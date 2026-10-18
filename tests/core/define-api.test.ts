@@ -1,4 +1,4 @@
-import { defineApi } from "@apixa/core";
+import { defineApi, type } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -14,9 +14,9 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { response: {} as User[] },
-          getByID: { response: {} as User },
-          create: { body: {} as Omit<User, "id">, response: {} as User },
+          getAll: { response: type<User[]>() },
+          getByID: { response: type<User>() },
+          create: { body: type<Omit<User, "id">>(), response: type<User>() },
         },
       },
     });
@@ -49,7 +49,7 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { response: {} as User },
+          getByID: { response: type<User>() },
         },
       },
     });
@@ -70,7 +70,7 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/by-uuid/:id", response: {} as User },
+          getByID: { method: "GET", path: "/by-uuid/:id", response: type<User>() },
         },
       },
     });
@@ -94,11 +94,11 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { response: {} as User[] },
-          getByID: { response: {} as User },
-          create: { body: {} as Omit<User, "id">, response: {} as User },
-          update: { body: {} as Partial<User>, response: {} as User },
-          delete: { response: undefined as void },
+          getAll: { response: type<User[]>() },
+          getByID: { response: type<User>() },
+          create: { body: type<Omit<User, "id">>(), response: type<User>() },
+          update: { body: type<Partial<User>>(), response: type<User>() },
+          delete: { response: type<void>() },
         },
       },
     });

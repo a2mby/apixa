@@ -5,6 +5,10 @@ export type {
   HeadersInitLike,
 } from "./http.js";
 
+import { type as typeMarker } from "./marker.js";
+export { typeMarker as type };
+export type { Type, Infer } from "./marker.js";
+
 export type {
   RequestConfig,
   ApiResponse,

@@ -1,4 +1,4 @@
-import { defineApi, HttpError, NetworkError, isApiError } from "@apixa/core";
+import { defineApi, HttpError, NetworkError, isApiError, type } from "@apixa/core";
 import { describe, expect, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -20,13 +20,13 @@ describe("request execution", () => {
           getAll: {
             method: "GET",
             query: {} as { limit?: number; active?: boolean },
-            response: {} as User[],
+            response: type<User[]>(),
           },
-          getByID: { method: "GET", path: "/:id", response: {} as User },
+          getByID: { method: "GET", path: "/:id", response: type<User>() },
           getPost: {
             method: "GET",
             path: "/:userId/posts/:postId",
-            response: {} as { id: string },
+            response: type<{ id: string }>(),
           },
         },
       },
@@ -60,7 +60,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          create: { method: "POST", body: {} as Omit<User, "id">, response: {} as User },
+          create: { method: "POST", body: type<Omit<User, "id">>(), response: type<User>() },
         },
       },
     });
@@ -78,7 +78,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/:id", response: {} as User },
+          getByID: { method: "GET", path: "/:id", response: type<User>() },
         },
       },
     });
@@ -98,7 +98,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/:id", response: {} as User },
+          getByID: { method: "GET", path: "/:id", response: type<User>() },
         },
       },
     });
@@ -126,7 +126,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { method: "GET", response: {} as User[] },
+          getAll: { method: "GET", response: type<User[]>() },
         },
       },
     });

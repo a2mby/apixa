@@ -22,7 +22,7 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 | Version | Status | Path |
 | --- | --- | --- |
-| **v0.3.0** | Active — coding contract | [v0.3.0/](./v0.3.0/) |
+| **v0.3.0** | Shipped — `type<T>()` markers (current until next `/start-version`) | [v0.3.0/](./v0.3.0/) |
 
 ## Completed
 

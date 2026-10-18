@@ -1,4 +1,4 @@
-import { defineApi } from "@apixa/core";
+import { defineApi, type } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -66,8 +66,8 @@ describe("default-first operations", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { path: "/active", response: {} as User[] },
-          update: { method: "PATCH", body: {} as Partial<User>, response: {} as User },
+          getAll: { path: "/active", response: type<User[]>() },
+          update: { method: "PATCH", body: type<Partial<User>>(), response: type<User>() },
         },
       },
     });
@@ -107,7 +107,7 @@ describe("default-first operations", () => {
             method: "GET",
             path: "/search",
             query: {} as { q: string },
-            response: {} as User[],
+            response: type<User[]>(),
           },
         },
       },

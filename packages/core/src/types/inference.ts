@@ -1,14 +1,15 @@
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
 import type { RequestOptions } from "./transport.js";
 import type { ReservedApiConfigKey } from "./definition.js";
+import type { Infer, Type } from "./marker.js";
 
 export type BuiltinOpName = "getAll" | "getByID" | "create" | "update" | "delete";
 
 type BuiltinOpDefs = {
   getAll: { path: "" };
   getByID: { path: "/:id" };
-  create: { path: ""; body: unknown };
-  update: { path: "/:id"; body: unknown };
+  create: { path: ""; body: Type<unknown> };
+  update: { path: "/:id"; body: Type<unknown> };
   delete: { path: "/:id" };
 };
 
@@ -46,8 +47,8 @@ type PathParamsOf<Path extends string> = [PathParamName<Path>] extends [never]
   ? PathParams
   : { [K in PathParamName<Path>]: string | number };
 
-type InferResponse<Op> = Op extends { response: infer R } ? R : unknown;
-type InferBody<Op> = Op extends { body: infer B } ? B : undefined;
+type InferResponse<Op> = Op extends { response: infer R } ? Infer<R> : unknown;
+type InferBody<Op> = Op extends { body: infer B } ? Infer<B> : undefined;
 type InferQuery<Op> = Op extends { query: infer Q } ? Q : QueryParams;
 type HasBody<Op> = Op extends { body: infer B }
   ? [B] extends [undefined]
@@ -85,7 +86,7 @@ type BuildOperationFn<
 type WithBuiltinBody<Name, Op> = Name extends "create" | "update"
   ? "body" extends keyof Op
     ? Op
-    : Op & { body: unknown }
+    : Op & { body: Type<unknown> }
   : Op;
 
 type EffectiveOpDef<Name extends BuiltinOpName, Ops> = Name extends keyof Ops
@@ -133,8 +134,8 @@ export type ApiClient<T> = {
 type ValidOperationValue = {
   method?: HttpMethod;
   path?: string;
-  body?: unknown;
-  response?: unknown;
+  body?: Type<unknown>;
+  response?: Type<unknown>;
   query?: unknown;
   headers?: HeadersInitLike;
   timeout?: number;

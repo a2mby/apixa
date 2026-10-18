@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Land v0.3.0 `type<T>()` markers
+
+Implemented branded `type<T>()` / `Type<T>` / `Infer` in `@apixa/core`. Operation `body` / `response` accept markers only; inference unwraps them; `{} as T` no longer type-checks. Tests, Next example, README, and `CHANGELOG.md` updated. Follow-ups `crud<>()` and path-param inference remain planned.
+
 ## 2026-10-18 — Retarget GitHub owner to a2mby
 
 Living docs, README, `/plan-change`, and `/git-push` now point at `a2mby/apixa` after the account rename from `a2mbyd`. Added [`docs/external-context.md`](./external-context.md) so external agents get the same owner and planning rules before a change brief.

@@ -49,9 +49,11 @@ await api.users.update("123", { name: "Ada Lovelace" });
 await api.users.delete("123");
 ```
 
-Optional type markers and partial overrides:
+Optional type markers and partial overrides (use `type<T>()`, not `{} as T`):
 
 ```ts
+import { defineApi, type } from "@apixa/core";
+
 type User = { id: string; name: string; email: string };
 
 const api = defineApi({
@@ -60,9 +62,9 @@ const api = defineApi({
     path: "/users",
     headers: { "X-Client": "dashboard" },
     operations: {
-      getAll: { path: "/active", response: {} as User[] },
-      update: { method: "PATCH", body: {} as Partial<User>, response: {} as User },
-      create: { body: {} as Omit<User, "id">, response: {} as User },
+      getAll: { path: "/active", response: type<User[]>() },
+      update: { method: "PATCH", body: type<Partial<User>>(), response: type<User>() },
+      create: { body: type<Omit<User, "id">>(), response: type<User>() },
     },
   },
 });
@@ -78,10 +80,11 @@ See [`examples/next`](./examples/next) for the primary real-app playground (Next
 
 Apixa is being designed around a small, extensible core that can grow into a broader API development ecosystem.
 
-**Implemented:** `defineApi()` with default-first CRUD (v0.2.0), type markers, URL/body/headers merge, Fetch transport, standardized errors.
+**Implemented:** `defineApi()` with default-first CRUD (v0.2.0), branded `type<T>()` markers (v0.3.0), URL/body/headers merge, Fetch transport, standardized errors.
 
 **Planned later** (not in Core yet):
 
+- `crud<>()` preset and path-param template inference.
 - Runtime schema validation hooks, middleware, retries, pagination conventions.
 - Mocking package (not coupled to production execution).
 - Optional TanStack Query integration.

@@ -70,13 +70,21 @@ Keep the initial core small and cohesive. Do not implement every future feature 
 
 ## 5. Intended Developer Experience
 
-**Implemented direction (v0.2.0 contract):** a resource with `path` gets built-in CRUD; configure only differences.
+**Implemented direction (v0.2.0 + v0.3.0):** a resource with `path` gets built-in CRUD; type payloads with `type<T>()`.
 
 ```ts
+import { defineApi, type } from "@apixa/core";
+
+type User = { id: string; name: string; email: string };
+
 const api = defineApi({
   baseURL: "https://api.example.com",
   users: {
     path: "/users",
+    operations: {
+      getAll: { response: type<User[]>() },
+      getByID: { response: type<User>() },
+    },
   },
 });
 
@@ -84,9 +92,9 @@ const users = await api.users.getAll();
 const user = await api.users.getByID("123");
 ```
 
-Built-in operations: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). Optional `operations` merges overrides and custom endpoints; custom/explicit settings win over defaults.
+Built-in operations: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). Optional `operations` merges overrides and custom endpoints; custom/explicit settings win over defaults. Use `type<T>()` for `body` / `response` — not `{} as T`.
 
-**Planned later (not v0.2.0):** `getBySlug`, `getByUUID`, `getBy(key, value)`, runtime schema validation hooks.
+**Planned later:** `crud<>()` preset, path-param template inference, `getBySlug` / `getByUUID` / `getBy`, runtime schema validation hooks.
 
 Prefer clear semantics. For example, `update()` is a clearer default than an ambiguous operation such as `appendUser()`.
 
