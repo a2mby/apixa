@@ -2,6 +2,7 @@ export {
   defineApi,
   registerDefineApiProcessor,
   clearDefineApiProcessors,
+  setMockingRegisterLoaderForTests,
 } from "./api/index.js";
 export type { DefineApiProcessor, DefineApiConfigBag } from "./api/index.js";
 

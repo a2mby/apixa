@@ -6,3 +6,4 @@ export {
   type DefineApiProcessor,
   type DefineApiConfigBag,
 } from "./processors.js";
+export { setMockingRegisterLoaderForTests } from "./peer-mocking.js";

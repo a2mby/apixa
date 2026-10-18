@@ -14,6 +14,7 @@ export default defineConfig({
       "@apixa/mocking/data/users": resolve(root, "packages/mocking/src/data/users.ts"),
       "@apixa/mocking/data": resolve(root, "packages/mocking/src/data/index.ts"),
       "@apixa/mocking/node": resolve(root, "packages/mocking/src/node.ts"),
+      "@apixa/mocking/register": resolve(root, "packages/mocking/src/register-entry.ts"),
       "@apixa/mocking": resolve(root, "packages/mocking/src/index.ts"),
     },
   },

@@ -1,4 +1,3 @@
-import "@apixa/mocking";
 import { defineApi } from "@apixa/core";
 import type { User } from "@apixa/mocking/data/users";
 
@@ -12,8 +11,8 @@ export type AppApi = {
 };
 
 /**
- * Resource-level mocking: `mock` / `mockConfig` are handled by `@apixa/mocking`
- * via Core's defineApi processor — not a second defineApi.
+ * Resource-level mocking: Core lazy-loads `@apixa/mocking` when `mock` / `mockConfig`
+ * are present — no side-effect `import "@apixa/mocking"` required.
  */
 export const api = defineApi<AppApi>()({
   baseURL: "https://api.example.com",

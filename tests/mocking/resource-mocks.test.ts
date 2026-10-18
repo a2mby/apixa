@@ -26,7 +26,7 @@ function createRecordingTransport(hits: TransportRequest[]): Transport {
   };
 }
 
-describe("resource-level mocking", () => {
+describe("resource-level mocking (processor)", () => {
   beforeEach(() => {
     clearDefineApiProcessors();
     clearDatasetPresets();
@@ -162,19 +162,31 @@ describe("resource-level mocking", () => {
       }),
     ).toThrow(/Unknown mockConfig.type/);
   });
+});
 
-  it("errors if mock is set but mocking processor is not enabled", () => {
+describe("resource-level mocking (deferred peer when processor off)", () => {
+  beforeEach(() => {
     disableResourceMocks();
     clearDefineApiProcessors();
-    expect(() =>
-      defineApi({
-        baseURL: "https://api.example.com",
-        users: {
-          path: "/users",
-          mock: true,
-          mockConfig: { type: "users-sample" },
-        },
-      }),
-    ).toThrow(/Import "@apixa\/mocking"/);
+    clearDatasetPresets();
+  });
+
+  afterEach(() => {
+    disableResourceMocks();
+    clearDefineApiProcessors();
+    clearDatasetPresets();
+  });
+
+  it("rejects unknown mockConfig.type on first request via the peer", async () => {
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      users: {
+        path: "/users",
+        mock: true,
+        mockConfig: { type: "no-such-dataset" },
+      },
+    });
+
+    await expect(api.users.getAll()).rejects.toThrow(/Unknown mockConfig.type/);
   });
 });

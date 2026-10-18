@@ -2,20 +2,12 @@
  * Browser-safe public surface.
  *
  * - `defineMockApi()` — standalone, in-memory mock API (no `defineApi()`, no network).
- * - Importing this package also enables resource-level `mock` / `mockConfig` on Core `defineApi`
- *   (legacy bridge: `register.ts`, `processor.ts`, `store.ts`, `transport.ts`). The standalone
- *   modules never import it.
+ * - Resource-level `mock` / `mockConfig` on Core `defineApi`: Core lazy-loads
+ *   `@apixa/mocking/register` when those keys are present (no side-effect import required).
+ *   You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly.
  *
  * Node filesystem loaders live at `@apixa/mocking/node`; typed data at `@apixa/mocking/data`.
  */
-import { enableResourceMocks } from "./register.js";
-
-// Register Core processor (side effect) so `import "@apixa/mocking"` is enough for `mock: true`.
-enableResourceMocks();
-
-// Register built-in typed presets for that processor.
-import "./data/users.js";
-import "./data/users-mock.js";
 
 export { defineMockApi } from "./mock-api.js";
 export type { MockApi, MockApiConfig, MockResourceConfig } from "./mock-api.js";
@@ -40,3 +32,8 @@ export {
 } from "./presets/registry.js";
 
 export { enableResourceMocks, disableResourceMocks } from "./register.js";
+export {
+  applyResourceMocksToConfig,
+  createSelectiveMockTransportFromSpecs,
+  type ResourceMockSpec,
+} from "./bridge.js";
