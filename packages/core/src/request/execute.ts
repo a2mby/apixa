@@ -32,12 +32,7 @@ export async function executeRequest<TData>(
 ): Promise<TData> {
   const path = interpolatePath(operation.path, call.params);
   const url = `${joinURL(api.baseURL, path)}${buildQueryString(call.query)}`;
-  const headers = mergeHeaders(
-    api.headers,
-    resource.headers,
-    operation.headers,
-    call.headers,
-  );
+  const headers = mergeHeaders(api.headers, resource.headers, operation.headers, call.headers);
   const timeout = call.timeout ?? operation.timeout ?? resource.timeout ?? api.timeout;
   const { signal, cleanup } = createTimeoutSignal(timeout, call.signal);
 

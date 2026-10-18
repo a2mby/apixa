@@ -46,8 +46,8 @@ uvicorn app.main:app --host 127.0.0.1 --port 8787 --reload
 
 Optional env overrides: `APIXA_BACKEND_HOST`, `APIXA_BACKEND_PORT`.
 
-- API docs: http://127.0.0.1:8787/docs  
-- Health: http://127.0.0.1:8787/health  
+- API docs: http://127.0.0.1:8787/docs
+- Health: http://127.0.0.1:8787/health
 
 ## Add more resources / test surfaces
 

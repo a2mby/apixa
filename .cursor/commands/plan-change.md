@@ -36,9 +36,11 @@ Active version: vX.Y.Z
 <One or two sentences on the outcome.>
 
 Touches:
+
 - path/to/file
 
 Tests:
+
 - tests/core/<name>.test.ts — <what behavior this covers>
 ```
 

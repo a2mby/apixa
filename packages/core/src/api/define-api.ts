@@ -1,9 +1,5 @@
 import { createFetchTransport } from "../transport/fetch.js";
-import type {
-  ApiRootConfig,
-  ResourceDefinition,
-  ResolvedApiConfig,
-} from "../types/definition.js";
+import type { ApiRootConfig, ResourceDefinition, ResolvedApiConfig } from "../types/definition.js";
 import type { ApiClient, ValidateApiConfig } from "../types/inference.js";
 import { createResourceClient } from "./resource-client.js";
 

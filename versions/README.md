@@ -11,25 +11,25 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Required files per version
 
-| File | Purpose |
-| --- | --- |
-| `context.md` | Frozen subset of project context for this release |
-| `scope.md` | Explicit in / out |
-| `implementation-plan.md` | Ordered smallest-path plan |
-| `acceptance-criteria.md` | Checklist that gates “done” |
+| File                     | Purpose                                           |
+| ------------------------ | ------------------------------------------------- |
+| `context.md`             | Frozen subset of project context for this release |
+| `scope.md`               | Explicit in / out                                 |
+| `implementation-plan.md` | Ordered smallest-path plan                        |
+| `acceptance-criteria.md` | Checklist that gates “done”                       |
 
 ## Current
 
-| Version | Status | Path |
-| --- | --- | --- |
+| Version    | Status                                                              | Path                 |
+| ---------- | ------------------------------------------------------------------- | -------------------- |
 | **v0.3.0** | Shipped — `type<T>()` markers (current until next `/start-version`) | [v0.3.0/](./v0.3.0/) |
 
 ## Completed
 
-| Version | Status | Path |
-| --- | --- | --- |
-| v0.2.0 | Shipped — default-first resource CRUD | [v0.2.0/](./v0.2.0/) |
-| v0.1.0 | Shipped — opt-in operations foundation | [v0.1.0/](./v0.1.0/) |
+| Version | Status                                 | Path                 |
+| ------- | -------------------------------------- | -------------------- |
+| v0.2.0  | Shipped — default-first resource CRUD  | [v0.2.0/](./v0.2.0/) |
+| v0.1.0  | Shipped — opt-in operations foundation | [v0.1.0/](./v0.1.0/) |
 
 ## Later (roadmap only)
 

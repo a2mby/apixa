@@ -3,10 +3,7 @@ export function isJsonContentType(headers: Headers): boolean {
   return contentType.includes("application/json") || contentType.includes("+json");
 }
 
-export function serializeBody(
-  body: unknown,
-  headers: Headers,
-): BodyInit | null | undefined {
+export function serializeBody(body: unknown, headers: Headers): BodyInit | null | undefined {
   if (body === undefined || body === null) {
     return body as null | undefined;
   }

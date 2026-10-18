@@ -37,10 +37,9 @@ export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport
           throw new AbortError("Request was aborted", { cause: error });
         }
 
-        throw new NetworkError(
-          error instanceof Error ? error.message : "Network request failed",
-          { cause: error },
-        );
+        throw new NetworkError(error instanceof Error ? error.message : "Network request failed", {
+          cause: error,
+        });
       }
 
       let body: unknown;

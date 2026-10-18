@@ -115,7 +115,9 @@ describe("default-first operations", () => {
 
     expect(api.users).toHaveProperty("getAll");
     expect(api.users).toHaveProperty("search");
-    expectTypeOf(api.users.search).parameter(0).toMatchTypeOf<{ query?: { q: string } } | undefined>();
+    expectTypeOf(api.users.search)
+      .parameter(0)
+      .toMatchTypeOf<{ query?: { q: string } } | undefined>();
 
     await api.users.getAll();
     await api.users.search({ query: { q: "ada" } });

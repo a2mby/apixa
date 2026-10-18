@@ -115,21 +115,21 @@ Cover at minimum:
 
 ## Suggested file touch list
 
-| Path | Action |
-| --- | --- |
-| `packages/core/src/api.ts` | Replace `createApi` with `defineApi` + resource generation |
-| `packages/core/src/endpoint.ts` | Operation builders / generation helpers |
-| `packages/core/src/client.ts` | Slim pipeline; unwrap data |
-| `packages/core/src/types.ts` | New definition types; trim public clutter |
-| `packages/core/src/index.ts` | Freeze exports |
-| `packages/core/src/utils.ts` | Keep / minor fixes |
-| `packages/core/src/transport/fetch.ts` | Keep |
-| `packages/core/src/errors.ts` | Keep |
-| `packages/core/src/mock.ts` / `auth.ts` / `middleware.ts` | Unexport or delete from public path |
-| `examples/basic/src/index.ts` | Rewrite |
-| `tests/**` | Add |
-| `README.md` | Match implemented API |
-| `docs/story.md` | Log completion |
+| Path                                                      | Action                                                     |
+| --------------------------------------------------------- | ---------------------------------------------------------- |
+| `packages/core/src/api.ts`                                | Replace `createApi` with `defineApi` + resource generation |
+| `packages/core/src/endpoint.ts`                           | Operation builders / generation helpers                    |
+| `packages/core/src/client.ts`                             | Slim pipeline; unwrap data                                 |
+| `packages/core/src/types.ts`                              | New definition types; trim public clutter                  |
+| `packages/core/src/index.ts`                              | Freeze exports                                             |
+| `packages/core/src/utils.ts`                              | Keep / minor fixes                                         |
+| `packages/core/src/transport/fetch.ts`                    | Keep                                                       |
+| `packages/core/src/errors.ts`                             | Keep                                                       |
+| `packages/core/src/mock.ts` / `auth.ts` / `middleware.ts` | Unexport or delete from public path                        |
+| `examples/basic/src/index.ts`                             | Rewrite                                                    |
+| `tests/**`                                                | Add                                                        |
+| `README.md`                                               | Match implemented API                                      |
+| `docs/story.md`                                           | Log completion                                             |
 
 ## Done when
 

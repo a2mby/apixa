@@ -38,15 +38,15 @@
 
 ## Out of scope
 
-| Item | Why |
-| --- | --- |
-| Runtime schema validation library / `schema:` product API | Roadmap hooks later; v0.1.0 already deferred |
-| Object-style args (`getByID({ id })`) | Prefer existing positional conventions |
-| `getBySlug`, `getByUUID`, `getBy` | Nice-to-have; not required |
-| Retries, pagination, middleware product surface | Separate reliability/DX work |
-| TanStack Query / OpenAPI / mocking / client-server packages | Later milestones |
-| New workspace packages | Core-only |
-| Custom TypeScript transforms / codegen | Forbidden |
+| Item                                                        | Why                                          |
+| ----------------------------------------------------------- | -------------------------------------------- |
+| Runtime schema validation library / `schema:` product API   | Roadmap hooks later; v0.1.0 already deferred |
+| Object-style args (`getByID({ id })`)                       | Prefer existing positional conventions       |
+| `getBySlug`, `getByUUID`, `getBy`                           | Nice-to-have; not required                   |
+| Retries, pagination, middleware product surface             | Separate reliability/DX work                 |
+| TanStack Query / OpenAPI / mocking / client-server packages | Later milestones                             |
+| New workspace packages                                      | Core-only                                    |
+| Custom TypeScript transforms / codegen                      | Forbidden                                    |
 
 ## Constraints (non-negotiable)
 

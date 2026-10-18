@@ -34,9 +34,11 @@ Report pass/fail for each:
 Current version: vX.Y.Z
 
 Pass:
+
 - …
 
 Fail:
+
 - … (how to fix)
 
 Next command: /implement-version | /start-version | /plan-change

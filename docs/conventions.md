@@ -41,11 +41,11 @@ Shared rules for building Apixa Core, writing docs, and shipping version milesto
 
 Each active or completed milestone under `versions/vX.Y.Z/` should include:
 
-| File | Purpose |
-| --- | --- |
-| `context.md` | Frozen subset of project context for that release |
-| `scope.md` | In / out for the milestone |
-| `implementation-plan.md` | Ordered smallest-path plan |
+| File                     | Purpose                                                  |
+| ------------------------ | -------------------------------------------------------- |
+| `context.md`             | Frozen subset of project context for that release        |
+| `scope.md`               | In / out for the milestone                               |
+| `implementation-plan.md` | Ordered smallest-path plan                               |
 | `acceptance-criteria.md` | Checklist that must pass before calling the version done |
 
 See [versions/README.md](../versions/README.md).
@@ -62,13 +62,13 @@ See [versions/README.md](../versions/README.md).
 
 Use these so the structure does not drift:
 
-| Command | When |
-| --- | --- |
-| `/plan-change` | Open issue + `task/N-slug` branch |
+| Command              | When                                       |
+| -------------------- | ------------------------------------------ |
+| `/plan-change`       | Open issue + `task/N-slug` branch          |
 | `/implement-version` | Code against the active `versions/vX.Y.Z/` |
-| `/start-version` | Create the next filled version folder |
-| `/check-structure` | Audit docs/versions/packages layout |
-| `/git-push` | Commit, PR, squash merge, story log |
+| `/start-version`     | Create the next filled version folder      |
+| `/check-structure`   | Audit docs/versions/packages layout        |
+| `/git-push`          | Commit, PR, squash merge, story log        |
 
 Rules live in `.cursor/rules/apixa-*.mdc`. Skill: `.cursor/skills/apixa-workflow/`.
 

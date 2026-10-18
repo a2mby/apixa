@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+**/dist
+build
+**/build
+.next
+**/.next
+out
+**/out
+coverage
+**/coverage
+
+# Caches and tooling
+.turbo
+.vite
+*.tsbuildinfo
+.cache
+**/.cache
+
+# Lockfiles and env
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+.env
+.env.*
+
+# Local / generated
+.DS_Store
+*.log
+.vscode
+
+# Examples are local-only (gitignored); skip if present
+examples/**
+
+# Python backend local env
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc

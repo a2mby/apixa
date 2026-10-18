@@ -43,10 +43,10 @@ Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `
 
 Confirm against the repo (do not invent versions):
 
-| Version | Status |
-| --- | --- |
-| v0.1.0 | Shipped — opt-in operations foundation |
-| v0.2.0 | Shipped — default-first resource CRUD |
+| Version    | Status                                                      |
+| ---------- | ----------------------------------------------------------- |
+| v0.1.0     | Shipped — opt-in operations foundation                      |
+| v0.2.0     | Shipped — default-first resource CRUD                       |
 | **v0.3.0** | **Active** — branded `type<T>()` / `Type` / `Infer` markers |
 
 Pointer of truth: [`versions/README.md`](../versions/README.md) → **Current** folder.
@@ -61,8 +61,8 @@ Pointer of truth: [`versions/README.md`](../versions/README.md) → **Current** 
 
 ## Read before planning (in the repo)
 
-1. [`docs/context.md`](./context.md) — principles / constraints  
-2. Active milestone under `versions/vX.Y.Z/` — `scope.md`, `implementation-plan.md`, `acceptance-criteria.md`  
+1. [`docs/context.md`](./context.md) — principles / constraints
+2. Active milestone under `versions/vX.Y.Z/` — `scope.md`, `implementation-plan.md`, `acceptance-criteria.md`
 3. Optionally: [`architecture.md`](./architecture.md), [`roadmap.md`](./roadmap.md), [`story.md`](./story.md) (newest first)
 
 Do **not** recap the whole project back to the human.
@@ -115,9 +115,11 @@ Active version: vX.Y.Z
 <One or two sentences on the outcome.>
 
 Touches:
+
 - path/to/file
 
 Tests:
+
 - tests/core/<name>.test.ts — <what behavior this covers>
 ```
 
@@ -141,12 +143,12 @@ git switch -c task/N-slug
 
 ## Commands map (Cursor)
 
-| Intent | Command |
-| --- | --- |
-| Open issue + task branch | `/plan-change <brief>` |
-| Implement active milestone | `/implement-version` |
-| Start new milestone folder | `/start-version` |
-| Audit layout | `/check-structure` |
+| Intent                     | Command                |
+| -------------------------- | ---------------------- |
+| Open issue + task branch   | `/plan-change <brief>` |
+| Implement active milestone | `/implement-version`   |
+| Start new milestone folder | `/start-version`       |
+| Audit layout               | `/check-structure`     |
 
 ---
 
