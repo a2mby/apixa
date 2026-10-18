@@ -11,7 +11,7 @@ Apixa is an open-source, TypeScript-first library for defining APIs and automati
 **Tagline:** Define your API once. Use it everywhere.
 
 - Copyright holder: Abdalrahman bani younes
-- GitHub: https://github.com/a2mbyd
+- GitHub: https://github.com/a2mby
 - License: MIT
 - Current stage: Initial development
 - Primary language: TypeScript

@@ -65,10 +65,10 @@ For each such change:
 
 Do **not** plan a functional Core change with an empty or missing Tests section. The long-term goal is a huge number of tests covering Core thoroughly; each `/plan-change` should add to that pile when behavior moves.
 
-Label the issue `task`. Repo is `a2mbyd/apixa`.
+Label the issue `task`. Repo is `a2mby/apixa`.
 
 ```bash
-gh issue create --repo a2mbyd/apixa --title "Add defineApi resource generation" --label "task" --body "$(cat <<'EOF'
+gh issue create --repo a2mby/apixa --title "Add defineApi resource generation" --label "task" --body "$(cat <<'EOF'
 ...
 EOF
 )"

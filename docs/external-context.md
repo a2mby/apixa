@@ -1,0 +1,159 @@
+# Apixa — external agent context
+
+Paste this whole file into ChatGPT / Claude / other external agents **before** asking them to plan a change (same job as Cursor `/plan-change`). Keep it updated when the active version or shipped surface changes.
+
+You are helping on **Apixa** (`https://github.com/a2mby/apixa`). Do **not** write feature code unless the human explicitly asks to implement. Prefer opening a GitHub issue + task branch (see **How to /plan-change** below).
+
+---
+
+## What Apixa is
+
+TypeScript-first library: define an API once → generate a fully typed client.
+
+- Package today: `@apixa/core` only
+- Tagline: Define your API once. Use it everywhere.
+- Tooling: pnpm monorepo, TypeScript, native `Promise<T>`
+- Fetch transport lives **inside** Core until an ADR/version says otherwise
+- Not a UI framework, not a server router, not merely a Fetch wrapper
+
+```ts
+import { defineApi, type } from "@apixa/core";
+
+type User = { id: string; name: string; email: string };
+
+const api = defineApi({
+  baseURL: "https://api.example.com",
+  users: {
+    path: "/users",
+    operations: {
+      getAll: { response: type<User[]>() },
+      getByID: { response: type<User>() },
+    },
+  },
+});
+
+await api.users.getAll(); // Promise<User[]>
+```
+
+Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). Optional `operations` for overrides and custom endpoints. Typing markers: `type<T>()` — **not** `{} as T`.
+
+---
+
+## Where we are
+
+Confirm against the repo (do not invent versions):
+
+| Version | Status |
+| --- | --- |
+| v0.1.0 | Shipped — opt-in operations foundation |
+| v0.2.0 | Shipped — default-first resource CRUD |
+| **v0.3.0** | **Active** — branded `type<T>()` / `Type` / `Infer` markers |
+
+Pointer of truth: [`versions/README.md`](../versions/README.md) → **Current** folder.
+
+**v0.3.0 goal:** one cast inside Core (`type<T>()`); per-op `body` / `response` markers; `{} as T` no longer type-checks on those fields. Call style / path arity unchanged.
+
+**Documented follow-ups (not in v0.3.0):** `crud<>()` preset, path-param template inference.
+
+**Next roadmap heading (approx v0.4.0):** AbortSignal, timeouts/retries, middleware, optional schema hooks, mocking, pagination — only after a version folder exists. Do **not** create empty future `versions/` stubs.
+
+---
+
+## Read before planning (in the repo)
+
+1. [`docs/context.md`](./context.md) — principles / constraints  
+2. Active milestone under `versions/vX.Y.Z/` — `scope.md`, `implementation-plan.md`, `acceptance-criteria.md`  
+3. Optionally: [`architecture.md`](./architecture.md), [`roadmap.md`](./roadmap.md), [`story.md`](./story.md) (newest first)
+
+Do **not** recap the whole project back to the human.
+
+---
+
+## Repo layout (do not invent a different one)
+
+```text
+docs/                 # living context, architecture, roadmap, story, ADRs, this file
+versions/             # frozen milestones only — no empty future stubs
+packages/core/        # only package until active scope says otherwise
+examples/next/        # ONLY maintained example — do not edit other examples/*
+tests/                # growing Vitest suite; injectable / fake Transport
+```
+
+---
+
+## Hard constraints
+
+- No React, Next.js, or TanStack Query in `@apixa/core`
+- No custom Promise wrappers
+- Custom endpoints beat conventions; do not silently invent backend ops
+- Fetch stays in Core until ADR/version says otherwise
+- Do not couple mocking to production request execution
+- Planned ≠ implemented; keep docs honest
+- Do not add packages (`transport-fetch`, `client`, `server`, `mocking`, `tanstack-query`, `openapi`) unless **active** scope says so
+- Do not rewrite frozen `versions/v0.1.0/` or `v0.2.0/` for new features
+- Examples: **Next only** (`examples/next/**`)
+
+---
+
+## How to /plan-change
+
+When the human gives a brief (or says `/plan-change <brief>`):
+
+1. Stop if the brief is empty — ask what the change is.
+2. Read active version scope. If the ask is **Out of scope**, say so in the issue body and in chat; do not pretend it is in scope.
+3. If the brief is “implement the version” / whole active milestone, still open the issue, then prefer `/implement-version` for the coding work.
+4. Open a GitHub issue on `a2mby/apixa`, label `task`. Title = outcome (e.g. “Add defineApi resource generation”), not “Working on core”.
+5. Issue body, in this order:
+
+```markdown
+Asked for: <their brief, unchanged>
+
+Active version: vX.Y.Z
+
+<One or two sentences on the problem.>
+
+<One or two sentences on the outcome.>
+
+Touches:
+- path/to/file
+
+Tests:
+- tests/core/<name>.test.ts — <what behavior this covers>
+```
+
+6. Functional changes **must** list concrete tests (fake Transport; no live network as the primary suite). Prefer many small cases. Docs/process-only → `Tests: none (no functional change)`.
+7. Branch from latest `main` only: `task/N-slug` (N = issue number, slug short/hyphenated). Never stack a second change on an existing `task/…` for the same brief. If already on another task branch, still open the issue, then create the new branch from `main`.
+8. Reply with: issue URL, branch name, active version, Touches, Tests. **Then wait** — do not implement unless the human also asked to implement now.
+
+```bash
+gh issue create --repo a2mby/apixa --title "…" --label "task" --body "$(cat <<'EOF'
+…
+EOF
+)"
+
+git fetch origin
+git switch main
+git pull --ff-only origin main
+git switch -c task/N-slug
+```
+
+---
+
+## Commands map (Cursor)
+
+| Intent | Command |
+| --- | --- |
+| Open issue + task branch | `/plan-change <brief>` |
+| Implement active milestone | `/implement-version` |
+| Start new milestone folder | `/start-version` |
+| Audit layout | `/check-structure` |
+
+---
+
+## Human brief (append when pasting)
+
+After this file, the human’s next message is the change brief:
+
+```text
+Asked for: <paste brief here>
+```

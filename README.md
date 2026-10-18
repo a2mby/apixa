@@ -135,7 +135,7 @@ See [versions/v0.1.0/acceptance-criteria.md](./versions/v0.1.0/acceptance-criter
 
 ## Author
 
-Created and maintained by **Abdalrahman bani younes** ([a2mbyd](https://github.com/a2mbyd)).
+Created and maintained by **Abdalrahman bani younes** ([a2mby](https://github.com/a2mby)).
 
 ## License
 
