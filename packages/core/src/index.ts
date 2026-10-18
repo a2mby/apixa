@@ -1,4 +1,9 @@
-export { defineApi } from "./api/index.js";
+export {
+  defineApi,
+  registerDefineApiProcessor,
+  clearDefineApiProcessors,
+} from "./api/index.js";
+export type { DefineApiProcessor, DefineApiConfigBag } from "./api/index.js";
 
 export {
   ApiError,
@@ -34,4 +39,5 @@ export type {
   ApiInput,
   ApiClient,
   ResourceClient,
+  ResourceMockConfigInput,
 } from "./types/index.js";

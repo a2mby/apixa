@@ -6,7 +6,9 @@
     "paths": {
       "@apixa/core": ["../packages/core/src/index.ts"],
       "@apixa/mocking": ["../packages/mocking/src/index.ts"],
-      "@apixa/mocking/node": ["../packages/mocking/src/node.ts"]
+      "@apixa/mocking/node": ["../packages/mocking/src/node.ts"],
+      "@apixa/mocking/data/users": ["../packages/mocking/src/data/users.ts"],
+      "@apixa/mocking/data/users-mock": ["../packages/mocking/src/data/users-mock.ts"]
     }
   },
   "include": ["./**/*.ts"]

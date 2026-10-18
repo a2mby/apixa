@@ -73,9 +73,10 @@ See also:
 | URL / serialization helpers             | `http/`       | Path, query, headers, body, timeout signal            |
 | Public exports                          | `index.ts`    | `defineApi`, types, errors, Fetch / `Transport`       |
 
-Out of the v0.1.0 public product surface (may exist in the scaffold today):
+Out of Core’s product mock engine (owned by `@apixa/mocking`):
 
-- Production `mocks` on API config (do not couple mocking to execution)
+- Core exposes `registerDefineApiProcessor` so integrations can transform config before the client is built
+- Resource `mock` / `mockConfig` keys are opaque to Core; `@apixa/mocking` must be imported to handle them
 - Auth helpers and logging middleware as Core product features
 - Schema validation as a Core dependency
 

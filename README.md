@@ -84,27 +84,25 @@ Pass `transport` to inject a custom HTTP implementation (used in tests). The def
 
 ### Simple Mocking (implemented)
 
-Local JSON datasets + `@apixa/mocking` (not coupled to Core’s production Fetch path):
+Resource-level mocking via `@apixa/mocking` (Core stays live-only; import mocking to enable processors):
 
 ```ts
+import "@apixa/mocking";
 import { defineApi } from "@apixa/core";
-import { createMockTransport } from "@apixa/mocking";
-import { loadDataset } from "@apixa/mocking/node"; // Node only — not for Next client bundles
 
-const dataset = await loadDataset("users-sample");
 const api = defineApi({
-  baseURL: "https://mock.local",
-  transport: createMockTransport({ dataset }),
-  users: { path: "/users" },
+  baseURL: "https://api.example.com",
+  users: {
+    path: "/users",
+    mock: true,
+    mockConfig: { type: "users-sample", pagination: true },
+  },
+  payments: { path: "/payments" }, // real network
 });
-
-await api.users.getAll(); // from datasets/ — no network
 ```
 
-In the browser / Next client, import JSON and pass it to `createMockTransport` (do not import `@apixa/mocking/node`).
-```
-
-See [`datasets/`](./datasets/) and [`packages/mocking`](./packages/mocking).
+Typed presets: `import { type User } from "@apixa/mocking/data/users"`.  
+Global `createMockTransport` remains for full-client mocks. See [`datasets/`](./datasets/) and [`packages/mocking`](./packages/mocking).
 
 See [`examples/next`](./examples/next) for the primary real-app playground (Next.js). Other frontends and a Node CLI live under [`examples/`](./examples/). Platform run scripts: [`scripts/README.md`](./scripts/README.md).
 
