@@ -97,12 +97,11 @@ import type { User, Product } from "@apixa/mocking/data";
 
 Read-only typed records for the small synthetic sets (`users`, `mockUsers`, `products`, `companies`, `orders`, `posts`, `comments`) straight from the root JSON — no copies. Entity types for **every** dataset above are exported too; reference sets (countries, currencies, …) are types only, so importing them costs nothing at runtime.
 
-## Core inline mocking (unchanged)
+## Core inline mocking
 
-Importing this package also registers a Core `defineApi` **processor**, which honors resource-level `mock` / `mockConfig`. It is independent of `defineMockApi()` and shares no state with it.
+Install `@apixa/mocking` next to `@apixa/core`. When a resource has `mock` / `mockConfig`, Core lazy-loads `@apixa/mocking/register` on first request — no side-effect `import "@apixa/mocking"` required. You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly (e.g. to fail fast at `defineApi` time via the processor).
 
 ```ts
-import "@apixa/mocking"; // enables mock / mockConfig on Core defineApi
 import { defineApi } from "@apixa/core";
 
 const api = defineApi({

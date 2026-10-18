@@ -2,7 +2,7 @@
 
 This document describes the architecture Apixa is building toward, and how the current codebase maps to it.
 
-Apixa Core owns definitions and live HTTP execution. `@apixa/mocking` is a separate package: a standalone in-memory mock API (`defineMockApi()`) plus a `defineApi` processor that handles resource `mock` / `mockConfig` — Core never depends on it. Other optional packages (client, server, TanStack Query, OpenAPI) remain planned boundaries.
+Apixa Core owns definitions and live HTTP execution. `@apixa/mocking` is a separate package: a standalone in-memory mock API (`defineMockApi()`) plus resource `mock` / `mockConfig` support. Core lists mocking as an **optional peer** and lazy-loads `@apixa/mocking/register` when those keys are present — it does not embed a mock engine. Other optional packages (client, server, TanStack Query, OpenAPI) remain planned boundaries.
 
 ## High-level shape
 
@@ -76,7 +76,7 @@ See also:
 Out of Core’s product mock engine (owned by `@apixa/mocking`):
 
 - Core exposes `registerDefineApiProcessor` so integrations can transform config before the client is built
-- Resource `mock` / `mockConfig` keys are opaque to Core; `@apixa/mocking` must be imported to handle them
+- Resource `mock` / `mockConfig`: Core strips keys and deferred-loads the optional `@apixa/mocking` peer (or uses a registered processor). No hard dependency; clear error if the peer is missing at request time
 - Auth helpers and logging middleware as Core product features
 - Schema validation as a Core dependency
 

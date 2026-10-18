@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Resource mocks without side-effect mocking import (#28)
+
+Core treats `@apixa/mocking` as an optional peer: when `defineApi` sees unhandled `mock` / `mockConfig`, it strips those keys and deferred-loads `@apixa/mocking/register` on first request. No side-effect `import "@apixa/mocking"` is required; missing peer yields a clear error. Extends shipped v0.5.0 without a new versions folder.
+
 ## 2026-10-18 — Standalone `defineMockApi()` in `@apixa/mocking`
 
 Added `defineMockApi({ users: { type, size, pagination } })`: a local, in-memory mock API with typed CRUD, pagination, and isolated state per call — no `defineApi()`, transport, or network. Datasets load lazily from the root `datasets/` JSON (one chunk each); `@apixa/mocking/data` exports typed records and entity types. Removed `createMockTransport` (and the unusable `createSelectiveMockTransport` export). Core and its resource-level `mock` / `mockConfig` processor are untouched. Three datasets (`states-csc`, `states-parseapi`, `counties-parseapi`) are not exposed: too large, and two have non-unique ids.

@@ -118,7 +118,14 @@ describe("package surface", () => {
       scripts: { build: string };
     };
     expect(Object.keys(pkg.exports)).toEqual(
-      expect.arrayContaining([".", "./node", "./data", "./data/users", "./data/users-mock"]),
+      expect.arrayContaining([
+        ".",
+        "./register",
+        "./node",
+        "./data",
+        "./data/users",
+        "./data/users-mock",
+      ]),
     );
     for (const [subpath, target] of Object.entries(pkg.exports)) {
       const source = target.import.replace("./dist/", "src/").replace(/\.js$/, ".ts");

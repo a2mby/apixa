@@ -99,10 +99,9 @@ const { data, total } = await mockApi.users.getAll({ page: 1, pageSize: 10 });
 
 Typed data: `import { users, type User } from "@apixa/mocking/data"`.
 
-Or mock individual resources of a Core client (Core stays live-only; import mocking to enable processors):
+Or mock individual resources of a Core client (`@apixa/mocking` as a dependency; no side-effect import):
 
 ```ts
-import "@apixa/mocking";
 import { defineApi } from "@apixa/core";
 
 const api = defineApi({

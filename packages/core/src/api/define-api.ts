@@ -6,32 +6,13 @@ import type {
   ResolvedApiConfig,
 } from "../types/definition.js";
 import type { ApiClient, ApiInput } from "../types/inference.js";
+import { applyPeerMockBridge, hasUnhandledMockKeys } from "./peer-mocking.js";
 import { applyDefineApiProcessors } from "./processors.js";
 import { createResourceClient } from "./resource-client.js";
 
 const RESERVED_KEYS = new Set(["baseURL", "headers", "transport", "timeout"]);
 
 const RESOURCE_HTTP_KEYS = new Set(["path", "operations", "headers", "timeout"]);
-
-function assertNoUnhandledMockKeys(config: Record<string, unknown>): void {
-  for (const [key, value] of Object.entries(config)) {
-    if (RESERVED_KEYS.has(key)) continue;
-    if (!value || typeof value !== "object") continue;
-    const resource = value as Record<string, unknown>;
-    if (resource.mock === true) {
-      throw new Error(
-        `Resource "${key}" has mock: true, but no defineApi processor handled it. ` +
-          `Import "@apixa/mocking" before calling defineApi (resource mocking is implemented by @apixa/mocking, not Core).`,
-      );
-    }
-    if (resource.mockConfig != null) {
-      throw new Error(
-        `Resource "${key}" has mockConfig, but no defineApi processor handled it. ` +
-          `Import "@apixa/mocking" before calling defineApi.`,
-      );
-    }
-  }
-}
 
 function toHttpResource(value: Record<string, unknown>): ResourceDefinition {
   const resource: ResourceDefinition = {
@@ -46,14 +27,25 @@ function toHttpResource(value: Record<string, unknown>): ResourceDefinition {
   if (value.timeout !== undefined) {
     resource.timeout = value.timeout as number;
   }
-  // Drop integration-only keys (mock, mockConfig, …) — processors should strip them first.
+  // Drop integration-only keys (mock, mockConfig, …) — processors / peer bridge strip them first.
   void RESOURCE_HTTP_KEYS;
   return resource;
 }
 
 function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient<T> {
-  const config = applyDefineApiProcessors({ ...raw });
-  assertNoUnhandledMockKeys(config);
+  let config = applyDefineApiProcessors({ ...raw });
+
+  // Optional peer: if mock keys remain, Core defers to `@apixa/mocking` on first request.
+  if (hasUnhandledMockKeys(config)) {
+    config = applyPeerMockBridge(config);
+  }
+
+  if (hasUnhandledMockKeys(config)) {
+    throw new Error(
+      `Resource mock keys remain unhandled after the optional @apixa/mocking peer bridge. ` +
+        `Install "@apixa/mocking" or remove mock / mockConfig from the resource definition.`,
+    );
+  }
 
   const resolved: ResolvedApiConfig = {
     baseURL: config.baseURL,
