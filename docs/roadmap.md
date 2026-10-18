@@ -17,18 +17,21 @@ Shipped: `defineApi()`, opt-in operations, type inference, Fetch transport, erro
 - Resource-level headers and merge precedence
 - Updated examples, docs, and tests
 
-## Current: v0.3.0 — Resource typing
+## Completed: v0.3.0 — Resource typing (`type<T>()`)
 
 **Spec:** [versions/v0.3.0/](../versions/v0.3.0/)
 
-When starting work, implement against that folder’s acceptance criteria.
+Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 
-- Branded marker helper `type<T>()` / `Type<T>` / `Infer<M>`
-- Per-operation `body` / `response` markers without user-facing `as` casts
-- Breaking change from `{} as T` documented in changelog
-- Follow-ups documented: `crud<>()` preset, path-param template inference (not in this milestone)
+## Current: v0.4.0 — State typing (`defineApi<T>()`)
 
-## Next: Reliability and developer experience (approx. v0.4.0)
+**Spec:** [versions/v0.4.0/](../versions/v0.4.0/)
+
+- Resource-only `defineApi<AppApi>()({ … })` (`path` + `entity`)
+- Derived `create` / `update`; Core root builtins + `BuiltinHeaders`
+- Remove public `type()` / `Type` / `Infer`
+
+## Next: Reliability and developer experience (approx. v0.5.0)
 
 - Cancellation and `AbortSignal` as a first-class, documented surface
 - Timeouts and configurable retries

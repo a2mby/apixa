@@ -1,8 +1,10 @@
-export type { HttpMethod, PathParams, QueryParams, HeadersInitLike } from "./http.js";
-
-import { type as typeMarker } from "./marker.js";
-export { typeMarker as type };
-export type { Type, Infer } from "./marker.js";
+export type {
+  HttpMethod,
+  PathParams,
+  QueryParams,
+  HeadersInitLike,
+  BuiltinHeaders,
+} from "./http.js";
 
 export type {
   RequestConfig,
@@ -18,6 +20,11 @@ export type {
   ResourceDefinition,
   ReservedApiConfigKey,
   ApiRootConfig,
+  ApiState,
+  ResourceState,
+  OperationState,
+  ResourceTypeOnlyKey,
+  OperationTypeOnlyKey,
   ResolvedApiConfig,
   ResolvedResourceConfig,
   ResolvedOperation,
@@ -30,5 +37,6 @@ export type {
   ResourceOpsOf,
   ResourceClient,
   ApiClient,
+  ApiInput,
   ValidateApiConfig,
 } from "./inference.js";

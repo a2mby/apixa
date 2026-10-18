@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Land v0.4.0 entity-only `defineApi<T>()` state typing
+
+Replaced branded `type<T>()` markers with a resource-only Zustand-style state: `defineApi<AppApi>()({ … })` where `AppApi` declares `path` + `entity`. Core derives `create` / `update` (`Omit` / `Partial` on `"id"`), types root builtins separately, and adds `BuiltinHeaders`. `type` / `Type` / `Infer` are removed from `@apixa/core`.
+
 ## 2026-10-18 — Add Prettier root format command
 
 Installed Prettier at the workspace root with `.prettierrc.json` and `.prettierignore`. `npm run format` (and `pnpm format`) now formats supported source and docs across the monorepo while skipping build outputs, lockfiles, and local examples.

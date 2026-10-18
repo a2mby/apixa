@@ -1,16 +1,29 @@
-import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
+import type {
+  BuiltinHeaders,
+  HeadersInitLike,
+  HttpMethod,
+  PathParams,
+  QueryParams,
+} from "./http.js";
 import type { RequestOptions } from "./transport.js";
-import type { ReservedApiConfigKey } from "./definition.js";
-import type { Infer, Type } from "./marker.js";
+import type { ApiRootConfig, ReservedApiConfigKey } from "./definition.js";
 
 export type BuiltinOpName = "getAll" | "getByID" | "create" | "update" | "delete";
 
-type BuiltinOpDefs = {
-  getAll: { path: "" };
-  getByID: { path: "/:id" };
-  create: { path: ""; body: Type<unknown> };
-  update: { path: "/:id"; body: Type<unknown> };
-  delete: { path: "/:id" };
+type EntityOf<R> = R extends { entity: infer E } ? E : unknown;
+
+/** Derived create body: `Omit<Entity, "id">` when `entity` is set. */
+type CreateOf<R> = R extends { entity: infer E } ? Omit<E, "id"> : unknown;
+
+/** Derived update body: `Partial<Entity>` when `entity` is set. */
+type UpdateOf<R> = R extends { entity: infer E } ? Partial<E> : unknown;
+
+type EntityBuiltinOps<R> = {
+  getAll: { path: ""; response: EntityOf<R>[] };
+  getByID: { path: "/:id"; response: EntityOf<R> };
+  create: { path: ""; body: CreateOf<R>; response: EntityOf<R> };
+  update: { path: "/:id"; body: UpdateOf<R>; response: EntityOf<R> };
+  delete: { path: "/:id"; response: void };
 };
 
 type DefaultPath<Name extends string> = Name extends "getByID" | "update" | "delete" ? "/:id" : "";
@@ -45,8 +58,8 @@ type PathParamsOf<Path extends string> = [PathParamName<Path>] extends [never]
   ? PathParams
   : { [K in PathParamName<Path>]: string | number };
 
-type InferResponse<Op> = Op extends { response: infer R } ? Infer<R> : unknown;
-type InferBody<Op> = Op extends { body: infer B } ? Infer<B> : undefined;
+type InferResponse<Op> = Op extends { response: infer R } ? R : unknown;
+type InferBody<Op> = Op extends { body: infer B } ? B : undefined;
 type InferQuery<Op> = Op extends { query: infer Q } ? Q : QueryParams;
 type HasBody<Op> = Op extends { body: infer B } ? ([B] extends [undefined] ? false : true) : false;
 
@@ -72,77 +85,85 @@ type BuildOperationFn<Arity extends 0 | 1 | 2, Params, Body, Result, Query> = [B
       ? (id: string | number, body: Body, options?: RequestOptions<Query>) => Promise<Result>
       : (params: Params, body: Body, options?: RequestOptions<Query>) => Promise<Result>;
 
-/** Ensure create/update keep a body argument when overrides omit a `body` marker. */
-type WithBuiltinBody<Name, Op> = Name extends "create" | "update"
-  ? "body" extends keyof Op
-    ? Op
-    : Op & { body: Type<unknown> }
-  : Op;
+type MergeOp<Base, Override> = [Override] extends [never]
+  ? Base
+  : [Override] extends [undefined]
+    ? Base
+    : Omit<Base, keyof Override> & Override;
 
-type EffectiveOpDef<Name extends BuiltinOpName, Ops> = Name extends keyof Ops
-  ? WithBuiltinBody<Name, Ops[Name]>
-  : BuiltinOpDefs[Name];
-
-/** Normalize missing / empty `operations` to `{}` for merging. */
-export type ResourceOpsOf<R> = R extends { operations: infer Ops }
-  ? [keyof Ops & string] extends [never]
+/** Declared `operations` on the resource state (may include type-only fields). */
+export type ResourceOpsOf<R> = R extends { operations?: infer Ops }
+  ? [Ops] extends [undefined]
     ? {}
     : Ops extends Record<string, unknown>
-      ? Ops
+      ? {
+          [K in keyof Ops as [Ops[K]] extends [undefined] ? never : K]-?: Exclude<
+            Ops[K],
+            undefined
+          >;
+        }
       : {}
   : {};
 
-/** Builtins ∪ declared operations; overrides refine individual ops. */
-export type EffectiveOps<Ops> = {
-  [K in BuiltinOpName]: EffectiveOpDef<K, Ops>;
+type EffectiveOpDef<Name extends BuiltinOpName, R> = Name extends keyof ResourceOpsOf<R>
+  ? MergeOp<EntityBuiltinOps<R>[Name], ResourceOpsOf<R>[Name]>
+  : EntityBuiltinOps<R>[Name];
+
+/** Builtins from entity ∪ declared operations; overrides refine individual ops. */
+export type EffectiveOps<R> = {
+  [K in BuiltinOpName]: EffectiveOpDef<K, R>;
 } & {
-  [K in Exclude<keyof Ops, BuiltinOpName>]: Ops[K];
+  [K in Exclude<keyof ResourceOpsOf<R>, BuiltinOpName>]: ResourceOpsOf<R>[K];
 };
 
 /**
  * Resource client with **required** builtin method keys so IDEs complete
  * `api.users.getAll` / `getByID` / … without ReturnType hacks.
  */
-export type ResourceClient<Ops = {}> = {
-  getAll: OperationFn<"getAll", EffectiveOpDef<"getAll", Ops>>;
-  getByID: OperationFn<"getByID", EffectiveOpDef<"getByID", Ops>>;
-  create: OperationFn<"create", EffectiveOpDef<"create", Ops>>;
-  update: OperationFn<"update", EffectiveOpDef<"update", Ops>>;
-  delete: OperationFn<"delete", EffectiveOpDef<"delete", Ops>>;
+export type ResourceClient<R = {}> = {
+  getAll: OperationFn<"getAll", EffectiveOpDef<"getAll", R>>;
+  getByID: OperationFn<"getByID", EffectiveOpDef<"getByID", R>>;
+  create: OperationFn<"create", EffectiveOpDef<"create", R>>;
+  update: OperationFn<"update", EffectiveOpDef<"update", R>>;
+  delete: OperationFn<"delete", EffectiveOpDef<"delete", R>>;
 } & {
-  [K in Exclude<keyof Ops, BuiltinOpName>]: OperationFn<Extract<K, string>, Ops[K]>;
+  [K in Exclude<keyof ResourceOpsOf<R>, BuiltinOpName>]: OperationFn<
+    Extract<K, string>,
+    ResourceOpsOf<R>[K]
+  >;
 };
 
 export type ApiClient<T> = {
   [K in keyof T as K extends ReservedApiConfigKey ? never : K]: T[K] extends {
     path: string;
   }
-    ? ResourceClient<ResourceOpsOf<T[K]>>
+    ? ResourceClient<T[K]>
     : never;
 };
 
-type ValidOperationValue = {
+type RuntimeOperationValue = {
   method?: HttpMethod;
   path?: string;
-  body?: Type<unknown>;
-  response?: Type<unknown>;
-  query?: unknown;
   headers?: HeadersInitLike;
   timeout?: number;
+  hasBody?: boolean;
 };
 
-type ValidResourceValue = {
+type ResourceRuntimeInput<_R> = {
   path: string;
-  headers?: HeadersInitLike;
+  headers?: BuiltinHeaders | HeadersInitLike;
   timeout?: number;
-  operations?: Record<string, ValidOperationValue>;
+  /** Runtime overrides / custom ops (value-only). Client typing comes from state `T`. */
+  operations?: Record<string, RuntimeOperationValue>;
 };
 
-/** Structural check that preserves inferred operation types on `defineApi` input. */
-export type ValidateApiConfig<T> = {
-  [K in keyof T]: K extends ReservedApiConfigKey
-    ? T[K]
-    : T[K] extends ValidResourceValue
-      ? T[K]
-      : ValidResourceValue;
+/**
+ * Runtime config: Core root builtins + one runtime resource bag per key of `T`.
+ * Type-only `entity` (and op `body` / `response` / `query`) are not required on the object.
+ */
+export type ApiInput<T> = ApiRootConfig & {
+  [K in keyof T]: T[K] extends { path: string } ? ResourceRuntimeInput<T[K]> : never;
 };
+
+/** @deprecated Prefer ApiInput — kept name for call-site clarity in older docs. */
+export type ValidateApiConfig<T> = ApiInput<T>;

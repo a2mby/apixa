@@ -1,14 +1,29 @@
-import { defineApi, HttpError, NetworkError, isApiError, type } from "@apixa/core";
+import { defineApi, HttpError, NetworkError, isApiError } from "@apixa/core";
 import { describe, expect, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
 
+type HttpApi = {
+  users: {
+    path: string;
+    entity: User;
+    operations: {
+      getAll: { query: { limit?: number; active?: boolean }; response: User[] };
+      getPost: {
+        method: "GET";
+        path: "/:userId/posts/:postId";
+        response: { id: string };
+      };
+    };
+  };
+};
+
 describe("request execution", () => {
   it("applies path parameters and query strings to the final URL", async () => {
     const seen: string[] = [];
 
-    const api = defineApi({
+    const api = defineApi<HttpApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         seen.push(request.url);
@@ -17,16 +32,11 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: {
-            method: "GET",
-            query: {} as { limit?: number; active?: boolean },
-            response: type<User[]>(),
-          },
-          getByID: { method: "GET", path: "/:id", response: type<User>() },
+          getAll: { method: "GET" },
+          getByID: { method: "GET", path: "/:id" },
           getPost: {
             method: "GET",
             path: "/:userId/posts/:postId",
-            response: type<{ id: string }>(),
           },
         },
       },
@@ -44,7 +54,7 @@ describe("request execution", () => {
   });
 
   it("sends JSON bodies and shared headers", async () => {
-    const api = defineApi({
+    const api = defineApi<HttpApi>()({
       baseURL: "https://api.example.com",
       headers: { Accept: "application/json", "X-Client": "apixa" },
       transport: createFakeTransport((request) => {
@@ -60,7 +70,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          create: { method: "POST", body: type<Omit<User, "id">>(), response: type<User>() },
+          create: { method: "POST" },
         },
       },
     });
@@ -70,7 +80,7 @@ describe("request execution", () => {
   });
 
   it("returns unwrapped JSON data on success", async () => {
-    const api = defineApi({
+    const api = defineApi<HttpApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({
         body: { id: "1", name: "Ada", email: "ada@example.com" } satisfies User,
@@ -78,7 +88,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/:id", response: type<User>() },
+          getByID: { method: "GET", path: "/:id" },
         },
       },
     });
@@ -89,7 +99,7 @@ describe("request execution", () => {
   });
 
   it("throws HttpError for non-OK responses", async () => {
-    const api = defineApi({
+    const api = defineApi<HttpApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({
         status: 404,
@@ -98,7 +108,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/:id", response: type<User>() },
+          getByID: { method: "GET", path: "/:id" },
         },
       },
     });
@@ -126,7 +136,7 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { method: "GET", response: type<User[]>() },
+          getAll: { method: "GET" },
         },
       },
     });

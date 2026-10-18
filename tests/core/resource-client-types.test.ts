@@ -1,8 +1,23 @@
-import { defineApi, type } from "@apixa/core";
+import { defineApi } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
+
+type TypedUsersApi = {
+  users: {
+    path: string;
+    entity: User;
+    operations: {
+      search: {
+        method: "GET";
+        path: "/search";
+        query: { q: string };
+        response: User[];
+      };
+    };
+  };
+};
 
 describe("resource client TypeScript surface", () => {
   it("embeds builtin ops on a path-only resource", () => {
@@ -46,24 +61,22 @@ describe("resource client TypeScript surface", () => {
   });
 
   it("keeps custom ops alongside builtins with refined override signatures", () => {
-    const api = defineApi({
+    const api = defineApi<TypedUsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
       users: {
         path: "/users",
         operations: {
-          getAll: { response: type<User[]>() },
           search: {
             method: "GET",
             path: "/search",
-            query: {} as { q: string },
-            response: type<User[]>(),
           },
         },
       },
     });
 
     expectTypeOf(api.users.getAll).returns.toEqualTypeOf<Promise<User[]>>();
+    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
     expectTypeOf(api.users.getByID).toBeFunction();
     expectTypeOf(api.users.search).toBeFunction();
     expectTypeOf(api.users.search)

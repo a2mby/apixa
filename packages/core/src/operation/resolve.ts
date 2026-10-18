@@ -19,9 +19,7 @@ export function resolveOperation(
   }
 
   const relativePath = definition.path ?? defaults?.path ?? "";
-  const hasBody =
-    Object.prototype.hasOwnProperty.call(definition, "body") ||
-    (BODY_CONVENTIONS.has(name) && defaults !== undefined);
+  const hasBody = definition.hasBody ?? (BODY_CONVENTIONS.has(name) && defaults !== undefined);
 
   return {
     name,

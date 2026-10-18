@@ -1,12 +1,19 @@
-import { defineApi, type } from "@apixa/core";
+import { defineApi } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
 
+type UsersApi = {
+  users: {
+    path: string;
+    entity: User;
+  };
+};
+
 describe("defineApi", () => {
   it("exposes built-in operations when only a subset is typed in operations", async () => {
-    const api = defineApi({
+    const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({
         body: [{ id: "1", name: "Ada", email: "ada@example.com" }] satisfies User[],
@@ -14,9 +21,9 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { response: type<User[]>() },
-          getByID: { response: type<User>() },
-          create: { body: type<Omit<User, "id">>(), response: type<User>() },
+          getAll: {},
+          getByID: {},
+          create: {},
         },
       },
     });
@@ -40,7 +47,7 @@ describe("defineApi", () => {
   it("applies convention method and path defaults when they are omitted", async () => {
     const urls: string[] = [];
 
-    const api = defineApi({
+    const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         urls.push(`${request.method} ${request.url}`);
@@ -49,7 +56,7 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { response: type<User>() },
+          getByID: {},
         },
       },
     });
@@ -61,7 +68,7 @@ describe("defineApi", () => {
   it("lets a custom definition override a convention name", async () => {
     const urls: string[] = [];
 
-    const api = defineApi({
+    const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         urls.push(request.url);
@@ -70,7 +77,7 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/by-uuid/:id", response: type<User>() },
+          getByID: { method: "GET", path: "/by-uuid/:id" },
         },
       },
     });
@@ -80,7 +87,7 @@ describe("defineApi", () => {
   });
 
   it("infers argument and response types without casts at call sites", async () => {
-    const api = defineApi({
+    const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         if (request.method === "POST") {
@@ -93,13 +100,6 @@ describe("defineApi", () => {
       }),
       users: {
         path: "/users",
-        operations: {
-          getAll: { response: type<User[]>() },
-          getByID: { response: type<User>() },
-          create: { body: type<Omit<User, "id">>(), response: type<User>() },
-          update: { body: type<Partial<User>>(), response: type<User>() },
-          delete: { response: type<void>() },
-        },
       },
     });
 

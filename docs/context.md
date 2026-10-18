@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** [v0.3.0](../versions/v0.3.0/) — resource typing via `type<T>()`.
-> Previous: [v0.2.0](../versions/v0.2.0/) (shipped — default-first resource CRUD); [v0.1.0](../versions/v0.1.0/) (shipped — opt-in foundation).
+> **Current milestone:** [v0.4.0](../versions/v0.4.0/) — Zustand-style `defineApi<T>()` state typing.
+> Previous: [v0.3.0](../versions/v0.3.0/) (shipped — `type<T>()` markers, removed in v0.4.0); [v0.2.0](../versions/v0.2.0/) (shipped — default-first CRUD); [v0.1.0](../versions/v0.1.0/) (shipped — opt-in foundation).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity
@@ -70,31 +70,30 @@ Keep the initial core small and cohesive. Do not implement every future feature 
 
 ## 5. Intended Developer Experience
 
-**Implemented direction (v0.2.0 + v0.3.0):** a resource with `path` gets built-in CRUD; type payloads with `type<T>()`.
+**Implemented direction (v0.2.0 + v0.4.0):** a resource with `path` gets built-in CRUD; type payloads via resource-only `defineApi<AppApi>()({ … })`.
 
 ```ts
-import { defineApi, type } from "@apixa/core";
+import { defineApi } from "@apixa/core";
 
 type User = { id: string; name: string; email: string };
 
-const api = defineApi({
+type AppApi = {
+  users: { path: "/users"; entity: User };
+};
+
+const api = defineApi<AppApi>()({
   baseURL: "https://api.example.com",
-  users: {
-    path: "/users",
-    operations: {
-      getAll: { response: type<User[]>() },
-      getByID: { response: type<User>() },
-    },
-  },
+  headers: { Accept: "application/json" },
+  users: { path: "/users" },
 });
 
 const users = await api.users.getAll();
 const user = await api.users.getByID("123");
 ```
 
-Built-in operations: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). Optional `operations` merges overrides and custom endpoints; custom/explicit settings win over defaults. Use `type<T>()` for `body` / `response` — not `{} as T`.
+Built-in operations: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). `create` / `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). Root builtins (`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`) are typed by Core — not listed on `AppApi`. Optional runtime `operations` merges overrides and custom endpoints.
 
-**Planned later:** `crud<>()` preset, path-param template inference, `getBySlug` / `getByUUID` / `getBy`, runtime schema validation hooks.
+**Planned later:** `crud<>()` preset, path-param template inference, `idKey`, `getBySlug` / `getByUUID` / `getBy`, runtime schema validation hooks.
 
 Prefer clear semantics. For example, `update()` is a clearer default than an ambiguous operation such as `appendUser()`.
 

@@ -1,8 +1,34 @@
-import { defineApi, type } from "@apixa/core";
+import { defineApi } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
+
+type UsersWithSearchApi = {
+  users: {
+    path: string;
+    entity: User;
+    operations: {
+      search: {
+        method: "GET";
+        path: "/search";
+        query: { q: string };
+        response: User[];
+      };
+    };
+  };
+};
+
+type UsersWithOverridesApi = {
+  users: {
+    path: string;
+    entity: User;
+    operations: {
+      getAll: { path: "/active"; response: User[] };
+      update: { method: "PATCH"; body: Partial<User>; response: User };
+    };
+  };
+};
 
 describe("default-first operations", () => {
   it("exposes all built-in CRUD ops for a path-only resource", async () => {
@@ -57,7 +83,7 @@ describe("default-first operations", () => {
   it("keeps other builtins after a partial operation override", async () => {
     const calls: string[] = [];
 
-    const api = defineApi({
+    const api = defineApi<UsersWithOverridesApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         calls.push(`${request.method} ${request.url}`);
@@ -66,8 +92,8 @@ describe("default-first operations", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { path: "/active", response: type<User[]>() },
-          update: { method: "PATCH", body: type<Partial<User>>(), response: type<User>() },
+          getAll: { path: "/active" },
+          update: { method: "PATCH" },
         },
       },
     });
@@ -94,7 +120,7 @@ describe("default-first operations", () => {
   it("lets custom operations coexist with builtins", async () => {
     const calls: string[] = [];
 
-    const api = defineApi({
+    const api = defineApi<UsersWithSearchApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         calls.push(`${request.method} ${request.url}`);
@@ -106,8 +132,6 @@ describe("default-first operations", () => {
           search: {
             method: "GET",
             path: "/search",
-            query: {} as { q: string },
-            response: type<User[]>(),
           },
         },
       },
