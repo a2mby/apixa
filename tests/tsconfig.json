@@ -4,7 +4,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@apixa/core": ["../packages/core/src/index.ts"]
+      "@apixa/core": ["../packages/core/src/index.ts"],
+      "@apixa/mocking": ["../packages/mocking/src/index.ts"],
+      "@apixa/mocking/node": ["../packages/mocking/src/node.ts"]
     }
   },
   "include": ["./**/*.ts"]

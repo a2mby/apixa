@@ -23,7 +23,7 @@ Shipped: `defineApi()`, opt-in operations, type inference, Fetch transport, erro
 
 Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 
-## Current: v0.4.0 — State typing (`defineApi<T>()`)
+## Completed: v0.4.0 — State typing (`defineApi<T>()`)
 
 **Spec:** [versions/v0.4.0/](../versions/v0.4.0/)
 
@@ -31,16 +31,24 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Derived `create` / `update`; Core root builtins + `BuiltinHeaders`
 - Remove public `type()` / `Type` / `Infer`
 
-## Next: Reliability and developer experience (approx. v0.5.0)
+## Completed: v0.5.0 — Simple Mocking + remove backend
+
+**Spec:** [versions/v0.5.0/](../versions/v0.5.0/)
+
+- Local JSON datasets + metadata; lightweight on-demand registry
+- `@apixa/mocking` mock `Transport` (not coupled to Core production execution)
+- Remove FastAPI `backend/` and backend scripts
+- No website; future online catalog documented as planned only
+
+## Next: Reliability and developer experience (approx. v0.6.0)
 
 - Cancellation and `AbortSignal` as a first-class, documented surface
 - Timeouts and configurable retries
 - Middleware / interceptors as a stable public API
 - Optional schema validation hooks (without baking in a schema library)
-- Dedicated mocking package or utilities (not coupled to production execution)
 - Pagination, filtering, sorting, and search conventions
 
-## Later: Environment and integrations (approx. v0.5.0)
+## Later: Environment and integrations (approx. v0.6.0+)
 
 - Browser and server packages
 - Secure server-only configuration (secrets must not leak to browser bundles)

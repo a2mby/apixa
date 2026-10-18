@@ -1,0 +1,32 @@
+{
+  "id": "comments-mock",
+  "title": "Comments (synthetic)",
+  "description": "Deterministic comments with postId/userId FKs. Substitute for DummyJSON comments.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/comments",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "body",
+        "type": "string"
+      },
+      {
+        "name": "postId",
+        "type": "string"
+      },
+      {
+        "name": "userId",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 100
+}

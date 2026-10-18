@@ -1,0 +1,44 @@
+{
+  "id": "country-codes-iso",
+  "title": "Country codes (synthetic ISO-oriented)",
+  "description": "Original synthetic country code table derived from CSC slim fields — substitute for datasets/country-codes.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/country-codes",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "alpha2",
+        "type": "string"
+      },
+      {
+        "name": "alpha3",
+        "type": "string"
+      },
+      {
+        "name": "numeric",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "region",
+        "type": "string"
+      },
+      {
+        "name": "currency",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 250
+}

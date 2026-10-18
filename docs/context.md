@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** [v0.4.0](../versions/v0.4.0/) — Zustand-style `defineApi<T>()` state typing.
-> Previous: [v0.3.0](../versions/v0.3.0/) (shipped — `type<T>()` markers, removed in v0.4.0); [v0.2.0](../versions/v0.2.0/) (shipped — default-first CRUD); [v0.1.0](../versions/v0.1.0/) (shipped — opt-in foundation).
+> **Current milestone:** none open — last shipped [v0.5.0](../versions/v0.5.0/) (Simple Mocking + local datasets + remove backend).
+> Previous: [v0.4.0](../versions/v0.4.0/) (entity-only `defineApi<T>()`); [v0.3.0](../versions/v0.3.0/) (`type<T>()`, removed later); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity
@@ -160,13 +160,13 @@ The intended responsibilities are:
 - `transport-fetch`: Fetch transport implementation, if separation proves useful.
 - `client`: Browser-specific configuration and behavior.
 - `server`: Server-specific configuration and behavior.
-- `mocking`: Mock handlers, fixtures, and test utilities.
-- `tanstack-query`: Optional TanStack Query integration.
-- `openapi`: OpenAPI interoperability.
+- `mocking`: **Implemented (v0.5.0)** — local JSON datasets, registry, mock `Transport`.
+- `tanstack-query`: Optional TanStack Query integration (planned).
+- `openapi`: OpenAPI interoperability (planned).
 
-These are planned boundaries. Do not prematurely implement every package or introduce unnecessary cross-package dependencies.
+Do not prematurely implement remaining packages or introduce unnecessary cross-package dependencies.
 
-Start with Core and establish its public API before building integrations.
+Local fixtures live under `datasets/`. A future online catalog is planned only.
 
 ## 8. Possible Core Source Structure
 

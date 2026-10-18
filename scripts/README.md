@@ -1,18 +1,10 @@
 # Scripts
 
-Platform helpers for the FastAPI backend and frontend examples.
-
-## Backend
-
-| Platform | Start                            | Stop                              | Restart                              |
-| -------- | -------------------------------- | --------------------------------- | ------------------------------------ |
-| macOS    | `./scripts/macos/run-backend.sh` | `./scripts/macos/stop-backend.sh` | `./scripts/macos/restart-backend.sh` |
-| Linux    | `./scripts/linux/run-backend.sh` | `./scripts/linux/stop-backend.sh` | `./scripts/linux/restart-backend.sh` |
-| Windows  | `scripts\win\run-backend.bat`    | `scripts\win\stop-backend.bat`    | `scripts\win\restart-backend.bat`    |
+Platform helpers for frontend examples. Examples use `@apixa/mocking` (local JSON datasets) — no separate API server to start.
 
 ## Frontends
 
-Each script builds `@apixa/core`, then starts that example. Start the backend first.
+Each script builds `@apixa/core` (and `@apixa/mocking` when needed), then starts that example.
 
 | Example               | macOS                                          | Linux                                          | Windows                                     | URL / notes           |
 | --------------------- | ---------------------------------------------- | ---------------------------------------------- | ------------------------------------------- | --------------------- |

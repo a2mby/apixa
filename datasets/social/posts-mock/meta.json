@@ -1,0 +1,36 @@
+{
+  "id": "posts-mock",
+  "title": "Posts (synthetic)",
+  "description": "Deterministic posts with userId FK. Substitute for DummyJSON posts.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/posts",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "body",
+        "type": "string"
+      },
+      {
+        "name": "userId",
+        "type": "string"
+      },
+      {
+        "name": "tags",
+        "type": "array"
+      }
+    ]
+  },
+  "records": 100
+}

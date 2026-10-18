@@ -1,0 +1,40 @@
+{
+  "id": "counties-parseapi",
+  "title": "US Counties (parseapi)",
+  "description": "Imported from parseapi/lists counties/counties.json",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/counties",
+    "idField": "name"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "country",
+        "type": "string"
+      },
+      {
+        "name": "state",
+        "type": "string"
+      },
+      {
+        "name": "district",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "type",
+        "type": "string"
+      },
+      {
+        "name": "population",
+        "type": "number"
+      }
+    ]
+  },
+  "records": 3572
+}

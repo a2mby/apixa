@@ -1,5 +1,5 @@
 @echo off
-REM Shared helper: build Core, then start an examples/* frontend package.
+REM Shared helper: build Core (+ mocking), then start an examples/* frontend package.
 REM Usage: run-frontend.bat <pnpm-filter> <label> [url-hint] [script]
 setlocal EnableExtensions
 
@@ -31,10 +31,13 @@ echo Building @apixa/core...
 call pnpm --filter @apixa/core build
 if errorlevel 1 exit /b 1
 
+echo Building @apixa/mocking...
+call pnpm --filter @apixa/mocking build
+if errorlevel 1 exit /b 1
+
 echo.
 echo Starting %LABEL%...
 if not "%HINT%"=="" echo Open -^> %HINT%
-echo Tip: start the API first with scripts\win\run-backend.bat
 echo.
 
 call pnpm --filter "%FILTER%" "%SCRIPT%"

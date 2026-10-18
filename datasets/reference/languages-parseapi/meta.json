@@ -1,0 +1,44 @@
+{
+  "id": "languages-parseapi",
+  "title": "Languages (parseapi)",
+  "description": "Imported from parseapi/lists languages/languages.json",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/languages",
+    "idField": "language"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "language",
+        "type": "string"
+      },
+      {
+        "name": "iso3",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "name_local",
+        "type": "string"
+      },
+      {
+        "name": "script",
+        "type": "string"
+      },
+      {
+        "name": "direction",
+        "type": "string"
+      },
+      {
+        "name": "countries",
+        "type": "array"
+      }
+    ]
+  },
+  "records": 224
+}

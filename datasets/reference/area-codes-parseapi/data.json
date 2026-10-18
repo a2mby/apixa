@@ -1,0 +1,2546 @@
+[
+  {
+    "area_code": "201",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "202",
+    "country": "US",
+    "state": "DC",
+    "state_name": "District of Columbia"
+  },
+  {
+    "area_code": "203",
+    "country": "US",
+    "state": "CT",
+    "state_name": "Connecticut"
+  },
+  {
+    "area_code": "204",
+    "country": "CA",
+    "state": "MB",
+    "state_name": "Manitoba"
+  },
+  {
+    "area_code": "205",
+    "country": "US",
+    "state": "AL",
+    "state_name": "Alabama"
+  },
+  {
+    "area_code": "206",
+    "country": "US",
+    "state": "WA",
+    "state_name": "Washington"
+  },
+  {
+    "area_code": "207",
+    "country": "US",
+    "state": "ME",
+    "state_name": "Maine"
+  },
+  {
+    "area_code": "208",
+    "country": "US",
+    "state": "ID",
+    "state_name": "Idaho"
+  },
+  {
+    "area_code": "209",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "210",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "212",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "213",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "214",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "215",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "216",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "217",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "218",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "219",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "220",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "223",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "224",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "225",
+    "country": "US",
+    "state": "LA",
+    "state_name": "Louisiana"
+  },
+  {
+    "area_code": "226",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "227",
+    "country": "US",
+    "state": "MD",
+    "state_name": "Maryland"
+  },
+  {
+    "area_code": "228",
+    "country": "US",
+    "state": "MS",
+    "state_name": "Mississippi"
+  },
+  {
+    "area_code": "229",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "231",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "234",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "235",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "236",
+    "country": "CA",
+    "state": "BC",
+    "state_name": "British Columbia"
+  },
+  {
+    "area_code": "239",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "240",
+    "country": "US",
+    "state": "MD",
+    "state_name": "Maryland"
+  },
+  {
+    "area_code": "248",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "249",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "250",
+    "country": "CA",
+    "state": "BC",
+    "state_name": "British Columbia"
+  },
+  {
+    "area_code": "251",
+    "country": "US",
+    "state": "AL",
+    "state_name": "Alabama"
+  },
+  {
+    "area_code": "252",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "253",
+    "country": "US",
+    "state": "WA",
+    "state_name": "Washington"
+  },
+  {
+    "area_code": "254",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "256",
+    "country": "US",
+    "state": "AL",
+    "state_name": "Alabama"
+  },
+  {
+    "area_code": "257",
+    "country": "CA",
+    "state": "BC",
+    "state_name": "British Columbia"
+  },
+  {
+    "area_code": "260",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "262",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "263",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "267",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "269",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "270",
+    "country": "US",
+    "state": "KY",
+    "state_name": "Kentucky"
+  },
+  {
+    "area_code": "272",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "274",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "276",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "279",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "281",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "283",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "289",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "301",
+    "country": "US",
+    "state": "MD",
+    "state_name": "Maryland"
+  },
+  {
+    "area_code": "302",
+    "country": "US",
+    "state": "DE",
+    "state_name": "Delaware"
+  },
+  {
+    "area_code": "303",
+    "country": "US",
+    "state": "CO",
+    "state_name": "Colorado"
+  },
+  {
+    "area_code": "304",
+    "country": "US",
+    "state": "WV",
+    "state_name": "West Virginia"
+  },
+  {
+    "area_code": "305",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "306",
+    "country": "CA",
+    "state": "SK",
+    "state_name": "Saskatchewan"
+  },
+  {
+    "area_code": "307",
+    "country": "US",
+    "state": "WY",
+    "state_name": "Wyoming"
+  },
+  {
+    "area_code": "308",
+    "country": "US",
+    "state": "NE",
+    "state_name": "Nebraska"
+  },
+  {
+    "area_code": "309",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "310",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "312",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "313",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "314",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "315",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "316",
+    "country": "US",
+    "state": "KS",
+    "state_name": "Kansas"
+  },
+  {
+    "area_code": "317",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "318",
+    "country": "US",
+    "state": "LA",
+    "state_name": "Louisiana"
+  },
+  {
+    "area_code": "319",
+    "country": "US",
+    "state": "IA",
+    "state_name": "Iowa"
+  },
+  {
+    "area_code": "320",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "321",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "323",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "324",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "325",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "326",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "327",
+    "country": "US",
+    "state": "AR",
+    "state_name": "Arkansas"
+  },
+  {
+    "area_code": "329",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "330",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "331",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "332",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "334",
+    "country": "US",
+    "state": "AL",
+    "state_name": "Alabama"
+  },
+  {
+    "area_code": "336",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "337",
+    "country": "US",
+    "state": "LA",
+    "state_name": "Louisiana"
+  },
+  {
+    "area_code": "339",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "341",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "343",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "346",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "347",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "350",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "351",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "352",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "353",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "354",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "357",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "360",
+    "country": "US",
+    "state": "WA",
+    "state_name": "Washington"
+  },
+  {
+    "area_code": "361",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "363",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "364",
+    "country": "US",
+    "state": "KY",
+    "state_name": "Kentucky"
+  },
+  {
+    "area_code": "365",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "367",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "368",
+    "country": "CA",
+    "state": "AB",
+    "state_name": "Alberta"
+  },
+  {
+    "area_code": "369",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "380",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "382",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "385",
+    "country": "US",
+    "state": "UT",
+    "state_name": "Utah"
+  },
+  {
+    "area_code": "386",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "401",
+    "country": "US",
+    "state": "RI",
+    "state_name": "Rhode Island"
+  },
+  {
+    "area_code": "402",
+    "country": "US",
+    "state": "NE",
+    "state_name": "Nebraska"
+  },
+  {
+    "area_code": "403",
+    "country": "CA",
+    "state": "AB",
+    "state_name": "Alberta"
+  },
+  {
+    "area_code": "404",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "405",
+    "country": "US",
+    "state": "OK",
+    "state_name": "Oklahoma"
+  },
+  {
+    "area_code": "406",
+    "country": "US",
+    "state": "MT",
+    "state_name": "Montana"
+  },
+  {
+    "area_code": "407",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "408",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "409",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "410",
+    "country": "US",
+    "state": "MD",
+    "state_name": "Maryland"
+  },
+  {
+    "area_code": "412",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "413",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "414",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "415",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "416",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "417",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "418",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "419",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "423",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "424",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "425",
+    "country": "US",
+    "state": "WA",
+    "state_name": "Washington"
+  },
+  {
+    "area_code": "428",
+    "country": "CA",
+    "state": "NB",
+    "state_name": "New Brunswick"
+  },
+  {
+    "area_code": "430",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "431",
+    "country": "CA",
+    "state": "MB",
+    "state_name": "Manitoba"
+  },
+  {
+    "area_code": "432",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "434",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "435",
+    "country": "US",
+    "state": "UT",
+    "state_name": "Utah"
+  },
+  {
+    "area_code": "436",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "437",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "438",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "440",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "442",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "443",
+    "country": "US",
+    "state": "MD",
+    "state_name": "Maryland"
+  },
+  {
+    "area_code": "445",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "447",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "448",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "450",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "457",
+    "country": "US",
+    "state": "LA",
+    "state_name": "Louisiana"
+  },
+  {
+    "area_code": "458",
+    "country": "US",
+    "state": "OR",
+    "state_name": "Oregon"
+  },
+  {
+    "area_code": "463",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "464",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "465",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "468",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "469",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "470",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "471",
+    "country": "US",
+    "state": "MS",
+    "state_name": "Mississippi"
+  },
+  {
+    "area_code": "472",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "474",
+    "country": "CA",
+    "state": "SK",
+    "state_name": "Saskatchewan"
+  },
+  {
+    "area_code": "475",
+    "country": "US",
+    "state": "CT",
+    "state_name": "Connecticut"
+  },
+  {
+    "area_code": "478",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "479",
+    "country": "US",
+    "state": "AR",
+    "state_name": "Arkansas"
+  },
+  {
+    "area_code": "480",
+    "country": "US",
+    "state": "AZ",
+    "state_name": "Arizona"
+  },
+  {
+    "area_code": "483",
+    "country": "US",
+    "state": "AL",
+    "state_name": "Alabama"
+  },
+  {
+    "area_code": "484",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "501",
+    "country": "US",
+    "state": "AR",
+    "state_name": "Arkansas"
+  },
+  {
+    "area_code": "502",
+    "country": "US",
+    "state": "KY",
+    "state_name": "Kentucky"
+  },
+  {
+    "area_code": "503",
+    "country": "US",
+    "state": "OR",
+    "state_name": "Oregon"
+  },
+  {
+    "area_code": "504",
+    "country": "US",
+    "state": "LA",
+    "state_name": "Louisiana"
+  },
+  {
+    "area_code": "505",
+    "country": "US",
+    "state": "NM",
+    "state_name": "New Mexico"
+  },
+  {
+    "area_code": "506",
+    "country": "CA",
+    "state": "NB",
+    "state_name": "New Brunswick"
+  },
+  {
+    "area_code": "507",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "508",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "509",
+    "country": "US",
+    "state": "WA",
+    "state_name": "Washington"
+  },
+  {
+    "area_code": "510",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "512",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "513",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "514",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "515",
+    "country": "US",
+    "state": "IA",
+    "state_name": "Iowa"
+  },
+  {
+    "area_code": "516",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "517",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "518",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "519",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "520",
+    "country": "US",
+    "state": "AZ",
+    "state_name": "Arizona"
+  },
+  {
+    "area_code": "530",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "531",
+    "country": "US",
+    "state": "NE",
+    "state_name": "Nebraska"
+  },
+  {
+    "area_code": "534",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "539",
+    "country": "US",
+    "state": "OK",
+    "state_name": "Oklahoma"
+  },
+  {
+    "area_code": "540",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "541",
+    "country": "US",
+    "state": "OR",
+    "state_name": "Oregon"
+  },
+  {
+    "area_code": "548",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "551",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "557",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "559",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "561",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "562",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "563",
+    "country": "US",
+    "state": "IA",
+    "state_name": "Iowa"
+  },
+  {
+    "area_code": "564",
+    "country": "US",
+    "state": "WA",
+    "state_name": "Washington"
+  },
+  {
+    "area_code": "567",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "570",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "571",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "572",
+    "country": "US",
+    "state": "OK",
+    "state_name": "Oklahoma"
+  },
+  {
+    "area_code": "573",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "574",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "575",
+    "country": "US",
+    "state": "NM",
+    "state_name": "New Mexico"
+  },
+  {
+    "area_code": "579",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "580",
+    "country": "US",
+    "state": "OK",
+    "state_name": "Oklahoma"
+  },
+  {
+    "area_code": "581",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "582",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "584",
+    "country": "CA",
+    "state": "MB",
+    "state_name": "Manitoba"
+  },
+  {
+    "area_code": "585",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "586",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "587",
+    "country": "CA",
+    "state": "AB",
+    "state_name": "Alberta"
+  },
+  {
+    "area_code": "601",
+    "country": "US",
+    "state": "MS",
+    "state_name": "Mississippi"
+  },
+  {
+    "area_code": "602",
+    "country": "US",
+    "state": "AZ",
+    "state_name": "Arizona"
+  },
+  {
+    "area_code": "603",
+    "country": "US",
+    "state": "NH",
+    "state_name": "New Hampshire"
+  },
+  {
+    "area_code": "604",
+    "country": "CA",
+    "state": "BC",
+    "state_name": "British Columbia"
+  },
+  {
+    "area_code": "605",
+    "country": "US",
+    "state": "SD",
+    "state_name": "South Dakota"
+  },
+  {
+    "area_code": "606",
+    "country": "US",
+    "state": "KY",
+    "state_name": "Kentucky"
+  },
+  {
+    "area_code": "607",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "608",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "609",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "610",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "612",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "613",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "614",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "615",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "616",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "617",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "618",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "619",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "620",
+    "country": "US",
+    "state": "KS",
+    "state_name": "Kansas"
+  },
+  {
+    "area_code": "621",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "623",
+    "country": "US",
+    "state": "AZ",
+    "state_name": "Arizona"
+  },
+  {
+    "area_code": "624",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "626",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "628",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "629",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "630",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "631",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "636",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "639",
+    "country": "CA",
+    "state": "SK",
+    "state_name": "Saskatchewan"
+  },
+  {
+    "area_code": "640",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "641",
+    "country": "US",
+    "state": "IA",
+    "state_name": "Iowa"
+  },
+  {
+    "area_code": "645",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "646",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "647",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "650",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "651",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "656",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "657",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "659",
+    "country": "US",
+    "state": "AL",
+    "state_name": "Alabama"
+  },
+  {
+    "area_code": "660",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "661",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "662",
+    "country": "US",
+    "state": "MS",
+    "state_name": "Mississippi"
+  },
+  {
+    "area_code": "667",
+    "country": "US",
+    "state": "MD",
+    "state_name": "Maryland"
+  },
+  {
+    "area_code": "669",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "672",
+    "country": "CA",
+    "state": "BC",
+    "state_name": "British Columbia"
+  },
+  {
+    "area_code": "678",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "679",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "680",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "681",
+    "country": "US",
+    "state": "WV",
+    "state_name": "West Virginia"
+  },
+  {
+    "area_code": "682",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "683",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "686",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "689",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "701",
+    "country": "US",
+    "state": "ND",
+    "state_name": "North Dakota"
+  },
+  {
+    "area_code": "702",
+    "country": "US",
+    "state": "NV",
+    "state_name": "Nevada"
+  },
+  {
+    "area_code": "703",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "704",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "705",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "706",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "707",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "708",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "709",
+    "country": "CA",
+    "state": "NL",
+    "state_name": "Newfoundland and Labrador"
+  },
+  {
+    "area_code": "712",
+    "country": "US",
+    "state": "IA",
+    "state_name": "Iowa"
+  },
+  {
+    "area_code": "713",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "714",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "715",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "716",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "717",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "718",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "719",
+    "country": "US",
+    "state": "CO",
+    "state_name": "Colorado"
+  },
+  {
+    "area_code": "720",
+    "country": "US",
+    "state": "CO",
+    "state_name": "Colorado"
+  },
+  {
+    "area_code": "724",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "725",
+    "country": "US",
+    "state": "NV",
+    "state_name": "Nevada"
+  },
+  {
+    "area_code": "726",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "727",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "728",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "729",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "730",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "731",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "732",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "734",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "737",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "738",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "740",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "742",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "743",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "747",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "748",
+    "country": "US",
+    "state": "CO",
+    "state_name": "Colorado"
+  },
+  {
+    "area_code": "753",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "754",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "757",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "760",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "762",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "763",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "765",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "769",
+    "country": "US",
+    "state": "MS",
+    "state_name": "Mississippi"
+  },
+  {
+    "area_code": "770",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "771",
+    "country": "US",
+    "state": "DC",
+    "state_name": "District of Columbia"
+  },
+  {
+    "area_code": "772",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "773",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "774",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "775",
+    "country": "US",
+    "state": "NV",
+    "state_name": "Nevada"
+  },
+  {
+    "area_code": "778",
+    "country": "CA",
+    "state": "BC",
+    "state_name": "British Columbia"
+  },
+  {
+    "area_code": "779",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "780",
+    "country": "CA",
+    "state": "AB",
+    "state_name": "Alberta"
+  },
+  {
+    "area_code": "781",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "785",
+    "country": "US",
+    "state": "KS",
+    "state_name": "Kansas"
+  },
+  {
+    "area_code": "786",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "801",
+    "country": "US",
+    "state": "UT",
+    "state_name": "Utah"
+  },
+  {
+    "area_code": "802",
+    "country": "US",
+    "state": "VT",
+    "state_name": "Vermont"
+  },
+  {
+    "area_code": "803",
+    "country": "US",
+    "state": "SC",
+    "state_name": "South Carolina"
+  },
+  {
+    "area_code": "804",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "805",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "806",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "807",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "808",
+    "country": "US",
+    "state": "HI",
+    "state_name": "Hawaii"
+  },
+  {
+    "area_code": "810",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "812",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "813",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "814",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "815",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "816",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "817",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "818",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "819",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "820",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "821",
+    "country": "US",
+    "state": "SC",
+    "state_name": "South Carolina"
+  },
+  {
+    "area_code": "825",
+    "country": "CA",
+    "state": "AB",
+    "state_name": "Alberta"
+  },
+  {
+    "area_code": "826",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "828",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "830",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "831",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "832",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "835",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "837",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "838",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "839",
+    "country": "US",
+    "state": "SC",
+    "state_name": "South Carolina"
+  },
+  {
+    "area_code": "840",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "843",
+    "country": "US",
+    "state": "SC",
+    "state_name": "South Carolina"
+  },
+  {
+    "area_code": "845",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "847",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "848",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "850",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "854",
+    "country": "US",
+    "state": "SC",
+    "state_name": "South Carolina"
+  },
+  {
+    "area_code": "856",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "857",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "858",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "859",
+    "country": "US",
+    "state": "KY",
+    "state_name": "Kentucky"
+  },
+  {
+    "area_code": "860",
+    "country": "US",
+    "state": "CT",
+    "state_name": "Connecticut"
+  },
+  {
+    "area_code": "861",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "862",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "863",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "864",
+    "country": "US",
+    "state": "SC",
+    "state_name": "South Carolina"
+  },
+  {
+    "area_code": "865",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "870",
+    "country": "US",
+    "state": "AR",
+    "state_name": "Arkansas"
+  },
+  {
+    "area_code": "872",
+    "country": "US",
+    "state": "IL",
+    "state_name": "Illinois"
+  },
+  {
+    "area_code": "873",
+    "country": "CA",
+    "state": "QC",
+    "state_name": "Quebec"
+  },
+  {
+    "area_code": "878",
+    "country": "US",
+    "state": "PA",
+    "state_name": "Pennsylvania"
+  },
+  {
+    "area_code": "879",
+    "country": "CA",
+    "state": "NL",
+    "state_name": "Newfoundland and Labrador"
+  },
+  {
+    "area_code": "901",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "903",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "904",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "905",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "906",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "907",
+    "country": "US",
+    "state": "AK",
+    "state_name": "Alaska"
+  },
+  {
+    "area_code": "908",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "909",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "910",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "912",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "913",
+    "country": "US",
+    "state": "KS",
+    "state_name": "Kansas"
+  },
+  {
+    "area_code": "914",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "915",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "916",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "917",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "918",
+    "country": "US",
+    "state": "OK",
+    "state_name": "Oklahoma"
+  },
+  {
+    "area_code": "919",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "920",
+    "country": "US",
+    "state": "WI",
+    "state_name": "Wisconsin"
+  },
+  {
+    "area_code": "924",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "925",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "928",
+    "country": "US",
+    "state": "AZ",
+    "state_name": "Arizona"
+  },
+  {
+    "area_code": "929",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "930",
+    "country": "US",
+    "state": "IN",
+    "state_name": "Indiana"
+  },
+  {
+    "area_code": "931",
+    "country": "US",
+    "state": "TN",
+    "state_name": "Tennessee"
+  },
+  {
+    "area_code": "934",
+    "country": "US",
+    "state": "NY",
+    "state_name": "New York"
+  },
+  {
+    "area_code": "936",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "937",
+    "country": "US",
+    "state": "OH",
+    "state_name": "Ohio"
+  },
+  {
+    "area_code": "938",
+    "country": "US",
+    "state": "AL",
+    "state_name": "Alabama"
+  },
+  {
+    "area_code": "940",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "941",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "942",
+    "country": "CA",
+    "state": "ON",
+    "state_name": "Ontario"
+  },
+  {
+    "area_code": "943",
+    "country": "US",
+    "state": "GA",
+    "state_name": "Georgia"
+  },
+  {
+    "area_code": "945",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "947",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  },
+  {
+    "area_code": "948",
+    "country": "US",
+    "state": "VA",
+    "state_name": "Virginia"
+  },
+  {
+    "area_code": "949",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "951",
+    "country": "US",
+    "state": "CA",
+    "state_name": "California"
+  },
+  {
+    "area_code": "952",
+    "country": "US",
+    "state": "MN",
+    "state_name": "Minnesota"
+  },
+  {
+    "area_code": "954",
+    "country": "US",
+    "state": "FL",
+    "state_name": "Florida"
+  },
+  {
+    "area_code": "956",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "959",
+    "country": "US",
+    "state": "CT",
+    "state_name": "Connecticut"
+  },
+  {
+    "area_code": "970",
+    "country": "US",
+    "state": "CO",
+    "state_name": "Colorado"
+  },
+  {
+    "area_code": "971",
+    "country": "US",
+    "state": "OR",
+    "state_name": "Oregon"
+  },
+  {
+    "area_code": "972",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "973",
+    "country": "US",
+    "state": "NJ",
+    "state_name": "New Jersey"
+  },
+  {
+    "area_code": "975",
+    "country": "US",
+    "state": "MO",
+    "state_name": "Missouri"
+  },
+  {
+    "area_code": "978",
+    "country": "US",
+    "state": "MA",
+    "state_name": "Massachusetts"
+  },
+  {
+    "area_code": "979",
+    "country": "US",
+    "state": "TX",
+    "state_name": "Texas"
+  },
+  {
+    "area_code": "980",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "983",
+    "country": "US",
+    "state": "CO",
+    "state_name": "Colorado"
+  },
+  {
+    "area_code": "984",
+    "country": "US",
+    "state": "NC",
+    "state_name": "North Carolina"
+  },
+  {
+    "area_code": "985",
+    "country": "US",
+    "state": "LA",
+    "state_name": "Louisiana"
+  },
+  {
+    "area_code": "986",
+    "country": "US",
+    "state": "ID",
+    "state_name": "Idaho"
+  },
+  {
+    "area_code": "989",
+    "country": "US",
+    "state": "MI",
+    "state_name": "Michigan"
+  }
+]

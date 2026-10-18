@@ -1,0 +1,36 @@
+{
+  "id": "users-mock",
+  "title": "Users (synthetic)",
+  "description": "Deterministic synthetic users (seed 230523). Substitute for DummyJSON users.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/users",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "name": "username",
+        "type": "string"
+      },
+      {
+        "name": "companyId",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 100
+}

@@ -1,0 +1,44 @@
+{
+  "id": "products-mock",
+  "title": "Products (synthetic)",
+  "description": "Deterministic synthetic products. Substitute for DummyJSON products.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/products",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "price",
+        "type": "number"
+      },
+      {
+        "name": "brand",
+        "type": "string"
+      },
+      {
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "name": "stock",
+        "type": "number"
+      }
+    ]
+  },
+  "records": 100
+}

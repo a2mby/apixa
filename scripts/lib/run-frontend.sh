@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared helper: build Core, then start an examples/* frontend package.
+# Shared helper: build Core (+ mocking), then start an examples/* frontend package.
 # Usage: run-frontend.sh <pnpm-filter> <label> [url-hint] [script=dev]
 set -euo pipefail
 
@@ -19,12 +19,14 @@ fi
 echo "Building @apixa/core…"
 pnpm --filter @apixa/core build
 
+echo "Building @apixa/mocking…"
+pnpm --filter @apixa/mocking build
+
 echo ""
 echo "Starting ${LABEL}…"
 if [[ -n "${HINT}" ]]; then
   echo "Open → ${HINT}"
 fi
-echo "Tip: start the API first with scripts/<platform>/run-backend.sh"
 echo ""
 
 pnpm --filter "${FILTER}" "${SCRIPT}"

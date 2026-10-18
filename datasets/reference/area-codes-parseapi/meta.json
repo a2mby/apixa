@@ -1,0 +1,32 @@
+{
+  "id": "area-codes-parseapi",
+  "title": "US Area codes (parseapi)",
+  "description": "Imported from parseapi/lists area-codes/area-codes.json",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/area-codes",
+    "idField": "area_code"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "area_code",
+        "type": "string"
+      },
+      {
+        "name": "country",
+        "type": "string"
+      },
+      {
+        "name": "state",
+        "type": "string"
+      },
+      {
+        "name": "state_name",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 424
+}

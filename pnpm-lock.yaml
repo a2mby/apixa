@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@faker-js/faker':
+        specifier: '9'
+        version: 9.9.0
       prettier:
         specifier: ^3.9.10
         version: 3.9.10
@@ -69,6 +72,9 @@ importers:
       '@apixa/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@apixa/mocking':
+        specifier: workspace:*
+        version: link:../../packages/mocking
     devDependencies:
       '@types/node':
         specifier: ^22.13.10
@@ -85,6 +91,9 @@ importers:
       '@apixa/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@apixa/mocking':
+        specifier: workspace:*
+        version: link:../../packages/mocking
       '@tanstack/react-query':
         specifier: ^5.104.4
         version: 5.104.4(@types/react@19.3.0)(react@19.3.0)
@@ -210,6 +219,22 @@ importers:
       typescript:
         specifier: ^5.8.2
         version: 5.9.3
+
+  packages/mocking:
+    dependencies:
+      '@apixa/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.20.5
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.29)(tsx@4.23.15)(typescript@5.8.3)
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.3
 
 packages:
 
@@ -1795,6 +1820,10 @@ packages:
   '@expo/xcpretty@4.4.6':
     resolution: {integrity: sha512-uRaZZ/IsX1WkFW69xxTZtMeRvI5ziD9yoian+FMqdhITkU6NGvIWd5uRMh2Gbo/6xstpQ4v0GtF1V5YatTwzDA==}
     hasBin: true
+
+  '@faker-js/faker@9.9.0':
+    resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
+    engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -8101,6 +8130,8 @@ snapshots:
       chalk: 4.1.2
       js-yaml: 4.3.2
 
+  '@faker-js/faker@9.9.0': {}
+
   '@img/colour@1.1.0':
     optional: true
 
@@ -12496,6 +12527,34 @@ snapshots:
   ts-interface-checker@0.1.13: {}
 
   tslib@2.8.1: {}
+
+  tsup@8.5.1(postcss@8.5.29)(tsx@4.23.15)(typescript@5.8.3):
+    dependencies:
+      bundle-require: 5.1.0(esbuild@0.27.7)
+      cac: 6.7.14
+      chokidar: 4.0.3
+      consola: 3.4.2
+      debug: 4.4.3
+      esbuild: 0.27.7
+      fix-dts-default-cjs-exports: 1.0.1
+      joycon: 3.1.1
+      picocolors: 1.1.1
+      postcss-load-config: 6.0.1(postcss@8.5.29)(tsx@4.23.15)
+      resolve-from: 5.0.0
+      rollup: 4.64.0
+      source-map: 0.7.6
+      sucrase: 3.35.1
+      tinyexec: 0.3.2
+      tinyglobby: 0.2.17
+      tree-kill: 1.2.2
+    optionalDependencies:
+      postcss: 8.5.29
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - jiti
+      - supports-color
+      - tsx
+      - yaml
 
   tsup@8.5.1(postcss@8.5.29)(tsx@4.23.15)(typescript@5.9.3):
     dependencies:

@@ -2,6 +2,22 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Land v0.5.0 Simple Mocking and dataset collection (#23)
+
+Shipped `@apixa/mocking` (browser-safe transport + `@apixa/mocking/node` loaders), removed FastAPI `backend/` and backend scripts, and filled root `datasets/` with domain folders, `manifest.json` provenance, and `ATTRIBUTION.md`. Imported CC0/ODbL geography/reference sets; generated deterministic synthetics (Faker seed `230523`) where redistribution was unclear. Core production Fetch path unchanged; online catalog remains planned only.
+
+## 2026-10-18 — Expand local mock dataset collection (#23)
+
+Filled root `datasets/` with domain folders (`geography`, `reference`, `users`, `companies`, `products`, `orders`, `social`, `comments`), `manifest.json` provenance, and `ATTRIBUTION.md`. Imported CC0 parseapi lists + ODbL CSC/mledoze (cities capped to capitals). Skipped unclear/restricted sources (DummyJSON, country-codes combo, catalog sites); substituted deterministic Faker/PRNG synthetics (seed `230523`). Registry walks nested folders. Build script: `pnpm datasets:build`.
+
+## 2026-10-18 — Land v0.5.0 Simple Mocking
+
+Shipped `@apixa/mocking` (`loadDataset`, `listDatasets`, `createMockTransport`), root `datasets/users-sample`, Next + basic examples on mock transport, and removed FastAPI `backend/` plus backend run scripts. Core production Fetch path unchanged (no Core `mocks` API). Online catalog remains planned only.
+
+## 2026-10-18 — Start v0.5.0 Simple Mocking
+
+Opened [`versions/v0.5.0/`](../versions/v0.5.0/) for local JSON datasets, an `@apixa/mocking` registry + mock `Transport`, and removal of the FastAPI `backend/`. No website or hosted catalog in this milestone. Contract and pointers only — no mocking implementation in this kickoff.
+
 ## 2026-10-18 — Land v0.4.0 entity-only `defineApi<T>()` state typing
 
 Replaced branded `type<T>()` markers with a resource-only Zustand-style state: `defineApi<AppApi>()({ … })` where `AppApi` declares `path` + `entity`. Core derives `create` / `update` (`Omit` / `Partial` on `"id"`), types root builtins separately, and adds `BuiltinHeaders`. `type` / `Type` / `Infer` are removed from `@apixa/core`.

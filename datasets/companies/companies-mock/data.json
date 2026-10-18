@@ -1,0 +1,242 @@
+[
+  {
+    "id": "1",
+    "name": "Kreiger - Funk",
+    "catchPhrase": "Programmable logistical productivity",
+    "countryCode": "QA"
+  },
+  {
+    "id": "2",
+    "name": "VonRueden, Beier and Vandervort",
+    "catchPhrase": "Fully-configurable transitional matrix",
+    "countryCode": "DE"
+  },
+  {
+    "id": "3",
+    "name": "Koss, Feeney and Bednar",
+    "catchPhrase": "Balanced bifurcated neural-net",
+    "countryCode": "JM"
+  },
+  {
+    "id": "4",
+    "name": "Bergstrom, O'Reilly and Adams",
+    "catchPhrase": "Decentralized mobile algorithm",
+    "countryCode": "LR"
+  },
+  {
+    "id": "5",
+    "name": "Kunze LLC",
+    "catchPhrase": "Focused asymmetric analyzer",
+    "countryCode": "CD"
+  },
+  {
+    "id": "6",
+    "name": "O'Keefe and Sons",
+    "catchPhrase": "Self-enabling analyzing time-frame",
+    "countryCode": "BA"
+  },
+  {
+    "id": "7",
+    "name": "Kuphal, DuBuque and Harber",
+    "catchPhrase": "Customer-focused local knowledge base",
+    "countryCode": "MA"
+  },
+  {
+    "id": "8",
+    "name": "Towne - Turner",
+    "catchPhrase": "Programmable static function",
+    "countryCode": "AR"
+  },
+  {
+    "id": "9",
+    "name": "Ernser, Casper and Willms",
+    "catchPhrase": "Balanced fault-tolerant support",
+    "countryCode": "CL"
+  },
+  {
+    "id": "10",
+    "name": "Schiller, Schimmel and Hackett",
+    "catchPhrase": "Innovative cloud-native internet solution",
+    "countryCode": "SX"
+  },
+  {
+    "id": "11",
+    "name": "Gulgowski Inc",
+    "catchPhrase": "Automated attitude-oriented framework",
+    "countryCode": "PS"
+  },
+  {
+    "id": "12",
+    "name": "Goldner, Pfannerstill and Tremblay",
+    "catchPhrase": "AI-driven intangible emulation",
+    "countryCode": "RO"
+  },
+  {
+    "id": "13",
+    "name": "Waters Group",
+    "catchPhrase": "Programmable motivating approach",
+    "countryCode": "BB"
+  },
+  {
+    "id": "14",
+    "name": "Johnston - Bode",
+    "catchPhrase": "Reverse-engineered zero trust workforce",
+    "countryCode": "PY"
+  },
+  {
+    "id": "15",
+    "name": "Predovic, Wolf and Kuphal",
+    "catchPhrase": "Reactive disintermediate process improvement",
+    "countryCode": "BQ"
+  },
+  {
+    "id": "16",
+    "name": "Buckridge - Grimes",
+    "catchPhrase": "Customer-focused encompassing budgetary management",
+    "countryCode": "BB"
+  },
+  {
+    "id": "17",
+    "name": "Lind - Waelchi",
+    "catchPhrase": "Secured static utilisation",
+    "countryCode": "KM"
+  },
+  {
+    "id": "18",
+    "name": "Wintheiser Group",
+    "catchPhrase": "Smart cohesive adapter",
+    "countryCode": "KM"
+  },
+  {
+    "id": "19",
+    "name": "Streich - Stehr",
+    "catchPhrase": "Open-architected actuating paradigm",
+    "countryCode": "TR"
+  },
+  {
+    "id": "20",
+    "name": "Pagac, Lang and Shields",
+    "catchPhrase": "Reactive leading edge capacity",
+    "countryCode": "MR"
+  },
+  {
+    "id": "21",
+    "name": "Hoppe - Pacocha",
+    "catchPhrase": "Intuitive value-added neural-net",
+    "countryCode": "UA"
+  },
+  {
+    "id": "22",
+    "name": "Kertzmann, Reinger and Bashirian",
+    "catchPhrase": "Monitored zero administration synergy",
+    "countryCode": "FI"
+  },
+  {
+    "id": "23",
+    "name": "Purdy and Sons",
+    "catchPhrase": "AI-driven AI-powered instruction set",
+    "countryCode": "MU"
+  },
+  {
+    "id": "24",
+    "name": "Rippin, Jaskolski and Nader",
+    "catchPhrase": "Diverse asynchronous knowledge base",
+    "countryCode": "GP"
+  },
+  {
+    "id": "25",
+    "name": "Gibson LLC",
+    "catchPhrase": "Team-oriented data-driven knowledge base",
+    "countryCode": "SH"
+  },
+  {
+    "id": "26",
+    "name": "Shields, Keeling and Mohr",
+    "catchPhrase": "Balanced transitional matrices",
+    "countryCode": "NI"
+  },
+  {
+    "id": "27",
+    "name": "Stehr and Sons",
+    "catchPhrase": "Seamless asynchronous synergy",
+    "countryCode": "TT"
+  },
+  {
+    "id": "28",
+    "name": "Runolfsdottir - Larkin",
+    "catchPhrase": "Sustainable user-facing productivity",
+    "countryCode": "NO"
+  },
+  {
+    "id": "29",
+    "name": "Nikolaus, Armstrong and Schaden",
+    "catchPhrase": "Enhanced interactive parallelism",
+    "countryCode": "ET"
+  },
+  {
+    "id": "30",
+    "name": "Parisian and Sons",
+    "catchPhrase": "Fundamental full-range utilisation",
+    "countryCode": "DZ"
+  },
+  {
+    "id": "31",
+    "name": "Fay - Treutel",
+    "catchPhrase": "Robust bifurcated array",
+    "countryCode": "IQ"
+  },
+  {
+    "id": "32",
+    "name": "Schuppe, Trantow and Champlin",
+    "catchPhrase": "Devolved analyzing budgetary management",
+    "countryCode": "LY"
+  },
+  {
+    "id": "33",
+    "name": "Gorczany - Kunde",
+    "catchPhrase": "Realigned zero defect synergy",
+    "countryCode": "AS"
+  },
+  {
+    "id": "34",
+    "name": "Kautzer - Greenfelder",
+    "catchPhrase": "Profound fresh-thinking core",
+    "countryCode": "NO"
+  },
+  {
+    "id": "35",
+    "name": "Hagenes LLC",
+    "catchPhrase": "Visionary context-sensitive alliance",
+    "countryCode": "ZM"
+  },
+  {
+    "id": "36",
+    "name": "Ward - Murphy",
+    "catchPhrase": "Persistent hybrid customer loyalty",
+    "countryCode": "BH"
+  },
+  {
+    "id": "37",
+    "name": "Kirlin, Zemlak and Waelchi",
+    "catchPhrase": "Exclusive user-facing microservice",
+    "countryCode": "VC"
+  },
+  {
+    "id": "38",
+    "name": "Dach, Mayer and Hilll",
+    "catchPhrase": "Customizable mobile artificial intelligence",
+    "countryCode": "IO"
+  },
+  {
+    "id": "39",
+    "name": "Heller, Kling and Collier",
+    "catchPhrase": "Enhanced directional framework",
+    "countryCode": "MR"
+  },
+  {
+    "id": "40",
+    "name": "Emmerich - Senger",
+    "catchPhrase": "Sharable local success",
+    "countryCode": "GP"
+  }
+]

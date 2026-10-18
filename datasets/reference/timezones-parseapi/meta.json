@@ -1,0 +1,40 @@
+{
+  "id": "timezones-parseapi",
+  "title": "Time zones (parseapi)",
+  "description": "Imported from parseapi/lists timezones/timezones.json",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/timezones",
+    "idField": "timezone"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "timezone",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "abbreviation",
+        "type": "string"
+      },
+      {
+        "name": "offset",
+        "type": "string"
+      },
+      {
+        "name": "offset_minutes",
+        "type": "number"
+      },
+      {
+        "name": "dst",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 418
+}
