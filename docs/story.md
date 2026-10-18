@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Retarget GitHub owner to a2mby
+
+Living docs, README, `/plan-change`, and `/git-push` now point at `a2mby/apixa` after the account rename from `a2mbyd`. Added [`docs/external-context.md`](./external-context.md) so external agents get the same owner and planning rules before a change brief.
+
 ## 2026-10-10 — Start v0.3.0 resource typing
 
 Opened [`versions/v0.3.0/`](../versions/v0.3.0/) as the active coding contract: branded `type<T>()` markers for per-operation `body` / `response`, with `Infer` unwrap and a breaking move away from `{} as T`. Reliability work (abort, retries, middleware) moves to a later roadmap heading. No Core code in this kickoff — contract and pointers only.

@@ -82,7 +82,7 @@ If this branch already has an open pull request, use it. Do not open a second on
 If it does not, create one. The first line is `Closes #N`.
 
 ```bash
-gh pr create --repo a2mbyd/apixa --base main --title "Add defineApi resource generation" --body "$(cat <<'EOF'
+gh pr create --repo a2mby/apixa --base main --title "Add defineApi resource generation" --body "$(cat <<'EOF'
 Closes #N
 
 ## Summary
@@ -102,7 +102,7 @@ The title matches the issue outcome.
 Run the Update from main steps again. If the rebase moved commits, push with `--force-with-lease`. Then merge.
 
 ```bash
-gh pr merge N --repo a2mbyd/apixa --squash --delete-branch
+gh pr merge N --repo a2mby/apixa --squash --delete-branch
 ```
 
 Confirm `main` is checked out, it matches `origin/main`, and the task branch is gone. `Closes #N` closes the issue. Do not close it by hand before the merge.
