@@ -14,7 +14,7 @@ pnpm typecheck
 ## Layout
 
 - `tests/core/*.test.ts` — Core behavior (definitions, operations, HTTP success/error).
-- `tests/mocking/*.test.ts` — dataset load, registry, mock transport routing.
+- `tests/mocking/*.test.ts` — dataset load + registry, standalone `defineMockApi()` (CRUD, pagination, isolation, typed data, package exports), and Core inline `mock` / `mockConfig`.
 - `tests/helpers/` — fake `Transport` used by the Core suite.
 
 Tests import packages and inject transports. They do not require the network or a live HTTP server.

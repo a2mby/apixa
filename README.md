@@ -84,7 +84,22 @@ Pass `transport` to inject a custom HTTP implementation (used in tests). The def
 
 ### Simple Mocking (implemented)
 
-Resource-level mocking via `@apixa/mocking` (Core stays live-only; import mocking to enable processors):
+Standalone, in-memory mock API from local datasets — no `defineApi()`, no network, no backend:
+
+```ts
+import { defineMockApi } from "@apixa/mocking";
+
+const mockApi = defineMockApi({
+  users: { type: "users-sample", size: 100, pagination: true },
+  products: { type: "products-mock", size: 50 },
+});
+
+const { data, total } = await mockApi.users.getAll({ page: 1, pageSize: 10 });
+```
+
+Typed data: `import { users, type User } from "@apixa/mocking/data"`.
+
+Or mock individual resources of a Core client (Core stays live-only; import mocking to enable processors):
 
 ```ts
 import "@apixa/mocking";
@@ -101,8 +116,7 @@ const api = defineApi({
 });
 ```
 
-Typed presets: `import { type User } from "@apixa/mocking/data/users"`.  
-Global `createMockTransport` remains for full-client mocks. See [`datasets/`](./datasets/) and [`packages/mocking`](./packages/mocking).
+See [`datasets/`](./datasets/) and [`packages/mocking`](./packages/mocking).
 
 See [`examples/next`](./examples/next) for the primary real-app playground (Next.js). Other frontends and a Node CLI live under [`examples/`](./examples/). Platform run scripts: [`scripts/README.md`](./scripts/README.md).
 

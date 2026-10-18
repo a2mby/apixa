@@ -2,7 +2,7 @@
 
 This document describes the architecture Apixa is building toward, and how the current codebase maps to it.
 
-Apixa Core owns definitions and live HTTP execution. `@apixa/mocking` (v0.5.0) is a separate package that injects a mock `Transport` — Core never depends on it. Other optional packages (client, server, TanStack Query, OpenAPI) remain planned boundaries.
+Apixa Core owns definitions and live HTTP execution. `@apixa/mocking` is a separate package: a standalone in-memory mock API (`defineMockApi()`) plus a `defineApi` processor that handles resource `mock` / `mockConfig` — Core never depends on it. Other optional packages (client, server, TanStack Query, OpenAPI) remain planned boundaries.
 
 ## High-level shape
 
@@ -86,7 +86,7 @@ Out of Core’s product mock engine (owned by `@apixa/mocking`):
 
 ```text
 packages/core/
-packages/mocking/   # local datasets + mock Transport (v0.5.0)
+packages/mocking/   # defineMockApi + typed data + Core mock/mockConfig processor
 datasets/           # version-controlled JSON fixtures
 examples/next/      # primary playground (uses mocking)
 tests/              # vitest — Core + mocking
