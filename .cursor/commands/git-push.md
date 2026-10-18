@@ -10,6 +10,8 @@ Read the branch name. It must be `task/N-slug`. N is the issue number. If you ar
 
 Read issue N. Stay inside its Touches list. If a file you need is not listed, stop and name it. Do not add it quietly.
 
+**Exception:** after `npm run format` (required below), Prettier-only changes outside Touches are allowed and must be staged. Stop only for non-format edits outside Touches.
+
 If there is nothing to commit and no existing pull request, stop.
 
 Leave unrelated dirty files unstaged. Do not commit `.env`, credentials, or a `package-lock.json` from an unrelated install.
@@ -44,6 +46,16 @@ Two or three sentences. What landed, and what it changed about the repo. Name th
 
 Use today's date. Name the outcome. "Updated docs" is not an entry.
 
+## Format
+
+From the repo root, **always** run before staging:
+
+```bash
+npm run format
+```
+
+Stage Touches files plus any Prettier-only diffs. Format-only files outside Touches are allowed.
+
 ## Commit
 
 Subject is `type: why`, present tense, under 72 characters, no trailing period. Types used here are `feat`, `fix`, `docs`, and `chore`.
@@ -57,7 +69,7 @@ Agents and humans need a frozen scope and acceptance checklist before Core work.
 ```
 
 ```bash
-git add <files on the Touches list>
+git add <files on the Touches list> <prettier-touched files>
 git commit -m "$(cat <<'EOF'
 type: why
 

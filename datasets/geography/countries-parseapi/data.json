@@ -10,9 +10,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Andorran",
-    "languages": [
-      "ca"
-    ],
+    "languages": ["ca"],
     "currency": "EUR",
     "tld": ".ad",
     "calling_code": "+376",
@@ -31,9 +29,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Emirati",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "AED",
     "tld": ".ae",
     "calling_code": "+971",
@@ -52,11 +48,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Afghan",
-    "languages": [
-      "prs",
-      "ps",
-      "tk"
-    ],
+    "languages": ["prs", "ps", "tk"],
     "currency": "AFN",
     "tld": ".af",
     "calling_code": "+93",
@@ -75,9 +67,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Antiguan, Barbudan",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".ag",
     "calling_code": "+1",
@@ -96,9 +86,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Anguillian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".ai",
     "calling_code": "+1",
@@ -117,9 +105,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Albanian",
-    "languages": [
-      "sq"
-    ],
+    "languages": ["sq"],
     "currency": "ALL",
     "tld": ".al",
     "calling_code": "+355",
@@ -138,9 +124,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Armenian",
-    "languages": [
-      "hy"
-    ],
+    "languages": ["hy"],
     "currency": "AMD",
     "tld": ".am",
     "calling_code": "+374",
@@ -159,9 +143,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Angolan",
-    "languages": [
-      "pt"
-    ],
+    "languages": ["pt"],
     "currency": "AOA",
     "tld": ".ao",
     "calling_code": "+244",
@@ -199,10 +181,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Argentine",
-    "languages": [
-      "gn",
-      "es"
-    ],
+    "languages": ["gn", "es"],
     "currency": "ARS",
     "tld": ".ar",
     "calling_code": "+54",
@@ -221,10 +200,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "American Samoan",
-    "languages": [
-      "en",
-      "sm"
-    ],
+    "languages": ["en", "sm"],
     "currency": "USD",
     "tld": ".as",
     "calling_code": "+1",
@@ -243,9 +219,7 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "demonym": "Austrian",
-    "languages": [
-      "bar"
-    ],
+    "languages": ["bar"],
     "currency": "EUR",
     "tld": ".at",
     "calling_code": "+43",
@@ -264,9 +238,7 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "demonym": "Australian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "AUD",
     "tld": ".au",
     "calling_code": "+61",
@@ -285,10 +257,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Aruban",
-    "languages": [
-      "nl",
-      "pap"
-    ],
+    "languages": ["nl", "pap"],
     "currency": "AWG",
     "tld": ".aw",
     "calling_code": "+297",
@@ -307,9 +276,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Ålandish",
-    "languages": [
-      "sv"
-    ],
+    "languages": ["sv"],
     "currency": "EUR",
     "tld": ".ax",
     "calling_code": "+358",
@@ -328,10 +295,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Azerbaijani",
-    "languages": [
-      "az",
-      "ru"
-    ],
+    "languages": ["az", "ru"],
     "currency": "AZN",
     "tld": ".az",
     "calling_code": "+994",
@@ -350,11 +314,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Bosnian, Herzegovinian",
-    "languages": [
-      "bs",
-      "hr",
-      "sr"
-    ],
+    "languages": ["bs", "hr", "sr"],
     "currency": "BAM",
     "tld": ".ba",
     "calling_code": "+387",
@@ -373,9 +333,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Barbadian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "BBD",
     "tld": ".bb",
     "calling_code": "+1",
@@ -394,9 +352,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Bangladeshi",
-    "languages": [
-      "bn"
-    ],
+    "languages": ["bn"],
     "currency": "BDT",
     "tld": ".bd",
     "calling_code": "+880",
@@ -415,11 +371,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "Belgian",
-    "languages": [
-      "de",
-      "fr",
-      "nl"
-    ],
+    "languages": ["de", "fr", "nl"],
     "currency": "EUR",
     "tld": ".be",
     "calling_code": "+32",
@@ -438,9 +390,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Burkinabe",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XOF",
     "tld": ".bf",
     "calling_code": "+226",
@@ -459,9 +409,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Bulgarian",
-    "languages": [
-      "bg"
-    ],
+    "languages": ["bg"],
     "currency": "BGN",
     "tld": ".bg",
     "calling_code": "+359",
@@ -480,9 +428,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Bahraini",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "BHD",
     "tld": ".bh",
     "calling_code": "+973",
@@ -501,10 +447,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Burundian",
-    "languages": [
-      "fr",
-      "rn"
-    ],
+    "languages": ["fr", "rn"],
     "currency": "BIF",
     "tld": ".bi",
     "calling_code": "+257",
@@ -523,9 +466,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Beninese",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XOF",
     "tld": ".bj",
     "calling_code": "+229",
@@ -544,9 +485,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Saint Barthélemy Islander",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".gp",
     "calling_code": "+590",
@@ -565,9 +504,7 @@
     "region": "Americas",
     "subregion": "Northern America",
     "demonym": "Bermudian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "BMD",
     "tld": ".bm",
     "calling_code": "+1",
@@ -586,9 +523,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Bruneian",
-    "languages": [
-      "ms"
-    ],
+    "languages": ["ms"],
     "currency": "BND",
     "tld": ".bn",
     "calling_code": "+673",
@@ -607,12 +542,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Bolivian",
-    "languages": [
-      "ay",
-      "gn",
-      "qu",
-      "es"
-    ],
+    "languages": ["ay", "gn", "qu", "es"],
     "currency": "BOB",
     "tld": ".bo",
     "calling_code": "+591",
@@ -631,11 +561,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Dutch",
-    "languages": [
-      "en",
-      "nl",
-      "pap"
-    ],
+    "languages": ["en", "nl", "pap"],
     "currency": "USD",
     "tld": ".bq",
     "calling_code": "+599",
@@ -654,9 +580,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Brazilian",
-    "languages": [
-      "pt"
-    ],
+    "languages": ["pt"],
     "currency": "BRL",
     "tld": ".br",
     "calling_code": "+55",
@@ -675,9 +599,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Bahamian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "BSD",
     "tld": ".bs",
     "calling_code": "+1",
@@ -696,9 +618,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Bhutanese",
-    "languages": [
-      "dz"
-    ],
+    "languages": ["dz"],
     "currency": "BTN",
     "tld": ".bt",
     "calling_code": "+975",
@@ -717,9 +637,7 @@
     "region": "Antarctic",
     "subregion": "Antarctic",
     "demonym": null,
-    "languages": [
-      "no"
-    ],
+    "languages": ["no"],
     "currency": "NOK",
     "tld": ".bv",
     "calling_code": "+55",
@@ -738,10 +656,7 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "demonym": "Motswana",
-    "languages": [
-      "en",
-      "tn"
-    ],
+    "languages": ["en", "tn"],
     "currency": "BWP",
     "tld": ".bw",
     "calling_code": "+267",
@@ -760,10 +675,7 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "demonym": "Belarusian",
-    "languages": [
-      "be",
-      "ru"
-    ],
+    "languages": ["be", "ru"],
     "currency": "BYN",
     "tld": ".by",
     "calling_code": "+375",
@@ -782,11 +694,7 @@
     "region": "Americas",
     "subregion": "Central America",
     "demonym": "Belizean",
-    "languages": [
-      "bzj",
-      "en",
-      "es"
-    ],
+    "languages": ["bzj", "en", "es"],
     "currency": "BZD",
     "tld": ".bz",
     "calling_code": "+501",
@@ -805,9 +713,7 @@
     "region": "Americas",
     "subregion": "Northern America",
     "demonym": "Canadian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "CAD",
     "tld": ".ca",
     "calling_code": "+1",
@@ -826,9 +732,7 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "demonym": "Cocos Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "AUD",
     "tld": ".cc",
     "calling_code": "+61",
@@ -847,13 +751,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Congolese",
-    "languages": [
-      "fr",
-      "kg",
-      "ln",
-      "lua",
-      "sw"
-    ],
+    "languages": ["fr", "kg", "ln", "lua", "sw"],
     "currency": "CDF",
     "tld": ".cd",
     "calling_code": "+243",
@@ -872,10 +770,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Central African",
-    "languages": [
-      "fr",
-      "sg"
-    ],
+    "languages": ["fr", "sg"],
     "currency": "XAF",
     "tld": ".cf",
     "calling_code": "+236",
@@ -894,11 +789,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Congolese",
-    "languages": [
-      "fr",
-      "kg",
-      "ln"
-    ],
+    "languages": ["fr", "kg", "ln"],
     "currency": "XAF",
     "tld": ".cg",
     "calling_code": "+242",
@@ -917,12 +808,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "Swiss",
-    "languages": [
-      "fr",
-      "gsw",
-      "it",
-      "rm"
-    ],
+    "languages": ["fr", "gsw", "it", "rm"],
     "currency": "CHF",
     "tld": ".ch",
     "calling_code": "+41",
@@ -941,9 +827,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Ivorian",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XOF",
     "tld": ".ci",
     "calling_code": "+225",
@@ -962,10 +846,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Cook Islander",
-    "languages": [
-      "en",
-      "rar"
-    ],
+    "languages": ["en", "rar"],
     "currency": "NZD",
     "tld": ".ck",
     "calling_code": "+682",
@@ -984,9 +865,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Chilean",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "CLP",
     "tld": ".cl",
     "calling_code": "+56",
@@ -1005,10 +884,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Cameroonian",
-    "languages": [
-      "en",
-      "fr"
-    ],
+    "languages": ["en", "fr"],
     "currency": "XAF",
     "tld": ".cm",
     "calling_code": "+237",
@@ -1027,9 +903,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "Chinese",
-    "languages": [
-      "zh"
-    ],
+    "languages": ["zh"],
     "currency": "CNY",
     "tld": ".cn",
     "calling_code": "+86",
@@ -1048,9 +922,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Colombian",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "COP",
     "tld": ".co",
     "calling_code": "+57",
@@ -1069,9 +941,7 @@
     "region": "Americas",
     "subregion": "Central America",
     "demonym": "Costa Rican",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "CRC",
     "tld": ".cr",
     "calling_code": "+506",
@@ -1090,9 +960,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Cuban",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "CUP",
     "tld": ".cu",
     "calling_code": "+53",
@@ -1111,9 +979,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Cape Verdian",
-    "languages": [
-      "pt"
-    ],
+    "languages": ["pt"],
     "currency": "CVE",
     "tld": ".cv",
     "calling_code": "+238",
@@ -1132,11 +998,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Curaçaoan",
-    "languages": [
-      "en",
-      "nl",
-      "pap"
-    ],
+    "languages": ["en", "nl", "pap"],
     "currency": "ANG",
     "tld": ".cw",
     "calling_code": "+599",
@@ -1155,9 +1017,7 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "demonym": "Christmas Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "AUD",
     "tld": ".cx",
     "calling_code": "+61",
@@ -1176,10 +1036,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Cypriot",
-    "languages": [
-      "el",
-      "tr"
-    ],
+    "languages": ["el", "tr"],
     "currency": "EUR",
     "tld": ".cy",
     "calling_code": "+357",
@@ -1198,10 +1055,7 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "demonym": "Czech",
-    "languages": [
-      "cs",
-      "sk"
-    ],
+    "languages": ["cs", "sk"],
     "currency": "CZK",
     "tld": ".cz",
     "calling_code": "+420",
@@ -1220,9 +1074,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "German",
-    "languages": [
-      "de"
-    ],
+    "languages": ["de"],
     "currency": "EUR",
     "tld": ".de",
     "calling_code": "+49",
@@ -1241,10 +1093,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Djibouti",
-    "languages": [
-      "ar",
-      "fr"
-    ],
+    "languages": ["ar", "fr"],
     "currency": "DJF",
     "tld": ".dj",
     "calling_code": "+253",
@@ -1263,9 +1112,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Danish",
-    "languages": [
-      "da"
-    ],
+    "languages": ["da"],
     "currency": "DKK",
     "tld": ".dk",
     "calling_code": "+45",
@@ -1284,9 +1131,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Dominican",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".dm",
     "calling_code": "+1",
@@ -1305,9 +1150,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Dominican",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "DOP",
     "tld": ".do",
     "calling_code": "+1",
@@ -1326,9 +1169,7 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "demonym": "Algerian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "DZD",
     "tld": ".dz",
     "calling_code": "+213",
@@ -1347,9 +1188,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Ecuadorean",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "USD",
     "tld": ".ec",
     "calling_code": "+593",
@@ -1368,9 +1207,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Estonian",
-    "languages": [
-      "et"
-    ],
+    "languages": ["et"],
     "currency": "EUR",
     "tld": ".ee",
     "calling_code": "+372",
@@ -1389,9 +1226,7 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "demonym": "Egyptian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "EGP",
     "tld": ".eg",
     "calling_code": "+20",
@@ -1410,11 +1245,7 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "demonym": "Sahrawi",
-    "languages": [
-      "ber",
-      "mey",
-      "es"
-    ],
+    "languages": ["ber", "mey", "es"],
     "currency": "MAD",
     "tld": ".eh",
     "calling_code": "+212",
@@ -1433,11 +1264,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Eritrean",
-    "languages": [
-      "ar",
-      "en",
-      "ti"
-    ],
+    "languages": ["ar", "en", "ti"],
     "currency": "ERN",
     "tld": ".er",
     "calling_code": "+291",
@@ -1456,9 +1283,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Spanish",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "EUR",
     "tld": ".es",
     "calling_code": "+34",
@@ -1477,9 +1302,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Ethiopian",
-    "languages": [
-      "am"
-    ],
+    "languages": ["am"],
     "currency": "ETB",
     "tld": ".et",
     "calling_code": "+251",
@@ -1498,10 +1321,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Finnish",
-    "languages": [
-      "fi",
-      "sv"
-    ],
+    "languages": ["fi", "sv"],
     "currency": "EUR",
     "tld": ".fi",
     "calling_code": "+358",
@@ -1520,11 +1340,7 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "demonym": "Fijian",
-    "languages": [
-      "en",
-      "fj",
-      "hif"
-    ],
+    "languages": ["en", "fj", "hif"],
     "currency": "FJD",
     "tld": ".fj",
     "calling_code": "+679",
@@ -1543,9 +1359,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Falkland Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "FKP",
     "tld": ".fk",
     "calling_code": "+500",
@@ -1564,9 +1378,7 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "demonym": "Micronesian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "USD",
     "tld": ".fm",
     "calling_code": "+691",
@@ -1585,10 +1397,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Faroese",
-    "languages": [
-      "da",
-      "fo"
-    ],
+    "languages": ["da", "fo"],
     "currency": "DKK",
     "tld": ".fo",
     "calling_code": "+298",
@@ -1607,9 +1416,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "French",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".fr",
     "calling_code": "+33",
@@ -1628,9 +1435,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Gabonese",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XAF",
     "tld": ".ga",
     "calling_code": "+241",
@@ -1649,9 +1454,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "British",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "GBP",
     "tld": ".uk",
     "calling_code": "+44",
@@ -1670,9 +1473,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Grenadian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".gd",
     "calling_code": "+1",
@@ -1691,9 +1492,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Georgian",
-    "languages": [
-      "ka"
-    ],
+    "languages": ["ka"],
     "currency": "GEL",
     "tld": ".ge",
     "calling_code": "+995",
@@ -1712,9 +1511,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Guianan",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".gf",
     "calling_code": "+594",
@@ -1733,11 +1530,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Channel Islander",
-    "languages": [
-      "en",
-      "fr",
-      "nrf"
-    ],
+    "languages": ["en", "fr", "nrf"],
     "currency": "GBP",
     "tld": ".gg",
     "calling_code": "+44",
@@ -1756,9 +1549,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Ghanaian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "GHS",
     "tld": ".gh",
     "calling_code": "+233",
@@ -1777,9 +1568,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Gibraltar",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "GIP",
     "tld": ".gi",
     "calling_code": "+350",
@@ -1798,9 +1587,7 @@
     "region": "Americas",
     "subregion": "Northern America",
     "demonym": "Greenlandic",
-    "languages": [
-      "kl"
-    ],
+    "languages": ["kl"],
     "currency": "DKK",
     "tld": ".gl",
     "calling_code": "+299",
@@ -1819,9 +1606,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Gambian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "GMD",
     "tld": ".gm",
     "calling_code": "+220",
@@ -1840,9 +1625,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Guinean",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "GNF",
     "tld": ".gn",
     "calling_code": "+224",
@@ -1861,9 +1644,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Guadeloupian",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".gp",
     "calling_code": "+590",
@@ -1882,11 +1663,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Equatorial Guinean",
-    "languages": [
-      "fr",
-      "pt",
-      "es"
-    ],
+    "languages": ["fr", "pt", "es"],
     "currency": "XAF",
     "tld": ".gq",
     "calling_code": "+240",
@@ -1905,9 +1682,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Greek",
-    "languages": [
-      "el"
-    ],
+    "languages": ["el"],
     "currency": "EUR",
     "tld": ".gr",
     "calling_code": "+30",
@@ -1926,9 +1701,7 @@
     "region": "Antarctic",
     "subregion": "Antarctic",
     "demonym": "South Georgian South Sandwich Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "GBP",
     "tld": ".gs",
     "calling_code": "+500",
@@ -1947,9 +1720,7 @@
     "region": "Americas",
     "subregion": "Central America",
     "demonym": "Guatemalan",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "GTQ",
     "tld": ".gt",
     "calling_code": "+502",
@@ -1968,11 +1739,7 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "demonym": "Guamanian",
-    "languages": [
-      "ch",
-      "en",
-      "es"
-    ],
+    "languages": ["ch", "en", "es"],
     "currency": "USD",
     "tld": ".gu",
     "calling_code": "+1",
@@ -1991,10 +1758,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Guinea-Bissauan",
-    "languages": [
-      "pt",
-      "pov"
-    ],
+    "languages": ["pt", "pov"],
     "currency": "XOF",
     "tld": ".gw",
     "calling_code": "+245",
@@ -2013,9 +1777,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Guyanese",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "GYD",
     "tld": ".gy",
     "calling_code": "+592",
@@ -2034,10 +1796,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "Hong Konger",
-    "languages": [
-      "en",
-      "zh"
-    ],
+    "languages": ["en", "zh"],
     "currency": "HKD",
     "tld": ".hk",
     "calling_code": "+852",
@@ -2056,9 +1815,7 @@
     "region": "Antarctic",
     "subregion": "Antarctic",
     "demonym": "Heard and McDonald Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "AUD",
     "tld": ".hm",
     "calling_code": "+672",
@@ -2077,9 +1834,7 @@
     "region": "Americas",
     "subregion": "Central America",
     "demonym": "Honduran",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "HNL",
     "tld": ".hn",
     "calling_code": "+504",
@@ -2098,9 +1853,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Croatian",
-    "languages": [
-      "hr"
-    ],
+    "languages": ["hr"],
     "currency": "HRK",
     "tld": ".hr",
     "calling_code": "+385",
@@ -2119,10 +1872,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Haitian",
-    "languages": [
-      "fr",
-      "ht"
-    ],
+    "languages": ["fr", "ht"],
     "currency": "HTG",
     "tld": ".ht",
     "calling_code": "+509",
@@ -2141,9 +1891,7 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "demonym": "Hungarian",
-    "languages": [
-      "hu"
-    ],
+    "languages": ["hu"],
     "currency": "HUF",
     "tld": ".hu",
     "calling_code": "+36",
@@ -2162,9 +1910,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Indonesian",
-    "languages": [
-      "id"
-    ],
+    "languages": ["id"],
     "currency": "IDR",
     "tld": ".id",
     "calling_code": "+62",
@@ -2183,10 +1929,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Irish",
-    "languages": [
-      "en",
-      "ga"
-    ],
+    "languages": ["en", "ga"],
     "currency": "EUR",
     "tld": ".ie",
     "calling_code": "+353",
@@ -2205,10 +1948,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Israeli",
-    "languages": [
-      "ar",
-      "he"
-    ],
+    "languages": ["ar", "he"],
     "currency": "ILS",
     "tld": ".il",
     "calling_code": "+972",
@@ -2227,10 +1967,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Manx",
-    "languages": [
-      "en",
-      "gv"
-    ],
+    "languages": ["en", "gv"],
     "currency": "GBP",
     "tld": ".im",
     "calling_code": "+44",
@@ -2249,11 +1986,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Indian",
-    "languages": [
-      "en",
-      "hi",
-      "ta"
-    ],
+    "languages": ["en", "hi", "ta"],
     "currency": "INR",
     "tld": ".in",
     "calling_code": "+91",
@@ -2272,9 +2005,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Indian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "USD",
     "tld": ".io",
     "calling_code": "+246",
@@ -2293,11 +2024,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Iraqi",
-    "languages": [
-      "ar",
-      "syr",
-      "ckb"
-    ],
+    "languages": ["ar", "syr", "ckb"],
     "currency": "IQD",
     "tld": ".iq",
     "calling_code": "+964",
@@ -2316,9 +2043,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Iranian",
-    "languages": [
-      "fa"
-    ],
+    "languages": ["fa"],
     "currency": "IRR",
     "tld": ".ir",
     "calling_code": "+98",
@@ -2337,9 +2062,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Icelander",
-    "languages": [
-      "is"
-    ],
+    "languages": ["is"],
     "currency": "ISK",
     "tld": ".is",
     "calling_code": "+354",
@@ -2358,9 +2081,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Italian",
-    "languages": [
-      "it"
-    ],
+    "languages": ["it"],
     "currency": "EUR",
     "tld": ".it",
     "calling_code": "+39",
@@ -2379,11 +2100,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Channel Islander",
-    "languages": [
-      "en",
-      "fr",
-      "nrf"
-    ],
+    "languages": ["en", "fr", "nrf"],
     "currency": "GBP",
     "tld": ".je",
     "calling_code": "+44",
@@ -2402,10 +2119,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Jamaican",
-    "languages": [
-      "en",
-      "jam"
-    ],
+    "languages": ["en", "jam"],
     "currency": "JMD",
     "tld": ".jm",
     "calling_code": "+1",
@@ -2424,9 +2138,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Jordanian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "JOD",
     "tld": ".jo",
     "calling_code": "+962",
@@ -2445,9 +2157,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "Japanese",
-    "languages": [
-      "ja"
-    ],
+    "languages": ["ja"],
     "currency": "JPY",
     "tld": ".jp",
     "calling_code": "+81",
@@ -2466,10 +2176,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Kenyan",
-    "languages": [
-      "en",
-      "sw"
-    ],
+    "languages": ["en", "sw"],
     "currency": "KES",
     "tld": ".ke",
     "calling_code": "+254",
@@ -2488,10 +2195,7 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "demonym": "Kirghiz",
-    "languages": [
-      "ky",
-      "ru"
-    ],
+    "languages": ["ky", "ru"],
     "currency": "KGS",
     "tld": ".kg",
     "calling_code": "+996",
@@ -2510,9 +2214,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Cambodian",
-    "languages": [
-      "km"
-    ],
+    "languages": ["km"],
     "currency": "KHR",
     "tld": ".kh",
     "calling_code": "+855",
@@ -2531,10 +2233,7 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "demonym": "I-Kiribati",
-    "languages": [
-      "en",
-      "gil"
-    ],
+    "languages": ["en", "gil"],
     "currency": "AUD",
     "tld": ".ki",
     "calling_code": "+686",
@@ -2553,11 +2252,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Comoran",
-    "languages": [
-      "ar",
-      "fr",
-      "zdj"
-    ],
+    "languages": ["ar", "fr", "zdj"],
     "currency": "KMF",
     "tld": ".km",
     "calling_code": "+269",
@@ -2576,9 +2271,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Kittitian or Nevisian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".kn",
     "calling_code": "+1",
@@ -2597,9 +2290,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "North Korean",
-    "languages": [
-      "ko"
-    ],
+    "languages": ["ko"],
     "currency": "KPW",
     "tld": ".kp",
     "calling_code": "+850",
@@ -2618,9 +2309,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "South Korean",
-    "languages": [
-      "ko"
-    ],
+    "languages": ["ko"],
     "currency": "KRW",
     "tld": ".kr",
     "calling_code": "+82",
@@ -2639,9 +2328,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Kuwaiti",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "KWD",
     "tld": ".kw",
     "calling_code": "+965",
@@ -2660,9 +2347,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Caymanian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "KYD",
     "tld": ".ky",
     "calling_code": "+1",
@@ -2681,10 +2366,7 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "demonym": "Kazakhstani",
-    "languages": [
-      "kk",
-      "ru"
-    ],
+    "languages": ["kk", "ru"],
     "currency": "KZT",
     "tld": ".kz",
     "calling_code": "+7",
@@ -2703,9 +2385,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Laotian",
-    "languages": [
-      "lo"
-    ],
+    "languages": ["lo"],
     "currency": "LAK",
     "tld": ".la",
     "calling_code": "+856",
@@ -2724,10 +2404,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Lebanese",
-    "languages": [
-      "ar",
-      "fr"
-    ],
+    "languages": ["ar", "fr"],
     "currency": "LBP",
     "tld": ".lb",
     "calling_code": "+961",
@@ -2746,9 +2423,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Saint Lucian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".lc",
     "calling_code": "+1",
@@ -2767,9 +2442,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "Liechtensteiner",
-    "languages": [
-      "de"
-    ],
+    "languages": ["de"],
     "currency": "CHF",
     "tld": ".li",
     "calling_code": "+423",
@@ -2788,10 +2461,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Sri Lankan",
-    "languages": [
-      "si",
-      "ta"
-    ],
+    "languages": ["si", "ta"],
     "currency": "LKR",
     "tld": ".lk",
     "calling_code": "+94",
@@ -2810,9 +2480,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Liberian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "LRD",
     "tld": ".lr",
     "calling_code": "+231",
@@ -2831,10 +2499,7 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "demonym": "Mosotho",
-    "languages": [
-      "en",
-      "st"
-    ],
+    "languages": ["en", "st"],
     "currency": "LSL",
     "tld": ".ls",
     "calling_code": "+266",
@@ -2853,9 +2518,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Lithuanian",
-    "languages": [
-      "lt"
-    ],
+    "languages": ["lt"],
     "currency": "EUR",
     "tld": ".lt",
     "calling_code": "+370",
@@ -2874,11 +2537,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "Luxembourger",
-    "languages": [
-      "de",
-      "fr",
-      "lb"
-    ],
+    "languages": ["de", "fr", "lb"],
     "currency": "EUR",
     "tld": ".lu",
     "calling_code": "+352",
@@ -2897,9 +2556,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Latvian",
-    "languages": [
-      "lv"
-    ],
+    "languages": ["lv"],
     "currency": "EUR",
     "tld": ".lv",
     "calling_code": "+371",
@@ -2918,9 +2575,7 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "demonym": "Libyan",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "LYD",
     "tld": ".ly",
     "calling_code": "+218",
@@ -2939,10 +2594,7 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "demonym": "Moroccan",
-    "languages": [
-      "ar",
-      "ber"
-    ],
+    "languages": ["ar", "ber"],
     "currency": "MAD",
     "tld": ".ma",
     "calling_code": "+212",
@@ -2961,9 +2613,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "Monegasque",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".mc",
     "calling_code": "+377",
@@ -2982,9 +2632,7 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "demonym": "Moldovan",
-    "languages": [
-      "ro"
-    ],
+    "languages": ["ro"],
     "currency": "MDL",
     "tld": ".md",
     "calling_code": "+373",
@@ -3003,9 +2651,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Montenegrin",
-    "languages": [
-      "cnr"
-    ],
+    "languages": ["cnr"],
     "currency": "EUR",
     "tld": ".me",
     "calling_code": "+382",
@@ -3024,9 +2670,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Saint Martin Islander",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".gp",
     "calling_code": "+590",
@@ -3045,10 +2689,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Malagasy",
-    "languages": [
-      "fr",
-      "mg"
-    ],
+    "languages": ["fr", "mg"],
     "currency": "MGA",
     "tld": ".mg",
     "calling_code": "+261",
@@ -3067,10 +2708,7 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "demonym": "Marshallese",
-    "languages": [
-      "en",
-      "mh"
-    ],
+    "languages": ["en", "mh"],
     "currency": "USD",
     "tld": ".mh",
     "calling_code": "+692",
@@ -3089,9 +2727,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Macedonian",
-    "languages": [
-      "mk"
-    ],
+    "languages": ["mk"],
     "currency": "MKD",
     "tld": ".mk",
     "calling_code": "+389",
@@ -3110,9 +2746,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Malian",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XOF",
     "tld": ".ml",
     "calling_code": "+223",
@@ -3131,9 +2765,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Burmese",
-    "languages": [
-      "my"
-    ],
+    "languages": ["my"],
     "currency": "MMK",
     "tld": ".mm",
     "calling_code": "+95",
@@ -3152,9 +2784,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "Mongolian",
-    "languages": [
-      "mn"
-    ],
+    "languages": ["mn"],
     "currency": "MNT",
     "tld": ".mn",
     "calling_code": "+976",
@@ -3173,10 +2803,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "Macanese",
-    "languages": [
-      "pt",
-      "zh"
-    ],
+    "languages": ["pt", "zh"],
     "currency": "MOP",
     "tld": ".mo",
     "calling_code": "+853",
@@ -3195,11 +2822,7 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "demonym": "American",
-    "languages": [
-      "cal",
-      "ch",
-      "en"
-    ],
+    "languages": ["cal", "ch", "en"],
     "currency": "USD",
     "tld": ".mp",
     "calling_code": "+1",
@@ -3218,9 +2841,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Martinican",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".mq",
     "calling_code": "+596",
@@ -3239,9 +2860,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Mauritanian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "MRU",
     "tld": ".mr",
     "calling_code": "+222",
@@ -3260,9 +2879,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Montserratian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".ms",
     "calling_code": "+1",
@@ -3281,10 +2898,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Maltese",
-    "languages": [
-      "en",
-      "mt"
-    ],
+    "languages": ["en", "mt"],
     "currency": "EUR",
     "tld": ".mt",
     "calling_code": "+356",
@@ -3303,11 +2917,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Mauritian",
-    "languages": [
-      "en",
-      "fr",
-      "mfe"
-    ],
+    "languages": ["en", "fr", "mfe"],
     "currency": "MUR",
     "tld": ".mu",
     "calling_code": "+230",
@@ -3326,9 +2936,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Maldivan",
-    "languages": [
-      "dv"
-    ],
+    "languages": ["dv"],
     "currency": "MVR",
     "tld": ".mv",
     "calling_code": "+960",
@@ -3347,10 +2955,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Malawian",
-    "languages": [
-      "en",
-      "ny"
-    ],
+    "languages": ["en", "ny"],
     "currency": "MWK",
     "tld": ".mw",
     "calling_code": "+265",
@@ -3369,9 +2974,7 @@
     "region": "Americas",
     "subregion": "Northern America",
     "demonym": "Mexican",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "MXN",
     "tld": ".mx",
     "calling_code": "+52",
@@ -3390,10 +2993,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Malaysian",
-    "languages": [
-      "en",
-      "ms"
-    ],
+    "languages": ["en", "ms"],
     "currency": "MYR",
     "tld": ".my",
     "calling_code": "+60",
@@ -3412,9 +3012,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Mozambican",
-    "languages": [
-      "pt"
-    ],
+    "languages": ["pt"],
     "currency": "MZN",
     "tld": ".mz",
     "calling_code": "+258",
@@ -3433,17 +3031,7 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "demonym": "Namibian",
-    "languages": [
-      "af",
-      "de",
-      "en",
-      "hz",
-      "naq",
-      "kwn",
-      "loz",
-      "ng",
-      "tn"
-    ],
+    "languages": ["af", "de", "en", "hz", "naq", "kwn", "loz", "ng", "tn"],
     "currency": "NAD",
     "tld": ".na",
     "calling_code": "+264",
@@ -3462,9 +3050,7 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "demonym": "New Caledonian",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XPF",
     "tld": ".nc",
     "calling_code": "+687",
@@ -3483,9 +3069,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Nigerien",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XOF",
     "tld": ".ne",
     "calling_code": "+227",
@@ -3504,10 +3088,7 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "demonym": "Norfolk Islander",
-    "languages": [
-      "en",
-      "pih"
-    ],
+    "languages": ["en", "pih"],
     "currency": "AUD",
     "tld": ".nf",
     "calling_code": "+672",
@@ -3526,9 +3107,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Nigerian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "NGN",
     "tld": ".ng",
     "calling_code": "+234",
@@ -3547,9 +3126,7 @@
     "region": "Americas",
     "subregion": "Central America",
     "demonym": "Nicaraguan",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "NIO",
     "tld": ".ni",
     "calling_code": "+505",
@@ -3568,9 +3145,7 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "demonym": "Dutch",
-    "languages": [
-      "nl"
-    ],
+    "languages": ["nl"],
     "currency": "EUR",
     "tld": ".nl",
     "calling_code": "+31",
@@ -3589,11 +3164,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Norwegian",
-    "languages": [
-      "nn",
-      "nb",
-      "smi"
-    ],
+    "languages": ["nn", "nb", "smi"],
     "currency": "NOK",
     "tld": ".no",
     "calling_code": "+47",
@@ -3612,9 +3183,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Nepalese",
-    "languages": [
-      "ne"
-    ],
+    "languages": ["ne"],
     "currency": "NPR",
     "tld": ".np",
     "calling_code": "+977",
@@ -3633,10 +3202,7 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "demonym": "Nauruan",
-    "languages": [
-      "en",
-      "na"
-    ],
+    "languages": ["en", "na"],
     "currency": "AUD",
     "tld": ".nr",
     "calling_code": "+674",
@@ -3655,10 +3221,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Niuean",
-    "languages": [
-      "en",
-      "niu"
-    ],
+    "languages": ["en", "niu"],
     "currency": "NZD",
     "tld": ".nu",
     "calling_code": "+683",
@@ -3677,11 +3240,7 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "demonym": "New Zealander",
-    "languages": [
-      "en",
-      "mi",
-      "nzs"
-    ],
+    "languages": ["en", "mi", "nzs"],
     "currency": "NZD",
     "tld": ".nz",
     "calling_code": "+64",
@@ -3700,9 +3259,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Omani",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "OMR",
     "tld": ".om",
     "calling_code": "+968",
@@ -3721,9 +3278,7 @@
     "region": "Americas",
     "subregion": "Central America",
     "demonym": "Panamanian",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "PAB",
     "tld": ".pa",
     "calling_code": "+507",
@@ -3742,11 +3297,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Peruvian",
-    "languages": [
-      "ay",
-      "qu",
-      "es"
-    ],
+    "languages": ["ay", "qu", "es"],
     "currency": "PEN",
     "tld": ".pe",
     "calling_code": "+51",
@@ -3765,9 +3316,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "French Polynesian",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XPF",
     "tld": ".pf",
     "calling_code": "+689",
@@ -3786,11 +3335,7 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "demonym": "Papua New Guinean",
-    "languages": [
-      "en",
-      "ho",
-      "tpi"
-    ],
+    "languages": ["en", "ho", "tpi"],
     "currency": "PGK",
     "tld": ".pg",
     "calling_code": "+675",
@@ -3809,10 +3354,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Filipino",
-    "languages": [
-      "en",
-      "fil"
-    ],
+    "languages": ["en", "fil"],
     "currency": "PHP",
     "tld": ".ph",
     "calling_code": "+63",
@@ -3831,10 +3373,7 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "demonym": "Pakistani",
-    "languages": [
-      "en",
-      "ur"
-    ],
+    "languages": ["en", "ur"],
     "currency": "PKR",
     "tld": ".pk",
     "calling_code": "+92",
@@ -3853,9 +3392,7 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "demonym": "Polish",
-    "languages": [
-      "pl"
-    ],
+    "languages": ["pl"],
     "currency": "PLN",
     "tld": ".pl",
     "calling_code": "+48",
@@ -3874,9 +3411,7 @@
     "region": "Americas",
     "subregion": "Northern America",
     "demonym": "Saint-Pierrais, Miquelonnais",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".pm",
     "calling_code": "+508",
@@ -3895,9 +3430,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Pitcairn Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "NZD",
     "tld": ".pn",
     "calling_code": "+870",
@@ -3916,10 +3449,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Puerto Rican",
-    "languages": [
-      "en",
-      "es"
-    ],
+    "languages": ["en", "es"],
     "currency": "USD",
     "tld": ".pr",
     "calling_code": "+1",
@@ -3938,9 +3468,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Palestinian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "ILS",
     "tld": ".ps",
     "calling_code": "+970",
@@ -3959,9 +3487,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Portuguese",
-    "languages": [
-      "pt"
-    ],
+    "languages": ["pt"],
     "currency": "EUR",
     "tld": ".pt",
     "calling_code": "+351",
@@ -3980,10 +3506,7 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "demonym": "Palauan",
-    "languages": [
-      "en",
-      "pau"
-    ],
+    "languages": ["en", "pau"],
     "currency": "USD",
     "tld": ".pw",
     "calling_code": "+680",
@@ -4002,10 +3525,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Paraguayan",
-    "languages": [
-      "gn",
-      "es"
-    ],
+    "languages": ["gn", "es"],
     "currency": "PYG",
     "tld": ".py",
     "calling_code": "+595",
@@ -4024,9 +3544,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Qatari",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "QAR",
     "tld": ".qa",
     "calling_code": "+974",
@@ -4045,9 +3563,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Réunionese",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".re",
     "calling_code": "+262",
@@ -4066,9 +3582,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Romanian",
-    "languages": [
-      "ro"
-    ],
+    "languages": ["ro"],
     "currency": "RON",
     "tld": ".ro",
     "calling_code": "+40",
@@ -4087,9 +3601,7 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "demonym": "Serbian",
-    "languages": [
-      "sr"
-    ],
+    "languages": ["sr"],
     "currency": "RSD",
     "tld": ".rs",
     "calling_code": "+381",
@@ -4108,9 +3620,7 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "demonym": "Russian",
-    "languages": [
-      "ru"
-    ],
+    "languages": ["ru"],
     "currency": "RUB",
     "tld": ".ru",
     "calling_code": "+7",
@@ -4129,11 +3639,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Rwandan",
-    "languages": [
-      "en",
-      "fr",
-      "rw"
-    ],
+    "languages": ["en", "fr", "rw"],
     "currency": "RWF",
     "tld": ".rw",
     "calling_code": "+250",
@@ -4152,9 +3658,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Saudi Arabian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "SAR",
     "tld": ".sa",
     "calling_code": "+966",
@@ -4173,9 +3677,7 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "demonym": "Solomon Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "SBD",
     "tld": ".sb",
     "calling_code": "+677",
@@ -4194,11 +3696,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Seychellois",
-    "languages": [
-      "crs",
-      "en",
-      "fr"
-    ],
+    "languages": ["crs", "en", "fr"],
     "currency": "SCR",
     "tld": ".sc",
     "calling_code": "+248",
@@ -4217,10 +3715,7 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "demonym": "Sudanese",
-    "languages": [
-      "ar",
-      "en"
-    ],
+    "languages": ["ar", "en"],
     "currency": "SDG",
     "tld": ".sd",
     "calling_code": "+249",
@@ -4239,9 +3734,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Swedish",
-    "languages": [
-      "sv"
-    ],
+    "languages": ["sv"],
     "currency": "SEK",
     "tld": ".se",
     "calling_code": "+46",
@@ -4260,12 +3753,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Singaporean",
-    "languages": [
-      "en",
-      "ms",
-      "ta",
-      "zh"
-    ],
+    "languages": ["en", "ms", "ta", "zh"],
     "currency": "SGD",
     "tld": ".sg",
     "calling_code": "+65",
@@ -4284,9 +3772,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Saint Helenian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "SHP",
     "tld": ".sh",
     "calling_code": "+290",
@@ -4305,9 +3791,7 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "demonym": "Slovene",
-    "languages": [
-      "sl"
-    ],
+    "languages": ["sl"],
     "currency": "EUR",
     "tld": ".si",
     "calling_code": "+386",
@@ -4326,9 +3810,7 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "demonym": "Norwegian",
-    "languages": [
-      "no"
-    ],
+    "languages": ["no"],
     "currency": "NOK",
     "tld": ".sj",
     "calling_code": "+47",
@@ -4347,9 +3829,7 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "demonym": "Slovak",
-    "languages": [
-      "sk"
-    ],
+    "languages": ["sk"],
     "currency": "EUR",
     "tld": ".sk",
     "calling_code": "+421",
@@ -4368,9 +3848,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Sierra Leonean",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "SLL",
     "tld": ".sl",
     "calling_code": "+232",
@@ -4389,9 +3867,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Sammarinese",
-    "languages": [
-      "it"
-    ],
+    "languages": ["it"],
     "currency": "EUR",
     "tld": ".sm",
     "calling_code": "+378",
@@ -4410,9 +3886,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Senegalese",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XOF",
     "tld": ".sn",
     "calling_code": "+221",
@@ -4431,10 +3905,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Somali",
-    "languages": [
-      "ar",
-      "so"
-    ],
+    "languages": ["ar", "so"],
     "currency": "SOS",
     "tld": ".so",
     "calling_code": "+252",
@@ -4453,9 +3924,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Surinamer",
-    "languages": [
-      "nl"
-    ],
+    "languages": ["nl"],
     "currency": "SRD",
     "tld": ".sr",
     "calling_code": "+597",
@@ -4474,9 +3943,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "South Sudanese",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "SSP",
     "tld": null,
     "calling_code": "+211",
@@ -4495,9 +3962,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Sao Tomean",
-    "languages": [
-      "pt"
-    ],
+    "languages": ["pt"],
     "currency": "STN",
     "tld": ".st",
     "calling_code": "+239",
@@ -4516,9 +3981,7 @@
     "region": "Americas",
     "subregion": "Central America",
     "demonym": "Salvadoran",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "USD",
     "tld": ".sv",
     "calling_code": "+503",
@@ -4537,11 +4000,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "St. Maartener",
-    "languages": [
-      "en",
-      "fr",
-      "nl"
-    ],
+    "languages": ["en", "fr", "nl"],
     "currency": "ANG",
     "tld": ".sx",
     "calling_code": "+1721",
@@ -4560,9 +4019,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Syrian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "SYP",
     "tld": ".sy",
     "calling_code": "+963",
@@ -4581,10 +4038,7 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "demonym": "Swazi",
-    "languages": [
-      "en",
-      "ss"
-    ],
+    "languages": ["en", "ss"],
     "currency": "SZL",
     "tld": ".sz",
     "calling_code": "+268",
@@ -4603,9 +4057,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Turks and Caicos Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "USD",
     "tld": ".tc",
     "calling_code": "+1",
@@ -4624,10 +4076,7 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "demonym": "Chadian",
-    "languages": [
-      "ar",
-      "fr"
-    ],
+    "languages": ["ar", "fr"],
     "currency": "XAF",
     "tld": ".td",
     "calling_code": "+235",
@@ -4646,9 +4095,7 @@
     "region": "Antarctic",
     "subregion": "Antarctic",
     "demonym": "French",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".tf",
     "calling_code": "+262",
@@ -4667,9 +4114,7 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "demonym": "Togolese",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XOF",
     "tld": ".tg",
     "calling_code": "+228",
@@ -4688,9 +4133,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Thai",
-    "languages": [
-      "th"
-    ],
+    "languages": ["th"],
     "currency": "THB",
     "tld": ".th",
     "calling_code": "+66",
@@ -4709,10 +4152,7 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "demonym": "Tadzhik",
-    "languages": [
-      "ru",
-      "tg"
-    ],
+    "languages": ["ru", "tg"],
     "currency": "TJS",
     "tld": ".tj",
     "calling_code": "+992",
@@ -4731,11 +4171,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Tokelauan",
-    "languages": [
-      "en",
-      "sm",
-      "tkl"
-    ],
+    "languages": ["en", "sm", "tkl"],
     "currency": "NZD",
     "tld": ".tk",
     "calling_code": "+690",
@@ -4754,10 +4190,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "East Timorese",
-    "languages": [
-      "pt",
-      "tet"
-    ],
+    "languages": ["pt", "tet"],
     "currency": "USD",
     "tld": ".tl",
     "calling_code": "+670",
@@ -4776,10 +4209,7 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "demonym": "Turkmen",
-    "languages": [
-      "ru",
-      "tk"
-    ],
+    "languages": ["ru", "tk"],
     "currency": "TMT",
     "tld": ".tm",
     "calling_code": "+993",
@@ -4798,9 +4228,7 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "demonym": "Tunisian",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "TND",
     "tld": ".tn",
     "calling_code": "+216",
@@ -4819,10 +4247,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Tongan",
-    "languages": [
-      "en",
-      "to"
-    ],
+    "languages": ["en", "to"],
     "currency": "TOP",
     "tld": ".to",
     "calling_code": "+676",
@@ -4841,9 +4266,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Turkish",
-    "languages": [
-      "tr"
-    ],
+    "languages": ["tr"],
     "currency": "TRY",
     "tld": ".tr",
     "calling_code": "+90",
@@ -4862,9 +4285,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Trinidadian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "TTD",
     "tld": ".tt",
     "calling_code": "+1",
@@ -4883,10 +4304,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Tuvaluan",
-    "languages": [
-      "en",
-      "tvl"
-    ],
+    "languages": ["en", "tvl"],
     "currency": "AUD",
     "tld": ".tv",
     "calling_code": "+688",
@@ -4905,9 +4323,7 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "demonym": "Taiwanese",
-    "languages": [
-      "zh"
-    ],
+    "languages": ["zh"],
     "currency": "TWD",
     "tld": ".tw",
     "calling_code": "+886",
@@ -4926,10 +4342,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Tanzanian",
-    "languages": [
-      "en",
-      "sw"
-    ],
+    "languages": ["en", "sw"],
     "currency": "TZS",
     "tld": ".tz",
     "calling_code": "+255",
@@ -4948,9 +4361,7 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "demonym": "Ukrainian",
-    "languages": [
-      "uk"
-    ],
+    "languages": ["uk"],
     "currency": "UAH",
     "tld": ".ua",
     "calling_code": "+380",
@@ -4969,10 +4380,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Ugandan",
-    "languages": [
-      "en",
-      "sw"
-    ],
+    "languages": ["en", "sw"],
     "currency": "UGX",
     "tld": ".ug",
     "calling_code": "+256",
@@ -4991,9 +4399,7 @@
     "region": "Americas",
     "subregion": "Northern America",
     "demonym": "American Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "USD",
     "tld": ".um",
     "calling_code": "+1",
@@ -5012,9 +4418,7 @@
     "region": "Americas",
     "subregion": "Northern America",
     "demonym": "American",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "USD",
     "tld": ".us",
     "calling_code": "+1",
@@ -5033,9 +4437,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Uruguayan",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "UYU",
     "tld": ".uy",
     "calling_code": "+598",
@@ -5054,10 +4456,7 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "demonym": "Uzbekistani",
-    "languages": [
-      "ru",
-      "uz"
-    ],
+    "languages": ["ru", "uz"],
     "currency": "UZS",
     "tld": ".uz",
     "calling_code": "+998",
@@ -5076,10 +4475,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Vatican",
-    "languages": [
-      "it",
-      "la"
-    ],
+    "languages": ["it", "la"],
     "currency": "EUR",
     "tld": ".va",
     "calling_code": "+379",
@@ -5098,9 +4494,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Saint Vincentian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "XCD",
     "tld": ".vc",
     "calling_code": "+1",
@@ -5119,9 +4513,7 @@
     "region": "Americas",
     "subregion": "South America",
     "demonym": "Venezuelan",
-    "languages": [
-      "es"
-    ],
+    "languages": ["es"],
     "currency": "VEF",
     "tld": ".ve",
     "calling_code": "+58",
@@ -5140,9 +4532,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Virgin Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "USD",
     "tld": ".vg",
     "calling_code": "+1",
@@ -5161,9 +4551,7 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "demonym": "Virgin Islander",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "USD",
     "tld": ".vi",
     "calling_code": "+1",
@@ -5182,9 +4570,7 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "demonym": "Vietnamese",
-    "languages": [
-      "vi"
-    ],
+    "languages": ["vi"],
     "currency": "VND",
     "tld": ".vn",
     "calling_code": "+84",
@@ -5203,11 +4589,7 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "demonym": "Ni-Vanuatu",
-    "languages": [
-      "bi",
-      "en",
-      "fr"
-    ],
+    "languages": ["bi", "en", "fr"],
     "currency": "VUV",
     "tld": ".vu",
     "calling_code": "+678",
@@ -5226,9 +4608,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Wallis and Futuna Islander",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "XPF",
     "tld": ".wf",
     "calling_code": "+681",
@@ -5247,10 +4627,7 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "demonym": "Samoan",
-    "languages": [
-      "en",
-      "sm"
-    ],
+    "languages": ["en", "sm"],
     "currency": "WST",
     "tld": ".ws",
     "calling_code": "+685",
@@ -5269,10 +4646,7 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "demonym": "Kosovar",
-    "languages": [
-      "sq",
-      "sr"
-    ],
+    "languages": ["sq", "sr"],
     "currency": "EUR",
     "tld": null,
     "calling_code": "+383",
@@ -5291,9 +4665,7 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "demonym": "Yemeni",
-    "languages": [
-      "ar"
-    ],
+    "languages": ["ar"],
     "currency": "YER",
     "tld": ".ye",
     "calling_code": "+967",
@@ -5312,9 +4684,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Mahoran",
-    "languages": [
-      "fr"
-    ],
+    "languages": ["fr"],
     "currency": "EUR",
     "tld": ".yt",
     "calling_code": "+262",
@@ -5333,19 +4703,7 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "demonym": "South African",
-    "languages": [
-      "af",
-      "en",
-      "nr",
-      "nso",
-      "st",
-      "ss",
-      "tn",
-      "ts",
-      "ve",
-      "xh",
-      "zu"
-    ],
+    "languages": ["af", "en", "nr", "nso", "st", "ss", "tn", "ts", "ve", "xh", "zu"],
     "currency": "ZAR",
     "tld": ".za",
     "calling_code": "+27",
@@ -5364,9 +4722,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "demonym": "Zambian",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "currency": "ZMW",
     "tld": ".zm",
     "calling_code": "+260",

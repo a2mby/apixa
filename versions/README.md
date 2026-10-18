@@ -24,13 +24,13 @@ None — open the next milestone with `/start-version` when ready.
 
 ## Completed
 
-| Version | Status                                                        | Path                 |
-| ------- | ------------------------------------------------------------- | -------------------- |
-| v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend    | [v0.5.0/](./v0.5.0/) |
-| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing           | [v0.4.0/](./v0.4.0/) |
-| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)             | [v0.3.0/](./v0.3.0/) |
-| v0.2.0  | Shipped — default-first resource CRUD                         | [v0.2.0/](./v0.2.0/) |
-| v0.1.0  | Shipped — opt-in operations foundation                        | [v0.1.0/](./v0.1.0/) |
+| Version | Status                                                     | Path                 |
+| ------- | ---------------------------------------------------------- | -------------------- |
+| v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend | [v0.5.0/](./v0.5.0/) |
+| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing        | [v0.4.0/](./v0.4.0/) |
+| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)          | [v0.3.0/](./v0.3.0/) |
+| v0.2.0  | Shipped — default-first resource CRUD                      | [v0.2.0/](./v0.2.0/) |
+| v0.1.0  | Shipped — opt-in operations foundation                     | [v0.1.0/](./v0.1.0/) |
 
 ## Later (roadmap only)
 

@@ -8,11 +8,7 @@ export function mockResponse(status: number, body: unknown = null): TransportRes
     headers.set("content-type", "application/json");
   }
 
-  const rawBody = hasBody
-    ? typeof body === "string"
-      ? body
-      : JSON.stringify(body)
-    : null;
+  const rawBody = hasBody ? (typeof body === "string" ? body : JSON.stringify(body)) : null;
 
   const raw = new Response(rawBody, { status, headers });
 

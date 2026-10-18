@@ -75,7 +75,20 @@ describe("@apixa/mocking/data", () => {
 
   it("exposes the exports it documents, and nothing from the large datasets", () => {
     expect(Object.keys(data).sort()).toEqual(
-      ["comments", "companies", "mockUsers", "orders", "posts", "products", "users"].sort(),
+      [
+        "comments",
+        "commentsDataset",
+        "companies",
+        "companiesDataset",
+        "mockUsers",
+        "orders",
+        "ordersDataset",
+        "posts",
+        "postsDataset",
+        "products",
+        "productsDataset",
+        "users",
+      ].sort(),
     );
   });
 
