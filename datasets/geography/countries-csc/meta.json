@@ -1,0 +1,64 @@
+{
+  "id": "countries-csc",
+  "title": "Countries (CSC)",
+  "description": "Countries from dr5hn/countries-states-cities-database (slimmed fields).",
+  "license": "ODbL-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/countries",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "iso2",
+        "type": "string"
+      },
+      {
+        "name": "iso3",
+        "type": "string"
+      },
+      {
+        "name": "numeric_code",
+        "type": "string"
+      },
+      {
+        "name": "phonecode",
+        "type": "string"
+      },
+      {
+        "name": "capital",
+        "type": "string"
+      },
+      {
+        "name": "currency",
+        "type": "string"
+      },
+      {
+        "name": "region",
+        "type": "string"
+      },
+      {
+        "name": "subregion",
+        "type": "string"
+      },
+      {
+        "name": "latitude",
+        "type": "string"
+      },
+      {
+        "name": "longitude",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 250
+}

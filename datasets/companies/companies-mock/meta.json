@@ -1,0 +1,32 @@
+{
+  "id": "companies-mock",
+  "title": "Companies (synthetic)",
+  "description": "Deterministic synthetic companies with countryCode FK into CSC countries.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/companies",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "catchPhrase",
+        "type": "string"
+      },
+      {
+        "name": "countryCode",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 40
+}

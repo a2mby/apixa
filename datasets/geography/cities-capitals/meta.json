@@ -1,0 +1,48 @@
+{
+  "id": "cities-capitals",
+  "title": "Capital cities (CSC-derived subset)",
+  "description": "Deterministic capital-city subset derived from CSC countries.json — not the full cities dump.",
+  "license": "ODbL-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/cities",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "country_id",
+        "type": "string"
+      },
+      {
+        "name": "country_code",
+        "type": "string"
+      },
+      {
+        "name": "country_name",
+        "type": "string"
+      },
+      {
+        "name": "is_capital",
+        "type": "string"
+      },
+      {
+        "name": "latitude",
+        "type": "string"
+      },
+      {
+        "name": "longitude",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 245
+}

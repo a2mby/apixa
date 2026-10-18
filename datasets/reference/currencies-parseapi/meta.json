@@ -1,0 +1,40 @@
+{
+  "id": "currencies-parseapi",
+  "title": "Currencies (parseapi)",
+  "description": "Imported from parseapi/lists currencies/currencies.json",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/currencies",
+    "idField": "currency"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "currency",
+        "type": "string"
+      },
+      {
+        "name": "numeric",
+        "type": "number"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "symbol",
+        "type": "string"
+      },
+      {
+        "name": "digits",
+        "type": "number"
+      },
+      {
+        "name": "countries",
+        "type": "array"
+      }
+    ]
+  },
+  "records": 156
+}

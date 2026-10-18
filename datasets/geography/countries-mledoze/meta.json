@@ -1,0 +1,64 @@
+{
+  "id": "countries-mledoze",
+  "title": "Countries (mledoze)",
+  "description": "Countries from mledoze/countries (slimmed fields).",
+  "license": "ODbL-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/countries",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "official",
+        "type": "string"
+      },
+      {
+        "name": "cca2",
+        "type": "string"
+      },
+      {
+        "name": "cca3",
+        "type": "string"
+      },
+      {
+        "name": "ccn3",
+        "type": "string"
+      },
+      {
+        "name": "region",
+        "type": "string"
+      },
+      {
+        "name": "subregion",
+        "type": "string"
+      },
+      {
+        "name": "capital",
+        "type": "string"
+      },
+      {
+        "name": "currencies",
+        "type": "array"
+      },
+      {
+        "name": "languages",
+        "type": "array"
+      },
+      {
+        "name": "latlng",
+        "type": "array"
+      }
+    ]
+  },
+  "records": 250
+}

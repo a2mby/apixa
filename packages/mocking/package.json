@@ -1,0 +1,47 @@
+{
+  "name": "@apixa/mocking",
+  "version": "0.5.0",
+  "description": "Local JSON datasets and mock Transport for Apixa — not coupled to production execution.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts src/node.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/node.ts --format esm --dts --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apixa/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "apixa",
+    "mock",
+    "fixtures",
+    "transport",
+    "typescript"
+  ]
+}

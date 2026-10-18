@@ -1,0 +1,344 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-10-18T02:24:43.441Z",
+  "seed": 230523,
+  "generators": {
+    "used": "@faker-js/faker",
+    "seed": 230523,
+    "evaluatedNotUsed": [
+      "https://github.com/ngneat/falso",
+      "https://github.com/json-schema-faker/json-schema-faker",
+      "https://github.com/chancejs/chancejs"
+    ],
+    "primaryGeneratorUrl": "https://github.com/faker-js/faker"
+  },
+  "datasets": [
+    {
+      "id": "area-codes-parseapi",
+      "name": "US Area codes (parseapi)",
+      "description": "Imported from parseapi/lists area-codes/area-codes.json",
+      "sourceUrl": "https://raw.githubusercontent.com/parseapi/lists/main/area-codes/area-codes.json",
+      "license": "CC0-1.0",
+      "attribution": "Data from parseapi/lists (https://github.com/parseapi/lists), Creative Commons Zero v1.0 Universal.",
+      "recordCount": 424,
+      "filePath": "reference/area-codes-parseapi/data.json",
+      "metaPath": "reference/area-codes-parseapi/meta.json",
+      "domain": "reference",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "cities-capitals",
+      "name": "Capital cities (CSC-derived subset)",
+      "description": "Deterministic capital-city subset derived from CSC countries.json — not the full cities dump.",
+      "sourceUrl": "https://github.com/dr5hn/countries-states-cities-database",
+      "license": "ODbL-1.0",
+      "attribution": "Contains information from countries-states-cities-database (https://github.com/dr5hn/countries-states-cities-database), which is made available under the ODC Open Database License (ODbL).",
+      "recordCount": 245,
+      "filePath": "geography/cities-capitals/data.json",
+      "metaPath": "geography/cities-capitals/meta.json",
+      "domain": "geography",
+      "origin": "imported",
+      "notes": "Capped subset: one capital per country from countries.json. Full json/countries+states+cities.json (~53MB) not bundled.",
+      "substitutes": null
+    },
+    {
+      "id": "comments-mock",
+      "name": "Comments (synthetic)",
+      "description": "Deterministic comments with postId/userId FKs. Substitute for DummyJSON comments.",
+      "sourceUrl": "https://dummyjson.com/comments?limit=100",
+      "license": "MIT",
+      "attribution": "Apixa-generated with Faker.js / PRNG. Not DummyJSON data.",
+      "recordCount": 100,
+      "filePath": "comments/comments-mock/data.json",
+      "metaPath": "comments/comments-mock/meta.json",
+      "domain": "comments",
+      "origin": "generated",
+      "notes": null,
+      "substitutes": "https://dummyjson.com/comments?limit=100"
+    },
+    {
+      "id": "companies-mock",
+      "name": "Companies (synthetic)",
+      "description": "Deterministic synthetic companies with countryCode FK into CSC countries.",
+      "sourceUrl": "https://github.com/faker-js/faker",
+      "license": "MIT",
+      "attribution": "Apixa-generated with Faker.js / PRNG (MIT).",
+      "recordCount": 40,
+      "filePath": "companies/companies-mock/data.json",
+      "metaPath": "companies/companies-mock/meta.json",
+      "domain": "companies",
+      "origin": "generated",
+      "notes": "Generator: @faker-js/faker seed=230523.",
+      "substitutes": null
+    },
+    {
+      "id": "counties-parseapi",
+      "name": "US Counties (parseapi)",
+      "description": "Imported from parseapi/lists counties/counties.json",
+      "sourceUrl": "https://raw.githubusercontent.com/parseapi/lists/main/counties/counties.json",
+      "license": "CC0-1.0",
+      "attribution": "Data from parseapi/lists (https://github.com/parseapi/lists), Creative Commons Zero v1.0 Universal.",
+      "recordCount": 3572,
+      "filePath": "geography/counties-parseapi/data.json",
+      "metaPath": "geography/counties-parseapi/meta.json",
+      "domain": "geography",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "countries-csc",
+      "name": "Countries (CSC)",
+      "description": "Countries from dr5hn/countries-states-cities-database (slimmed fields).",
+      "sourceUrl": "https://github.com/dr5hn/countries-states-cities-database",
+      "license": "ODbL-1.0",
+      "attribution": "Contains information from countries-states-cities-database (https://github.com/dr5hn/countries-states-cities-database), which is made available under the ODC Open Database License (ODbL).",
+      "recordCount": 250,
+      "filePath": "geography/countries-csc/data.json",
+      "metaPath": "geography/countries-csc/meta.json",
+      "domain": "geography",
+      "origin": "imported",
+      "notes": "Source file: json/countries.json (fields slimmed for repo size).",
+      "substitutes": null
+    },
+    {
+      "id": "countries-mledoze",
+      "name": "Countries (mledoze)",
+      "description": "Countries from mledoze/countries (slimmed fields).",
+      "sourceUrl": "https://github.com/mledoze/countries",
+      "license": "ODbL-1.0",
+      "attribution": "Contains information from mledoze/countries (https://github.com/mledoze/countries), available under the ODC Open Database License (ODbL).",
+      "recordCount": 250,
+      "filePath": "geography/countries-mledoze/data.json",
+      "metaPath": "geography/countries-mledoze/meta.json",
+      "domain": "geography",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "countries-parseapi",
+      "name": "Countries (parseapi)",
+      "description": "Imported from parseapi/lists countries/countries.json",
+      "sourceUrl": "https://raw.githubusercontent.com/parseapi/lists/main/countries/countries.json",
+      "license": "CC0-1.0",
+      "attribution": "Data from parseapi/lists (https://github.com/parseapi/lists), Creative Commons Zero v1.0 Universal.",
+      "recordCount": 250,
+      "filePath": "geography/countries-parseapi/data.json",
+      "metaPath": "geography/countries-parseapi/meta.json",
+      "domain": "geography",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "country-codes-iso",
+      "name": "Country codes (synthetic ISO-oriented)",
+      "description": "Original synthetic country code table derived from CSC slim fields — substitute for datasets/country-codes.",
+      "sourceUrl": "https://github.com/datasets/country-codes",
+      "license": "MIT",
+      "attribution": "Apixa-generated substitute. Not a redistribution of datasets/country-codes.",
+      "recordCount": 250,
+      "filePath": "reference/country-codes-iso/data.json",
+      "metaPath": "reference/country-codes-iso/meta.json",
+      "domain": "reference",
+      "origin": "generated",
+      "notes": "Generated substitute due to restricted/unclear redistribution terms on the combined upstream file.",
+      "substitutes": "https://github.com/datasets/country-codes"
+    },
+    {
+      "id": "currencies-parseapi",
+      "name": "Currencies (parseapi)",
+      "description": "Imported from parseapi/lists currencies/currencies.json",
+      "sourceUrl": "https://raw.githubusercontent.com/parseapi/lists/main/currencies/currencies.json",
+      "license": "CC0-1.0",
+      "attribution": "Data from parseapi/lists (https://github.com/parseapi/lists), Creative Commons Zero v1.0 Universal.",
+      "recordCount": 156,
+      "filePath": "reference/currencies-parseapi/data.json",
+      "metaPath": "reference/currencies-parseapi/meta.json",
+      "domain": "reference",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "languages-parseapi",
+      "name": "Languages (parseapi)",
+      "description": "Imported from parseapi/lists languages/languages.json",
+      "sourceUrl": "https://raw.githubusercontent.com/parseapi/lists/main/languages/languages.json",
+      "license": "CC0-1.0",
+      "attribution": "Data from parseapi/lists (https://github.com/parseapi/lists), Creative Commons Zero v1.0 Universal.",
+      "recordCount": 224,
+      "filePath": "reference/languages-parseapi/data.json",
+      "metaPath": "reference/languages-parseapi/meta.json",
+      "domain": "reference",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "orders-mock",
+      "name": "Orders (synthetic)",
+      "description": "Deterministic orders with FKs to users-mock, products-mock, companies-mock.",
+      "sourceUrl": "https://github.com/faker-js/faker",
+      "license": "MIT",
+      "attribution": "Apixa-generated with Faker.js / PRNG (MIT).",
+      "recordCount": 80,
+      "filePath": "orders/orders-mock/data.json",
+      "metaPath": "orders/orders-mock/meta.json",
+      "domain": "orders",
+      "origin": "generated",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "posts-mock",
+      "name": "Posts (synthetic)",
+      "description": "Deterministic posts with userId FK. Substitute for DummyJSON posts.",
+      "sourceUrl": "https://dummyjson.com/posts?limit=100",
+      "license": "MIT",
+      "attribution": "Apixa-generated with Faker.js / PRNG. Not DummyJSON data.",
+      "recordCount": 100,
+      "filePath": "social/posts-mock/data.json",
+      "metaPath": "social/posts-mock/meta.json",
+      "domain": "social",
+      "origin": "generated",
+      "notes": null,
+      "substitutes": "https://dummyjson.com/posts?limit=100"
+    },
+    {
+      "id": "products-mock",
+      "name": "Products (synthetic)",
+      "description": "Deterministic synthetic products. Substitute for DummyJSON products.",
+      "sourceUrl": "https://dummyjson.com/products?limit=100",
+      "license": "MIT",
+      "attribution": "Apixa-generated with Faker.js / PRNG. Not DummyJSON data.",
+      "recordCount": 100,
+      "filePath": "products/products-mock/data.json",
+      "metaPath": "products/products-mock/meta.json",
+      "domain": "products",
+      "origin": "generated",
+      "notes": null,
+      "substitutes": "https://dummyjson.com/products?limit=100"
+    },
+    {
+      "id": "states-csc",
+      "name": "States (CSC)",
+      "description": "States/provinces from dr5hn/countries-states-cities-database (slimmed fields).",
+      "sourceUrl": "https://github.com/dr5hn/countries-states-cities-database",
+      "license": "ODbL-1.0",
+      "attribution": "Contains information from countries-states-cities-database (https://github.com/dr5hn/countries-states-cities-database), which is made available under the ODC Open Database License (ODbL).",
+      "recordCount": 5328,
+      "filePath": "geography/states-csc/data.json",
+      "metaPath": "geography/states-csc/meta.json",
+      "domain": "geography",
+      "origin": "imported",
+      "notes": "Source file: json/states.json (fields slimmed). Full cities dump (~50MB) not imported.",
+      "substitutes": null
+    },
+    {
+      "id": "states-parseapi",
+      "name": "States (parseapi)",
+      "description": "Imported from parseapi/lists states/states.json",
+      "sourceUrl": "https://raw.githubusercontent.com/parseapi/lists/main/states/states.json",
+      "license": "CC0-1.0",
+      "attribution": "Data from parseapi/lists (https://github.com/parseapi/lists), Creative Commons Zero v1.0 Universal.",
+      "recordCount": 5308,
+      "filePath": "geography/states-parseapi/data.json",
+      "metaPath": "geography/states-parseapi/meta.json",
+      "domain": "geography",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "timezones-parseapi",
+      "name": "Time zones (parseapi)",
+      "description": "Imported from parseapi/lists timezones/timezones.json",
+      "sourceUrl": "https://raw.githubusercontent.com/parseapi/lists/main/timezones/timezones.json",
+      "license": "CC0-1.0",
+      "attribution": "Data from parseapi/lists (https://github.com/parseapi/lists), Creative Commons Zero v1.0 Universal.",
+      "recordCount": 418,
+      "filePath": "reference/timezones-parseapi/data.json",
+      "metaPath": "reference/timezones-parseapi/meta.json",
+      "domain": "reference",
+      "origin": "imported",
+      "notes": null,
+      "substitutes": null
+    },
+    {
+      "id": "users-mock",
+      "name": "Users (synthetic)",
+      "description": "Deterministic synthetic users (seed 230523). Substitute for DummyJSON users.",
+      "sourceUrl": "https://dummyjson.com/users?limit=100",
+      "license": "MIT",
+      "attribution": "Apixa-generated with Faker.js / PRNG. Not DummyJSON data.",
+      "recordCount": 100,
+      "filePath": "users/users-mock/data.json",
+      "metaPath": "users/users-mock/meta.json",
+      "domain": "users",
+      "origin": "generated",
+      "notes": "Generator: @faker-js/faker seed=230523. Source URL listed as the skipped DummyJSON endpoint.",
+      "substitutes": "https://dummyjson.com/users?limit=100"
+    },
+    {
+      "id": "users-sample",
+      "name": "Users sample",
+      "description": "Small directory of example users for Apixa demos.",
+      "sourceUrl": "https://github.com/a2mby/apixa",
+      "license": "MIT",
+      "attribution": "Apixa maintainers (original sample).",
+      "recordCount": 2,
+      "filePath": "users/users-sample/data.json",
+      "metaPath": "users/users-sample/meta.json",
+      "domain": "users",
+      "origin": "generated",
+      "notes": null,
+      "substitutes": null
+    }
+  ],
+  "skipped": [
+    {
+      "sourceUrl": "https://github.com/datasets/country-codes",
+      "reason": "Combined CSV mixes restricted UNTERM and unclear-license sources; maintainers warn against republishing. Substituted with original synthetic country-codes-iso generated locally."
+    },
+    {
+      "sourceUrl": "https://exploremydata.com/datasets/",
+      "reason": "Catalog page only; no clear redistributable bulk JSON license established. Domains covered by Faker-generated sets."
+    },
+    {
+      "sourceUrl": "https://flaviocopes.com/datasets/",
+      "reason": "Catalog page only; no clear redistributable bulk JSON license established. Domains covered by Faker-generated sets."
+    },
+    {
+      "sourceUrl": "https://github.com/ngneat/falso",
+      "reason": "Evaluated generator; not used. Generation uses Faker.js (or built-in PRNG) only."
+    },
+    {
+      "sourceUrl": "https://github.com/json-schema-faker/json-schema-faker",
+      "reason": "Evaluated generator; not used. Generation uses Faker.js (or built-in PRNG) only."
+    },
+    {
+      "sourceUrl": "https://github.com/chancejs/chancejs",
+      "reason": "Evaluated generator; not used. Generation uses Faker.js (or built-in PRNG) only."
+    },
+    {
+      "sourceUrl": "https://dummyjson.com/users?limit=100",
+      "reason": "No clear redistributable license for DummyJSON response bodies. Substituted with original synthetic users-mock."
+    },
+    {
+      "sourceUrl": "https://dummyjson.com/products?limit=100",
+      "reason": "No clear redistributable license for DummyJSON response bodies. Substituted with original synthetic products-mock."
+    },
+    {
+      "sourceUrl": "https://dummyjson.com/posts?limit=100",
+      "reason": "No clear redistributable license for DummyJSON response bodies. Substituted with original synthetic posts-mock."
+    },
+    {
+      "sourceUrl": "https://dummyjson.com/comments?limit=100",
+      "reason": "No clear redistributable license for DummyJSON response bodies. Substituted with original synthetic comments-mock."
+    }
+  ]
+}

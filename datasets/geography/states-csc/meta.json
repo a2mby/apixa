@@ -1,0 +1,48 @@
+{
+  "id": "states-csc",
+  "title": "States (CSC)",
+  "description": "States/provinces from dr5hn/countries-states-cities-database (slimmed fields).",
+  "license": "ODbL-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/states",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "country_id",
+        "type": "string"
+      },
+      {
+        "name": "country_code",
+        "type": "string"
+      },
+      {
+        "name": "iso2",
+        "type": "string"
+      },
+      {
+        "name": "type",
+        "type": "string"
+      },
+      {
+        "name": "latitude",
+        "type": "string"
+      },
+      {
+        "name": "longitude",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 5328
+}

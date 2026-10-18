@@ -11,11 +11,8 @@ coverage
 .vite
 /.vscode
 
-# Python backend local env
-backend/.venv/
-backend/.backend.pid
-backend/**/__pycache__/
-backend/**/*.pyc
-
 # examples
 examples/**
+
+# dataset build cache (re-fetched by scripts/datasets/build-collection.mjs)
+scripts/datasets/.cache/

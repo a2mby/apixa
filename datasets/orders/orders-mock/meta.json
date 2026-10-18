@@ -1,0 +1,44 @@
+{
+  "id": "orders-mock",
+  "title": "Orders (synthetic)",
+  "description": "Deterministic orders with FKs to users-mock, products-mock, companies-mock.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/orders",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "userId",
+        "type": "string"
+      },
+      {
+        "name": "productId",
+        "type": "string"
+      },
+      {
+        "name": "companyId",
+        "type": "string"
+      },
+      {
+        "name": "quantity",
+        "type": "number"
+      },
+      {
+        "name": "total",
+        "type": "number"
+      },
+      {
+        "name": "status",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 80
+}

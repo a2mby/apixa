@@ -2,7 +2,7 @@
 
 This document describes the architecture Apixa is building toward, and how the current codebase maps to it.
 
-Apixa Core is the only package in scope for v0.1.0. Optional packages (client, server, mocking, TanStack Query, OpenAPI) are planned boundaries, not current work.
+Apixa Core owns definitions and live HTTP execution. `@apixa/mocking` (v0.5.0) is a separate package that injects a mock `Transport` — Core never depends on it. Other optional packages (client, server, TanStack Query, OpenAPI) remain planned boundaries.
 
 ## High-level shape
 
@@ -81,12 +81,14 @@ Out of the v0.1.0 public product surface (may exist in the scaffold today):
 
 ## Workspace today vs planned
 
-**Today (v0.1.0 focus):**
+**Today:**
 
 ```text
 packages/core/
-examples/basic/
-tests/          # vitest, fake Transport
+packages/mocking/   # local datasets + mock Transport (v0.5.0)
+datasets/           # version-controlled JSON fixtures
+examples/next/      # primary playground (uses mocking)
+tests/              # vitest — Core + mocking
 ```
 
 **Planned later (do not create yet):**
@@ -95,10 +97,11 @@ tests/          # vitest, fake Transport
 packages/transport-fetch/
 packages/client/
 packages/server/
-packages/mocking/
 packages/tanstack-query/
 packages/openapi/
 ```
+
+A future **online dataset catalog** may reuse the local `meta.json` shape; hosting is not implemented.
 
 Integrations always depend on Core. Core never depends on integrations.
 
@@ -106,4 +109,4 @@ Integrations always depend on Core. Core never depends on integrations.
 
 - Living context: [context.md](./context.md)
 - Roadmap: [roadmap.md](./roadmap.md)
-- Coding contract: [../versions/v0.1.0/](../versions/v0.1.0/)
+- Coding contract: [../versions/v0.5.0/](../versions/v0.5.0/)

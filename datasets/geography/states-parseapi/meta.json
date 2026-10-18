@@ -1,0 +1,32 @@
+{
+  "id": "states-parseapi",
+  "title": "States (parseapi)",
+  "description": "Imported from parseapi/lists states/states.json",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/states",
+    "idField": "state"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "country",
+        "type": "string"
+      },
+      {
+        "name": "state",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "type",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 5308
+}

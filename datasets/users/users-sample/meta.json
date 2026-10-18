@@ -1,0 +1,28 @@
+{
+  "id": "users-sample",
+  "title": "Users sample",
+  "description": "Small directory of example users for Apixa demos.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/users",
+    "idField": "id"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      }
+    ]
+  },
+  "records": 2
+}

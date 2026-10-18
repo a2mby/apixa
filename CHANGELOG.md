@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.5.0
+
+### Added
+
+- `@apixa/mocking` — `loadDataset`, `listDatasets`, `createMockTransport` (injectable Core `Transport`).
+- Local version-controlled datasets under `datasets/<domain>/<id>/` (`meta.json` + `data.json`) with `manifest.json` provenance.
+- Imported CC0 / ODbL reference geography sets; deterministic synthetic users/products/orders/social (Faker seed).
+- Sample `users-sample` dataset for demos and the Next example.
+- `pnpm datasets:build` to regenerate the collection from the fixed source URL list.
+
+### Removed
+
+- FastAPI `backend/` and platform `run-backend` / `stop-backend` / `restart-backend` scripts.
+- Happy-path dependency on `127.0.0.1:8787` in the Next / basic examples.
+
+### Notes
+
+- Core production Fetch path is unchanged; no Core `mocks` product API.
+- A future online dataset catalog is planned only — not implemented.
+
 ## 0.4.0
 
 ### Breaking

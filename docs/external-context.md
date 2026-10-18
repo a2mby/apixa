@@ -10,10 +10,11 @@ You are helping on **Apixa** (`https://github.com/a2mby/apixa`). Do **not** writ
 
 TypeScript-first library: define an API once → generate a fully typed client.
 
-- Package today: `@apixa/core` only
+- Packages today: `@apixa/core`, `@apixa/mocking` (local datasets + mock `Transport`)
 - Tagline: Define your API once. Use it everywhere.
 - Tooling: pnpm monorepo, TypeScript, native `Promise<T>`
 - Fetch transport lives **inside** Core until an ADR/version says otherwise
+- Mocking is injected via `transport` — never a Core `mocks` product API
 - Not a UI framework, not a server router, not merely a Fetch wrapper
 
 ```ts
@@ -43,20 +44,21 @@ Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `
 
 Confirm against the repo (do not invent versions):
 
-| Version    | Status                                                   |
-| ---------- | -------------------------------------------------------- |
-| v0.1.0     | Shipped — opt-in operations foundation                   |
-| v0.2.0     | Shipped — default-first resource CRUD                    |
-| v0.3.0     | Shipped — `type<T>()` markers (removed in v0.4.0)        |
-| **v0.4.0** | **Active** — Zustand-style `defineApi<T>()` state typing |
+| Version    | Status                                                        |
+| ---------- | ------------------------------------------------------------- |
+| v0.1.0     | Shipped — opt-in operations foundation                        |
+| v0.2.0     | Shipped — default-first resource CRUD                         |
+| v0.3.0     | Shipped — `type<T>()` markers (removed in v0.4.0)             |
+| v0.4.0     | Shipped — entity-only `defineApi<T>()` state typing           |
+| **v0.5.0** | **Active** — Simple Mocking + remove FastAPI backend          |
 
 Pointer of truth: [`versions/README.md`](../versions/README.md) → **Current** folder.
 
-**v0.4.0 goal:** resource-only state (`path` + `entity`); create/update derived; `BuiltinHeaders`; root builtins from Core; `type()` removed.
+**v0.5.0 goal:** local `datasets/` + `@apixa/mocking` (`loadDataset`, `listDatasets`, `createMockTransport`); remove `backend/`; no website / hosted catalog.
 
-**Documented follow-ups:** `crud<>()` preset, path-param template inference.
+**Documented follow-ups:** online dataset catalog (planned), `crud<>()` preset, path-param inference, reliability (abort/retries/middleware).
 
-**Next roadmap heading (approx v0.5.0):** AbortSignal, timeouts/retries, middleware, optional schema hooks, mocking, pagination — only after a version folder exists. Do **not** create empty future `versions/` stubs.
+Do **not** create empty future `versions/` stubs.
 
 ---
 
@@ -75,9 +77,11 @@ Do **not** recap the whole project back to the human.
 ```text
 docs/                 # living context, architecture, roadmap, story, ADRs, this file
 versions/             # frozen milestones only — no empty future stubs
-packages/core/        # only package until active scope says otherwise
+packages/core/        # definitions + live HTTP
+packages/mocking/     # local datasets + mock Transport (v0.5.0)
+datasets/             # version-controlled JSON fixtures
 examples/next/        # ONLY maintained example — do not edit other examples/*
-tests/                # growing Vitest suite; injectable / fake Transport
+tests/                # Vitest suite; injectable / fake Transport
 ```
 
 ---
@@ -90,7 +94,7 @@ tests/                # growing Vitest suite; injectable / fake Transport
 - Fetch stays in Core until ADR/version says otherwise
 - Do not couple mocking to production request execution
 - Planned ≠ implemented; keep docs honest
-- Do not add packages (`transport-fetch`, `client`, `server`, `mocking`, `tanstack-query`, `openapi`) unless **active** scope says so
+- Do not add packages (`transport-fetch`, `client`, `server`, `tanstack-query`, `openapi`) unless **active** scope says so (`mocking` exists as of v0.5.0)
 - Do not rewrite frozen `versions/v0.1.0/` or `v0.2.0/` for new features
 - Examples: **Next only** (`examples/next/**`)
 

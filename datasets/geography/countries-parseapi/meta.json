@@ -1,0 +1,84 @@
+{
+  "id": "countries-parseapi",
+  "title": "Countries (parseapi)",
+  "description": "Imported from parseapi/lists countries/countries.json",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "resource": {
+    "path": "/countries",
+    "idField": "country"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "country",
+        "type": "string"
+      },
+      {
+        "name": "iso3",
+        "type": "string"
+      },
+      {
+        "name": "numeric",
+        "type": "number"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "name_local",
+        "type": "string"
+      },
+      {
+        "name": "capital",
+        "type": "string"
+      },
+      {
+        "name": "continent",
+        "type": "string"
+      },
+      {
+        "name": "region",
+        "type": "string"
+      },
+      {
+        "name": "subregion",
+        "type": "string"
+      },
+      {
+        "name": "demonym",
+        "type": "string"
+      },
+      {
+        "name": "languages",
+        "type": "array"
+      },
+      {
+        "name": "currency",
+        "type": "string"
+      },
+      {
+        "name": "tld",
+        "type": "string"
+      },
+      {
+        "name": "calling_code",
+        "type": "string"
+      },
+      {
+        "name": "emoji",
+        "type": "string"
+      },
+      {
+        "name": "population",
+        "type": "number"
+      },
+      {
+        "name": "area",
+        "type": "number"
+      }
+    ]
+  },
+  "records": 250
+}

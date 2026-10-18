@@ -6,13 +6,14 @@
   "license": "MIT",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "pnpm --filter @apixa/core build",
+    "build": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build",
     "dev": "pnpm --filter @apixa/core dev",
-    "typecheck": "pnpm --filter @apixa/core typecheck && tsc --noEmit -p tests/tsconfig.json",
+    "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/mocking typecheck && tsc --noEmit -p tests/tsconfig.json",
     "test": "vitest run",
     "format": "prettier --write .",
-    "example": "pnpm --filter @apixa/example-basic start",
-    "example:next": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-next dev",
+    "datasets:build": "node scripts/datasets/build-collection.mjs",
+    "example": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/example-basic start",
+    "example:next": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/example-next dev",
     "example:react": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-react-vite dev",
     "example:vue": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-vue dev",
     "example:vanilla": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-vanilla dev",
@@ -20,6 +21,7 @@
     "example:react-native": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-react-native dev"
   },
   "devDependencies": {
+    "@faker-js/faker": "9",
     "prettier": "^3.9.10",
     "typescript": "^5.8.2",
     "vitest": "^3.2.4"
