@@ -5,6 +5,8 @@
 ### Added
 
 - `@apixa/mocking` — `loadDataset`, `listDatasets`, `createMockTransport` (injectable Core `Transport`).
+- Resource-level `mock` / `mockConfig` on Core `defineApi` via `registerDefineApiProcessor` (behavior owned by `@apixa/mocking`).
+- Typed presets `@apixa/mocking/data/users` and `data/users-mock`.
 - Local version-controlled datasets under `datasets/<domain>/<id>/` (`meta.json` + `data.json`) with `manifest.json` provenance.
 - Imported CC0 / ODbL reference geography sets; deterministic synthetic users/products/orders/social (Faker seed).
 - Sample `users-sample` dataset for demos and the Next example.

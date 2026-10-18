@@ -39,4 +39,5 @@ export type {
   ApiClient,
   ApiInput,
   ValidateApiConfig,
+  ResourceMockConfigInput,
 } from "./inference.js";

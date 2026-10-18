@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Resource-level mock / mockConfig on Core defineApi (#25)
+
+Core gained a generic `registerDefineApiProcessor` extension point; `@apixa/mocking` registers a processor that honors resource `mock` / `mockConfig` (selective Transport, in-memory CRUD, size + pagination envelope) without a second `defineApi`. Typed presets ship as `@apixa/mocking/data/*`. Global `createMockTransport` kept for compatibility.
+
 ## 2026-10-18 — Land v0.5.0 Simple Mocking and dataset collection (#23)
 
 Shipped `@apixa/mocking` (browser-safe transport + `@apixa/mocking/node` loaders), removed FastAPI `backend/` and backend scripts, and filled root `datasets/` with domain folders, `manifest.json` provenance, and `ATTRIBUTION.md`. Imported CC0/ODbL geography/reference sets; generated deterministic synthetics (Faker seed `230523`) where redistribution was unclear. Core production Fetch path unchanged; online catalog remains planned only.

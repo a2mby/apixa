@@ -149,12 +149,29 @@ type RuntimeOperationValue = {
   hasBody?: boolean;
 };
 
+/**
+ * Opaque resource mock config for integrations (e.g. `@apixa/mocking`).
+ * Core does not execute these — a registered defineApi processor must handle them.
+ */
+export type ResourceMockConfigInput = {
+  type: string;
+  size?: number;
+  pagination?: boolean;
+  [key: string]: unknown;
+};
+
 type ResourceRuntimeInput<_R> = {
   path: string;
   headers?: BuiltinHeaders | HeadersInitLike;
   timeout?: number;
   /** Runtime overrides / custom ops (value-only). Client typing comes from state `T`. */
   operations?: Record<string, RuntimeOperationValue>;
+  /**
+   * When true, `@apixa/mocking` must be imported so its processor can intercept this resource.
+   * Core never sends mocked resources to the network itself.
+   */
+  mock?: boolean;
+  mockConfig?: ResourceMockConfigInput;
 };
 
 /**

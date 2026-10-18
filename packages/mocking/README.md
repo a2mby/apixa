@@ -1,57 +1,55 @@
 # `@apixa/mocking`
 
-Local JSON datasets and a mock `Transport` for Apixa.
+Local JSON datasets and mock request handling for Apixa.
 
-Mocking is **not** part of Core’s production request path. You inject a transport into `defineApi({ transport })`.
+Mocking is **not** implemented inside Core’s production request path. Importing this package registers a Core `defineApi` **processor** that honors resource-level `mock` / `mockConfig`.
 
-## Dataset layout
-
-Repo root (version-controlled), domain folders:
-
-```text
-datasets/
-  manifest.json
-  ATTRIBUTION.md
-  <domain>/<id>/
-    meta.json
-    data.json
-```
-
-`meta.json` minimum fields: `id`, `title`, `license`, `version`, `resource.path`, `schema.fields`, `records`.
-
-Rebuild from fixed sources (see issue #23): `pnpm datasets:build`.
-
-## Usage (Node)
+## Resource-level mocking (recommended)
 
 ```ts
+import "@apixa/mocking"; // enables mock / mockConfig on Core defineApi
 import { defineApi } from "@apixa/core";
+
+const api = defineApi({
+  baseURL: "https://api.example.com",
+  users: {
+    path: "/users",
+    mock: true,
+    mockConfig: {
+      type: "users-sample",
+      size: 100,
+      pagination: true,
+    },
+  },
+  payments: {
+    path: "/payments", // real network
+  },
+});
+```
+
+- `mock: true` requires `mockConfig.type` (dataset / preset id).
+- Mocked resources never hit the network; others use the normal transport.
+- With `pagination: true`, list GET returns `{ data, total, page, pageSize }` (`page` / `pageSize` query; defaults `1` / `20`). `size` is applied first.
+
+## Typed presets
+
+```ts
+import users, { type User, dataset } from "@apixa/mocking/data/users";
+```
+
+Root `datasets/` remains the full catalog. Presets under `@apixa/mocking/data/*` are small, typed, import-friendly slices (no large geography dumps).
+
+## Global mock transport (compat)
+
+```ts
 import { createMockTransport } from "@apixa/mocking";
 import { loadDataset } from "@apixa/mocking/node";
 
-const dataset = await loadDataset("users-sample");
-const api = defineApi({
-  baseURL: "https://mock.local",
-  transport: createMockTransport({ dataset }),
-  users: { path: "/users" },
+const transport = createMockTransport({
+  dataset: await loadDataset("users-sample"),
 });
-
-await api.users.getAll();
 ```
 
-`listDatasets()` (from `@apixa/mocking/node`) lists local folders; no network.
+## Node loaders
 
-## Browser / Next
-
-Import JSON (or an already-loaded `Dataset`) and use the **browser-safe** entry — do **not** import `@apixa/mocking/node` in client bundles:
-
-```ts
-import data from "../../../datasets/users/users-sample/data.json";
-import meta from "../../../datasets/users/users-sample/meta.json";
-import { createMockTransport } from "@apixa/mocking";
-
-createMockTransport({ dataset: { meta, records: data } });
-```
-
-## Future online catalog
-
-A hosted browse/download catalog is **planned** only. This package stays local-first.
+`listDatasets` / `loadDataset` live at `@apixa/mocking/node` (filesystem). Do not import `/node` in browser bundles.

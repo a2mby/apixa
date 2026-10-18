@@ -160,7 +160,7 @@ The intended responsibilities are:
 - `transport-fetch`: Fetch transport implementation, if separation proves useful.
 - `client`: Browser-specific configuration and behavior.
 - `server`: Server-specific configuration and behavior.
-- `mocking`: **Implemented (v0.5.0)** — local JSON datasets, registry, mock `Transport`.
+- `mocking`: **Implemented (v0.5.0)** — local JSON datasets, registry, mock `Transport`, and resource-level `mock` / `mockConfig` via Core’s `registerDefineApiProcessor` (Core does not implement mock execution).
 - `tanstack-query`: Optional TanStack Query integration (planned).
 - `openapi`: OpenAPI interoperability (planned).
 

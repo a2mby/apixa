@@ -15,15 +15,23 @@
     "./node": {
       "types": "./dist/node.d.ts",
       "import": "./dist/node.js"
+    },
+    "./data/users": {
+      "types": "./dist/data/users.d.ts",
+      "import": "./dist/data/users.js"
+    },
+    "./data/users-mock": {
+      "types": "./dist/data/users-mock.d.ts",
+      "import": "./dist/data/users-mock.js"
     }
   },
   "files": [
     "dist"
   ],
-  "sideEffects": false,
+  "sideEffects": true,
   "scripts": {
-    "build": "tsup src/index.ts src/node.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts src/node.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts src/node.ts src/data/users.ts src/data/users-mock.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/node.ts src/data/users.ts src/data/users-mock.ts --format esm --dts --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
