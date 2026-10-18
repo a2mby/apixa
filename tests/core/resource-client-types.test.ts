@@ -1,4 +1,4 @@
-import { defineApi } from "@apixa/core";
+import { defineApi, type } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -52,12 +52,12 @@ describe("resource client TypeScript surface", () => {
       users: {
         path: "/users",
         operations: {
-          getAll: { response: {} as User[] },
+          getAll: { response: type<User[]>() },
           search: {
             method: "GET",
             path: "/search",
             query: {} as { q: string },
-            response: {} as User[],
+            response: type<User[]>(),
           },
         },
       },

@@ -13,6 +13,10 @@ export {
 
 export { createFetchTransport } from "./transport/index.js";
 
+import { type as typeMarker } from "./types/index.js";
+export { typeMarker as type };
+export type { Type, Infer } from "./types/index.js";
+
 export type {
   HttpMethod,
   PathParams,
