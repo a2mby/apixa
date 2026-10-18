@@ -1,7 +1,7 @@
 {
   "name": "@apixa/mocking",
   "version": "0.5.0",
-  "description": "Local JSON datasets and mock Transport for Apixa — not coupled to production execution.",
+  "description": "Standalone in-memory mock APIs and local JSON datasets for Apixa — no network, no backend.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -15,6 +15,10 @@
     "./node": {
       "types": "./dist/node.d.ts",
       "import": "./dist/node.js"
+    },
+    "./data": {
+      "types": "./dist/data/index.d.ts",
+      "import": "./dist/data/index.js"
     },
     "./data/users": {
       "types": "./dist/data/users.d.ts",
@@ -30,8 +34,8 @@
   ],
   "sideEffects": true,
   "scripts": {
-    "build": "tsup src/index.ts src/node.ts src/data/users.ts src/data/users-mock.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts src/node.ts src/data/users.ts src/data/users-mock.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts src/node.ts src/data/index.ts src/data/users.ts src/data/users-mock.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/node.ts src/data/index.ts src/data/users.ts src/data/users-mock.ts --format esm --dts --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -49,7 +53,7 @@
     "apixa",
     "mock",
     "fixtures",
-    "transport",
+    "in-memory",
     "typescript"
   ]
 }

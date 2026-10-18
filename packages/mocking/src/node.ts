@@ -14,7 +14,3 @@ export type {
 export { loadDataset, type LoadDatasetOptions } from "./load.js";
 export { listDatasets, getDataset, type ListDatasetsOptions } from "./registry.js";
 export { findDatasetDirs, resolveDatasetDir } from "./discover.js";
-export {
-  createMockTransport,
-  type CreateMockTransportOptions,
-} from "./transport.js";

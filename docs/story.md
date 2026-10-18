@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Standalone `defineMockApi()` in `@apixa/mocking`
+
+Added `defineMockApi({ users: { type, size, pagination } })`: a local, in-memory mock API with typed CRUD, pagination, and isolated state per call — no `defineApi()`, transport, or network. Datasets load lazily from the root `datasets/` JSON (one chunk each); `@apixa/mocking/data` exports typed records and entity types. Removed `createMockTransport` (and the unusable `createSelectiveMockTransport` export). Core and its resource-level `mock` / `mockConfig` processor are untouched. Three datasets (`states-csc`, `states-parseapi`, `counties-parseapi`) are not exposed: too large, and two have non-unique ids.
+
 ## 2026-10-18 — Resource-level mock / mockConfig on Core defineApi (#25)
 
 Core gained a generic `registerDefineApiProcessor` extension point; `@apixa/mocking` registers a processor that honors resource `mock` / `mockConfig` (selective Transport, in-memory CRUD, size + pagination envelope) without a second `defineApi`. Typed presets ship as `@apixa/mocking/data/*`. Global `createMockTransport` kept for compatibility.

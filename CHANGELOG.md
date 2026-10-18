@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `@apixa/mocking` — `defineMockApi()`: standalone, in-memory mock API seeded from local datasets (`type`, `size`, `pagination`); typed `getAll` / `getById` / `create` / `update` / `patch` / `delete`; no `defineApi()`, no network.
+- `MockApiError` with stable `code`s (`INVALID_CONFIG`, `UNKNOWN_DATASET`, `NOT_FOUND`, `DUPLICATE_ID`, `INVALID_INPUT`, `INVALID_PAGINATION`).
+- `@apixa/mocking/data` — typed, read-only records for the small synthetic datasets, plus entity types for all 16 datasets `defineMockApi()` can load.
+
+### Removed
+
+- `createMockTransport()` and its options type (superseded by `defineMockApi()` / resource-level `mock`).
+- `createSelectiveMockTransport` from the public exports (needed an unexported `MockStore`; still used internally by the Core bridge).
+
+### Notes
+
+- Core is unchanged. Resource-level `mock` / `mockConfig` and `import "@apixa/mocking"` behave exactly as before.
+- Not loadable through `defineMockApi()`: `states-csc`, `states-parseapi`, `counties-parseapi` (each >500 KB; the two parseapi sets also have non-unique id fields).
+
 ## 0.5.0
 
 ### Added

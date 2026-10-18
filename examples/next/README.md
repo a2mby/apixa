@@ -32,3 +32,16 @@ users: {
 ```
 
 Typed entity: `import type { User } from "@apixa/mocking/data/users"`.
+
+## Standalone mock API
+
+[`lib/mock-api.ts`](./lib/mock-api.ts) uses `defineMockApi()` instead — no `defineApi()`, no network, state kept in memory:
+
+```ts
+export const mockApi = defineMockApi({
+  users: { type: "users-sample", pagination: true },
+  products: { type: "products-mock", size: 50 },
+});
+```
+
+`api.ts` (Core inline mocking) and `mock-api.ts` are independent and share no state.
