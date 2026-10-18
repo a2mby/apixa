@@ -16,8 +16,16 @@ alwaysApply: false
 | `conventions.md` | How we build and document |
 | `story.md` | Dated log, newest first |
 | `decisions/NNN-*.md` | ADRs (Context / Decision / Consequences) |
+| `guides/` | Short how-tos — `humans/` (prose) and `agents/` (checklists) |
 
 Do not move living context to the repo root.
+
+### Guides (`docs/guides/`)
+
+- Task-oriented only — not a second `context.md` or architecture dump.
+- Put human-facing prose under `guides/humans/`; agent checklists and Cursor command pointers under `guides/agents/`.
+- Keep both indexes (`guides/README.md`, folder READMEs) updated when you add a guide.
+- Prefer linking to package READMEs / source for long code samples instead of duplicating them.
 
 ## Version folders (`versions/vX.Y.Z/`)
 

@@ -35,6 +35,7 @@ Shared rules for building Apixa Core, writing docs, and shipping version milesto
   - [architecture.md](./architecture.md) — structure and request flow
   - [roadmap.md](./roadmap.md) — phases
   - [decisions/](./decisions/) — ADRs
+  - [guides/](./guides/) — short how-tos ([humans](./guides/humans/), [agents](./guides/agents/))
 - Milestone specs live under [`versions/`](../versions/). A version folder freezes intent for that release. Do not invent empty future version folders; add them when that milestone starts.
 
 ## Version folders
@@ -71,6 +72,8 @@ Use these so the structure does not drift:
 | `/git-push`          | Commit, PR, squash merge, story log        |
 
 Rules live in `.cursor/rules/apixa-*.mdc`. Skill: `.cursor/skills/apixa-workflow/`.
+
+How-to checklists for agents (and prose for humans): [`docs/guides/`](./guides/).
 
 ## Examples and tests
 
