@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — Human and agent how-to guides (#32)
+
+Added `docs/guides/` with `humans/` and `agents/` folders: short task guides (extend `MockDatasetIds`, fix a small bug, plan-and-land via `/plan-change` + `/git-push`). Conventions and the docs Cursor rule point at the new tree so contributors and agents share the same how-to home.
+
 ## 2026-10-18 — MockDatasetIds autocomplete for mockConfig.type (#30)
 
 Core exports an empty extensible `MockDatasetIds`; `@apixa/mocking` data modules merge preset ids next to `registerDatasetPreset`, so importing `@apixa/mocking/data` teaches `mockConfig.type` autocomplete while still accepting custom strings. Builtins cover the small synthetic presets; mocking README documents the customize-your-own pattern. `/git-push` now always runs `npm run format`, and Prettier-only diffs outside Touches are allowed.
