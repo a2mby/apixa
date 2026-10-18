@@ -9,17 +9,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Oranjestad",
-    "currencies": [
-      "AWG"
-    ],
-    "languages": [
-      "Dutch",
-      "Papiamento"
-    ],
-    "latlng": [
-      12.5,
-      -69.96666666
-    ]
+    "currencies": ["AWG"],
+    "languages": ["Dutch", "Papiamento"],
+    "latlng": [12.5, -69.96666666]
   },
   {
     "id": "AFG",
@@ -31,18 +23,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Kabul",
-    "currencies": [
-      "AFN"
-    ],
-    "languages": [
-      "Dari",
-      "Pashto",
-      "Turkmen"
-    ],
-    "latlng": [
-      33,
-      65
-    ]
+    "currencies": ["AFN"],
+    "languages": ["Dari", "Pashto", "Turkmen"],
+    "latlng": [33, 65]
   },
   {
     "id": "AGO",
@@ -54,16 +37,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Luanda",
-    "currencies": [
-      "AOA"
-    ],
-    "languages": [
-      "Portuguese"
-    ],
-    "latlng": [
-      -12.5,
-      18.5
-    ]
+    "currencies": ["AOA"],
+    "languages": ["Portuguese"],
+    "latlng": [-12.5, 18.5]
   },
   {
     "id": "AIA",
@@ -75,16 +51,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "The Valley",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      18.25,
-      -63.16666666
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [18.25, -63.16666666]
   },
   {
     "id": "ALA",
@@ -96,16 +65,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Mariehamn",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Swedish"
-    ],
-    "latlng": [
-      60.116667,
-      19.9
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Swedish"],
+    "latlng": [60.116667, 19.9]
   },
   {
     "id": "ALB",
@@ -117,16 +79,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Tirana",
-    "currencies": [
-      "ALL"
-    ],
-    "languages": [
-      "Albanian"
-    ],
-    "latlng": [
-      41,
-      20
-    ]
+    "currencies": ["ALL"],
+    "languages": ["Albanian"],
+    "latlng": [41, 20]
   },
   {
     "id": "AND",
@@ -138,16 +93,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Andorra la Vella",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Catalan"
-    ],
-    "latlng": [
-      42.5,
-      1.5
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Catalan"],
+    "latlng": [42.5, 1.5]
   },
   {
     "id": "ARE",
@@ -159,16 +107,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Abu Dhabi",
-    "currencies": [
-      "AED"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      24,
-      54
-    ]
+    "currencies": ["AED"],
+    "languages": ["Arabic"],
+    "latlng": [24, 54]
   },
   {
     "id": "ARG",
@@ -180,17 +121,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Buenos Aires",
-    "currencies": [
-      "ARS"
-    ],
-    "languages": [
-      "Guaraní",
-      "Spanish"
-    ],
-    "latlng": [
-      -34,
-      -64
-    ]
+    "currencies": ["ARS"],
+    "languages": ["Guaraní", "Spanish"],
+    "latlng": [-34, -64]
   },
   {
     "id": "ARM",
@@ -202,16 +135,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Yerevan",
-    "currencies": [
-      "AMD"
-    ],
-    "languages": [
-      "Armenian"
-    ],
-    "latlng": [
-      40,
-      45
-    ]
+    "currencies": ["AMD"],
+    "languages": ["Armenian"],
+    "latlng": [40, 45]
   },
   {
     "id": "ASM",
@@ -223,17 +149,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Pago Pago",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English",
-      "Samoan"
-    ],
-    "latlng": [
-      -14.33333333,
-      -170
-    ]
+    "currencies": ["USD"],
+    "languages": ["English", "Samoan"],
+    "latlng": [-14.33333333, -170]
   },
   {
     "id": "ATA",
@@ -247,10 +165,7 @@
     "capital": null,
     "currencies": [],
     "languages": [],
-    "latlng": [
-      -90,
-      0
-    ]
+    "latlng": [-90, 0]
   },
   {
     "id": "ATF",
@@ -262,16 +177,9 @@
     "region": "Antarctic",
     "subregion": "",
     "capital": "Port-aux-Français",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      -49.25,
-      69.167
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [-49.25, 69.167]
   },
   {
     "id": "ATG",
@@ -283,16 +191,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Saint John's",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      17.05,
-      -61.8
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [17.05, -61.8]
   },
   {
     "id": "AUS",
@@ -304,16 +205,9 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "capital": "Canberra",
-    "currencies": [
-      "AUD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -27,
-      133
-    ]
+    "currencies": ["AUD"],
+    "languages": ["English"],
+    "latlng": [-27, 133]
   },
   {
     "id": "AUT",
@@ -325,16 +219,9 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "capital": "Vienna",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Austro-Bavarian German"
-    ],
-    "latlng": [
-      47.33333333,
-      13.33333333
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Austro-Bavarian German"],
+    "latlng": [47.33333333, 13.33333333]
   },
   {
     "id": "AZE",
@@ -346,17 +233,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Baku",
-    "currencies": [
-      "AZN"
-    ],
-    "languages": [
-      "Azerbaijani",
-      "Russian"
-    ],
-    "latlng": [
-      40.5,
-      47.5
-    ]
+    "currencies": ["AZN"],
+    "languages": ["Azerbaijani", "Russian"],
+    "latlng": [40.5, 47.5]
   },
   {
     "id": "BDI",
@@ -368,17 +247,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Gitega",
-    "currencies": [
-      "BIF"
-    ],
-    "languages": [
-      "French",
-      "Kirundi"
-    ],
-    "latlng": [
-      -3.5,
-      30
-    ]
+    "currencies": ["BIF"],
+    "languages": ["French", "Kirundi"],
+    "latlng": [-3.5, 30]
   },
   {
     "id": "BEL",
@@ -390,18 +261,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Brussels",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "German",
-      "French",
-      "Dutch"
-    ],
-    "latlng": [
-      50.83333333,
-      4
-    ]
+    "currencies": ["EUR"],
+    "languages": ["German", "French", "Dutch"],
+    "latlng": [50.83333333, 4]
   },
   {
     "id": "BEN",
@@ -413,16 +275,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Porto-Novo",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      9.5,
-      2.25
-    ]
+    "currencies": ["XOF"],
+    "languages": ["French"],
+    "latlng": [9.5, 2.25]
   },
   {
     "id": "BFA",
@@ -434,16 +289,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Ouagadougou",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      13,
-      -2
-    ]
+    "currencies": ["XOF"],
+    "languages": ["French"],
+    "latlng": [13, -2]
   },
   {
     "id": "BGD",
@@ -455,16 +303,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Dhaka",
-    "currencies": [
-      "BDT"
-    ],
-    "languages": [
-      "Bengali"
-    ],
-    "latlng": [
-      24,
-      90
-    ]
+    "currencies": ["BDT"],
+    "languages": ["Bengali"],
+    "latlng": [24, 90]
   },
   {
     "id": "BGR",
@@ -476,16 +317,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Sofia",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Bulgarian"
-    ],
-    "latlng": [
-      43,
-      25
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Bulgarian"],
+    "latlng": [43, 25]
   },
   {
     "id": "BHR",
@@ -497,16 +331,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Manama",
-    "currencies": [
-      "BHD"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      26,
-      50.55
-    ]
+    "currencies": ["BHD"],
+    "languages": ["Arabic"],
+    "latlng": [26, 50.55]
   },
   {
     "id": "BHS",
@@ -518,17 +345,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Nassau",
-    "currencies": [
-      "BSD",
-      "USD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      24.25,
-      -76
-    ]
+    "currencies": ["BSD", "USD"],
+    "languages": ["English"],
+    "latlng": [24.25, -76]
   },
   {
     "id": "BIH",
@@ -540,18 +359,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Sarajevo",
-    "currencies": [
-      "BAM"
-    ],
-    "languages": [
-      "Bosnian",
-      "Croatian",
-      "Serbian"
-    ],
-    "latlng": [
-      44,
-      18
-    ]
+    "currencies": ["BAM"],
+    "languages": ["Bosnian", "Croatian", "Serbian"],
+    "latlng": [44, 18]
   },
   {
     "id": "BLM",
@@ -563,16 +373,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Gustavia",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      18.5,
-      -63.41666666
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [18.5, -63.41666666]
   },
   {
     "id": "SHN",
@@ -584,17 +387,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Jamestown",
-    "currencies": [
-      "GBP",
-      "SHP"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -15.95,
-      -5.72
-    ]
+    "currencies": ["GBP", "SHP"],
+    "languages": ["English"],
+    "latlng": [-15.95, -5.72]
   },
   {
     "id": "BLR",
@@ -606,17 +401,9 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "capital": "Minsk",
-    "currencies": [
-      "BYN"
-    ],
-    "languages": [
-      "Belarusian",
-      "Russian"
-    ],
-    "latlng": [
-      53,
-      28
-    ]
+    "currencies": ["BYN"],
+    "languages": ["Belarusian", "Russian"],
+    "latlng": [53, 28]
   },
   {
     "id": "BLZ",
@@ -628,18 +415,9 @@
     "region": "Americas",
     "subregion": "Central America",
     "capital": "Belmopan",
-    "currencies": [
-      "BZD"
-    ],
-    "languages": [
-      "Belizean Creole",
-      "English",
-      "Spanish"
-    ],
-    "latlng": [
-      17.25,
-      -88.75
-    ]
+    "currencies": ["BZD"],
+    "languages": ["Belizean Creole", "English", "Spanish"],
+    "latlng": [17.25, -88.75]
   },
   {
     "id": "BMU",
@@ -651,16 +429,9 @@
     "region": "Americas",
     "subregion": "North America",
     "capital": "Hamilton",
-    "currencies": [
-      "BMD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      32.33333333,
-      -64.75
-    ]
+    "currencies": ["BMD"],
+    "languages": ["English"],
+    "latlng": [32.33333333, -64.75]
   },
   {
     "id": "BOL",
@@ -672,19 +443,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Sucre",
-    "currencies": [
-      "BOB"
-    ],
-    "languages": [
-      "Aymara",
-      "Guaraní",
-      "Quechua",
-      "Spanish"
-    ],
-    "latlng": [
-      -17,
-      -65
-    ]
+    "currencies": ["BOB"],
+    "languages": ["Aymara", "Guaraní", "Quechua", "Spanish"],
+    "latlng": [-17, -65]
   },
   {
     "id": "BES",
@@ -696,18 +457,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Kralendijk",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English",
-      "Dutch",
-      "Papiamento"
-    ],
-    "latlng": [
-      12.18,
-      -68.25
-    ]
+    "currencies": ["USD"],
+    "languages": ["English", "Dutch", "Papiamento"],
+    "latlng": [12.18, -68.25]
   },
   {
     "id": "BRA",
@@ -719,16 +471,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Brasília",
-    "currencies": [
-      "BRL"
-    ],
-    "languages": [
-      "Portuguese"
-    ],
-    "latlng": [
-      -10,
-      -55
-    ]
+    "currencies": ["BRL"],
+    "languages": ["Portuguese"],
+    "latlng": [-10, -55]
   },
   {
     "id": "BRB",
@@ -740,16 +485,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Bridgetown",
-    "currencies": [
-      "BBD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      13.16666666,
-      -59.53333333
-    ]
+    "currencies": ["BBD"],
+    "languages": ["English"],
+    "latlng": [13.16666666, -59.53333333]
   },
   {
     "id": "BRN",
@@ -761,17 +499,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Bandar Seri Begawan",
-    "currencies": [
-      "BND",
-      "SGD"
-    ],
-    "languages": [
-      "Malay"
-    ],
-    "latlng": [
-      4.5,
-      114.66666666
-    ]
+    "currencies": ["BND", "SGD"],
+    "languages": ["Malay"],
+    "latlng": [4.5, 114.66666666]
   },
   {
     "id": "BTN",
@@ -783,17 +513,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Thimphu",
-    "currencies": [
-      "BTN",
-      "INR"
-    ],
-    "languages": [
-      "Dzongkha"
-    ],
-    "latlng": [
-      27.5,
-      90.5
-    ]
+    "currencies": ["BTN", "INR"],
+    "languages": ["Dzongkha"],
+    "latlng": [27.5, 90.5]
   },
   {
     "id": "BVT",
@@ -806,13 +528,8 @@
     "subregion": "",
     "capital": null,
     "currencies": [],
-    "languages": [
-      "Norwegian"
-    ],
-    "latlng": [
-      -54.43333333,
-      3.4
-    ]
+    "languages": ["Norwegian"],
+    "latlng": [-54.43333333, 3.4]
   },
   {
     "id": "BWA",
@@ -824,17 +541,9 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "capital": "Gaborone",
-    "currencies": [
-      "BWP"
-    ],
-    "languages": [
-      "English",
-      "Tswana"
-    ],
-    "latlng": [
-      -22,
-      24
-    ]
+    "currencies": ["BWP"],
+    "languages": ["English", "Tswana"],
+    "latlng": [-22, 24]
   },
   {
     "id": "CAF",
@@ -846,17 +555,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Bangui",
-    "currencies": [
-      "XAF"
-    ],
-    "languages": [
-      "French",
-      "Sango"
-    ],
-    "latlng": [
-      7,
-      21
-    ]
+    "currencies": ["XAF"],
+    "languages": ["French", "Sango"],
+    "latlng": [7, 21]
   },
   {
     "id": "CAN",
@@ -868,17 +569,9 @@
     "region": "Americas",
     "subregion": "North America",
     "capital": "Ottawa",
-    "currencies": [
-      "CAD"
-    ],
-    "languages": [
-      "English",
-      "French"
-    ],
-    "latlng": [
-      60,
-      -95
-    ]
+    "currencies": ["CAD"],
+    "languages": ["English", "French"],
+    "latlng": [60, -95]
   },
   {
     "id": "CCK",
@@ -890,16 +583,9 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "capital": "West Island",
-    "currencies": [
-      "AUD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -12.5,
-      96.83333333
-    ]
+    "currencies": ["AUD"],
+    "languages": ["English"],
+    "latlng": [-12.5, 96.83333333]
   },
   {
     "id": "CHE",
@@ -911,19 +597,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Bern",
-    "currencies": [
-      "CHF"
-    ],
-    "languages": [
-      "French",
-      "Swiss German",
-      "Italian",
-      "Romansh"
-    ],
-    "latlng": [
-      47,
-      8
-    ]
+    "currencies": ["CHF"],
+    "languages": ["French", "Swiss German", "Italian", "Romansh"],
+    "latlng": [47, 8]
   },
   {
     "id": "CHL",
@@ -935,16 +611,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Santiago",
-    "currencies": [
-      "CLP"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      -30,
-      -71
-    ]
+    "currencies": ["CLP"],
+    "languages": ["Spanish"],
+    "latlng": [-30, -71]
   },
   {
     "id": "CHN",
@@ -956,16 +625,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": "Beijing",
-    "currencies": [
-      "CNY"
-    ],
-    "languages": [
-      "Chinese"
-    ],
-    "latlng": [
-      35,
-      105
-    ]
+    "currencies": ["CNY"],
+    "languages": ["Chinese"],
+    "latlng": [35, 105]
   },
   {
     "id": "CIV",
@@ -977,16 +639,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Yamoussoukro",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      8,
-      -5
-    ]
+    "currencies": ["XOF"],
+    "languages": ["French"],
+    "latlng": [8, -5]
   },
   {
     "id": "CMR",
@@ -998,17 +653,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Yaoundé",
-    "currencies": [
-      "XAF"
-    ],
-    "languages": [
-      "English",
-      "French"
-    ],
-    "latlng": [
-      6,
-      12
-    ]
+    "currencies": ["XAF"],
+    "languages": ["English", "French"],
+    "latlng": [6, 12]
   },
   {
     "id": "COD",
@@ -1020,20 +667,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Kinshasa",
-    "currencies": [
-      "CDF"
-    ],
-    "languages": [
-      "French",
-      "Kikongo",
-      "Lingala",
-      "Tshiluba",
-      "Swahili"
-    ],
-    "latlng": [
-      0,
-      25
-    ]
+    "currencies": ["CDF"],
+    "languages": ["French", "Kikongo", "Lingala", "Tshiluba", "Swahili"],
+    "latlng": [0, 25]
   },
   {
     "id": "COG",
@@ -1045,18 +681,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Brazzaville",
-    "currencies": [
-      "XAF"
-    ],
-    "languages": [
-      "French",
-      "Kikongo",
-      "Lingala"
-    ],
-    "latlng": [
-      -1,
-      15
-    ]
+    "currencies": ["XAF"],
+    "languages": ["French", "Kikongo", "Lingala"],
+    "latlng": [-1, 15]
   },
   {
     "id": "COK",
@@ -1068,18 +695,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Avarua",
-    "currencies": [
-      "CKD",
-      "NZD"
-    ],
-    "languages": [
-      "English",
-      "Cook Islands Māori"
-    ],
-    "latlng": [
-      -21.23333333,
-      -159.76666666
-    ]
+    "currencies": ["CKD", "NZD"],
+    "languages": ["English", "Cook Islands Māori"],
+    "latlng": [-21.23333333, -159.76666666]
   },
   {
     "id": "COL",
@@ -1091,16 +709,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Bogotá",
-    "currencies": [
-      "COP"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      4,
-      -72
-    ]
+    "currencies": ["COP"],
+    "languages": ["Spanish"],
+    "latlng": [4, -72]
   },
   {
     "id": "COM",
@@ -1112,18 +723,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Moroni",
-    "currencies": [
-      "KMF"
-    ],
-    "languages": [
-      "Arabic",
-      "French",
-      "Comorian"
-    ],
-    "latlng": [
-      -12.16666666,
-      44.25
-    ]
+    "currencies": ["KMF"],
+    "languages": ["Arabic", "French", "Comorian"],
+    "latlng": [-12.16666666, 44.25]
   },
   {
     "id": "CPV",
@@ -1135,16 +737,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Praia",
-    "currencies": [
-      "CVE"
-    ],
-    "languages": [
-      "Portuguese"
-    ],
-    "latlng": [
-      16,
-      -24
-    ]
+    "currencies": ["CVE"],
+    "languages": ["Portuguese"],
+    "latlng": [16, -24]
   },
   {
     "id": "CRI",
@@ -1156,16 +751,9 @@
     "region": "Americas",
     "subregion": "Central America",
     "capital": "San José",
-    "currencies": [
-      "CRC"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      10,
-      -84
-    ]
+    "currencies": ["CRC"],
+    "languages": ["Spanish"],
+    "latlng": [10, -84]
   },
   {
     "id": "CUB",
@@ -1177,17 +765,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Havana",
-    "currencies": [
-      "CUC",
-      "CUP"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      21.5,
-      -80
-    ]
+    "currencies": ["CUC", "CUP"],
+    "languages": ["Spanish"],
+    "latlng": [21.5, -80]
   },
   {
     "id": "CUW",
@@ -1199,18 +779,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Willemstad",
-    "currencies": [
-      "ANG"
-    ],
-    "languages": [
-      "English",
-      "Dutch",
-      "Papiamento"
-    ],
-    "latlng": [
-      12.116667,
-      -68.933333
-    ]
+    "currencies": ["ANG"],
+    "languages": ["English", "Dutch", "Papiamento"],
+    "latlng": [12.116667, -68.933333]
   },
   {
     "id": "CXR",
@@ -1222,16 +793,9 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "capital": "Flying Fish Cove",
-    "currencies": [
-      "AUD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -10.5,
-      105.66666666
-    ]
+    "currencies": ["AUD"],
+    "languages": ["English"],
+    "latlng": [-10.5, 105.66666666]
   },
   {
     "id": "CYM",
@@ -1243,16 +807,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "George Town",
-    "currencies": [
-      "KYD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      19.5,
-      -80.5
-    ]
+    "currencies": ["KYD"],
+    "languages": ["English"],
+    "latlng": [19.5, -80.5]
   },
   {
     "id": "CYP",
@@ -1264,17 +821,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Nicosia",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Greek",
-      "Turkish"
-    ],
-    "latlng": [
-      35,
-      33
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Greek", "Turkish"],
+    "latlng": [35, 33]
   },
   {
     "id": "CZE",
@@ -1286,17 +835,9 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "capital": "Prague",
-    "currencies": [
-      "CZK"
-    ],
-    "languages": [
-      "Czech",
-      "Slovak"
-    ],
-    "latlng": [
-      49.75,
-      15.5
-    ]
+    "currencies": ["CZK"],
+    "languages": ["Czech", "Slovak"],
+    "latlng": [49.75, 15.5]
   },
   {
     "id": "DEU",
@@ -1308,16 +849,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Berlin",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "German"
-    ],
-    "latlng": [
-      51,
-      9
-    ]
+    "currencies": ["EUR"],
+    "languages": ["German"],
+    "latlng": [51, 9]
   },
   {
     "id": "DJI",
@@ -1329,17 +863,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Djibouti",
-    "currencies": [
-      "DJF"
-    ],
-    "languages": [
-      "Arabic",
-      "French"
-    ],
-    "latlng": [
-      11.5,
-      43
-    ]
+    "currencies": ["DJF"],
+    "languages": ["Arabic", "French"],
+    "latlng": [11.5, 43]
   },
   {
     "id": "DMA",
@@ -1351,16 +877,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Roseau",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      15.41666666,
-      -61.33333333
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [15.41666666, -61.33333333]
   },
   {
     "id": "DNK",
@@ -1372,16 +891,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Copenhagen",
-    "currencies": [
-      "DKK"
-    ],
-    "languages": [
-      "Danish"
-    ],
-    "latlng": [
-      56,
-      10
-    ]
+    "currencies": ["DKK"],
+    "languages": ["Danish"],
+    "latlng": [56, 10]
   },
   {
     "id": "DOM",
@@ -1393,16 +905,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Santo Domingo",
-    "currencies": [
-      "DOP"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      19,
-      -70.66666666
-    ]
+    "currencies": ["DOP"],
+    "languages": ["Spanish"],
+    "latlng": [19, -70.66666666]
   },
   {
     "id": "DZA",
@@ -1414,16 +919,9 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "capital": "Algiers",
-    "currencies": [
-      "DZD"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      28,
-      3
-    ]
+    "currencies": ["DZD"],
+    "languages": ["Arabic"],
+    "latlng": [28, 3]
   },
   {
     "id": "ECU",
@@ -1435,16 +933,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Quito",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      -2,
-      -77.5
-    ]
+    "currencies": ["USD"],
+    "languages": ["Spanish"],
+    "latlng": [-2, -77.5]
   },
   {
     "id": "EGY",
@@ -1456,16 +947,9 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "capital": "Cairo",
-    "currencies": [
-      "EGP"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      27,
-      30
-    ]
+    "currencies": ["EGP"],
+    "languages": ["Arabic"],
+    "latlng": [27, 30]
   },
   {
     "id": "ERI",
@@ -1477,18 +961,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Asmara",
-    "currencies": [
-      "ERN"
-    ],
-    "languages": [
-      "Arabic",
-      "English",
-      "Tigrinya"
-    ],
-    "latlng": [
-      15,
-      39
-    ]
+    "currencies": ["ERN"],
+    "languages": ["Arabic", "English", "Tigrinya"],
+    "latlng": [15, 39]
   },
   {
     "id": "ESH",
@@ -1500,20 +975,9 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "capital": "El Aaiún",
-    "currencies": [
-      "DZD",
-      "MAD",
-      "MRU"
-    ],
-    "languages": [
-      "Berber",
-      "Hassaniya",
-      "Spanish"
-    ],
-    "latlng": [
-      24.5,
-      -13
-    ]
+    "currencies": ["DZD", "MAD", "MRU"],
+    "languages": ["Berber", "Hassaniya", "Spanish"],
+    "latlng": [24.5, -13]
   },
   {
     "id": "ESP",
@@ -1525,16 +989,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Madrid",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      40,
-      -4
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Spanish"],
+    "latlng": [40, -4]
   },
   {
     "id": "EST",
@@ -1546,16 +1003,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Tallinn",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Estonian"
-    ],
-    "latlng": [
-      59,
-      26
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Estonian"],
+    "latlng": [59, 26]
   },
   {
     "id": "ETH",
@@ -1567,16 +1017,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Addis Ababa",
-    "currencies": [
-      "ETB"
-    ],
-    "languages": [
-      "Amharic"
-    ],
-    "latlng": [
-      8,
-      38
-    ]
+    "currencies": ["ETB"],
+    "languages": ["Amharic"],
+    "latlng": [8, 38]
   },
   {
     "id": "FIN",
@@ -1588,17 +1031,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Helsinki",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Finnish",
-      "Swedish"
-    ],
-    "latlng": [
-      64,
-      26
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Finnish", "Swedish"],
+    "latlng": [64, 26]
   },
   {
     "id": "FJI",
@@ -1610,18 +1045,9 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "capital": "Suva",
-    "currencies": [
-      "FJD"
-    ],
-    "languages": [
-      "English",
-      "Fijian",
-      "Fiji Hindi"
-    ],
-    "latlng": [
-      -18,
-      175
-    ]
+    "currencies": ["FJD"],
+    "languages": ["English", "Fijian", "Fiji Hindi"],
+    "latlng": [-18, 175]
   },
   {
     "id": "FLK",
@@ -1633,16 +1059,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Stanley",
-    "currencies": [
-      "FKP"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -51.75,
-      -59
-    ]
+    "currencies": ["FKP"],
+    "languages": ["English"],
+    "latlng": [-51.75, -59]
   },
   {
     "id": "FRA",
@@ -1654,16 +1073,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Paris",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      46,
-      2
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [46, 2]
   },
   {
     "id": "FRO",
@@ -1675,18 +1087,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Tórshavn",
-    "currencies": [
-      "DKK",
-      "FOK"
-    ],
-    "languages": [
-      "Danish",
-      "Faroese"
-    ],
-    "latlng": [
-      62,
-      -7
-    ]
+    "currencies": ["DKK", "FOK"],
+    "languages": ["Danish", "Faroese"],
+    "latlng": [62, -7]
   },
   {
     "id": "FSM",
@@ -1699,13 +1102,8 @@
     "subregion": "Micronesia",
     "capital": "Palikir",
     "currencies": [],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      6.91666666,
-      158.25
-    ]
+    "languages": ["English"],
+    "latlng": [6.91666666, 158.25]
   },
   {
     "id": "GAB",
@@ -1717,16 +1115,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Libreville",
-    "currencies": [
-      "XAF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      -1,
-      11.75
-    ]
+    "currencies": ["XAF"],
+    "languages": ["French"],
+    "latlng": [-1, 11.75]
   },
   {
     "id": "GBR",
@@ -1738,16 +1129,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "London",
-    "currencies": [
-      "GBP"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      54,
-      -2
-    ]
+    "currencies": ["GBP"],
+    "languages": ["English"],
+    "latlng": [54, -2]
   },
   {
     "id": "GEO",
@@ -1759,16 +1143,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Tbilisi",
-    "currencies": [
-      "GEL"
-    ],
-    "languages": [
-      "Georgian"
-    ],
-    "latlng": [
-      42,
-      43.5
-    ]
+    "currencies": ["GEL"],
+    "languages": ["Georgian"],
+    "latlng": [42, 43.5]
   },
   {
     "id": "GGY",
@@ -1780,19 +1157,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "St. Peter Port",
-    "currencies": [
-      "GBP",
-      "GGP"
-    ],
-    "languages": [
-      "English",
-      "French",
-      "Guernésiais"
-    ],
-    "latlng": [
-      49.46666666,
-      -2.58333333
-    ]
+    "currencies": ["GBP", "GGP"],
+    "languages": ["English", "French", "Guernésiais"],
+    "latlng": [49.46666666, -2.58333333]
   },
   {
     "id": "GHA",
@@ -1804,16 +1171,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Accra",
-    "currencies": [
-      "GHS"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      8,
-      -2
-    ]
+    "currencies": ["GHS"],
+    "languages": ["English"],
+    "latlng": [8, -2]
   },
   {
     "id": "GIB",
@@ -1825,16 +1185,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Gibraltar",
-    "currencies": [
-      "GIP"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      36.13333333,
-      -5.35
-    ]
+    "currencies": ["GIP"],
+    "languages": ["English"],
+    "latlng": [36.13333333, -5.35]
   },
   {
     "id": "GIN",
@@ -1846,16 +1199,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Conakry",
-    "currencies": [
-      "GNF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      11,
-      -10
-    ]
+    "currencies": ["GNF"],
+    "languages": ["French"],
+    "latlng": [11, -10]
   },
   {
     "id": "GLP",
@@ -1867,16 +1213,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Basse-Terre",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      16.25,
-      -61.583333
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [16.25, -61.583333]
   },
   {
     "id": "GMB",
@@ -1888,16 +1227,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Banjul",
-    "currencies": [
-      "GMD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      13.46666666,
-      -16.56666666
-    ]
+    "currencies": ["GMD"],
+    "languages": ["English"],
+    "latlng": [13.46666666, -16.56666666]
   },
   {
     "id": "GNB",
@@ -1909,17 +1241,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Bissau",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "Portuguese",
-      "Upper Guinea Creole"
-    ],
-    "latlng": [
-      12,
-      -15
-    ]
+    "currencies": ["XOF"],
+    "languages": ["Portuguese", "Upper Guinea Creole"],
+    "latlng": [12, -15]
   },
   {
     "id": "GNQ",
@@ -1931,18 +1255,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Malabo",
-    "currencies": [
-      "XAF"
-    ],
-    "languages": [
-      "French",
-      "Portuguese",
-      "Spanish"
-    ],
-    "latlng": [
-      2,
-      10
-    ]
+    "currencies": ["XAF"],
+    "languages": ["French", "Portuguese", "Spanish"],
+    "latlng": [2, 10]
   },
   {
     "id": "GRC",
@@ -1954,16 +1269,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Athens",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Greek"
-    ],
-    "latlng": [
-      39,
-      22
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Greek"],
+    "latlng": [39, 22]
   },
   {
     "id": "GRD",
@@ -1975,16 +1283,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "St. George's",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      12.11666666,
-      -61.66666666
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [12.11666666, -61.66666666]
   },
   {
     "id": "GRL",
@@ -1996,16 +1297,9 @@
     "region": "Americas",
     "subregion": "North America",
     "capital": "Nuuk",
-    "currencies": [
-      "DKK"
-    ],
-    "languages": [
-      "Greenlandic"
-    ],
-    "latlng": [
-      72,
-      -40
-    ]
+    "currencies": ["DKK"],
+    "languages": ["Greenlandic"],
+    "latlng": [72, -40]
   },
   {
     "id": "GTM",
@@ -2017,16 +1311,9 @@
     "region": "Americas",
     "subregion": "Central America",
     "capital": "Guatemala City",
-    "currencies": [
-      "GTQ"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      15.5,
-      -90.25
-    ]
+    "currencies": ["GTQ"],
+    "languages": ["Spanish"],
+    "latlng": [15.5, -90.25]
   },
   {
     "id": "GUF",
@@ -2038,16 +1325,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Cayenne",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      4,
-      -53
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [4, -53]
   },
   {
     "id": "GUM",
@@ -2059,18 +1339,9 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "capital": "Hagåtña",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "Chamorro",
-      "English",
-      "Spanish"
-    ],
-    "latlng": [
-      13.46666666,
-      144.78333333
-    ]
+    "currencies": ["USD"],
+    "languages": ["Chamorro", "English", "Spanish"],
+    "latlng": [13.46666666, 144.78333333]
   },
   {
     "id": "GUY",
@@ -2082,16 +1353,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Georgetown",
-    "currencies": [
-      "GYD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      5,
-      -59
-    ]
+    "currencies": ["GYD"],
+    "languages": ["English"],
+    "latlng": [5, -59]
   },
   {
     "id": "HKG",
@@ -2103,17 +1367,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": "City of Victoria",
-    "currencies": [
-      "HKD"
-    ],
-    "languages": [
-      "English",
-      "Chinese"
-    ],
-    "latlng": [
-      22.267,
-      114.188
-    ]
+    "currencies": ["HKD"],
+    "languages": ["English", "Chinese"],
+    "latlng": [22.267, 114.188]
   },
   {
     "id": "HMD",
@@ -2126,13 +1382,8 @@
     "subregion": "",
     "capital": null,
     "currencies": [],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -53.1,
-      72.51666666
-    ]
+    "languages": ["English"],
+    "latlng": [-53.1, 72.51666666]
   },
   {
     "id": "HND",
@@ -2144,16 +1395,9 @@
     "region": "Americas",
     "subregion": "Central America",
     "capital": "Tegucigalpa",
-    "currencies": [
-      "HNL"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      15,
-      -86.5
-    ]
+    "currencies": ["HNL"],
+    "languages": ["Spanish"],
+    "latlng": [15, -86.5]
   },
   {
     "id": "HRV",
@@ -2165,16 +1409,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Zagreb",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Croatian"
-    ],
-    "latlng": [
-      45.16666666,
-      15.5
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Croatian"],
+    "latlng": [45.16666666, 15.5]
   },
   {
     "id": "HTI",
@@ -2186,17 +1423,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Port-au-Prince",
-    "currencies": [
-      "HTG"
-    ],
-    "languages": [
-      "French",
-      "Haitian Creole"
-    ],
-    "latlng": [
-      19,
-      -72.41666666
-    ]
+    "currencies": ["HTG"],
+    "languages": ["French", "Haitian Creole"],
+    "latlng": [19, -72.41666666]
   },
   {
     "id": "HUN",
@@ -2208,16 +1437,9 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "capital": "Budapest",
-    "currencies": [
-      "HUF"
-    ],
-    "languages": [
-      "Hungarian"
-    ],
-    "latlng": [
-      47,
-      20
-    ]
+    "currencies": ["HUF"],
+    "languages": ["Hungarian"],
+    "latlng": [47, 20]
   },
   {
     "id": "IDN",
@@ -2229,16 +1451,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Jakarta",
-    "currencies": [
-      "IDR"
-    ],
-    "languages": [
-      "Indonesian"
-    ],
-    "latlng": [
-      -5,
-      120
-    ]
+    "currencies": ["IDR"],
+    "languages": ["Indonesian"],
+    "latlng": [-5, 120]
   },
   {
     "id": "IMN",
@@ -2250,18 +1465,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Douglas",
-    "currencies": [
-      "GBP",
-      "IMP"
-    ],
-    "languages": [
-      "English",
-      "Manx"
-    ],
-    "latlng": [
-      54.25,
-      -4.5
-    ]
+    "currencies": ["GBP", "IMP"],
+    "languages": ["English", "Manx"],
+    "latlng": [54.25, -4.5]
   },
   {
     "id": "IND",
@@ -2273,18 +1479,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "New Delhi",
-    "currencies": [
-      "INR"
-    ],
-    "languages": [
-      "English",
-      "Hindi",
-      "Tamil"
-    ],
-    "latlng": [
-      20,
-      77
-    ]
+    "currencies": ["INR"],
+    "languages": ["English", "Hindi", "Tamil"],
+    "latlng": [20, 77]
   },
   {
     "id": "IOT",
@@ -2296,16 +1493,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Diego Garcia",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -6,
-      71.5
-    ]
+    "currencies": ["USD"],
+    "languages": ["English"],
+    "latlng": [-6, 71.5]
   },
   {
     "id": "IRL",
@@ -2317,17 +1507,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Dublin",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "English",
-      "Irish"
-    ],
-    "latlng": [
-      53,
-      -8
-    ]
+    "currencies": ["EUR"],
+    "languages": ["English", "Irish"],
+    "latlng": [53, -8]
   },
   {
     "id": "IRN",
@@ -2339,16 +1521,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Tehran",
-    "currencies": [
-      "IRR"
-    ],
-    "languages": [
-      "Persian (Farsi)"
-    ],
-    "latlng": [
-      32,
-      53
-    ]
+    "currencies": ["IRR"],
+    "languages": ["Persian (Farsi)"],
+    "latlng": [32, 53]
   },
   {
     "id": "IRQ",
@@ -2360,18 +1535,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Baghdad",
-    "currencies": [
-      "IQD"
-    ],
-    "languages": [
-      "Arabic",
-      "Aramaic",
-      "Sorani"
-    ],
-    "latlng": [
-      33,
-      44
-    ]
+    "currencies": ["IQD"],
+    "languages": ["Arabic", "Aramaic", "Sorani"],
+    "latlng": [33, 44]
   },
   {
     "id": "ISL",
@@ -2383,16 +1549,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Reykjavik",
-    "currencies": [
-      "ISK"
-    ],
-    "languages": [
-      "Icelandic"
-    ],
-    "latlng": [
-      65,
-      -18
-    ]
+    "currencies": ["ISK"],
+    "languages": ["Icelandic"],
+    "latlng": [65, -18]
   },
   {
     "id": "ISR",
@@ -2404,17 +1563,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Jerusalem",
-    "currencies": [
-      "ILS"
-    ],
-    "languages": [
-      "Arabic",
-      "Hebrew"
-    ],
-    "latlng": [
-      31.47,
-      35.13
-    ]
+    "currencies": ["ILS"],
+    "languages": ["Arabic", "Hebrew"],
+    "latlng": [31.47, 35.13]
   },
   {
     "id": "ITA",
@@ -2426,16 +1577,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Rome",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Italian"
-    ],
-    "latlng": [
-      42.83333333,
-      12.83333333
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Italian"],
+    "latlng": [42.83333333, 12.83333333]
   },
   {
     "id": "JAM",
@@ -2447,17 +1591,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Kingston",
-    "currencies": [
-      "JMD"
-    ],
-    "languages": [
-      "English",
-      "Jamaican Patois"
-    ],
-    "latlng": [
-      18.25,
-      -77.5
-    ]
+    "currencies": ["JMD"],
+    "languages": ["English", "Jamaican Patois"],
+    "latlng": [18.25, -77.5]
   },
   {
     "id": "JEY",
@@ -2469,19 +1605,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Saint Helier",
-    "currencies": [
-      "GBP",
-      "JEP"
-    ],
-    "languages": [
-      "English",
-      "French",
-      "Jèrriais"
-    ],
-    "latlng": [
-      49.25,
-      -2.16666666
-    ]
+    "currencies": ["GBP", "JEP"],
+    "languages": ["English", "French", "Jèrriais"],
+    "latlng": [49.25, -2.16666666]
   },
   {
     "id": "JOR",
@@ -2493,16 +1619,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Amman",
-    "currencies": [
-      "JOD"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      31,
-      36
-    ]
+    "currencies": ["JOD"],
+    "languages": ["Arabic"],
+    "latlng": [31, 36]
   },
   {
     "id": "JPN",
@@ -2514,16 +1633,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": "Tokyo",
-    "currencies": [
-      "JPY"
-    ],
-    "languages": [
-      "Japanese"
-    ],
-    "latlng": [
-      36,
-      138
-    ]
+    "currencies": ["JPY"],
+    "languages": ["Japanese"],
+    "latlng": [36, 138]
   },
   {
     "id": "KAZ",
@@ -2535,17 +1647,9 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "capital": "Astana",
-    "currencies": [
-      "KZT"
-    ],
-    "languages": [
-      "Kazakh",
-      "Russian"
-    ],
-    "latlng": [
-      48,
-      68
-    ]
+    "currencies": ["KZT"],
+    "languages": ["Kazakh", "Russian"],
+    "latlng": [48, 68]
   },
   {
     "id": "KEN",
@@ -2557,17 +1661,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Nairobi",
-    "currencies": [
-      "KES"
-    ],
-    "languages": [
-      "English",
-      "Swahili"
-    ],
-    "latlng": [
-      1,
-      38
-    ]
+    "currencies": ["KES"],
+    "languages": ["English", "Swahili"],
+    "latlng": [1, 38]
   },
   {
     "id": "KGZ",
@@ -2579,17 +1675,9 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "capital": "Bishkek",
-    "currencies": [
-      "KGS"
-    ],
-    "languages": [
-      "Kyrgyz",
-      "Russian"
-    ],
-    "latlng": [
-      41,
-      75
-    ]
+    "currencies": ["KGS"],
+    "languages": ["Kyrgyz", "Russian"],
+    "latlng": [41, 75]
   },
   {
     "id": "KHM",
@@ -2601,17 +1689,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Phnom Penh",
-    "currencies": [
-      "KHR",
-      "USD"
-    ],
-    "languages": [
-      "Khmer"
-    ],
-    "latlng": [
-      13,
-      105
-    ]
+    "currencies": ["KHR", "USD"],
+    "languages": ["Khmer"],
+    "latlng": [13, 105]
   },
   {
     "id": "KIR",
@@ -2623,18 +1703,9 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "capital": "South Tarawa",
-    "currencies": [
-      "AUD",
-      "KID"
-    ],
-    "languages": [
-      "English",
-      "Gilbertese"
-    ],
-    "latlng": [
-      1.41666666,
-      173
-    ]
+    "currencies": ["AUD", "KID"],
+    "languages": ["English", "Gilbertese"],
+    "latlng": [1.41666666, 173]
   },
   {
     "id": "KNA",
@@ -2646,16 +1717,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Basseterre",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      17.33333333,
-      -62.75
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [17.33333333, -62.75]
   },
   {
     "id": "KOR",
@@ -2667,16 +1731,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": "Seoul",
-    "currencies": [
-      "KRW"
-    ],
-    "languages": [
-      "Korean"
-    ],
-    "latlng": [
-      37,
-      127.5
-    ]
+    "currencies": ["KRW"],
+    "languages": ["Korean"],
+    "latlng": [37, 127.5]
   },
   {
     "id": "UNK",
@@ -2688,17 +1745,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Pristina",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Albanian",
-      "Serbian"
-    ],
-    "latlng": [
-      42.666667,
-      21.166667
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Albanian", "Serbian"],
+    "latlng": [42.666667, 21.166667]
   },
   {
     "id": "KWT",
@@ -2710,16 +1759,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Kuwait City",
-    "currencies": [
-      "KWD"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      29.5,
-      45.75
-    ]
+    "currencies": ["KWD"],
+    "languages": ["Arabic"],
+    "latlng": [29.5, 45.75]
   },
   {
     "id": "LAO",
@@ -2731,16 +1773,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Vientiane",
-    "currencies": [
-      "LAK"
-    ],
-    "languages": [
-      "Lao"
-    ],
-    "latlng": [
-      18,
-      105
-    ]
+    "currencies": ["LAK"],
+    "languages": ["Lao"],
+    "latlng": [18, 105]
   },
   {
     "id": "LBN",
@@ -2752,17 +1787,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Beirut",
-    "currencies": [
-      "LBP"
-    ],
-    "languages": [
-      "Arabic",
-      "French"
-    ],
-    "latlng": [
-      33.83333333,
-      35.83333333
-    ]
+    "currencies": ["LBP"],
+    "languages": ["Arabic", "French"],
+    "latlng": [33.83333333, 35.83333333]
   },
   {
     "id": "LBR",
@@ -2774,16 +1801,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Monrovia",
-    "currencies": [
-      "LRD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      6.5,
-      -9.5
-    ]
+    "currencies": ["LRD"],
+    "languages": ["English"],
+    "latlng": [6.5, -9.5]
   },
   {
     "id": "LBY",
@@ -2795,16 +1815,9 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "capital": "Tripoli",
-    "currencies": [
-      "LYD"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      25,
-      17
-    ]
+    "currencies": ["LYD"],
+    "languages": ["Arabic"],
+    "latlng": [25, 17]
   },
   {
     "id": "LCA",
@@ -2816,16 +1829,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Castries",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      13.88333333,
-      -60.96666666
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [13.88333333, -60.96666666]
   },
   {
     "id": "LIE",
@@ -2837,16 +1843,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Vaduz",
-    "currencies": [
-      "CHF"
-    ],
-    "languages": [
-      "German"
-    ],
-    "latlng": [
-      47.26666666,
-      9.53333333
-    ]
+    "currencies": ["CHF"],
+    "languages": ["German"],
+    "latlng": [47.26666666, 9.53333333]
   },
   {
     "id": "LKA",
@@ -2858,17 +1857,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Colombo",
-    "currencies": [
-      "LKR"
-    ],
-    "languages": [
-      "Sinhala",
-      "Tamil"
-    ],
-    "latlng": [
-      7,
-      81
-    ]
+    "currencies": ["LKR"],
+    "languages": ["Sinhala", "Tamil"],
+    "latlng": [7, 81]
   },
   {
     "id": "LSO",
@@ -2880,18 +1871,9 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "capital": "Maseru",
-    "currencies": [
-      "LSL",
-      "ZAR"
-    ],
-    "languages": [
-      "English",
-      "Sotho"
-    ],
-    "latlng": [
-      -29.5,
-      28.5
-    ]
+    "currencies": ["LSL", "ZAR"],
+    "languages": ["English", "Sotho"],
+    "latlng": [-29.5, 28.5]
   },
   {
     "id": "LTU",
@@ -2903,16 +1885,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Vilnius",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Lithuanian"
-    ],
-    "latlng": [
-      56,
-      24
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Lithuanian"],
+    "latlng": [56, 24]
   },
   {
     "id": "LUX",
@@ -2924,18 +1899,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Luxembourg",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "German",
-      "French",
-      "Luxembourgish"
-    ],
-    "latlng": [
-      49.75,
-      6.16666666
-    ]
+    "currencies": ["EUR"],
+    "languages": ["German", "French", "Luxembourgish"],
+    "latlng": [49.75, 6.16666666]
   },
   {
     "id": "LVA",
@@ -2947,16 +1913,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Riga",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Latvian"
-    ],
-    "latlng": [
-      57,
-      25
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Latvian"],
+    "latlng": [57, 25]
   },
   {
     "id": "MAC",
@@ -2968,17 +1927,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": null,
-    "currencies": [
-      "MOP"
-    ],
-    "languages": [
-      "Portuguese",
-      "Chinese"
-    ],
-    "latlng": [
-      22.16666666,
-      113.55
-    ]
+    "currencies": ["MOP"],
+    "languages": ["Portuguese", "Chinese"],
+    "latlng": [22.16666666, 113.55]
   },
   {
     "id": "MAF",
@@ -2990,16 +1941,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Marigot",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      18.08333333,
-      -63.95
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [18.08333333, -63.95]
   },
   {
     "id": "MAR",
@@ -3011,17 +1955,9 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "capital": "Rabat",
-    "currencies": [
-      "MAD"
-    ],
-    "languages": [
-      "Arabic",
-      "Berber"
-    ],
-    "latlng": [
-      32,
-      -5
-    ]
+    "currencies": ["MAD"],
+    "languages": ["Arabic", "Berber"],
+    "latlng": [32, -5]
   },
   {
     "id": "MCO",
@@ -3033,16 +1969,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Monaco",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      43.73333333,
-      7.4
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [43.73333333, 7.4]
   },
   {
     "id": "MDA",
@@ -3054,16 +1983,9 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "capital": "Chișinău",
-    "currencies": [
-      "MDL"
-    ],
-    "languages": [
-      "Moldavian"
-    ],
-    "latlng": [
-      47,
-      29
-    ]
+    "currencies": ["MDL"],
+    "languages": ["Moldavian"],
+    "latlng": [47, 29]
   },
   {
     "id": "MDG",
@@ -3075,17 +1997,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Antananarivo",
-    "currencies": [
-      "MGA"
-    ],
-    "languages": [
-      "French",
-      "Malagasy"
-    ],
-    "latlng": [
-      -20,
-      47
-    ]
+    "currencies": ["MGA"],
+    "languages": ["French", "Malagasy"],
+    "latlng": [-20, 47]
   },
   {
     "id": "MDV",
@@ -3097,16 +2011,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Malé",
-    "currencies": [
-      "MVR"
-    ],
-    "languages": [
-      "Maldivian"
-    ],
-    "latlng": [
-      3.25,
-      73
-    ]
+    "currencies": ["MVR"],
+    "languages": ["Maldivian"],
+    "latlng": [3.25, 73]
   },
   {
     "id": "MEX",
@@ -3118,16 +2025,9 @@
     "region": "Americas",
     "subregion": "North America",
     "capital": "Mexico City",
-    "currencies": [
-      "MXN"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      23,
-      -102
-    ]
+    "currencies": ["MXN"],
+    "languages": ["Spanish"],
+    "latlng": [23, -102]
   },
   {
     "id": "MHL",
@@ -3139,17 +2039,9 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "capital": "Majuro",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English",
-      "Marshallese"
-    ],
-    "latlng": [
-      9,
-      168
-    ]
+    "currencies": ["USD"],
+    "languages": ["English", "Marshallese"],
+    "latlng": [9, 168]
   },
   {
     "id": "MKD",
@@ -3161,16 +2053,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Skopje",
-    "currencies": [
-      "MKD"
-    ],
-    "languages": [
-      "Macedonian"
-    ],
-    "latlng": [
-      41.83333333,
-      22
-    ]
+    "currencies": ["MKD"],
+    "languages": ["Macedonian"],
+    "latlng": [41.83333333, 22]
   },
   {
     "id": "MLI",
@@ -3182,16 +2067,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Bamako",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      17,
-      -4
-    ]
+    "currencies": ["XOF"],
+    "languages": ["French"],
+    "latlng": [17, -4]
   },
   {
     "id": "MLT",
@@ -3203,17 +2081,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Valletta",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "English",
-      "Maltese"
-    ],
-    "latlng": [
-      35.83333333,
-      14.58333333
-    ]
+    "currencies": ["EUR"],
+    "languages": ["English", "Maltese"],
+    "latlng": [35.83333333, 14.58333333]
   },
   {
     "id": "MMR",
@@ -3225,16 +2095,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Naypyidaw",
-    "currencies": [
-      "MMK"
-    ],
-    "languages": [
-      "Burmese"
-    ],
-    "latlng": [
-      22,
-      98
-    ]
+    "currencies": ["MMK"],
+    "languages": ["Burmese"],
+    "latlng": [22, 98]
   },
   {
     "id": "MNE",
@@ -3246,16 +2109,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Podgorica",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Montenegrin"
-    ],
-    "latlng": [
-      42.5,
-      19.3
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Montenegrin"],
+    "latlng": [42.5, 19.3]
   },
   {
     "id": "MNG",
@@ -3267,16 +2123,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": "Ulan Bator",
-    "currencies": [
-      "MNT"
-    ],
-    "languages": [
-      "Mongolian"
-    ],
-    "latlng": [
-      46,
-      105
-    ]
+    "currencies": ["MNT"],
+    "languages": ["Mongolian"],
+    "latlng": [46, 105]
   },
   {
     "id": "MNP",
@@ -3288,18 +2137,9 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "capital": "Saipan",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "Carolinian",
-      "Chamorro",
-      "English"
-    ],
-    "latlng": [
-      15.2,
-      145.75
-    ]
+    "currencies": ["USD"],
+    "languages": ["Carolinian", "Chamorro", "English"],
+    "latlng": [15.2, 145.75]
   },
   {
     "id": "MOZ",
@@ -3311,16 +2151,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Maputo",
-    "currencies": [
-      "MZN"
-    ],
-    "languages": [
-      "Portuguese"
-    ],
-    "latlng": [
-      -18.25,
-      35
-    ]
+    "currencies": ["MZN"],
+    "languages": ["Portuguese"],
+    "latlng": [-18.25, 35]
   },
   {
     "id": "MRT",
@@ -3332,16 +2165,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Nouakchott",
-    "currencies": [
-      "MRU"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      20,
-      -12
-    ]
+    "currencies": ["MRU"],
+    "languages": ["Arabic"],
+    "latlng": [20, -12]
   },
   {
     "id": "MSR",
@@ -3353,16 +2179,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Plymouth",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      16.75,
-      -62.2
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [16.75, -62.2]
   },
   {
     "id": "MTQ",
@@ -3374,16 +2193,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Fort-de-France",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      14.666667,
-      -61
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [14.666667, -61]
   },
   {
     "id": "MUS",
@@ -3395,18 +2207,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Port Louis",
-    "currencies": [
-      "MUR"
-    ],
-    "languages": [
-      "English",
-      "French",
-      "Mauritian Creole"
-    ],
-    "latlng": [
-      -20.28333333,
-      57.55
-    ]
+    "currencies": ["MUR"],
+    "languages": ["English", "French", "Mauritian Creole"],
+    "latlng": [-20.28333333, 57.55]
   },
   {
     "id": "MWI",
@@ -3418,17 +2221,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Lilongwe",
-    "currencies": [
-      "MWK"
-    ],
-    "languages": [
-      "English",
-      "Chewa"
-    ],
-    "latlng": [
-      -13.5,
-      34
-    ]
+    "currencies": ["MWK"],
+    "languages": ["English", "Chewa"],
+    "latlng": [-13.5, 34]
   },
   {
     "id": "MYS",
@@ -3440,17 +2235,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Kuala Lumpur",
-    "currencies": [
-      "MYR"
-    ],
-    "languages": [
-      "English",
-      "Malay"
-    ],
-    "latlng": [
-      2.5,
-      112.5
-    ]
+    "currencies": ["MYR"],
+    "languages": ["English", "Malay"],
+    "latlng": [2.5, 112.5]
   },
   {
     "id": "MYT",
@@ -3462,16 +2249,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Mamoudzou",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      -12.83333333,
-      45.16666666
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [-12.83333333, 45.16666666]
   },
   {
     "id": "NAM",
@@ -3483,10 +2263,7 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "capital": "Windhoek",
-    "currencies": [
-      "NAD",
-      "ZAR"
-    ],
+    "currencies": ["NAD", "ZAR"],
     "languages": [
       "Afrikaans",
       "German",
@@ -3498,10 +2275,7 @@
       "Ndonga",
       "Tswana"
     ],
-    "latlng": [
-      -22,
-      17
-    ]
+    "latlng": [-22, 17]
   },
   {
     "id": "NCL",
@@ -3513,16 +2287,9 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "capital": "Nouméa",
-    "currencies": [
-      "XPF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      -21.5,
-      165.5
-    ]
+    "currencies": ["XPF"],
+    "languages": ["French"],
+    "latlng": [-21.5, 165.5]
   },
   {
     "id": "NER",
@@ -3534,16 +2301,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Niamey",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      16,
-      8
-    ]
+    "currencies": ["XOF"],
+    "languages": ["French"],
+    "latlng": [16, 8]
   },
   {
     "id": "NFK",
@@ -3555,17 +2315,9 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "capital": "Kingston",
-    "currencies": [
-      "AUD"
-    ],
-    "languages": [
-      "English",
-      "Norfuk"
-    ],
-    "latlng": [
-      -29.03333333,
-      167.95
-    ]
+    "currencies": ["AUD"],
+    "languages": ["English", "Norfuk"],
+    "latlng": [-29.03333333, 167.95]
   },
   {
     "id": "NGA",
@@ -3577,16 +2329,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Abuja",
-    "currencies": [
-      "NGN"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      10,
-      8
-    ]
+    "currencies": ["NGN"],
+    "languages": ["English"],
+    "latlng": [10, 8]
   },
   {
     "id": "NIC",
@@ -3598,16 +2343,9 @@
     "region": "Americas",
     "subregion": "Central America",
     "capital": "Managua",
-    "currencies": [
-      "NIO"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      13,
-      -85
-    ]
+    "currencies": ["NIO"],
+    "languages": ["Spanish"],
+    "latlng": [13, -85]
   },
   {
     "id": "NIU",
@@ -3619,17 +2357,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Alofi",
-    "currencies": [
-      "NZD"
-    ],
-    "languages": [
-      "English",
-      "Niuean"
-    ],
-    "latlng": [
-      -19.03333333,
-      -169.86666666
-    ]
+    "currencies": ["NZD"],
+    "languages": ["English", "Niuean"],
+    "latlng": [-19.03333333, -169.86666666]
   },
   {
     "id": "NLD",
@@ -3641,16 +2371,9 @@
     "region": "Europe",
     "subregion": "Western Europe",
     "capital": "Amsterdam",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Dutch"
-    ],
-    "latlng": [
-      52.5,
-      5.75
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Dutch"],
+    "latlng": [52.5, 5.75]
   },
   {
     "id": "NOR",
@@ -3662,18 +2385,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Oslo",
-    "currencies": [
-      "NOK"
-    ],
-    "languages": [
-      "Norwegian Nynorsk",
-      "Norwegian Bokmål",
-      "Sami"
-    ],
-    "latlng": [
-      62,
-      10
-    ]
+    "currencies": ["NOK"],
+    "languages": ["Norwegian Nynorsk", "Norwegian Bokmål", "Sami"],
+    "latlng": [62, 10]
   },
   {
     "id": "NPL",
@@ -3685,16 +2399,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Kathmandu",
-    "currencies": [
-      "NPR"
-    ],
-    "languages": [
-      "Nepali"
-    ],
-    "latlng": [
-      28,
-      84
-    ]
+    "currencies": ["NPR"],
+    "languages": ["Nepali"],
+    "latlng": [28, 84]
   },
   {
     "id": "NRU",
@@ -3706,17 +2413,9 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "capital": "Yaren",
-    "currencies": [
-      "AUD"
-    ],
-    "languages": [
-      "English",
-      "Nauru"
-    ],
-    "latlng": [
-      -0.53333333,
-      166.91666666
-    ]
+    "currencies": ["AUD"],
+    "languages": ["English", "Nauru"],
+    "latlng": [-0.53333333, 166.91666666]
   },
   {
     "id": "NZL",
@@ -3728,18 +2427,9 @@
     "region": "Oceania",
     "subregion": "Australia and New Zealand",
     "capital": "Wellington",
-    "currencies": [
-      "NZD"
-    ],
-    "languages": [
-      "English",
-      "Māori",
-      "New Zealand Sign Language"
-    ],
-    "latlng": [
-      -41,
-      174
-    ]
+    "currencies": ["NZD"],
+    "languages": ["English", "Māori", "New Zealand Sign Language"],
+    "latlng": [-41, 174]
   },
   {
     "id": "OMN",
@@ -3751,16 +2441,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Muscat",
-    "currencies": [
-      "OMR"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      21,
-      57
-    ]
+    "currencies": ["OMR"],
+    "languages": ["Arabic"],
+    "latlng": [21, 57]
   },
   {
     "id": "PAK",
@@ -3772,17 +2455,9 @@
     "region": "Asia",
     "subregion": "Southern Asia",
     "capital": "Islamabad",
-    "currencies": [
-      "PKR"
-    ],
-    "languages": [
-      "English",
-      "Urdu"
-    ],
-    "latlng": [
-      30,
-      70
-    ]
+    "currencies": ["PKR"],
+    "languages": ["English", "Urdu"],
+    "latlng": [30, 70]
   },
   {
     "id": "PAN",
@@ -3794,17 +2469,9 @@
     "region": "Americas",
     "subregion": "Central America",
     "capital": "Panama City",
-    "currencies": [
-      "PAB",
-      "USD"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      9,
-      -80
-    ]
+    "currencies": ["PAB", "USD"],
+    "languages": ["Spanish"],
+    "latlng": [9, -80]
   },
   {
     "id": "PCN",
@@ -3816,16 +2483,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Adamstown",
-    "currencies": [
-      "NZD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -25.06666666,
-      -130.1
-    ]
+    "currencies": ["NZD"],
+    "languages": ["English"],
+    "latlng": [-25.06666666, -130.1]
   },
   {
     "id": "PER",
@@ -3837,18 +2497,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Lima",
-    "currencies": [
-      "PEN"
-    ],
-    "languages": [
-      "Aymara",
-      "Quechua",
-      "Spanish"
-    ],
-    "latlng": [
-      -10,
-      -76
-    ]
+    "currencies": ["PEN"],
+    "languages": ["Aymara", "Quechua", "Spanish"],
+    "latlng": [-10, -76]
   },
   {
     "id": "PHL",
@@ -3860,17 +2511,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Manila",
-    "currencies": [
-      "PHP"
-    ],
-    "languages": [
-      "English",
-      "Filipino"
-    ],
-    "latlng": [
-      13,
-      122
-    ]
+    "currencies": ["PHP"],
+    "languages": ["English", "Filipino"],
+    "latlng": [13, 122]
   },
   {
     "id": "PLW",
@@ -3882,17 +2525,9 @@
     "region": "Oceania",
     "subregion": "Micronesia",
     "capital": "Ngerulmud",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English",
-      "Palauan"
-    ],
-    "latlng": [
-      7.5,
-      134.5
-    ]
+    "currencies": ["USD"],
+    "languages": ["English", "Palauan"],
+    "latlng": [7.5, 134.5]
   },
   {
     "id": "PNG",
@@ -3904,18 +2539,9 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "capital": "Port Moresby",
-    "currencies": [
-      "PGK"
-    ],
-    "languages": [
-      "English",
-      "Hiri Motu",
-      "Tok Pisin"
-    ],
-    "latlng": [
-      -6,
-      147
-    ]
+    "currencies": ["PGK"],
+    "languages": ["English", "Hiri Motu", "Tok Pisin"],
+    "latlng": [-6, 147]
   },
   {
     "id": "POL",
@@ -3927,16 +2553,9 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "capital": "Warsaw",
-    "currencies": [
-      "PLN"
-    ],
-    "languages": [
-      "Polish"
-    ],
-    "latlng": [
-      52,
-      20
-    ]
+    "currencies": ["PLN"],
+    "languages": ["Polish"],
+    "latlng": [52, 20]
   },
   {
     "id": "PRI",
@@ -3948,17 +2567,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "San Juan",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English",
-      "Spanish"
-    ],
-    "latlng": [
-      18.25,
-      -66.5
-    ]
+    "currencies": ["USD"],
+    "languages": ["English", "Spanish"],
+    "latlng": [18.25, -66.5]
   },
   {
     "id": "PRK",
@@ -3970,16 +2581,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": "Pyongyang",
-    "currencies": [
-      "KPW"
-    ],
-    "languages": [
-      "Korean"
-    ],
-    "latlng": [
-      40,
-      127
-    ]
+    "currencies": ["KPW"],
+    "languages": ["Korean"],
+    "latlng": [40, 127]
   },
   {
     "id": "PRT",
@@ -3991,16 +2595,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Lisbon",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Portuguese"
-    ],
-    "latlng": [
-      39.5,
-      -8
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Portuguese"],
+    "latlng": [39.5, -8]
   },
   {
     "id": "PRY",
@@ -4012,17 +2609,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Asunción",
-    "currencies": [
-      "PYG"
-    ],
-    "languages": [
-      "Guaraní",
-      "Spanish"
-    ],
-    "latlng": [
-      -23,
-      -58
-    ]
+    "currencies": ["PYG"],
+    "languages": ["Guaraní", "Spanish"],
+    "latlng": [-23, -58]
   },
   {
     "id": "PSE",
@@ -4034,18 +2623,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Ramallah",
-    "currencies": [
-      "EGP",
-      "ILS",
-      "JOD"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      31.9,
-      35.2
-    ]
+    "currencies": ["EGP", "ILS", "JOD"],
+    "languages": ["Arabic"],
+    "latlng": [31.9, 35.2]
   },
   {
     "id": "PYF",
@@ -4057,16 +2637,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Papeetē",
-    "currencies": [
-      "XPF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      -15,
-      -140
-    ]
+    "currencies": ["XPF"],
+    "languages": ["French"],
+    "latlng": [-15, -140]
   },
   {
     "id": "QAT",
@@ -4078,16 +2651,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Doha",
-    "currencies": [
-      "QAR"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      25.5,
-      51.25
-    ]
+    "currencies": ["QAR"],
+    "languages": ["Arabic"],
+    "latlng": [25.5, 51.25]
   },
   {
     "id": "REU",
@@ -4099,16 +2665,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Saint-Denis",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      -21.15,
-      55.5
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [-21.15, 55.5]
   },
   {
     "id": "ROU",
@@ -4120,16 +2679,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Bucharest",
-    "currencies": [
-      "RON"
-    ],
-    "languages": [
-      "Romanian"
-    ],
-    "latlng": [
-      46,
-      25
-    ]
+    "currencies": ["RON"],
+    "languages": ["Romanian"],
+    "latlng": [46, 25]
   },
   {
     "id": "RUS",
@@ -4141,16 +2693,9 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "capital": "Moscow",
-    "currencies": [
-      "RUB"
-    ],
-    "languages": [
-      "Russian"
-    ],
-    "latlng": [
-      60,
-      100
-    ]
+    "currencies": ["RUB"],
+    "languages": ["Russian"],
+    "latlng": [60, 100]
   },
   {
     "id": "RWA",
@@ -4162,18 +2707,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Kigali",
-    "currencies": [
-      "RWF"
-    ],
-    "languages": [
-      "English",
-      "French",
-      "Kinyarwanda"
-    ],
-    "latlng": [
-      -2,
-      30
-    ]
+    "currencies": ["RWF"],
+    "languages": ["English", "French", "Kinyarwanda"],
+    "latlng": [-2, 30]
   },
   {
     "id": "SAU",
@@ -4185,16 +2721,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Riyadh",
-    "currencies": [
-      "SAR"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      25,
-      45
-    ]
+    "currencies": ["SAR"],
+    "languages": ["Arabic"],
+    "latlng": [25, 45]
   },
   {
     "id": "SDN",
@@ -4206,17 +2735,9 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "capital": "Khartoum",
-    "currencies": [
-      "SDG"
-    ],
-    "languages": [
-      "Arabic",
-      "English"
-    ],
-    "latlng": [
-      15,
-      30
-    ]
+    "currencies": ["SDG"],
+    "languages": ["Arabic", "English"],
+    "latlng": [15, 30]
   },
   {
     "id": "SEN",
@@ -4228,16 +2749,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Dakar",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      14,
-      -14
-    ]
+    "currencies": ["XOF"],
+    "languages": ["French"],
+    "latlng": [14, -14]
   },
   {
     "id": "SGP",
@@ -4249,19 +2763,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Singapore",
-    "currencies": [
-      "SGD"
-    ],
-    "languages": [
-      "English",
-      "Malay",
-      "Tamil",
-      "Chinese"
-    ],
-    "latlng": [
-      1.36666666,
-      103.8
-    ]
+    "currencies": ["SGD"],
+    "languages": ["English", "Malay", "Tamil", "Chinese"],
+    "latlng": [1.36666666, 103.8]
   },
   {
     "id": "SGS",
@@ -4273,16 +2777,9 @@
     "region": "Antarctic",
     "subregion": "",
     "capital": "King Edward Point",
-    "currencies": [
-      "SHP"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -54.5,
-      -37
-    ]
+    "currencies": ["SHP"],
+    "languages": ["English"],
+    "latlng": [-54.5, -37]
   },
   {
     "id": "SJM",
@@ -4294,16 +2791,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Longyearbyen",
-    "currencies": [
-      "NOK"
-    ],
-    "languages": [
-      "Norwegian"
-    ],
-    "latlng": [
-      78,
-      20
-    ]
+    "currencies": ["NOK"],
+    "languages": ["Norwegian"],
+    "latlng": [78, 20]
   },
   {
     "id": "SLB",
@@ -4315,16 +2805,9 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "capital": "Honiara",
-    "currencies": [
-      "SBD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -8,
-      159
-    ]
+    "currencies": ["SBD"],
+    "languages": ["English"],
+    "latlng": [-8, 159]
   },
   {
     "id": "SLE",
@@ -4336,16 +2819,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Freetown",
-    "currencies": [
-      "SLE"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      8.5,
-      -11.5
-    ]
+    "currencies": ["SLE"],
+    "languages": ["English"],
+    "latlng": [8.5, -11.5]
   },
   {
     "id": "SLV",
@@ -4357,16 +2833,9 @@
     "region": "Americas",
     "subregion": "Central America",
     "capital": "San Salvador",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      13.83333333,
-      -88.91666666
-    ]
+    "currencies": ["USD"],
+    "languages": ["Spanish"],
+    "latlng": [13.83333333, -88.91666666]
   },
   {
     "id": "SMR",
@@ -4378,16 +2847,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "City of San Marino",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Italian"
-    ],
-    "latlng": [
-      43.76666666,
-      12.41666666
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Italian"],
+    "latlng": [43.76666666, 12.41666666]
   },
   {
     "id": "SOM",
@@ -4399,17 +2861,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Mogadishu",
-    "currencies": [
-      "SOS"
-    ],
-    "languages": [
-      "Arabic",
-      "Somali"
-    ],
-    "latlng": [
-      10,
-      49
-    ]
+    "currencies": ["SOS"],
+    "languages": ["Arabic", "Somali"],
+    "latlng": [10, 49]
   },
   {
     "id": "SPM",
@@ -4421,16 +2875,9 @@
     "region": "Americas",
     "subregion": "North America",
     "capital": "Saint-Pierre",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      46.83333333,
-      -56.33333333
-    ]
+    "currencies": ["EUR"],
+    "languages": ["French"],
+    "latlng": [46.83333333, -56.33333333]
   },
   {
     "id": "SRB",
@@ -4442,16 +2889,9 @@
     "region": "Europe",
     "subregion": "Southeast Europe",
     "capital": "Belgrade",
-    "currencies": [
-      "RSD"
-    ],
-    "languages": [
-      "Serbian"
-    ],
-    "latlng": [
-      44,
-      21
-    ]
+    "currencies": ["RSD"],
+    "languages": ["Serbian"],
+    "latlng": [44, 21]
   },
   {
     "id": "SSD",
@@ -4463,16 +2903,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "Juba",
-    "currencies": [
-      "SSP"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      7,
-      30
-    ]
+    "currencies": ["SSP"],
+    "languages": ["English"],
+    "latlng": [7, 30]
   },
   {
     "id": "STP",
@@ -4484,16 +2917,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "São Tomé",
-    "currencies": [
-      "STN"
-    ],
-    "languages": [
-      "Portuguese"
-    ],
-    "latlng": [
-      1,
-      7
-    ]
+    "currencies": ["STN"],
+    "languages": ["Portuguese"],
+    "latlng": [1, 7]
   },
   {
     "id": "SUR",
@@ -4505,16 +2931,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Paramaribo",
-    "currencies": [
-      "SRD"
-    ],
-    "languages": [
-      "Dutch"
-    ],
-    "latlng": [
-      4,
-      -56
-    ]
+    "currencies": ["SRD"],
+    "languages": ["Dutch"],
+    "latlng": [4, -56]
   },
   {
     "id": "SVK",
@@ -4526,16 +2945,9 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "capital": "Bratislava",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Slovak"
-    ],
-    "latlng": [
-      48.66666666,
-      19.5
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Slovak"],
+    "latlng": [48.66666666, 19.5]
   },
   {
     "id": "SVN",
@@ -4547,16 +2959,9 @@
     "region": "Europe",
     "subregion": "Central Europe",
     "capital": "Ljubljana",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Slovene"
-    ],
-    "latlng": [
-      46.11666666,
-      14.81666666
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Slovene"],
+    "latlng": [46.11666666, 14.81666666]
   },
   {
     "id": "SWE",
@@ -4568,16 +2973,9 @@
     "region": "Europe",
     "subregion": "Northern Europe",
     "capital": "Stockholm",
-    "currencies": [
-      "SEK"
-    ],
-    "languages": [
-      "Swedish"
-    ],
-    "latlng": [
-      62,
-      15
-    ]
+    "currencies": ["SEK"],
+    "languages": ["Swedish"],
+    "latlng": [62, 15]
   },
   {
     "id": "SWZ",
@@ -4589,18 +2987,9 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "capital": "Lobamba",
-    "currencies": [
-      "SZL",
-      "ZAR"
-    ],
-    "languages": [
-      "English",
-      "Swazi"
-    ],
-    "latlng": [
-      -26.5,
-      31.5
-    ]
+    "currencies": ["SZL", "ZAR"],
+    "languages": ["English", "Swazi"],
+    "latlng": [-26.5, 31.5]
   },
   {
     "id": "SXM",
@@ -4612,18 +3001,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Philipsburg",
-    "currencies": [
-      "ANG"
-    ],
-    "languages": [
-      "English",
-      "French",
-      "Dutch"
-    ],
-    "latlng": [
-      18.033333,
-      -63.05
-    ]
+    "currencies": ["ANG"],
+    "languages": ["English", "French", "Dutch"],
+    "latlng": [18.033333, -63.05]
   },
   {
     "id": "SYC",
@@ -4635,18 +3015,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Victoria",
-    "currencies": [
-      "SCR"
-    ],
-    "languages": [
-      "Seychellois Creole",
-      "English",
-      "French"
-    ],
-    "latlng": [
-      -4.58333333,
-      55.66666666
-    ]
+    "currencies": ["SCR"],
+    "languages": ["Seychellois Creole", "English", "French"],
+    "latlng": [-4.58333333, 55.66666666]
   },
   {
     "id": "SYR",
@@ -4658,16 +3029,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Damascus",
-    "currencies": [
-      "SYP"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      35,
-      38
-    ]
+    "currencies": ["SYP"],
+    "languages": ["Arabic"],
+    "latlng": [35, 38]
   },
   {
     "id": "TCA",
@@ -4679,16 +3043,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Cockburn Town",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      21.75,
-      -71.58333333
-    ]
+    "currencies": ["USD"],
+    "languages": ["English"],
+    "latlng": [21.75, -71.58333333]
   },
   {
     "id": "TCD",
@@ -4700,17 +3057,9 @@
     "region": "Africa",
     "subregion": "Middle Africa",
     "capital": "N'Djamena",
-    "currencies": [
-      "XAF"
-    ],
-    "languages": [
-      "Arabic",
-      "French"
-    ],
-    "latlng": [
-      15,
-      19
-    ]
+    "currencies": ["XAF"],
+    "languages": ["Arabic", "French"],
+    "latlng": [15, 19]
   },
   {
     "id": "TGO",
@@ -4722,16 +3071,9 @@
     "region": "Africa",
     "subregion": "Western Africa",
     "capital": "Lomé",
-    "currencies": [
-      "XOF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      8,
-      1.16666666
-    ]
+    "currencies": ["XOF"],
+    "languages": ["French"],
+    "latlng": [8, 1.16666666]
   },
   {
     "id": "THA",
@@ -4743,16 +3085,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Bangkok",
-    "currencies": [
-      "THB"
-    ],
-    "languages": [
-      "Thai"
-    ],
-    "latlng": [
-      15,
-      100
-    ]
+    "currencies": ["THB"],
+    "languages": ["Thai"],
+    "latlng": [15, 100]
   },
   {
     "id": "TJK",
@@ -4764,17 +3099,9 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "capital": "Dushanbe",
-    "currencies": [
-      "TJS"
-    ],
-    "languages": [
-      "Russian",
-      "Tajik"
-    ],
-    "latlng": [
-      39,
-      71
-    ]
+    "currencies": ["TJS"],
+    "languages": ["Russian", "Tajik"],
+    "latlng": [39, 71]
   },
   {
     "id": "TKL",
@@ -4786,18 +3113,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Fakaofo",
-    "currencies": [
-      "NZD"
-    ],
-    "languages": [
-      "English",
-      "Samoan",
-      "Tokelauan"
-    ],
-    "latlng": [
-      -9,
-      -172
-    ]
+    "currencies": ["NZD"],
+    "languages": ["English", "Samoan", "Tokelauan"],
+    "latlng": [-9, -172]
   },
   {
     "id": "TKM",
@@ -4809,17 +3127,9 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "capital": "Ashgabat",
-    "currencies": [
-      "TMT"
-    ],
-    "languages": [
-      "Russian",
-      "Turkmen"
-    ],
-    "latlng": [
-      40,
-      60
-    ]
+    "currencies": ["TMT"],
+    "languages": ["Russian", "Turkmen"],
+    "latlng": [40, 60]
   },
   {
     "id": "TLS",
@@ -4831,17 +3141,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Dili",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "Portuguese",
-      "Tetum"
-    ],
-    "latlng": [
-      -8.83333333,
-      125.91666666
-    ]
+    "currencies": ["USD"],
+    "languages": ["Portuguese", "Tetum"],
+    "latlng": [-8.83333333, 125.91666666]
   },
   {
     "id": "TON",
@@ -4853,17 +3155,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Nuku'alofa",
-    "currencies": [
-      "TOP"
-    ],
-    "languages": [
-      "English",
-      "Tongan"
-    ],
-    "latlng": [
-      -20,
-      -175
-    ]
+    "currencies": ["TOP"],
+    "languages": ["English", "Tongan"],
+    "latlng": [-20, -175]
   },
   {
     "id": "TTO",
@@ -4875,16 +3169,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Port of Spain",
-    "currencies": [
-      "TTD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      11,
-      -61
-    ]
+    "currencies": ["TTD"],
+    "languages": ["English"],
+    "latlng": [11, -61]
   },
   {
     "id": "TUN",
@@ -4896,16 +3183,9 @@
     "region": "Africa",
     "subregion": "Northern Africa",
     "capital": "Tunis",
-    "currencies": [
-      "TND"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      34,
-      9
-    ]
+    "currencies": ["TND"],
+    "languages": ["Arabic"],
+    "latlng": [34, 9]
   },
   {
     "id": "TUR",
@@ -4917,16 +3197,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Ankara",
-    "currencies": [
-      "TRY"
-    ],
-    "languages": [
-      "Turkish"
-    ],
-    "latlng": [
-      39,
-      35
-    ]
+    "currencies": ["TRY"],
+    "languages": ["Turkish"],
+    "latlng": [39, 35]
   },
   {
     "id": "TUV",
@@ -4938,18 +3211,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Funafuti",
-    "currencies": [
-      "AUD",
-      "TVD"
-    ],
-    "languages": [
-      "English",
-      "Tuvaluan"
-    ],
-    "latlng": [
-      -8,
-      178
-    ]
+    "currencies": ["AUD", "TVD"],
+    "languages": ["English", "Tuvaluan"],
+    "latlng": [-8, 178]
   },
   {
     "id": "TWN",
@@ -4961,16 +3225,9 @@
     "region": "Asia",
     "subregion": "Eastern Asia",
     "capital": "Taipei",
-    "currencies": [
-      "TWD"
-    ],
-    "languages": [
-      "Chinese"
-    ],
-    "latlng": [
-      23.5,
-      121
-    ]
+    "currencies": ["TWD"],
+    "languages": ["Chinese"],
+    "latlng": [23.5, 121]
   },
   {
     "id": "TZA",
@@ -4982,17 +3239,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Dodoma",
-    "currencies": [
-      "TZS"
-    ],
-    "languages": [
-      "English",
-      "Swahili"
-    ],
-    "latlng": [
-      -6,
-      35
-    ]
+    "currencies": ["TZS"],
+    "languages": ["English", "Swahili"],
+    "latlng": [-6, 35]
   },
   {
     "id": "UGA",
@@ -5004,17 +3253,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Kampala",
-    "currencies": [
-      "UGX"
-    ],
-    "languages": [
-      "English",
-      "Swahili"
-    ],
-    "latlng": [
-      1,
-      32
-    ]
+    "currencies": ["UGX"],
+    "languages": ["English", "Swahili"],
+    "latlng": [1, 32]
   },
   {
     "id": "UKR",
@@ -5026,16 +3267,9 @@
     "region": "Europe",
     "subregion": "Eastern Europe",
     "capital": "Kyiv",
-    "currencies": [
-      "UAH"
-    ],
-    "languages": [
-      "Ukrainian"
-    ],
-    "latlng": [
-      49,
-      32
-    ]
+    "currencies": ["UAH"],
+    "languages": ["Ukrainian"],
+    "latlng": [49, 32]
   },
   {
     "id": "UMI",
@@ -5047,16 +3281,9 @@
     "region": "Americas",
     "subregion": "North America",
     "capital": null,
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      19.3,
-      166.633333
-    ]
+    "currencies": ["USD"],
+    "languages": ["English"],
+    "latlng": [19.3, 166.633333]
   },
   {
     "id": "URY",
@@ -5068,16 +3295,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Montevideo",
-    "currencies": [
-      "UYU"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      -33,
-      -56
-    ]
+    "currencies": ["UYU"],
+    "languages": ["Spanish"],
+    "latlng": [-33, -56]
   },
   {
     "id": "USA",
@@ -5089,16 +3309,9 @@
     "region": "Americas",
     "subregion": "North America",
     "capital": "Washington D.C.",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      38,
-      -97
-    ]
+    "currencies": ["USD"],
+    "languages": ["English"],
+    "latlng": [38, -97]
   },
   {
     "id": "UZB",
@@ -5110,17 +3323,9 @@
     "region": "Asia",
     "subregion": "Central Asia",
     "capital": "Tashkent",
-    "currencies": [
-      "UZS"
-    ],
-    "languages": [
-      "Russian",
-      "Uzbek"
-    ],
-    "latlng": [
-      41,
-      64
-    ]
+    "currencies": ["UZS"],
+    "languages": ["Russian", "Uzbek"],
+    "latlng": [41, 64]
   },
   {
     "id": "VAT",
@@ -5132,17 +3337,9 @@
     "region": "Europe",
     "subregion": "Southern Europe",
     "capital": "Vatican City",
-    "currencies": [
-      "EUR"
-    ],
-    "languages": [
-      "Italian",
-      "Latin"
-    ],
-    "latlng": [
-      41.9,
-      12.45
-    ]
+    "currencies": ["EUR"],
+    "languages": ["Italian", "Latin"],
+    "latlng": [41.9, 12.45]
   },
   {
     "id": "VCT",
@@ -5154,16 +3351,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Kingstown",
-    "currencies": [
-      "XCD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      13.25,
-      -61.2
-    ]
+    "currencies": ["XCD"],
+    "languages": ["English"],
+    "latlng": [13.25, -61.2]
   },
   {
     "id": "VEN",
@@ -5175,16 +3365,9 @@
     "region": "Americas",
     "subregion": "South America",
     "capital": "Caracas",
-    "currencies": [
-      "VES"
-    ],
-    "languages": [
-      "Spanish"
-    ],
-    "latlng": [
-      8,
-      -66
-    ]
+    "currencies": ["VES"],
+    "languages": ["Spanish"],
+    "latlng": [8, -66]
   },
   {
     "id": "VGB",
@@ -5196,16 +3379,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Road Town",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      18.431383,
-      -64.62305
-    ]
+    "currencies": ["USD"],
+    "languages": ["English"],
+    "latlng": [18.431383, -64.62305]
   },
   {
     "id": "VIR",
@@ -5217,16 +3393,9 @@
     "region": "Americas",
     "subregion": "Caribbean",
     "capital": "Charlotte Amalie",
-    "currencies": [
-      "USD"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      18.35,
-      -64.933333
-    ]
+    "currencies": ["USD"],
+    "languages": ["English"],
+    "latlng": [18.35, -64.933333]
   },
   {
     "id": "VNM",
@@ -5238,16 +3407,9 @@
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "capital": "Hanoi",
-    "currencies": [
-      "VND"
-    ],
-    "languages": [
-      "Vietnamese"
-    ],
-    "latlng": [
-      16.16666666,
-      107.83333333
-    ]
+    "currencies": ["VND"],
+    "languages": ["Vietnamese"],
+    "latlng": [16.16666666, 107.83333333]
   },
   {
     "id": "VUT",
@@ -5259,18 +3421,9 @@
     "region": "Oceania",
     "subregion": "Melanesia",
     "capital": "Port Vila",
-    "currencies": [
-      "VUV"
-    ],
-    "languages": [
-      "Bislama",
-      "English",
-      "French"
-    ],
-    "latlng": [
-      -16,
-      167
-    ]
+    "currencies": ["VUV"],
+    "languages": ["Bislama", "English", "French"],
+    "latlng": [-16, 167]
   },
   {
     "id": "WLF",
@@ -5282,16 +3435,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Mata-Utu",
-    "currencies": [
-      "XPF"
-    ],
-    "languages": [
-      "French"
-    ],
-    "latlng": [
-      -13.3,
-      -176.2
-    ]
+    "currencies": ["XPF"],
+    "languages": ["French"],
+    "latlng": [-13.3, -176.2]
   },
   {
     "id": "WSM",
@@ -5303,17 +3449,9 @@
     "region": "Oceania",
     "subregion": "Polynesia",
     "capital": "Apia",
-    "currencies": [
-      "WST"
-    ],
-    "languages": [
-      "English",
-      "Samoan"
-    ],
-    "latlng": [
-      -13.58333333,
-      -172.33333333
-    ]
+    "currencies": ["WST"],
+    "languages": ["English", "Samoan"],
+    "latlng": [-13.58333333, -172.33333333]
   },
   {
     "id": "YEM",
@@ -5325,16 +3463,9 @@
     "region": "Asia",
     "subregion": "Western Asia",
     "capital": "Sana'a",
-    "currencies": [
-      "YER"
-    ],
-    "languages": [
-      "Arabic"
-    ],
-    "latlng": [
-      15,
-      48
-    ]
+    "currencies": ["YER"],
+    "languages": ["Arabic"],
+    "latlng": [15, 48]
   },
   {
     "id": "ZAF",
@@ -5346,9 +3477,7 @@
     "region": "Africa",
     "subregion": "Southern Africa",
     "capital": "Pretoria",
-    "currencies": [
-      "ZAR"
-    ],
+    "currencies": ["ZAR"],
     "languages": [
       "Afrikaans",
       "English",
@@ -5362,10 +3491,7 @@
       "Xhosa",
       "Zulu"
     ],
-    "latlng": [
-      -29,
-      24
-    ]
+    "latlng": [-29, 24]
   },
   {
     "id": "ZMB",
@@ -5377,16 +3503,9 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Lusaka",
-    "currencies": [
-      "ZMW"
-    ],
-    "languages": [
-      "English"
-    ],
-    "latlng": [
-      -15,
-      30
-    ]
+    "currencies": ["ZMW"],
+    "languages": ["English"],
+    "latlng": [-15, 30]
   },
   {
     "id": "ZWE",
@@ -5398,17 +3517,7 @@
     "region": "Africa",
     "subregion": "Eastern Africa",
     "capital": "Harare",
-    "currencies": [
-      "BWP",
-      "CNY",
-      "EUR",
-      "GBP",
-      "INR",
-      "JPY",
-      "USD",
-      "ZAR",
-      "ZWB"
-    ],
+    "currencies": ["BWP", "CNY", "EUR", "GBP", "INR", "JPY", "USD", "ZAR", "ZWB"],
     "languages": [
       "Chibarwe",
       "English",
@@ -5426,9 +3535,6 @@
       "Xhosa",
       "Zimbabwean Sign Language"
     ],
-    "latlng": [
-      -20,
-      30
-    ]
+    "latlng": [-20, 30]
   }
 ]

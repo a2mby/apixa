@@ -42,16 +42,16 @@
 
 ## Out of scope
 
-| Item | Why |
-| --- | --- |
-| Apixa website / dataset browse pages | Explicitly deferred — no site in repo |
-| Hosted catalog, auth, DB, CDN | Future |
-| Online runtime fetch of datasets | Local only this release |
-| Core `mocks` on `defineApi` config | Must not couple mocking to production execution |
-| Abort / retries / middleware product surface | Other reliability work |
-| `@apixa/tanstack-query` package | Later integration |
-| Schema validation library | Later |
-| Rewriting frozen v0.1–v0.4 | Errata only |
+| Item                                         | Why                                             |
+| -------------------------------------------- | ----------------------------------------------- |
+| Apixa website / dataset browse pages         | Explicitly deferred — no site in repo           |
+| Hosted catalog, auth, DB, CDN                | Future                                          |
+| Online runtime fetch of datasets             | Local only this release                         |
+| Core `mocks` on `defineApi` config           | Must not couple mocking to production execution |
+| Abort / retries / middleware product surface | Other reliability work                          |
+| `@apixa/tanstack-query` package              | Later integration                               |
+| Schema validation library                    | Later                                           |
+| Rewriting frozen v0.1–v0.4                   | Errata only                                     |
 
 ## Constraints (non-negotiable)
 

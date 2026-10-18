@@ -62,10 +62,19 @@ async function writeDataset({
   await ensureDir(dir);
   const schemaFields =
     records.length > 0
-      ? Object.keys(records[0]).slice(0, 24).map((name) => ({
-          name,
-          type: typeof records[0][name] === "number" ? "number" : Array.isArray(records[0][name]) ? "array" : typeof records[0][name] === "object" && records[0][name] !== null ? "object" : "string",
-        }))
+      ? Object.keys(records[0])
+          .slice(0, 24)
+          .map((name) => ({
+            name,
+            type:
+              typeof records[0][name] === "number"
+                ? "number"
+                : Array.isArray(records[0][name])
+                  ? "array"
+                  : typeof records[0][name] === "object" && records[0][name] !== null
+                    ? "object"
+                    : "string",
+          }))
       : [{ name: idField, type: "string" }];
 
   const meta = {
@@ -365,7 +374,7 @@ async function main() {
     ccn3: c.ccn3,
     region: c.region,
     subregion: c.subregion,
-    capital: Array.isArray(c.capital) ? c.capital[0] ?? null : c.capital ?? null,
+    capital: Array.isArray(c.capital) ? (c.capital[0] ?? null) : (c.capital ?? null),
     currencies: c.currencies ? Object.keys(c.currencies) : [],
     languages: c.languages ? Object.values(c.languages) : [],
     latlng: c.latlng,
@@ -414,7 +423,8 @@ async function main() {
     idField: "id",
     records: isoSynthetic,
     substitutes: "https://github.com/datasets/country-codes",
-    notes: "Generated substitute due to restricted/unclear redistribution terms on the combined upstream file.",
+    notes:
+      "Generated substitute due to restricted/unclear redistribution terms on the combined upstream file.",
   });
 
   // --- 11 ExploreMyData, 12 Flavio — catalog pages, skip ---
@@ -676,7 +686,8 @@ async function main() {
     domain: "comments",
     id: "comments-mock",
     title: "Comments (synthetic)",
-    description: "Deterministic comments with postId/userId FKs. Substitute for DummyJSON comments.",
+    description:
+      "Deterministic comments with postId/userId FKs. Substitute for DummyJSON comments.",
     license: "MIT",
     version: "1.0.0",
     sourceUrl: "https://dummyjson.com/comments?limit=100",

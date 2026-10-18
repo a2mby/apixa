@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-18 — MockDatasetIds autocomplete for mockConfig.type (#30)
+
+Core exports an empty extensible `MockDatasetIds`; `@apixa/mocking` data modules merge preset ids next to `registerDatasetPreset`, so importing `@apixa/mocking/data` teaches `mockConfig.type` autocomplete while still accepting custom strings. Builtins cover the small synthetic presets; mocking README documents the customize-your-own pattern. `/git-push` now always runs `npm run format`, and Prettier-only diffs outside Touches are allowed.
+
 ## 2026-10-18 — Resource mocks without side-effect mocking import (#28)
 
 Core treats `@apixa/mocking` as an optional peer: when `defineApi` sees unhandled `mock` / `mockConfig`, it strips those keys and deferred-loads `@apixa/mocking/register` on first request. No side-effect `import "@apixa/mocking"` is required; missing peer yields a clear error. Extends shipped v0.5.0 without a new versions folder.

@@ -5,9 +5,7 @@
     "name": "United Arab Emirates Dirham",
     "symbol": "د.إ",
     "digits": 2,
-    "countries": [
-      "AE"
-    ]
+    "countries": ["AE"]
   },
   {
     "currency": "AFN",
@@ -15,9 +13,7 @@
     "name": "Afghan Afghani",
     "symbol": "؋",
     "digits": 2,
-    "countries": [
-      "AF"
-    ]
+    "countries": ["AF"]
   },
   {
     "currency": "ALL",
@@ -25,9 +21,7 @@
     "name": "Albanian Lek",
     "symbol": "L",
     "digits": 2,
-    "countries": [
-      "AL"
-    ]
+    "countries": ["AL"]
   },
   {
     "currency": "AMD",
@@ -35,9 +29,7 @@
     "name": "Armenian Dram",
     "symbol": "֏",
     "digits": 2,
-    "countries": [
-      "AM"
-    ]
+    "countries": ["AM"]
   },
   {
     "currency": "ANG",
@@ -45,10 +37,7 @@
     "name": "Guilder",
     "symbol": "ƒ",
     "digits": 2,
-    "countries": [
-      "CW",
-      "SX"
-    ]
+    "countries": ["CW", "SX"]
   },
   {
     "currency": "AOA",
@@ -56,9 +45,7 @@
     "name": "Angolan Kwanza",
     "symbol": "Kz",
     "digits": 2,
-    "countries": [
-      "AO"
-    ]
+    "countries": ["AO"]
   },
   {
     "currency": "ARS",
@@ -66,9 +53,7 @@
     "name": "Argentine Peso",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "AR"
-    ]
+    "countries": ["AR"]
   },
   {
     "currency": "AUD",
@@ -76,16 +61,7 @@
     "name": "Australian Dollar",
     "symbol": "A$",
     "digits": 2,
-    "countries": [
-      "AU",
-      "CC",
-      "CX",
-      "HM",
-      "KI",
-      "NF",
-      "NR",
-      "TV"
-    ]
+    "countries": ["AU", "CC", "CX", "HM", "KI", "NF", "NR", "TV"]
   },
   {
     "currency": "AWG",
@@ -93,9 +69,7 @@
     "name": "Aruban Florin",
     "symbol": "ƒ",
     "digits": 2,
-    "countries": [
-      "AW"
-    ]
+    "countries": ["AW"]
   },
   {
     "currency": "AZN",
@@ -103,9 +77,7 @@
     "name": "Manat",
     "symbol": "₼",
     "digits": 2,
-    "countries": [
-      "AZ"
-    ]
+    "countries": ["AZ"]
   },
   {
     "currency": "BAM",
@@ -113,9 +85,7 @@
     "name": "Marka",
     "symbol": "KM",
     "digits": 2,
-    "countries": [
-      "BA"
-    ]
+    "countries": ["BA"]
   },
   {
     "currency": "BBD",
@@ -123,9 +93,7 @@
     "name": "Dollar",
     "symbol": "Bds$",
     "digits": 2,
-    "countries": [
-      "BB"
-    ]
+    "countries": ["BB"]
   },
   {
     "currency": "BDT",
@@ -133,9 +101,7 @@
     "name": "Bangladeshi Taka",
     "symbol": "৳",
     "digits": 2,
-    "countries": [
-      "BD"
-    ]
+    "countries": ["BD"]
   },
   {
     "currency": "BGN",
@@ -143,9 +109,7 @@
     "name": "Lev",
     "symbol": "лв",
     "digits": 2,
-    "countries": [
-      "BG"
-    ]
+    "countries": ["BG"]
   },
   {
     "currency": "BHD",
@@ -153,9 +117,7 @@
     "name": "Bahraini Dinar",
     "symbol": "ب.د",
     "digits": 3,
-    "countries": [
-      "BH"
-    ]
+    "countries": ["BH"]
   },
   {
     "currency": "BIF",
@@ -163,9 +125,7 @@
     "name": "Franc",
     "symbol": "FBu",
     "digits": 0,
-    "countries": [
-      "BI"
-    ]
+    "countries": ["BI"]
   },
   {
     "currency": "BMD",
@@ -173,9 +133,7 @@
     "name": "Dollar",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "BM"
-    ]
+    "countries": ["BM"]
   },
   {
     "currency": "BND",
@@ -183,9 +141,7 @@
     "name": "Dollar",
     "symbol": "B$",
     "digits": 2,
-    "countries": [
-      "BN"
-    ]
+    "countries": ["BN"]
   },
   {
     "currency": "BOB",
@@ -193,9 +149,7 @@
     "name": "Boliviano",
     "symbol": "Bs.",
     "digits": 2,
-    "countries": [
-      "BO"
-    ]
+    "countries": ["BO"]
   },
   {
     "currency": "BRL",
@@ -203,9 +157,7 @@
     "name": "Brazilian Real",
     "symbol": "R$",
     "digits": 2,
-    "countries": [
-      "BR"
-    ]
+    "countries": ["BR"]
   },
   {
     "currency": "BSD",
@@ -213,9 +165,7 @@
     "name": "Bahamian Dollar",
     "symbol": "B$",
     "digits": 2,
-    "countries": [
-      "BS"
-    ]
+    "countries": ["BS"]
   },
   {
     "currency": "BTN",
@@ -223,9 +173,7 @@
     "name": "Ngultrum",
     "symbol": "Nu.",
     "digits": 2,
-    "countries": [
-      "BT"
-    ]
+    "countries": ["BT"]
   },
   {
     "currency": "BWP",
@@ -233,9 +181,7 @@
     "name": "Botswana Pula",
     "symbol": "P",
     "digits": 2,
-    "countries": [
-      "BW"
-    ]
+    "countries": ["BW"]
   },
   {
     "currency": "BYN",
@@ -243,9 +189,7 @@
     "name": "Belarusian Ruble",
     "symbol": "Br",
     "digits": 2,
-    "countries": [
-      "BY"
-    ]
+    "countries": ["BY"]
   },
   {
     "currency": "BZD",
@@ -253,9 +197,7 @@
     "name": "Dollar",
     "symbol": "BZ$",
     "digits": 2,
-    "countries": [
-      "BZ"
-    ]
+    "countries": ["BZ"]
   },
   {
     "currency": "CAD",
@@ -263,9 +205,7 @@
     "name": "Canadian Dollar",
     "symbol": "C$",
     "digits": 2,
-    "countries": [
-      "CA"
-    ]
+    "countries": ["CA"]
   },
   {
     "currency": "CDF",
@@ -273,9 +213,7 @@
     "name": "Franc",
     "symbol": "FC",
     "digits": 2,
-    "countries": [
-      "CD"
-    ]
+    "countries": ["CD"]
   },
   {
     "currency": "CHF",
@@ -283,10 +221,7 @@
     "name": "Swiss Franc",
     "symbol": "Fr",
     "digits": 2,
-    "countries": [
-      "CH",
-      "LI"
-    ]
+    "countries": ["CH", "LI"]
   },
   {
     "currency": "CLP",
@@ -294,9 +229,7 @@
     "name": "Chilean Peso",
     "symbol": "$",
     "digits": 0,
-    "countries": [
-      "CL"
-    ]
+    "countries": ["CL"]
   },
   {
     "currency": "CNY",
@@ -304,9 +237,7 @@
     "name": "Chinese Yuan Renminbi",
     "symbol": "¥",
     "digits": 2,
-    "countries": [
-      "CN"
-    ]
+    "countries": ["CN"]
   },
   {
     "currency": "COP",
@@ -314,9 +245,7 @@
     "name": "Colombian Peso",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "CO"
-    ]
+    "countries": ["CO"]
   },
   {
     "currency": "CRC",
@@ -324,9 +253,7 @@
     "name": "Colon",
     "symbol": "₡",
     "digits": 2,
-    "countries": [
-      "CR"
-    ]
+    "countries": ["CR"]
   },
   {
     "currency": "CUP",
@@ -334,9 +261,7 @@
     "name": "Peso",
     "symbol": "$MN",
     "digits": 2,
-    "countries": [
-      "CU"
-    ]
+    "countries": ["CU"]
   },
   {
     "currency": "CVE",
@@ -344,9 +269,7 @@
     "name": "Escudo",
     "symbol": "Esc",
     "digits": 2,
-    "countries": [
-      "CV"
-    ]
+    "countries": ["CV"]
   },
   {
     "currency": "CZK",
@@ -354,9 +277,7 @@
     "name": "Koruna",
     "symbol": "Kč",
     "digits": 2,
-    "countries": [
-      "CZ"
-    ]
+    "countries": ["CZ"]
   },
   {
     "currency": "DJF",
@@ -364,9 +285,7 @@
     "name": "Franc",
     "symbol": "Fdj",
     "digits": 0,
-    "countries": [
-      "DJ"
-    ]
+    "countries": ["DJ"]
   },
   {
     "currency": "DKK",
@@ -374,11 +293,7 @@
     "name": "Danish Krone",
     "symbol": "kr",
     "digits": 2,
-    "countries": [
-      "DK",
-      "FO",
-      "GL"
-    ]
+    "countries": ["DK", "FO", "GL"]
   },
   {
     "currency": "DOP",
@@ -386,9 +301,7 @@
     "name": "Peso",
     "symbol": "RD$",
     "digits": 2,
-    "countries": [
-      "DO"
-    ]
+    "countries": ["DO"]
   },
   {
     "currency": "DZD",
@@ -396,9 +309,7 @@
     "name": "Algerian Dinar",
     "symbol": "د.ج",
     "digits": 2,
-    "countries": [
-      "DZ"
-    ]
+    "countries": ["DZ"]
   },
   {
     "currency": "EGP",
@@ -406,9 +317,7 @@
     "name": "Egyptian Pound",
     "symbol": "E£",
     "digits": 2,
-    "countries": [
-      "EG"
-    ]
+    "countries": ["EG"]
   },
   {
     "currency": "ERN",
@@ -416,9 +325,7 @@
     "name": "Nakfa",
     "symbol": "Nfk",
     "digits": 2,
-    "countries": [
-      "ER"
-    ]
+    "countries": ["ER"]
   },
   {
     "currency": "ETB",
@@ -426,9 +333,7 @@
     "name": "Birr",
     "symbol": "Br",
     "digits": 2,
-    "countries": [
-      "ET"
-    ]
+    "countries": ["ET"]
   },
   {
     "currency": "EUR",
@@ -480,9 +385,7 @@
     "name": "Dollar",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "FJ"
-    ]
+    "countries": ["FJ"]
   },
   {
     "currency": "FKP",
@@ -490,9 +393,7 @@
     "name": "Pound",
     "symbol": "£",
     "digits": 2,
-    "countries": [
-      "FK"
-    ]
+    "countries": ["FK"]
   },
   {
     "currency": "GBP",
@@ -500,13 +401,7 @@
     "name": "British Pound Sterling",
     "symbol": "£",
     "digits": 2,
-    "countries": [
-      "GB",
-      "GG",
-      "GS",
-      "IM",
-      "JE"
-    ]
+    "countries": ["GB", "GG", "GS", "IM", "JE"]
   },
   {
     "currency": "GEL",
@@ -514,9 +409,7 @@
     "name": "Lari",
     "symbol": "₾",
     "digits": 2,
-    "countries": [
-      "GE"
-    ]
+    "countries": ["GE"]
   },
   {
     "currency": "GHS",
@@ -524,9 +417,7 @@
     "name": "Ghanaian Cedi",
     "symbol": "₵",
     "digits": 2,
-    "countries": [
-      "GH"
-    ]
+    "countries": ["GH"]
   },
   {
     "currency": "GIP",
@@ -534,9 +425,7 @@
     "name": "Gibraltar Pound",
     "symbol": "£",
     "digits": 2,
-    "countries": [
-      "GI"
-    ]
+    "countries": ["GI"]
   },
   {
     "currency": "GMD",
@@ -544,9 +433,7 @@
     "name": "Dalasi",
     "symbol": "D",
     "digits": 2,
-    "countries": [
-      "GM"
-    ]
+    "countries": ["GM"]
   },
   {
     "currency": "GNF",
@@ -554,9 +441,7 @@
     "name": "Franc",
     "symbol": "FG",
     "digits": 0,
-    "countries": [
-      "GN"
-    ]
+    "countries": ["GN"]
   },
   {
     "currency": "GTQ",
@@ -564,9 +449,7 @@
     "name": "Quetzal",
     "symbol": "Q",
     "digits": 2,
-    "countries": [
-      "GT"
-    ]
+    "countries": ["GT"]
   },
   {
     "currency": "GYD",
@@ -574,9 +457,7 @@
     "name": "Dollar",
     "symbol": "G$",
     "digits": 2,
-    "countries": [
-      "GY"
-    ]
+    "countries": ["GY"]
   },
   {
     "currency": "HKD",
@@ -584,9 +465,7 @@
     "name": "Hong Kong Dollar",
     "symbol": "HK$",
     "digits": 2,
-    "countries": [
-      "HK"
-    ]
+    "countries": ["HK"]
   },
   {
     "currency": "HNL",
@@ -594,9 +473,7 @@
     "name": "Lempira",
     "symbol": "L",
     "digits": 2,
-    "countries": [
-      "HN"
-    ]
+    "countries": ["HN"]
   },
   {
     "currency": "HRK",
@@ -604,9 +481,7 @@
     "name": "Kuna",
     "symbol": "kn",
     "digits": 2,
-    "countries": [
-      "HR"
-    ]
+    "countries": ["HR"]
   },
   {
     "currency": "HTG",
@@ -614,9 +489,7 @@
     "name": "Gourde",
     "symbol": "G",
     "digits": 2,
-    "countries": [
-      "HT"
-    ]
+    "countries": ["HT"]
   },
   {
     "currency": "HUF",
@@ -624,9 +497,7 @@
     "name": "Forint",
     "symbol": "Ft",
     "digits": 2,
-    "countries": [
-      "HU"
-    ]
+    "countries": ["HU"]
   },
   {
     "currency": "IDR",
@@ -634,9 +505,7 @@
     "name": "Indonesian Rupiah",
     "symbol": "Rp",
     "digits": 2,
-    "countries": [
-      "ID"
-    ]
+    "countries": ["ID"]
   },
   {
     "currency": "ILS",
@@ -644,10 +513,7 @@
     "name": "Israeli New Shekel",
     "symbol": "₪",
     "digits": 2,
-    "countries": [
-      "IL",
-      "PS"
-    ]
+    "countries": ["IL", "PS"]
   },
   {
     "currency": "INR",
@@ -655,9 +521,7 @@
     "name": "Indian Rupee",
     "symbol": "₹",
     "digits": 2,
-    "countries": [
-      "IN"
-    ]
+    "countries": ["IN"]
   },
   {
     "currency": "IQD",
@@ -665,9 +529,7 @@
     "name": "Dinar",
     "symbol": "ع.د",
     "digits": 3,
-    "countries": [
-      "IQ"
-    ]
+    "countries": ["IQ"]
   },
   {
     "currency": "IRR",
@@ -675,9 +537,7 @@
     "name": "Rial",
     "symbol": "﷼",
     "digits": 2,
-    "countries": [
-      "IR"
-    ]
+    "countries": ["IR"]
   },
   {
     "currency": "ISK",
@@ -685,9 +545,7 @@
     "name": "Krona",
     "symbol": "kr",
     "digits": 0,
-    "countries": [
-      "IS"
-    ]
+    "countries": ["IS"]
   },
   {
     "currency": "JMD",
@@ -695,9 +553,7 @@
     "name": "Dollar",
     "symbol": "J$",
     "digits": 2,
-    "countries": [
-      "JM"
-    ]
+    "countries": ["JM"]
   },
   {
     "currency": "JOD",
@@ -705,9 +561,7 @@
     "name": "Jordanian Dinar",
     "symbol": "د.ا",
     "digits": 3,
-    "countries": [
-      "JO"
-    ]
+    "countries": ["JO"]
   },
   {
     "currency": "JPY",
@@ -715,9 +569,7 @@
     "name": "Japanese Yen",
     "symbol": "¥",
     "digits": 0,
-    "countries": [
-      "JP"
-    ]
+    "countries": ["JP"]
   },
   {
     "currency": "KES",
@@ -725,9 +577,7 @@
     "name": "Kenyan Shilling",
     "symbol": "KSh",
     "digits": 2,
-    "countries": [
-      "KE"
-    ]
+    "countries": ["KE"]
   },
   {
     "currency": "KGS",
@@ -735,9 +585,7 @@
     "name": "Som",
     "symbol": "с",
     "digits": 2,
-    "countries": [
-      "KG"
-    ]
+    "countries": ["KG"]
   },
   {
     "currency": "KHR",
@@ -745,9 +593,7 @@
     "name": "Riels",
     "symbol": "៛",
     "digits": 2,
-    "countries": [
-      "KH"
-    ]
+    "countries": ["KH"]
   },
   {
     "currency": "KMF",
@@ -755,9 +601,7 @@
     "name": "Franc",
     "symbol": "CF",
     "digits": 0,
-    "countries": [
-      "KM"
-    ]
+    "countries": ["KM"]
   },
   {
     "currency": "KPW",
@@ -765,9 +609,7 @@
     "name": "Won",
     "symbol": "₩",
     "digits": 2,
-    "countries": [
-      "KP"
-    ]
+    "countries": ["KP"]
   },
   {
     "currency": "KRW",
@@ -775,9 +617,7 @@
     "name": "South Korean Won",
     "symbol": "₩",
     "digits": 0,
-    "countries": [
-      "KR"
-    ]
+    "countries": ["KR"]
   },
   {
     "currency": "KWD",
@@ -785,9 +625,7 @@
     "name": "Kuwaiti Dinar",
     "symbol": "د.ك",
     "digits": 3,
-    "countries": [
-      "KW"
-    ]
+    "countries": ["KW"]
   },
   {
     "currency": "KYD",
@@ -795,9 +633,7 @@
     "name": "Dollar",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "KY"
-    ]
+    "countries": ["KY"]
   },
   {
     "currency": "KZT",
@@ -805,9 +641,7 @@
     "name": "Tenge",
     "symbol": "₸",
     "digits": 2,
-    "countries": [
-      "KZ"
-    ]
+    "countries": ["KZ"]
   },
   {
     "currency": "LAK",
@@ -815,9 +649,7 @@
     "name": "Kip",
     "symbol": "₭",
     "digits": 2,
-    "countries": [
-      "LA"
-    ]
+    "countries": ["LA"]
   },
   {
     "currency": "LBP",
@@ -825,9 +657,7 @@
     "name": "Lebanese Pound",
     "symbol": "ل.ل",
     "digits": 2,
-    "countries": [
-      "LB"
-    ]
+    "countries": ["LB"]
   },
   {
     "currency": "LKR",
@@ -835,9 +665,7 @@
     "name": "Sri Lankan Rupee",
     "symbol": "Rs",
     "digits": 2,
-    "countries": [
-      "LK"
-    ]
+    "countries": ["LK"]
   },
   {
     "currency": "LRD",
@@ -845,9 +673,7 @@
     "name": "Dollar",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "LR"
-    ]
+    "countries": ["LR"]
   },
   {
     "currency": "LSL",
@@ -855,9 +681,7 @@
     "name": "Loti",
     "symbol": "L",
     "digits": 2,
-    "countries": [
-      "LS"
-    ]
+    "countries": ["LS"]
   },
   {
     "currency": "LYD",
@@ -865,9 +689,7 @@
     "name": "Dinar",
     "symbol": "ل.د",
     "digits": 3,
-    "countries": [
-      "LY"
-    ]
+    "countries": ["LY"]
   },
   {
     "currency": "MAD",
@@ -875,10 +697,7 @@
     "name": "Moroccan Dirham",
     "symbol": "د.م.",
     "digits": 2,
-    "countries": [
-      "EH",
-      "MA"
-    ]
+    "countries": ["EH", "MA"]
   },
   {
     "currency": "MDL",
@@ -886,9 +705,7 @@
     "name": "Leu",
     "symbol": "L",
     "digits": 2,
-    "countries": [
-      "MD"
-    ]
+    "countries": ["MD"]
   },
   {
     "currency": "MGA",
@@ -896,9 +713,7 @@
     "name": "Ariary",
     "symbol": "Ar",
     "digits": 2,
-    "countries": [
-      "MG"
-    ]
+    "countries": ["MG"]
   },
   {
     "currency": "MKD",
@@ -906,9 +721,7 @@
     "name": "Denar",
     "symbol": "ден",
     "digits": 2,
-    "countries": [
-      "MK"
-    ]
+    "countries": ["MK"]
   },
   {
     "currency": "MMK",
@@ -916,9 +729,7 @@
     "name": "Kyat",
     "symbol": "K",
     "digits": 2,
-    "countries": [
-      "MM"
-    ]
+    "countries": ["MM"]
   },
   {
     "currency": "MNT",
@@ -926,9 +737,7 @@
     "name": "Tugrik",
     "symbol": "₮",
     "digits": 2,
-    "countries": [
-      "MN"
-    ]
+    "countries": ["MN"]
   },
   {
     "currency": "MOP",
@@ -936,9 +745,7 @@
     "name": "Pataca",
     "symbol": "MOP$",
     "digits": 2,
-    "countries": [
-      "MO"
-    ]
+    "countries": ["MO"]
   },
   {
     "currency": "MRU",
@@ -946,9 +753,7 @@
     "name": "Mauritanian Ouguiya",
     "symbol": "UM",
     "digits": 2,
-    "countries": [
-      "MR"
-    ]
+    "countries": ["MR"]
   },
   {
     "currency": "MUR",
@@ -956,9 +761,7 @@
     "name": "Mauritian Rupee",
     "symbol": "₨",
     "digits": 2,
-    "countries": [
-      "MU"
-    ]
+    "countries": ["MU"]
   },
   {
     "currency": "MVR",
@@ -966,9 +769,7 @@
     "name": "Rufiyaa",
     "symbol": "Rf",
     "digits": 2,
-    "countries": [
-      "MV"
-    ]
+    "countries": ["MV"]
   },
   {
     "currency": "MWK",
@@ -976,9 +777,7 @@
     "name": "Kwacha",
     "symbol": "MK",
     "digits": 2,
-    "countries": [
-      "MW"
-    ]
+    "countries": ["MW"]
   },
   {
     "currency": "MXN",
@@ -986,9 +785,7 @@
     "name": "Mexican Peso",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "MX"
-    ]
+    "countries": ["MX"]
   },
   {
     "currency": "MYR",
@@ -996,9 +793,7 @@
     "name": "Malaysian Ringgit",
     "symbol": "RM",
     "digits": 2,
-    "countries": [
-      "MY"
-    ]
+    "countries": ["MY"]
   },
   {
     "currency": "MZN",
@@ -1006,9 +801,7 @@
     "name": "Metical",
     "symbol": "MT",
     "digits": 2,
-    "countries": [
-      "MZ"
-    ]
+    "countries": ["MZ"]
   },
   {
     "currency": "NAD",
@@ -1016,9 +809,7 @@
     "name": "Namibian Dollar",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "NA"
-    ]
+    "countries": ["NA"]
   },
   {
     "currency": "NGN",
@@ -1026,9 +817,7 @@
     "name": "Nigerian Naira",
     "symbol": "₦",
     "digits": 2,
-    "countries": [
-      "NG"
-    ]
+    "countries": ["NG"]
   },
   {
     "currency": "NIO",
@@ -1036,9 +825,7 @@
     "name": "Cordoba",
     "symbol": "C$",
     "digits": 2,
-    "countries": [
-      "NI"
-    ]
+    "countries": ["NI"]
   },
   {
     "currency": "NOK",
@@ -1046,11 +833,7 @@
     "name": "Norwegian Krone",
     "symbol": "kr",
     "digits": 2,
-    "countries": [
-      "BV",
-      "NO",
-      "SJ"
-    ]
+    "countries": ["BV", "NO", "SJ"]
   },
   {
     "currency": "NPR",
@@ -1058,9 +841,7 @@
     "name": "Nepalese Rupee",
     "symbol": "₨",
     "digits": 2,
-    "countries": [
-      "NP"
-    ]
+    "countries": ["NP"]
   },
   {
     "currency": "NZD",
@@ -1068,13 +849,7 @@
     "name": "Dollar",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "CK",
-      "NU",
-      "NZ",
-      "PN",
-      "TK"
-    ]
+    "countries": ["CK", "NU", "NZ", "PN", "TK"]
   },
   {
     "currency": "OMR",
@@ -1082,9 +857,7 @@
     "name": "Omani Rial",
     "symbol": "ر.ع.",
     "digits": 3,
-    "countries": [
-      "OM"
-    ]
+    "countries": ["OM"]
   },
   {
     "currency": "PAB",
@@ -1092,9 +865,7 @@
     "name": "Balboa",
     "symbol": "B/.",
     "digits": 2,
-    "countries": [
-      "PA"
-    ]
+    "countries": ["PA"]
   },
   {
     "currency": "PEN",
@@ -1102,9 +873,7 @@
     "name": "Peruvian Sol",
     "symbol": "S/.",
     "digits": 2,
-    "countries": [
-      "PE"
-    ]
+    "countries": ["PE"]
   },
   {
     "currency": "PGK",
@@ -1112,9 +881,7 @@
     "name": "Kina",
     "symbol": "K",
     "digits": 2,
-    "countries": [
-      "PG"
-    ]
+    "countries": ["PG"]
   },
   {
     "currency": "PHP",
@@ -1122,9 +889,7 @@
     "name": "Philippine Peso",
     "symbol": "₱",
     "digits": 2,
-    "countries": [
-      "PH"
-    ]
+    "countries": ["PH"]
   },
   {
     "currency": "PKR",
@@ -1132,9 +897,7 @@
     "name": "Pakistani Rupee",
     "symbol": "₨",
     "digits": 2,
-    "countries": [
-      "PK"
-    ]
+    "countries": ["PK"]
   },
   {
     "currency": "PLN",
@@ -1142,9 +905,7 @@
     "name": "Polish Zloty",
     "symbol": "zł",
     "digits": 2,
-    "countries": [
-      "PL"
-    ]
+    "countries": ["PL"]
   },
   {
     "currency": "PYG",
@@ -1152,9 +913,7 @@
     "name": "Guarani",
     "symbol": "₲",
     "digits": 0,
-    "countries": [
-      "PY"
-    ]
+    "countries": ["PY"]
   },
   {
     "currency": "QAR",
@@ -1162,9 +921,7 @@
     "name": "Qatari Riyal",
     "symbol": "﷼",
     "digits": 2,
-    "countries": [
-      "QA"
-    ]
+    "countries": ["QA"]
   },
   {
     "currency": "RON",
@@ -1172,9 +929,7 @@
     "name": "Leu",
     "symbol": "lei",
     "digits": 2,
-    "countries": [
-      "RO"
-    ]
+    "countries": ["RO"]
   },
   {
     "currency": "RSD",
@@ -1182,9 +937,7 @@
     "name": "Serbian Dinar",
     "symbol": "дин",
     "digits": 2,
-    "countries": [
-      "RS"
-    ]
+    "countries": ["RS"]
   },
   {
     "currency": "RUB",
@@ -1192,9 +945,7 @@
     "name": "Russian Ruble",
     "symbol": "₽",
     "digits": 2,
-    "countries": [
-      "RU"
-    ]
+    "countries": ["RU"]
   },
   {
     "currency": "RWF",
@@ -1202,9 +953,7 @@
     "name": "Franc",
     "symbol": "RF",
     "digits": 0,
-    "countries": [
-      "RW"
-    ]
+    "countries": ["RW"]
   },
   {
     "currency": "SAR",
@@ -1212,9 +961,7 @@
     "name": "Saudi Riyal",
     "symbol": "﷼",
     "digits": 2,
-    "countries": [
-      "SA"
-    ]
+    "countries": ["SA"]
   },
   {
     "currency": "SBD",
@@ -1222,9 +969,7 @@
     "name": "Dollar",
     "symbol": "SI$",
     "digits": 2,
-    "countries": [
-      "SB"
-    ]
+    "countries": ["SB"]
   },
   {
     "currency": "SCR",
@@ -1232,9 +977,7 @@
     "name": "Rupee",
     "symbol": "₨",
     "digits": 2,
-    "countries": [
-      "SC"
-    ]
+    "countries": ["SC"]
   },
   {
     "currency": "SDG",
@@ -1242,9 +985,7 @@
     "name": "Pound",
     "symbol": "ج.س.",
     "digits": 2,
-    "countries": [
-      "SD"
-    ]
+    "countries": ["SD"]
   },
   {
     "currency": "SEK",
@@ -1252,9 +993,7 @@
     "name": "Swedish Krona",
     "symbol": "kr",
     "digits": 2,
-    "countries": [
-      "SE"
-    ]
+    "countries": ["SE"]
   },
   {
     "currency": "SGD",
@@ -1262,9 +1001,7 @@
     "name": "Singapore Dollar",
     "symbol": "S$",
     "digits": 2,
-    "countries": [
-      "SG"
-    ]
+    "countries": ["SG"]
   },
   {
     "currency": "SHP",
@@ -1272,9 +1009,7 @@
     "name": "Pound",
     "symbol": "£",
     "digits": 2,
-    "countries": [
-      "SH"
-    ]
+    "countries": ["SH"]
   },
   {
     "currency": "SLL",
@@ -1282,9 +1017,7 @@
     "name": "Leone",
     "symbol": "Le",
     "digits": 2,
-    "countries": [
-      "SL"
-    ]
+    "countries": ["SL"]
   },
   {
     "currency": "SNO",
@@ -1292,9 +1025,7 @@
     "name": "Snow Dollar",
     "symbol": "❄️",
     "digits": 2,
-    "countries": [
-      "AQ"
-    ]
+    "countries": ["AQ"]
   },
   {
     "currency": "SOS",
@@ -1302,9 +1033,7 @@
     "name": "Shilling",
     "symbol": "Sh",
     "digits": 2,
-    "countries": [
-      "SO"
-    ]
+    "countries": ["SO"]
   },
   {
     "currency": "SRD",
@@ -1312,9 +1041,7 @@
     "name": "Dollar",
     "symbol": "SR$",
     "digits": 2,
-    "countries": [
-      "SR"
-    ]
+    "countries": ["SR"]
   },
   {
     "currency": "SSP",
@@ -1322,9 +1049,7 @@
     "name": "South Sudanese Pound",
     "symbol": "£",
     "digits": 2,
-    "countries": [
-      "SS"
-    ]
+    "countries": ["SS"]
   },
   {
     "currency": "STN",
@@ -1332,9 +1057,7 @@
     "name": "São Tomé and Príncipe Dobra",
     "symbol": "Db",
     "digits": 2,
-    "countries": [
-      "ST"
-    ]
+    "countries": ["ST"]
   },
   {
     "currency": "SYP",
@@ -1342,9 +1065,7 @@
     "name": "Syrian Pound",
     "symbol": "£",
     "digits": 2,
-    "countries": [
-      "SY"
-    ]
+    "countries": ["SY"]
   },
   {
     "currency": "SZL",
@@ -1352,9 +1073,7 @@
     "name": "Lilangeni",
     "symbol": "E",
     "digits": 2,
-    "countries": [
-      "SZ"
-    ]
+    "countries": ["SZ"]
   },
   {
     "currency": "THB",
@@ -1362,9 +1081,7 @@
     "name": "Thai Baht",
     "symbol": "฿",
     "digits": 2,
-    "countries": [
-      "TH"
-    ]
+    "countries": ["TH"]
   },
   {
     "currency": "TJS",
@@ -1372,9 +1089,7 @@
     "name": "Somoni",
     "symbol": "ЅМ",
     "digits": 2,
-    "countries": [
-      "TJ"
-    ]
+    "countries": ["TJ"]
   },
   {
     "currency": "TMT",
@@ -1382,9 +1097,7 @@
     "name": "Manat",
     "symbol": "m",
     "digits": 2,
-    "countries": [
-      "TM"
-    ]
+    "countries": ["TM"]
   },
   {
     "currency": "TND",
@@ -1392,9 +1105,7 @@
     "name": "Tunisian Dinar",
     "symbol": "د.ت",
     "digits": 3,
-    "countries": [
-      "TN"
-    ]
+    "countries": ["TN"]
   },
   {
     "currency": "TOP",
@@ -1402,9 +1113,7 @@
     "name": "Pa'anga",
     "symbol": "T$",
     "digits": 2,
-    "countries": [
-      "TO"
-    ]
+    "countries": ["TO"]
   },
   {
     "currency": "TRY",
@@ -1412,9 +1121,7 @@
     "name": "Turkish Lira",
     "symbol": "₺",
     "digits": 2,
-    "countries": [
-      "TR"
-    ]
+    "countries": ["TR"]
   },
   {
     "currency": "TTD",
@@ -1422,9 +1129,7 @@
     "name": "Dollar",
     "symbol": "TT$",
     "digits": 2,
-    "countries": [
-      "TT"
-    ]
+    "countries": ["TT"]
   },
   {
     "currency": "TWD",
@@ -1432,9 +1137,7 @@
     "name": "Dollar",
     "symbol": "NT$",
     "digits": 2,
-    "countries": [
-      "TW"
-    ]
+    "countries": ["TW"]
   },
   {
     "currency": "TZS",
@@ -1442,9 +1145,7 @@
     "name": "Tanzanian Shilling",
     "symbol": "TSh",
     "digits": 2,
-    "countries": [
-      "TZ"
-    ]
+    "countries": ["TZ"]
   },
   {
     "currency": "UAH",
@@ -1452,9 +1153,7 @@
     "name": "Hryvnia",
     "symbol": "₴",
     "digits": 2,
-    "countries": [
-      "UA"
-    ]
+    "countries": ["UA"]
   },
   {
     "currency": "UGX",
@@ -1462,9 +1161,7 @@
     "name": "Shilling",
     "symbol": "USh",
     "digits": 0,
-    "countries": [
-      "UG"
-    ]
+    "countries": ["UG"]
   },
   {
     "currency": "USD",
@@ -1498,9 +1195,7 @@
     "name": "Peso",
     "symbol": "$U",
     "digits": 2,
-    "countries": [
-      "UY"
-    ]
+    "countries": ["UY"]
   },
   {
     "currency": "UZS",
@@ -1508,9 +1203,7 @@
     "name": "Som",
     "symbol": "сўм",
     "digits": 2,
-    "countries": [
-      "UZ"
-    ]
+    "countries": ["UZ"]
   },
   {
     "currency": "VEF",
@@ -1518,9 +1211,7 @@
     "name": "Bolivar",
     "symbol": "Bs",
     "digits": 2,
-    "countries": [
-      "VE"
-    ]
+    "countries": ["VE"]
   },
   {
     "currency": "VND",
@@ -1528,9 +1219,7 @@
     "name": "Vietnamese Dong",
     "symbol": "₫",
     "digits": 0,
-    "countries": [
-      "VN"
-    ]
+    "countries": ["VN"]
   },
   {
     "currency": "VUV",
@@ -1538,9 +1227,7 @@
     "name": "Vatu",
     "symbol": "VT",
     "digits": 0,
-    "countries": [
-      "VU"
-    ]
+    "countries": ["VU"]
   },
   {
     "currency": "WST",
@@ -1548,9 +1235,7 @@
     "name": "Tala",
     "symbol": "T",
     "digits": 2,
-    "countries": [
-      "WS"
-    ]
+    "countries": ["WS"]
   },
   {
     "currency": "XAF",
@@ -1558,14 +1243,7 @@
     "name": "Franc",
     "symbol": "FCFA",
     "digits": 0,
-    "countries": [
-      "CF",
-      "CG",
-      "CM",
-      "GA",
-      "GQ",
-      "TD"
-    ]
+    "countries": ["CF", "CG", "CM", "GA", "GQ", "TD"]
   },
   {
     "currency": "XCD",
@@ -1573,16 +1251,7 @@
     "name": "East Caribbean Dollar",
     "symbol": "EC$",
     "digits": 2,
-    "countries": [
-      "AG",
-      "AI",
-      "DM",
-      "GD",
-      "KN",
-      "LC",
-      "MS",
-      "VC"
-    ]
+    "countries": ["AG", "AI", "DM", "GD", "KN", "LC", "MS", "VC"]
   },
   {
     "currency": "XOF",
@@ -1590,16 +1259,7 @@
     "name": "Franc",
     "symbol": "CFA",
     "digits": 0,
-    "countries": [
-      "BF",
-      "BJ",
-      "CI",
-      "GW",
-      "ML",
-      "NE",
-      "SN",
-      "TG"
-    ]
+    "countries": ["BF", "BJ", "CI", "GW", "ML", "NE", "SN", "TG"]
   },
   {
     "currency": "XPF",
@@ -1607,11 +1267,7 @@
     "name": "Franc",
     "symbol": "₣",
     "digits": 0,
-    "countries": [
-      "NC",
-      "PF",
-      "WF"
-    ]
+    "countries": ["NC", "PF", "WF"]
   },
   {
     "currency": "YER",
@@ -1619,9 +1275,7 @@
     "name": "Yemeni Rial",
     "symbol": "﷼",
     "digits": 2,
-    "countries": [
-      "YE"
-    ]
+    "countries": ["YE"]
   },
   {
     "currency": "ZAR",
@@ -1629,9 +1283,7 @@
     "name": "South African Rand",
     "symbol": "R",
     "digits": 2,
-    "countries": [
-      "ZA"
-    ]
+    "countries": ["ZA"]
   },
   {
     "currency": "ZMW",
@@ -1639,9 +1291,7 @@
     "name": "Zambian Kwacha",
     "symbol": "ZK",
     "digits": 2,
-    "countries": [
-      "ZM"
-    ]
+    "countries": ["ZM"]
   },
   {
     "currency": "ZWL",
@@ -1649,8 +1299,6 @@
     "name": "Zimbabwean Dollar",
     "symbol": "$",
     "digits": 2,
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   }
 ]

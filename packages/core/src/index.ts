@@ -41,4 +41,5 @@ export type {
   ApiClient,
   ResourceClient,
   ResourceMockConfigInput,
+  MockDatasetIds,
 } from "./types/index.js";

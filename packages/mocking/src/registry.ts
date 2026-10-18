@@ -11,9 +11,7 @@ export type ListDatasetsOptions = LoadDatasetOptions;
  * List local datasets under the datasets root (no network).
  * Walks domain folders; each leaf with `meta.json` is a dataset.
  */
-export async function listDatasets(
-  options: ListDatasetsOptions = {},
-): Promise<DatasetListItem[]> {
+export async function listDatasets(options: ListDatasetsOptions = {}): Promise<DatasetListItem[]> {
   const root = resolveDatasetsRoot(options.basePath);
   let dirs: string[];
   try {

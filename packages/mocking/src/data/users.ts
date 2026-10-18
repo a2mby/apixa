@@ -38,4 +38,11 @@ export const dataset: Dataset = {
 
 registerDatasetPreset("users-sample", dataset);
 
+/** Teaches Core's `mockConfig.type` this id the moment this module is imported for types. */
+declare module "@apixa/core" {
+  interface MockDatasetIds {
+    "users-sample": true;
+  }
+}
+
 export default data;

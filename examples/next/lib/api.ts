@@ -1,5 +1,5 @@
 import { defineApi } from "@apixa/core";
-import type { User } from "@apixa/mocking/data/users";
+import { type User } from "@apixa/mocking/data";
 
 export type { User };
 
@@ -13,6 +13,9 @@ export type AppApi = {
 /**
  * Resource-level mocking: Core lazy-loads `@apixa/mocking` when `mock` / `mockConfig`
  * are present — no side-effect `import "@apixa/mocking"` required.
+ *
+ * Importing `@apixa/mocking/data` merges known preset ids into Core's `MockDatasetIds`,
+ * so `mockConfig.type` autocompletes (e.g. `"users-sample"`).
  */
 export const api = defineApi<AppApi>()({
   baseURL: "https://api.example.com",

@@ -150,11 +150,22 @@ type RuntimeOperationValue = {
 };
 
 /**
+ * Known `mockConfig.type` ids. Core ships this empty — it has no built-in knowledge of any
+ * dataset. Mock-data integrations (e.g. `@apixa/mocking`) merge their ids in via
+ * `declare module "@apixa/core"`, right next to the runtime call that registers the matching
+ * preset, so importing a dataset module teaches `mockConfig.type` that id for free.
+ */
+export interface MockDatasetIds {}
+
+/**
  * Opaque resource mock config for integrations (e.g. `@apixa/mocking`).
  * Core does not execute these — a registered defineApi processor must handle them.
+ *
+ * `type` autocompletes with any id merged into `MockDatasetIds`, but still accepts an
+ * arbitrary string so custom `registerDatasetPreset()` ids type-check too.
  */
 export type ResourceMockConfigInput = {
-  type: string;
+  type: keyof MockDatasetIds | (string & {});
   size?: number;
   pagination?: boolean;
   [key: string]: unknown;

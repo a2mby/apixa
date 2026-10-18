@@ -51,16 +51,16 @@ Smallest path to local Simple Mocking + backend removal. Prefer a thin `@apixa/m
 
 ## File touch list (expected)
 
-| Path | Change |
-| --- | --- |
-| `packages/mocking/**` | New package |
-| `datasets/**` or under mocking | Sample datasets + meta |
-| `pnpm-workspace.yaml` / lockfile | Include package |
-| `examples/next/lib/*` | Mock transport usage (local) |
-| `backend/**` | Delete |
-| `scripts/**/run-backend*` etc. | Delete or retarget |
-| `tests/mocking/**` or `tests/core` adjacent | Registry + transport tests |
-| `docs/*`, `README.md`, `CHANGELOG.md` | Document |
+| Path                                        | Change                       |
+| ------------------------------------------- | ---------------------------- |
+| `packages/mocking/**`                       | New package                  |
+| `datasets/**` or under mocking              | Sample datasets + meta       |
+| `pnpm-workspace.yaml` / lockfile            | Include package              |
+| `examples/next/lib/*`                       | Mock transport usage (local) |
+| `backend/**`                                | Delete                       |
+| `scripts/**/run-backend*` etc.              | Delete or retarget           |
+| `tests/mocking/**` or `tests/core` adjacent | Registry + transport tests   |
+| `docs/*`, `README.md`, `CHANGELOG.md`       | Document                     |
 
 ## Non-steps
 

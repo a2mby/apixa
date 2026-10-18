@@ -103,8 +103,9 @@ Install `@apixa/mocking` next to `@apixa/core`. When a resource has `mock` / `mo
 
 ```ts
 import { defineApi } from "@apixa/core";
+import type { User } from "@apixa/mocking/data";
 
-const api = defineApi({
+const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
   baseURL: "https://api.example.com",
   users: {
     path: "/users",
@@ -115,10 +116,78 @@ const api = defineApi({
 });
 ```
 
-- `mock: true` requires `mockConfig.type` (a typed preset id: `users-sample`, `users-mock`).
+- `mock: true` requires `mockConfig.type` (a registered preset id).
 - Mocked resources never hit the network; others use the normal transport.
 - With `pagination: true`, list GET returns `{ data, total, page, pageSize }` (`page` / `pageSize` query; defaults `1` / `20`).
-- Presets for this path: `@apixa/mocking/data/users`, `@apixa/mocking/data/users-mock`.
+- Built-in presets for this path live under `@apixa/mocking/data` (and `@apixa/mocking/data/users`, `…/users-mock`). Importing `@apixa/mocking/data` also teaches TypeScript the known ids (see below).
+
+### Customizing `mockConfig.type` suggestions
+
+Core ships an empty, extensible interface. Dataset modules merge their ids into it (same idea as runtime `registerDatasetPreset`). Import that module in the app that calls `defineApi`, and the id appears in `mockConfig.type` autocomplete.
+
+**1. Register + teach the type (keep these in the same file):**
+
+```ts
+// datasets/pets.ts
+import { registerDatasetPreset, type Dataset } from "@apixa/mocking";
+
+export type Pet = { id: string; name: string };
+
+const dataset: Dataset = {
+  meta: {
+    id: "pets-sample",
+    title: "Pets sample",
+    license: "MIT",
+    version: "1.0.0",
+    resource: { path: "/pets", idField: "id" },
+    schema: {
+      fields: [
+        { name: "id", type: "string" },
+        { name: "name", type: "string" },
+      ],
+    },
+    records: 1,
+  },
+  records: [{ id: "1", name: "Mochi" }],
+};
+
+registerDatasetPreset("pets-sample", dataset);
+
+declare module "@apixa/core" {
+  interface MockDatasetIds {
+    "pets-sample": true;
+  }
+}
+```
+
+**2. Import it where you define the API (so the merge enters the program):**
+
+```ts
+// lib/api.ts
+import { defineApi } from "@apixa/core";
+import "./datasets/pets"; // runtime register + type merge
+import type { Pet } from "./datasets/pets";
+
+export const api = defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
+  baseURL: "https://api.example.com",
+  pets: {
+    path: "/pets",
+    mock: true,
+    mockConfig: {
+      type: "pets-sample", // ← suggested alongside built-in ids
+      size: 50,
+      pagination: true,
+    },
+  },
+});
+```
+
+Notes:
+
+- Do not edit `@apixa/core`. Each app or package merges its own ids; they accumulate.
+- A type-only import of an unrelated entity (e.g. only `CountryCode`) does **not** add geography catalog ids — only modules that contain a `declare module "@apixa/core"` merge contribute suggestions.
+- `mockConfig.type` is `keyof MockDatasetIds | (string & {})`: known ids autocomplete, custom strings still type-check (the registry is open). Unknown ids fail at **runtime** when the preset is missing.
+- Built-in reference: [`src/data/users.ts`](./src/data/users.ts) (same `registerDatasetPreset` + `declare module` pair).
 
 ## Node loaders
 

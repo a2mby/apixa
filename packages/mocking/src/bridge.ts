@@ -1,8 +1,4 @@
-import {
-  createFetchTransport,
-  type DefineApiConfigBag,
-  type Transport,
-} from "@apixa/core";
+import { createFetchTransport, type DefineApiConfigBag, type Transport } from "@apixa/core";
 import { ensureBuiltinPresets } from "./presets/builtins.js";
 import { getDatasetPreset, listDatasetPresetIds } from "./presets/registry.js";
 import { buildStore, type MockStore } from "./store.js";

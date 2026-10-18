@@ -93,8 +93,7 @@ function parsePageParams(url: URL): { page: number; pageSize: number } {
   const pageRaw = Number(url.searchParams.get("page") ?? "1");
   const pageSizeRaw = Number(url.searchParams.get("pageSize") ?? "20");
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
-  const pageSize =
-    Number.isFinite(pageSizeRaw) && pageSizeRaw > 0 ? Math.floor(pageSizeRaw) : 20;
+  const pageSize = Number.isFinite(pageSizeRaw) && pageSizeRaw > 0 ? Math.floor(pageSizeRaw) : 20;
   return { page, pageSize };
 }
 

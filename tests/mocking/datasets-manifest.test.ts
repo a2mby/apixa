@@ -48,9 +48,10 @@ describe("datasets manifest", () => {
       expect(Array.isArray(data)).toBe(true);
       expect(data.length).toBe(entry.recordCount);
 
-      const meta = JSON.parse(
-        await readFile(resolve(datasetsRoot, entry.metaPath), "utf8"),
-      ) as { id: string; records: number };
+      const meta = JSON.parse(await readFile(resolve(datasetsRoot, entry.metaPath), "utf8")) as {
+        id: string;
+        records: number;
+      };
       expect(meta.id).toBe(entry.id);
       expect(meta.records).toBe(entry.recordCount);
     }

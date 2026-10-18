@@ -33,10 +33,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NA",
-      "ZA"
-    ]
+    "countries": ["NA", "ZA"]
   },
   {
     "language": "ak",
@@ -54,9 +51,7 @@
     "name_local": "አማርኛ",
     "script": "Ethi",
     "direction": "ltr",
-    "countries": [
-      "ET"
-    ]
+    "countries": ["ET"]
   },
   {
     "language": "an",
@@ -127,10 +122,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BO",
-      "PE"
-    ]
+    "countries": ["BO", "PE"]
   },
   {
     "language": "az",
@@ -139,9 +131,7 @@
     "name_local": "azərbaycan",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AZ"
-    ]
+    "countries": ["AZ"]
   },
   {
     "language": "ba",
@@ -159,9 +149,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AT"
-    ]
+    "countries": ["AT"]
   },
   {
     "language": "be",
@@ -170,9 +158,7 @@
     "name_local": "беларуская",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "BY"
-    ]
+    "countries": ["BY"]
   },
   {
     "language": "ber",
@@ -181,10 +167,7 @@
     "name_local": null,
     "script": null,
     "direction": "ltr",
-    "countries": [
-      "EH",
-      "MA"
-    ]
+    "countries": ["EH", "MA"]
   },
   {
     "language": "bg",
@@ -193,9 +176,7 @@
     "name_local": "български",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "BG"
-    ]
+    "countries": ["BG"]
   },
   {
     "language": "bi",
@@ -204,9 +185,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "VU"
-    ]
+    "countries": ["VU"]
   },
   {
     "language": "bm",
@@ -224,9 +203,7 @@
     "name_local": "বাংলা",
     "script": "Beng",
     "direction": "ltr",
-    "countries": [
-      "BD"
-    ]
+    "countries": ["BD"]
   },
   {
     "language": "bo",
@@ -253,9 +230,7 @@
     "name_local": "bosanski",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BA"
-    ]
+    "countries": ["BA"]
   },
   {
     "language": "bwg",
@@ -264,9 +239,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "bzj",
@@ -275,9 +248,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BZ"
-    ]
+    "countries": ["BZ"]
   },
   {
     "language": "ca",
@@ -286,9 +257,7 @@
     "name_local": "català",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AD"
-    ]
+    "countries": ["AD"]
   },
   {
     "language": "cal",
@@ -297,9 +266,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "MP"
-    ]
+    "countries": ["MP"]
   },
   {
     "language": "ce",
@@ -317,10 +284,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "GU",
-      "MP"
-    ]
+    "countries": ["GU", "MP"]
   },
   {
     "language": "ckb",
@@ -329,9 +293,7 @@
     "name_local": "کوردیی ناوەندی",
     "script": "Arab",
     "direction": "rtl",
-    "countries": [
-      "IQ"
-    ]
+    "countries": ["IQ"]
   },
   {
     "language": "cnr",
@@ -340,9 +302,7 @@
     "name_local": null,
     "script": null,
     "direction": "ltr",
-    "countries": [
-      "ME"
-    ]
+    "countries": ["ME"]
   },
   {
     "language": "co",
@@ -369,9 +329,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "SC"
-    ]
+    "countries": ["SC"]
   },
   {
     "language": "cs",
@@ -380,9 +338,7 @@
     "name_local": "čeština",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CZ"
-    ]
+    "countries": ["CZ"]
   },
   {
     "language": "cu",
@@ -418,10 +374,7 @@
     "name_local": "dansk",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "DK",
-      "FO"
-    ]
+    "countries": ["DK", "FO"]
   },
   {
     "language": "de",
@@ -430,13 +383,7 @@
     "name_local": "Deutsch",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BE",
-      "DE",
-      "LI",
-      "LU",
-      "NA"
-    ]
+    "countries": ["BE", "DE", "LI", "LU", "NA"]
   },
   {
     "language": "dv",
@@ -445,9 +392,7 @@
     "name_local": null,
     "script": "Thaa",
     "direction": "rtl",
-    "countries": [
-      "MV"
-    ]
+    "countries": ["MV"]
   },
   {
     "language": "dz",
@@ -456,9 +401,7 @@
     "name_local": "རྫོང་ཁ",
     "script": "Tibt",
     "direction": "ltr",
-    "countries": [
-      "BT"
-    ]
+    "countries": ["BT"]
   },
   {
     "language": "ee",
@@ -476,10 +419,7 @@
     "name_local": "Ελληνικά",
     "script": "Grek",
     "direction": "ltr",
-    "countries": [
-      "CY",
-      "GR"
-    ]
+    "countries": ["CY", "GR"]
   },
   {
     "language": "en",
@@ -632,9 +572,7 @@
     "name_local": "eesti",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "EE"
-    ]
+    "countries": ["EE"]
   },
   {
     "language": "eu",
@@ -652,9 +590,7 @@
     "name_local": "فارسی",
     "script": "Arab",
     "direction": "rtl",
-    "countries": [
-      "IR"
-    ]
+    "countries": ["IR"]
   },
   {
     "language": "ff",
@@ -672,9 +608,7 @@
     "name_local": "suomi",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "FI"
-    ]
+    "countries": ["FI"]
   },
   {
     "language": "fil",
@@ -683,9 +617,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "PH"
-    ]
+    "countries": ["PH"]
   },
   {
     "language": "fj",
@@ -694,9 +626,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "FJ"
-    ]
+    "countries": ["FJ"]
   },
   {
     "language": "fo",
@@ -705,9 +635,7 @@
     "name_local": "føroyskt",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "FO"
-    ]
+    "countries": ["FO"]
   },
   {
     "language": "fr",
@@ -780,9 +708,7 @@
     "name_local": "Gaeilge",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "IE"
-    ]
+    "countries": ["IE"]
   },
   {
     "language": "gd",
@@ -800,9 +726,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "KI"
-    ]
+    "countries": ["KI"]
   },
   {
     "language": "gl",
@@ -820,11 +744,7 @@
     "name_local": "avañe’ẽ",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AR",
-      "BO",
-      "PY"
-    ]
+    "countries": ["AR", "BO", "PY"]
   },
   {
     "language": "gsw",
@@ -833,9 +753,7 @@
     "name_local": "Schwiizertüütsch",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CH"
-    ]
+    "countries": ["CH"]
   },
   {
     "language": "gu",
@@ -853,9 +771,7 @@
     "name_local": "Gaelg",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "IM"
-    ]
+    "countries": ["IM"]
   },
   {
     "language": "ha",
@@ -873,9 +789,7 @@
     "name_local": "עברית",
     "script": "Hebr",
     "direction": "rtl",
-    "countries": [
-      "IL"
-    ]
+    "countries": ["IL"]
   },
   {
     "language": "hi",
@@ -884,9 +798,7 @@
     "name_local": "हिन्दी",
     "script": "Deva",
     "direction": "ltr",
-    "countries": [
-      "IN"
-    ]
+    "countries": ["IN"]
   },
   {
     "language": "hif",
@@ -895,9 +807,7 @@
     "name_local": null,
     "script": "Deva",
     "direction": "ltr",
-    "countries": [
-      "FJ"
-    ]
+    "countries": ["FJ"]
   },
   {
     "language": "ho",
@@ -906,9 +816,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "PG"
-    ]
+    "countries": ["PG"]
   },
   {
     "language": "hr",
@@ -917,10 +825,7 @@
     "name_local": "hrvatski",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BA",
-      "HR"
-    ]
+    "countries": ["BA", "HR"]
   },
   {
     "language": "ht",
@@ -929,9 +834,7 @@
     "name_local": "Kreyòl Ayisyen",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "HT"
-    ]
+    "countries": ["HT"]
   },
   {
     "language": "hu",
@@ -940,9 +843,7 @@
     "name_local": "magyar",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "HU"
-    ]
+    "countries": ["HU"]
   },
   {
     "language": "hy",
@@ -951,9 +852,7 @@
     "name_local": "հայերեն",
     "script": "Armn",
     "direction": "ltr",
-    "countries": [
-      "AM"
-    ]
+    "countries": ["AM"]
   },
   {
     "language": "hz",
@@ -962,9 +861,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NA"
-    ]
+    "countries": ["NA"]
   },
   {
     "language": "ia",
@@ -982,9 +879,7 @@
     "name_local": "Indonesia",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ID"
-    ]
+    "countries": ["ID"]
   },
   {
     "language": "ie",
@@ -1038,9 +933,7 @@
     "name_local": "íslenska",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "IS"
-    ]
+    "countries": ["IS"]
   },
   {
     "language": "it",
@@ -1049,12 +942,7 @@
     "name_local": "italiano",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CH",
-      "IT",
-      "SM",
-      "VA"
-    ]
+    "countries": ["CH", "IT", "SM", "VA"]
   },
   {
     "language": "iu",
@@ -1072,9 +960,7 @@
     "name_local": "日本語",
     "script": "Jpan",
     "direction": "ltr",
-    "countries": [
-      "JP"
-    ]
+    "countries": ["JP"]
   },
   {
     "language": "jam",
@@ -1083,9 +969,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "JM"
-    ]
+    "countries": ["JM"]
   },
   {
     "language": "jv",
@@ -1103,9 +987,7 @@
     "name_local": "ქართული",
     "script": "Geor",
     "direction": "ltr",
-    "countries": [
-      "GE"
-    ]
+    "countries": ["GE"]
   },
   {
     "language": "kck",
@@ -1114,9 +996,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "kg",
@@ -1125,10 +1005,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CD",
-      "CG"
-    ]
+    "countries": ["CD", "CG"]
   },
   {
     "language": "khi",
@@ -1137,9 +1014,7 @@
     "name_local": null,
     "script": null,
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "ki",
@@ -1166,9 +1041,7 @@
     "name_local": "қазақ тілі",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "KZ"
-    ]
+    "countries": ["KZ"]
   },
   {
     "language": "kl",
@@ -1177,9 +1050,7 @@
     "name_local": "kalaallisut",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "GL"
-    ]
+    "countries": ["GL"]
   },
   {
     "language": "km",
@@ -1188,9 +1059,7 @@
     "name_local": "ខ្មែរ",
     "script": "Khmr",
     "direction": "ltr",
-    "countries": [
-      "KH"
-    ]
+    "countries": ["KH"]
   },
   {
     "language": "kn",
@@ -1208,10 +1077,7 @@
     "name_local": "한국어",
     "script": "Kore",
     "direction": "ltr",
-    "countries": [
-      "KP",
-      "KR"
-    ]
+    "countries": ["KP", "KR"]
   },
   {
     "language": "kr",
@@ -1265,9 +1131,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NA"
-    ]
+    "countries": ["NA"]
   },
   {
     "language": "ky",
@@ -1276,9 +1140,7 @@
     "name_local": "кыргызча",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "KG"
-    ]
+    "countries": ["KG"]
   },
   {
     "language": "la",
@@ -1287,9 +1149,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "VA"
-    ]
+    "countries": ["VA"]
   },
   {
     "language": "lb",
@@ -1298,9 +1158,7 @@
     "name_local": "Lëtzebuergesch",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "LU"
-    ]
+    "countries": ["LU"]
   },
   {
     "language": "lg",
@@ -1327,10 +1185,7 @@
     "name_local": "lingála",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CD",
-      "CG"
-    ]
+    "countries": ["CD", "CG"]
   },
   {
     "language": "lo",
@@ -1339,9 +1194,7 @@
     "name_local": "ລາວ",
     "script": "Laoo",
     "direction": "ltr",
-    "countries": [
-      "LA"
-    ]
+    "countries": ["LA"]
   },
   {
     "language": "loz",
@@ -1350,9 +1203,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NA"
-    ]
+    "countries": ["NA"]
   },
   {
     "language": "lt",
@@ -1361,9 +1212,7 @@
     "name_local": "lietuvių",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "LT"
-    ]
+    "countries": ["LT"]
   },
   {
     "language": "lu",
@@ -1381,9 +1230,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CD"
-    ]
+    "countries": ["CD"]
   },
   {
     "language": "lv",
@@ -1392,9 +1239,7 @@
     "name_local": "latviešu",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "LV"
-    ]
+    "countries": ["LV"]
   },
   {
     "language": "mey",
@@ -1403,9 +1248,7 @@
     "name_local": null,
     "script": "Arab",
     "direction": "rtl",
-    "countries": [
-      "EH"
-    ]
+    "countries": ["EH"]
   },
   {
     "language": "mfe",
@@ -1414,9 +1257,7 @@
     "name_local": "kreol morisien",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "MU"
-    ]
+    "countries": ["MU"]
   },
   {
     "language": "mg",
@@ -1425,9 +1266,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "MG"
-    ]
+    "countries": ["MG"]
   },
   {
     "language": "mh",
@@ -1436,9 +1275,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "MH"
-    ]
+    "countries": ["MH"]
   },
   {
     "language": "mi",
@@ -1447,9 +1284,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NZ"
-    ]
+    "countries": ["NZ"]
   },
   {
     "language": "mk",
@@ -1458,9 +1293,7 @@
     "name_local": "македонски",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "MK"
-    ]
+    "countries": ["MK"]
   },
   {
     "language": "ml",
@@ -1478,9 +1311,7 @@
     "name_local": "монгол",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "MN"
-    ]
+    "countries": ["MN"]
   },
   {
     "language": "mr",
@@ -1498,11 +1329,7 @@
     "name_local": "Melayu",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BN",
-      "MY",
-      "SG"
-    ]
+    "countries": ["BN", "MY", "SG"]
   },
   {
     "language": "mt",
@@ -1511,9 +1338,7 @@
     "name_local": "Malti",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "MT"
-    ]
+    "countries": ["MT"]
   },
   {
     "language": "my",
@@ -1522,9 +1347,7 @@
     "name_local": "မြန်မာ",
     "script": "Mymr",
     "direction": "ltr",
-    "countries": [
-      "MM"
-    ]
+    "countries": ["MM"]
   },
   {
     "language": "na",
@@ -1533,9 +1356,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NR"
-    ]
+    "countries": ["NR"]
   },
   {
     "language": "naq",
@@ -1544,9 +1365,7 @@
     "name_local": "Khoekhoegowab",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NA"
-    ]
+    "countries": ["NA"]
   },
   {
     "language": "nb",
@@ -1555,9 +1374,7 @@
     "name_local": "norsk bokmål",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NO"
-    ]
+    "countries": ["NO"]
   },
   {
     "language": "nd",
@@ -1566,9 +1383,7 @@
     "name_local": "isiNdebele",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "ndc",
@@ -1577,9 +1392,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "ne",
@@ -1588,9 +1401,7 @@
     "name_local": "नेपाली",
     "script": "Deva",
     "direction": "ltr",
-    "countries": [
-      "NP"
-    ]
+    "countries": ["NP"]
   },
   {
     "language": "ng",
@@ -1599,9 +1410,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NA"
-    ]
+    "countries": ["NA"]
   },
   {
     "language": "niu",
@@ -1610,9 +1419,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NU"
-    ]
+    "countries": ["NU"]
   },
   {
     "language": "nl",
@@ -1621,15 +1428,7 @@
     "name_local": "Nederlands",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AW",
-      "BE",
-      "BQ",
-      "CW",
-      "NL",
-      "SR",
-      "SX"
-    ]
+    "countries": ["AW", "BE", "BQ", "CW", "NL", "SR", "SX"]
   },
   {
     "language": "nn",
@@ -1638,9 +1437,7 @@
     "name_local": "norsk nynorsk",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NO"
-    ]
+    "countries": ["NO"]
   },
   {
     "language": "no",
@@ -1649,10 +1446,7 @@
     "name_local": "norsk",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BV",
-      "SJ"
-    ]
+    "countries": ["BV", "SJ"]
   },
   {
     "language": "nr",
@@ -1661,9 +1455,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZA"
-    ]
+    "countries": ["ZA"]
   },
   {
     "language": "nrf",
@@ -1672,10 +1464,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "GG",
-      "JE"
-    ]
+    "countries": ["GG", "JE"]
   },
   {
     "language": "nso",
@@ -1684,9 +1473,7 @@
     "name_local": "Sesotho sa Leboa",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZA"
-    ]
+    "countries": ["ZA"]
   },
   {
     "language": "nv",
@@ -1704,10 +1491,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "MW",
-      "ZW"
-    ]
+    "countries": ["MW", "ZW"]
   },
   {
     "language": "nzs",
@@ -1716,9 +1500,7 @@
     "name_local": null,
     "script": null,
     "direction": "ltr",
-    "countries": [
-      "NZ"
-    ]
+    "countries": ["NZ"]
   },
   {
     "language": "oc",
@@ -1781,11 +1563,7 @@
     "name_local": "Papiamentu",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AW",
-      "BQ",
-      "CW"
-    ]
+    "countries": ["AW", "BQ", "CW"]
   },
   {
     "language": "pau",
@@ -1794,9 +1572,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "PW"
-    ]
+    "countries": ["PW"]
   },
   {
     "language": "pi",
@@ -1814,9 +1590,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "NF"
-    ]
+    "countries": ["NF"]
   },
   {
     "language": "pl",
@@ -1825,9 +1599,7 @@
     "name_local": "polski",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "PL"
-    ]
+    "countries": ["PL"]
   },
   {
     "language": "pov",
@@ -1836,9 +1608,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "GW"
-    ]
+    "countries": ["GW"]
   },
   {
     "language": "prs",
@@ -1847,9 +1617,7 @@
     "name_local": null,
     "script": null,
     "direction": "ltr",
-    "countries": [
-      "AF"
-    ]
+    "countries": ["AF"]
   },
   {
     "language": "ps",
@@ -1858,9 +1626,7 @@
     "name_local": "پښتو",
     "script": "Arab",
     "direction": "rtl",
-    "countries": [
-      "AF"
-    ]
+    "countries": ["AF"]
   },
   {
     "language": "pt",
@@ -1869,18 +1635,7 @@
     "name_local": "português",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AO",
-      "BR",
-      "CV",
-      "GQ",
-      "GW",
-      "MO",
-      "MZ",
-      "PT",
-      "ST",
-      "TL"
-    ]
+    "countries": ["AO", "BR", "CV", "GQ", "GW", "MO", "MZ", "PT", "ST", "TL"]
   },
   {
     "language": "qu",
@@ -1889,10 +1644,7 @@
     "name_local": "Runasimi",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BO",
-      "PE"
-    ]
+    "countries": ["BO", "PE"]
   },
   {
     "language": "rar",
@@ -1901,9 +1653,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CK"
-    ]
+    "countries": ["CK"]
   },
   {
     "language": "rm",
@@ -1912,9 +1662,7 @@
     "name_local": "rumantsch",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CH"
-    ]
+    "countries": ["CH"]
   },
   {
     "language": "rn",
@@ -1923,9 +1671,7 @@
     "name_local": "Ikirundi",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BI"
-    ]
+    "countries": ["BI"]
   },
   {
     "language": "ro",
@@ -1934,10 +1680,7 @@
     "name_local": "română",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "MD",
-      "RO"
-    ]
+    "countries": ["MD", "RO"]
   },
   {
     "language": "ru",
@@ -1946,16 +1689,7 @@
     "name_local": "русский",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "AZ",
-      "BY",
-      "KG",
-      "KZ",
-      "RU",
-      "TJ",
-      "TM",
-      "UZ"
-    ]
+    "countries": ["AZ", "BY", "KG", "KZ", "RU", "TJ", "TM", "UZ"]
   },
   {
     "language": "rw",
@@ -1964,9 +1698,7 @@
     "name_local": "Ikinyarwanda",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "RW"
-    ]
+    "countries": ["RW"]
   },
   {
     "language": "sa",
@@ -2011,9 +1743,7 @@
     "name_local": "Sängö",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CF"
-    ]
+    "countries": ["CF"]
   },
   {
     "language": "si",
@@ -2022,9 +1752,7 @@
     "name_local": "සිංහල",
     "script": "Sinh",
     "direction": "ltr",
-    "countries": [
-      "LK"
-    ]
+    "countries": ["LK"]
   },
   {
     "language": "sk",
@@ -2033,10 +1761,7 @@
     "name_local": "slovenčina",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CZ",
-      "SK"
-    ]
+    "countries": ["CZ", "SK"]
   },
   {
     "language": "sl",
@@ -2045,9 +1770,7 @@
     "name_local": "slovenščina",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "SI"
-    ]
+    "countries": ["SI"]
   },
   {
     "language": "sm",
@@ -2056,11 +1779,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AS",
-      "TK",
-      "WS"
-    ]
+    "countries": ["AS", "TK", "WS"]
   },
   {
     "language": "smi",
@@ -2069,9 +1788,7 @@
     "name_local": null,
     "script": null,
     "direction": "ltr",
-    "countries": [
-      "NO"
-    ]
+    "countries": ["NO"]
   },
   {
     "language": "sn",
@@ -2080,9 +1797,7 @@
     "name_local": "chiShona",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "so",
@@ -2091,9 +1806,7 @@
     "name_local": "Soomaali",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "SO"
-    ]
+    "countries": ["SO"]
   },
   {
     "language": "sq",
@@ -2102,10 +1815,7 @@
     "name_local": "shqip",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AL",
-      "XK"
-    ]
+    "countries": ["AL", "XK"]
   },
   {
     "language": "sr",
@@ -2114,11 +1824,7 @@
     "name_local": "српски",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "BA",
-      "RS",
-      "XK"
-    ]
+    "countries": ["BA", "RS", "XK"]
   },
   {
     "language": "ss",
@@ -2127,10 +1833,7 @@
     "name_local": "siSwati",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "SZ",
-      "ZA"
-    ]
+    "countries": ["SZ", "ZA"]
   },
   {
     "language": "st",
@@ -2139,11 +1842,7 @@
     "name_local": "Sesotho",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "LS",
-      "ZA",
-      "ZW"
-    ]
+    "countries": ["LS", "ZA", "ZW"]
   },
   {
     "language": "su",
@@ -2161,11 +1860,7 @@
     "name_local": "svenska",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AX",
-      "FI",
-      "SE"
-    ]
+    "countries": ["AX", "FI", "SE"]
   },
   {
     "language": "sw",
@@ -2174,12 +1869,7 @@
     "name_local": "Kiswahili",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CD",
-      "KE",
-      "TZ",
-      "UG"
-    ]
+    "countries": ["CD", "KE", "TZ", "UG"]
   },
   {
     "language": "syr",
@@ -2188,9 +1878,7 @@
     "name_local": "ܣܘܪܝܝܐ",
     "script": "Syrc",
     "direction": "rtl",
-    "countries": [
-      "IQ"
-    ]
+    "countries": ["IQ"]
   },
   {
     "language": "ta",
@@ -2199,11 +1887,7 @@
     "name_local": "தமிழ்",
     "script": "Taml",
     "direction": "ltr",
-    "countries": [
-      "IN",
-      "LK",
-      "SG"
-    ]
+    "countries": ["IN", "LK", "SG"]
   },
   {
     "language": "te",
@@ -2221,9 +1905,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "TL"
-    ]
+    "countries": ["TL"]
   },
   {
     "language": "tg",
@@ -2232,9 +1914,7 @@
     "name_local": "тоҷикӣ",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "TJ"
-    ]
+    "countries": ["TJ"]
   },
   {
     "language": "th",
@@ -2243,9 +1923,7 @@
     "name_local": "ไทย",
     "script": "Thai",
     "direction": "ltr",
-    "countries": [
-      "TH"
-    ]
+    "countries": ["TH"]
   },
   {
     "language": "ti",
@@ -2254,9 +1932,7 @@
     "name_local": "ትግርኛ",
     "script": "Ethi",
     "direction": "ltr",
-    "countries": [
-      "ER"
-    ]
+    "countries": ["ER"]
   },
   {
     "language": "tk",
@@ -2265,10 +1941,7 @@
     "name_local": "türkmen dili",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "AF",
-      "TM"
-    ]
+    "countries": ["AF", "TM"]
   },
   {
     "language": "tkl",
@@ -2277,9 +1950,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "TK"
-    ]
+    "countries": ["TK"]
   },
   {
     "language": "tl",
@@ -2297,12 +1968,7 @@
     "name_local": "Setswana",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "BW",
-      "NA",
-      "ZA",
-      "ZW"
-    ]
+    "countries": ["BW", "NA", "ZA", "ZW"]
   },
   {
     "language": "to",
@@ -2311,9 +1977,7 @@
     "name_local": "lea fakatonga",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "TO"
-    ]
+    "countries": ["TO"]
   },
   {
     "language": "toi",
@@ -2322,9 +1986,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "tpi",
@@ -2333,9 +1995,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "PG"
-    ]
+    "countries": ["PG"]
   },
   {
     "language": "tr",
@@ -2344,10 +2004,7 @@
     "name_local": "Türkçe",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "CY",
-      "TR"
-    ]
+    "countries": ["CY", "TR"]
   },
   {
     "language": "ts",
@@ -2356,10 +2013,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZA",
-      "ZW"
-    ]
+    "countries": ["ZA", "ZW"]
   },
   {
     "language": "tt",
@@ -2377,9 +2031,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "TV"
-    ]
+    "countries": ["TV"]
   },
   {
     "language": "tw",
@@ -2415,9 +2067,7 @@
     "name_local": "українська",
     "script": "Cyrl",
     "direction": "ltr",
-    "countries": [
-      "UA"
-    ]
+    "countries": ["UA"]
   },
   {
     "language": "ur",
@@ -2426,9 +2076,7 @@
     "name_local": "اردو",
     "script": "Arab",
     "direction": "rtl",
-    "countries": [
-      "PK"
-    ]
+    "countries": ["PK"]
   },
   {
     "language": "uz",
@@ -2437,9 +2085,7 @@
     "name_local": "o‘zbek",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "UZ"
-    ]
+    "countries": ["UZ"]
   },
   {
     "language": "ve",
@@ -2448,10 +2094,7 @@
     "name_local": null,
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZA",
-      "ZW"
-    ]
+    "countries": ["ZA", "ZW"]
   },
   {
     "language": "vi",
@@ -2460,9 +2103,7 @@
     "name_local": "Tiếng Việt",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "VN"
-    ]
+    "countries": ["VN"]
   },
   {
     "language": "vo",
@@ -2498,10 +2139,7 @@
     "name_local": "IsiXhosa",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZA",
-      "ZW"
-    ]
+    "countries": ["ZA", "ZW"]
   },
   {
     "language": "yi",
@@ -2537,9 +2175,7 @@
     "name_local": null,
     "script": "Arab",
     "direction": "rtl",
-    "countries": [
-      "KM"
-    ]
+    "countries": ["KM"]
   },
   {
     "language": "zh",
@@ -2548,13 +2184,7 @@
     "name_local": "中文",
     "script": "Hans",
     "direction": "ltr",
-    "countries": [
-      "CN",
-      "HK",
-      "MO",
-      "SG",
-      "TW"
-    ]
+    "countries": ["CN", "HK", "MO", "SG", "TW"]
   },
   {
     "language": "zib",
@@ -2563,9 +2193,7 @@
     "name_local": null,
     "script": null,
     "direction": "ltr",
-    "countries": [
-      "ZW"
-    ]
+    "countries": ["ZW"]
   },
   {
     "language": "zu",
@@ -2574,8 +2202,6 @@
     "name_local": "isiZulu",
     "script": "Latn",
     "direction": "ltr",
-    "countries": [
-      "ZA"
-    ]
+    "countries": ["ZA"]
   }
 ]

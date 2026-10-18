@@ -40,4 +40,5 @@ export type {
   ApiInput,
   ValidateApiConfig,
   ResourceMockConfigInput,
+  MockDatasetIds,
 } from "./inference.js";

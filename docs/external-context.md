@@ -44,13 +44,13 @@ Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `
 
 Confirm against the repo (do not invent versions):
 
-| Version    | Status                                                        |
-| ---------- | ------------------------------------------------------------- |
-| v0.1.0     | Shipped — opt-in operations foundation                        |
-| v0.2.0     | Shipped — default-first resource CRUD                         |
-| v0.3.0     | Shipped — `type<T>()` markers (removed in v0.4.0)             |
-| v0.4.0     | Shipped — entity-only `defineApi<T>()` state typing           |
-| **v0.5.0** | **Active** — Simple Mocking + remove FastAPI backend          |
+| Version    | Status                                               |
+| ---------- | ---------------------------------------------------- |
+| v0.1.0     | Shipped — opt-in operations foundation               |
+| v0.2.0     | Shipped — default-first resource CRUD                |
+| v0.3.0     | Shipped — `type<T>()` markers (removed in v0.4.0)    |
+| v0.4.0     | Shipped — entity-only `defineApi<T>()` state typing  |
+| **v0.5.0** | **Active** — Simple Mocking + remove FastAPI backend |
 
 Pointer of truth: [`versions/README.md`](../versions/README.md) → **Current** folder.
 
