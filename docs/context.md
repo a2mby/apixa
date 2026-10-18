@@ -190,6 +190,7 @@ Each folder owns one concern; keep modules short. Avoid speculative abstractions
 ## 9. Future Roadmap
 
 ### Foundation
+
 - API and resource definitions.
 - Configurable generated operations.
 - Type inference.
@@ -199,6 +200,7 @@ Each folder owns one concern; keep modules short. Avoid speculative abstractions
 - Basic example.
 
 ### Reliability and developer experience
+
 - Cancellation and `AbortSignal`.
 - Timeouts and configurable retries.
 - Middleware and interceptors.
@@ -207,6 +209,7 @@ Each folder owns one concern; keep modules short. Avoid speculative abstractions
 - Pagination, filtering, sorting, and search conventions.
 
 ### Environment and integrations
+
 - Browser and server packages.
 - Secure server-only configuration.
 - TanStack Query integration.
@@ -214,6 +217,7 @@ Each folder owns one concern; keep modules short. Avoid speculative abstractions
 - File uploads, downloads, and streaming where appropriate.
 
 ### Advanced ecosystem
+
 - OpenAPI import/export.
 - Reusable resource definitions and API versioning.
 - Additional transports.

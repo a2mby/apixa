@@ -1,9 +1,4 @@
-export type {
-  HttpMethod,
-  PathParams,
-  QueryParams,
-  HeadersInitLike,
-} from "./http.js";
+export type { HttpMethod, PathParams, QueryParams, HeadersInitLike } from "./http.js";
 
 import { type as typeMarker } from "./marker.js";
 export { typeMarker as type };

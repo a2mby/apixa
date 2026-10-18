@@ -17,13 +17,13 @@ description: >-
 
 ## Decide what kind of work this is
 
-| User intent | Do this |
-| --- | --- |
-| Start a change / issue | Follow `.cursor/commands/plan-change.md` |
+| User intent                  | Do this                                        |
+| ---------------------------- | ---------------------------------------------- |
+| Start a change / issue       | Follow `.cursor/commands/plan-change.md`       |
 | Implement the active version | Follow `.cursor/commands/implement-version.md` |
-| Open a new milestone folder | Follow `.cursor/commands/start-version.md` |
-| Land / merge | Follow `.cursor/commands/git-push.md` |
-| Audit layout | Follow `.cursor/commands/check-structure.md` |
+| Open a new milestone folder  | Follow `.cursor/commands/start-version.md`     |
+| Land / merge                 | Follow `.cursor/commands/git-push.md`          |
+| Audit layout                 | Follow `.cursor/commands/check-structure.md`   |
 
 ## Hard stops
 

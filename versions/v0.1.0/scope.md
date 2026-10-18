@@ -43,20 +43,20 @@
 
 ## Out of scope
 
-| Item | Why |
-| --- | --- |
-| TanStack Query package / helpers | Integration depends on Core; later milestone |
-| OpenAPI import/export | Advanced ecosystem |
-| `@apixa/client` / `@apixa/server` | Environment packages later |
-| `@apixa/transport-fetch` split | Fetch stays in Core (ADR 002) |
-| `@apixa/mocking` / production `mocks` on config | Do not couple mocking to execution |
-| Auth as a Core product surface | Can return later; not required to prove the idea |
-| Logging middleware as a product feature | Optional later |
-| Schema validation library dependency | Optional hooks later |
-| Retries, pagination, filtering conventions | Reliability / DX follow-up |
-| File upload / download / streaming | Later |
-| `getBySlug`, `getByUUID`, `getBy(key, value)` | Nice-to-have conventions; not required for v0.1.0 acceptance |
-| React / Next.js dependencies | Forbidden in Core |
+| Item                                            | Why                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------ |
+| TanStack Query package / helpers                | Integration depends on Core; later milestone                 |
+| OpenAPI import/export                           | Advanced ecosystem                                           |
+| `@apixa/client` / `@apixa/server`               | Environment packages later                                   |
+| `@apixa/transport-fetch` split                  | Fetch stays in Core (ADR 002)                                |
+| `@apixa/mocking` / production `mocks` on config | Do not couple mocking to execution                           |
+| Auth as a Core product surface                  | Can return later; not required to prove the idea             |
+| Logging middleware as a product feature         | Optional later                                               |
+| Schema validation library dependency            | Optional hooks later                                         |
+| Retries, pagination, filtering conventions      | Reliability / DX follow-up                                   |
+| File upload / download / streaming              | Later                                                        |
+| `getBySlug`, `getByUUID`, `getBy(key, value)`   | Nice-to-have conventions; not required for v0.1.0 acceptance |
+| React / Next.js dependencies                    | Forbidden in Core                                            |
 
 ## Constraints (non-negotiable)
 

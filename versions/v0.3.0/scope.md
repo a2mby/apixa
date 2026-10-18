@@ -45,18 +45,18 @@ delete:  { method: "DELETE", path: "/:id", response: type<void>() }
 
 ## Out of scope
 
-| Item | Why |
-| --- | --- |
-| Resource-level `types` bag | Deferred; use per-op markers only |
-| Inferring types from method / path / op names | Explicit markers only |
-| `crud<>()` preset | Follow-up; no Core type changes required beyond markers |
-| Path-param template-literal inference | Follow-up |
-| Schema libraries / runtime validation | Later milestones |
-| Codegen / OpenAPI | Later |
-| Call-style changes (object bags, etc.) | Out |
-| AbortSignal / retries / middleware / mocking / pagination | Reliability later (see roadmap) |
-| New workspace packages | Core-only |
-| Rewrite frozen `versions/v0.1.0/` or `versions/v0.2.0/` | Errata only |
+| Item                                                      | Why                                                     |
+| --------------------------------------------------------- | ------------------------------------------------------- |
+| Resource-level `types` bag                                | Deferred; use per-op markers only                       |
+| Inferring types from method / path / op names             | Explicit markers only                                   |
+| `crud<>()` preset                                         | Follow-up; no Core type changes required beyond markers |
+| Path-param template-literal inference                     | Follow-up                                               |
+| Schema libraries / runtime validation                     | Later milestones                                        |
+| Codegen / OpenAPI                                         | Later                                                   |
+| Call-style changes (object bags, etc.)                    | Out                                                     |
+| AbortSignal / retries / middleware / mocking / pagination | Reliability later (see roadmap)                         |
+| New workspace packages                                    | Core-only                                               |
+| Rewrite frozen `versions/v0.1.0/` or `versions/v0.2.0/`   | Errata only                                             |
 
 ## Follow-ups (not built in 0.3.0)
 

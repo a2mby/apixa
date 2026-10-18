@@ -62,16 +62,16 @@ See also:
 
 ## Source map (`packages/core`)
 
-| Responsibility | Intended home | Notes |
-| --- | --- | --- |
-| API / resource definition (`defineApi`) | `api/` | `defineApi` + resource client wiring |
-| Operation helpers | `operation/` | Convention defaults, arg parsing, operation callers |
-| Request execution pipeline | `request/` | URL/headers/body → transport → unwrapped `Promise<T>` |
-| Fetch transport | `transport/` | Default Fetch transport, kept in Core for v0.1.0 |
-| Errors | `errors/` | `ApiError` / `HttpError` / `NetworkError` / … |
-| Shared types | `types/` | HTTP, transport, definition, client inference |
-| URL / serialization helpers | `http/` | Path, query, headers, body, timeout signal |
-| Public exports | `index.ts` | `defineApi`, types, errors, Fetch / `Transport` |
+| Responsibility                          | Intended home | Notes                                                 |
+| --------------------------------------- | ------------- | ----------------------------------------------------- |
+| API / resource definition (`defineApi`) | `api/`        | `defineApi` + resource client wiring                  |
+| Operation helpers                       | `operation/`  | Convention defaults, arg parsing, operation callers   |
+| Request execution pipeline              | `request/`    | URL/headers/body → transport → unwrapped `Promise<T>` |
+| Fetch transport                         | `transport/`  | Default Fetch transport, kept in Core for v0.1.0      |
+| Errors                                  | `errors/`     | `ApiError` / `HttpError` / `NetworkError` / …         |
+| Shared types                            | `types/`      | HTTP, transport, definition, client inference         |
+| URL / serialization helpers             | `http/`       | Path, query, headers, body, timeout signal            |
+| Public exports                          | `index.ts`    | `defineApi`, types, errors, Fetch / `Transport`       |
 
 Out of the v0.1.0 public product surface (may exist in the scaffold today):
 

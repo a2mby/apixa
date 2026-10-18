@@ -24,7 +24,12 @@ const api = defineApi({
     operations: {
       getAll: { path: "/active", response: {} as User[] },
       update: { method: "PATCH", body: {} as Partial<User>, response: {} as User },
-      search: { method: "GET", path: "/search", query: {} as { q: string }, response: {} as User[] },
+      search: {
+        method: "GET",
+        path: "/search",
+        query: {} as { q: string },
+        response: {} as User[],
+      },
     },
   },
 });
@@ -74,16 +79,16 @@ Files: `examples/basic`, `examples/next/lib/api.ts`, `README.md`, living docs, `
 
 ## File touch list
 
-| Path | Change |
-| --- | --- |
-| `packages/core/src/types/definition.ts` | Optional `operations`; resource headers / request if shipped |
-| `packages/core/src/types/inference.ts` | Default builtin client types |
-| `packages/core/src/operation/*` | Effective op map + resolve |
-| `packages/core/src/api/resource-client.ts` | Build defaults + overrides |
-| `packages/core/src/request/execute.ts` | Resource-level merge |
-| `tests/core/*.test.ts` | New + updated cases |
-| `examples/basic`, `examples/next` | Minimal definitions |
-| `README.md`, `docs/*` | Honest DX |
+| Path                                       | Change                                                       |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `packages/core/src/types/definition.ts`    | Optional `operations`; resource headers / request if shipped |
+| `packages/core/src/types/inference.ts`     | Default builtin client types                                 |
+| `packages/core/src/operation/*`            | Effective op map + resolve                                   |
+| `packages/core/src/api/resource-client.ts` | Build defaults + overrides                                   |
+| `packages/core/src/request/execute.ts`     | Resource-level merge                                         |
+| `tests/core/*.test.ts`                     | New + updated cases                                          |
+| `examples/basic`, `examples/next`          | Minimal definitions                                          |
+| `README.md`, `docs/*`                      | Honest DX                                                    |
 
 ## Non-steps
 

@@ -85,17 +85,17 @@ Files: `examples/next/lib/api.ts` (local), `README.md`, living docs, `CHANGELOG.
 
 ## File touch list
 
-| Path | Change |
-| --- | --- |
-| `packages/core/src/types/marker.ts` | New — `Type`, `type`, `Infer` |
-| `packages/core/src/types/definition.ts` | `body` / `response` as `Type<…>` |
-| `packages/core/src/types/inference.ts` | Unwrap via `Infer<>` |
-| `packages/core/src/types/index.ts` | Export markers |
-| `packages/core/src/index.ts` | Public export `type`, `Type`, `Infer` |
-| `tests/core/*.test.ts` | Marker inference + breaking cases |
-| `examples/next/lib/api.ts` | `type<T>()` usage |
-| `README.md`, `docs/*`, `CHANGELOG.md` | DX + breaking note |
-| `docs/story.md` | Implementation outcome |
+| Path                                    | Change                                |
+| --------------------------------------- | ------------------------------------- |
+| `packages/core/src/types/marker.ts`     | New — `Type`, `type`, `Infer`         |
+| `packages/core/src/types/definition.ts` | `body` / `response` as `Type<…>`      |
+| `packages/core/src/types/inference.ts`  | Unwrap via `Infer<>`                  |
+| `packages/core/src/types/index.ts`      | Export markers                        |
+| `packages/core/src/index.ts`            | Public export `type`, `Type`, `Infer` |
+| `tests/core/*.test.ts`                  | Marker inference + breaking cases     |
+| `examples/next/lib/api.ts`              | `type<T>()` usage                     |
+| `README.md`, `docs/*`, `CHANGELOG.md`   | DX + breaking note                    |
+| `docs/story.md`                         | Implementation outcome                |
 
 ## Non-steps
 

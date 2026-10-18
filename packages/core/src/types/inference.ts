@@ -13,9 +13,7 @@ type BuiltinOpDefs = {
   delete: { path: "/:id" };
 };
 
-type DefaultPath<Name extends string> = Name extends "getByID" | "update" | "delete"
-  ? "/:id"
-  : "";
+type DefaultPath<Name extends string> = Name extends "getByID" | "update" | "delete" ? "/:id" : "";
 
 export type EffectivePath<Name extends string, Op> = Op extends { path: infer P }
   ? P extends string
@@ -50,11 +48,7 @@ type PathParamsOf<Path extends string> = [PathParamName<Path>] extends [never]
 type InferResponse<Op> = Op extends { response: infer R } ? Infer<R> : unknown;
 type InferBody<Op> = Op extends { body: infer B } ? Infer<B> : undefined;
 type InferQuery<Op> = Op extends { query: infer Q } ? Q : QueryParams;
-type HasBody<Op> = Op extends { body: infer B }
-  ? [B] extends [undefined]
-    ? false
-    : true
-  : false;
+type HasBody<Op> = Op extends { body: infer B } ? ([B] extends [undefined] ? false : true) : false;
 
 type OperationFn<Name extends string, Op> = BuildOperationFn<
   PathArity<EffectivePath<Name, Op>>,
@@ -64,13 +58,9 @@ type OperationFn<Name extends string, Op> = BuildOperationFn<
   InferQuery<Op>
 >;
 
-type BuildOperationFn<
-  Arity extends 0 | 1 | 2,
-  Params,
-  Body,
-  Result,
-  Query,
-> = [Body] extends [undefined]
+type BuildOperationFn<Arity extends 0 | 1 | 2, Params, Body, Result, Query> = [Body] extends [
+  undefined,
+]
   ? Arity extends 0
     ? (options?: RequestOptions<Query>) => Promise<Result>
     : Arity extends 1

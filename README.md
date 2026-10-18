@@ -122,13 +122,13 @@ Planned later packages (not created yet): `transport-fetch`, `client`, `server`,
 
 ## Documentation
 
-| Doc | Purpose |
-| --- | --- |
-| [docs/context.md](./docs/context.md) | Project identity, principles, constraints |
-| [docs/architecture.md](./docs/architecture.md) | Core shape and request flow |
-| [docs/roadmap.md](./docs/roadmap.md) | Milestones and future phases |
-| [docs/conventions.md](./docs/conventions.md) | How we build and document |
-| [versions/v0.1.0/](./versions/v0.1.0/) | **Current coding contract** (scope, plan, acceptance) |
+| Doc                                            | Purpose                                               |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| [docs/context.md](./docs/context.md)           | Project identity, principles, constraints             |
+| [docs/architecture.md](./docs/architecture.md) | Core shape and request flow                           |
+| [docs/roadmap.md](./docs/roadmap.md)           | Milestones and future phases                          |
+| [docs/conventions.md](./docs/conventions.md)   | How we build and document                             |
+| [versions/v0.1.0/](./versions/v0.1.0/)         | **Current coding contract** (scope, plan, acceptance) |
 
 ## Project Status
 
