@@ -13,15 +13,12 @@ export {
 
 export { createFetchTransport } from "./transport/index.js";
 
-import { type as typeMarker } from "./types/index.js";
-export { typeMarker as type };
-export type { Type, Infer } from "./types/index.js";
-
 export type {
   HttpMethod,
   PathParams,
   QueryParams,
   HeadersInitLike,
+  BuiltinHeaders,
   RequestConfig,
   ApiResponse,
   TransportRequest,
@@ -31,6 +28,10 @@ export type {
   ResourceDefinition,
   RequestOptions,
   ApiRootConfig,
+  ApiState,
+  ResourceState,
+  OperationState,
+  ApiInput,
   ApiClient,
   ResourceClient,
 } from "./types/index.js";

@@ -1,20 +1,21 @@
-import type { HeadersInitLike, HttpMethod } from "./http.js";
-import type { Type } from "./marker.js";
+import type { BuiltinHeaders, HeadersInitLike, HttpMethod } from "./http.js";
 import type { Transport } from "./transport.js";
 
-/** Type marker object for an operation. Values are not read at runtime except `method`, `path`, `headers`, `timeout`, and the presence of `body`. */
+/**
+ * Runtime operation config. Payload types live on the `defineApi<T>` state generic,
+ * not as runtime marker values.
+ */
 export interface OperationDefinition {
   method?: HttpMethod;
   /** Path relative to the resource `path`. Convention names default when omitted. */
   path?: string;
-  /** Type marker for the JSON request body (`type<Body>()`). */
-  body?: Type<unknown>;
-  /** Type marker for the unwrapped response payload (`type<User>()`). */
-  response?: Type<unknown>;
-  /** Type marker for query-string parameters. */
-  query?: unknown;
   headers?: HeadersInitLike;
   timeout?: number;
+  /**
+   * Whether the operation sends a JSON body. Builtin `create` / `update` default to true.
+   * Set explicitly for custom body operations.
+   */
+  hasBody?: boolean;
 }
 
 export interface ResourceDefinition {
@@ -29,10 +30,41 @@ export type ReservedApiConfigKey = "baseURL" | "headers" | "transport" | "timeou
 
 export interface ApiRootConfig {
   baseURL: string;
-  headers?: HeadersInitLike;
+  headers?: BuiltinHeaders | HeadersInitLike;
   transport?: Transport;
   timeout?: number;
 }
+
+/**
+ * Developer state for `defineApi<T>()`: **resources only**.
+ * Root builtins (`baseURL`, `headers`, `transport`, `timeout`) come from Core on the runtime config.
+ */
+export type ApiState = Record<string, ResourceState | unknown>;
+
+/** Type-only keys on a resource state (not required at runtime). */
+export type ResourceTypeOnlyKey = "entity";
+
+/** Type-only keys on an operation state (not required at runtime). */
+export type OperationTypeOnlyKey = "body" | "response" | "query";
+
+export type OperationState = OperationDefinition & {
+  body?: unknown;
+  response?: unknown;
+  query?: unknown;
+};
+
+/**
+ * Resource state: developer declares `path` + `entity`.
+ * `create` / `update` bodies are derived as `Omit<Entity,"id">` / `Partial<Entity>`.
+ */
+export type ResourceState = {
+  path: string;
+  headers?: BuiltinHeaders | HeadersInitLike;
+  timeout?: number;
+  /** Entity for getAll / getByID and create/update response typing. */
+  entity?: unknown;
+  operations?: Record<string, OperationState>;
+};
 
 export interface ResolvedApiConfig {
   baseURL: string;

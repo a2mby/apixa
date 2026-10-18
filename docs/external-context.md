@@ -17,25 +17,25 @@ TypeScript-first library: define an API once → generate a fully typed client.
 - Not a UI framework, not a server router, not merely a Fetch wrapper
 
 ```ts
-import { defineApi, type } from "@apixa/core";
+import { defineApi } from "@apixa/core";
 
 type User = { id: string; name: string; email: string };
 
-const api = defineApi({
+type AppApi = {
+  users: { path: "/users"; entity: User };
+};
+
+const api = defineApi<AppApi>()({
   baseURL: "https://api.example.com",
-  users: {
-    path: "/users",
-    operations: {
-      getAll: { response: type<User[]>() },
-      getByID: { response: type<User>() },
-    },
-  },
+  headers: { Accept: "application/json" },
+  users: { path: "/users" },
 });
 
 await api.users.getAll(); // Promise<User[]>
+await api.users.create({ name: "Ada", email: "ada@example.com" }); // Omit<User,"id">
 ```
 
-Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). Optional `operations` for overrides and custom endpoints. Typing markers: `type<T>()` — **not** `{} as T`.
+Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). Optional runtime `operations` for overrides and custom endpoints. Typing: resource-only `defineApi<T>()(config)` with `path` + `entity`; create/update derived — **not** `type()`.
 
 ---
 
@@ -43,19 +43,20 @@ Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `
 
 Confirm against the repo (do not invent versions):
 
-| Version    | Status                                                      |
-| ---------- | ----------------------------------------------------------- |
-| v0.1.0     | Shipped — opt-in operations foundation                      |
-| v0.2.0     | Shipped — default-first resource CRUD                       |
-| **v0.3.0** | **Active** — branded `type<T>()` / `Type` / `Infer` markers |
+| Version    | Status                                                   |
+| ---------- | -------------------------------------------------------- |
+| v0.1.0     | Shipped — opt-in operations foundation                   |
+| v0.2.0     | Shipped — default-first resource CRUD                    |
+| v0.3.0     | Shipped — `type<T>()` markers (removed in v0.4.0)        |
+| **v0.4.0** | **Active** — Zustand-style `defineApi<T>()` state typing |
 
 Pointer of truth: [`versions/README.md`](../versions/README.md) → **Current** folder.
 
-**v0.3.0 goal:** one cast inside Core (`type<T>()`); per-op `body` / `response` markers; `{} as T` no longer type-checks on those fields. Call style / path arity unchanged.
+**v0.4.0 goal:** resource-only state (`path` + `entity`); create/update derived; `BuiltinHeaders`; root builtins from Core; `type()` removed.
 
-**Documented follow-ups (not in v0.3.0):** `crud<>()` preset, path-param template inference.
+**Documented follow-ups:** `crud<>()` preset, path-param template inference.
 
-**Next roadmap heading (approx v0.4.0):** AbortSignal, timeouts/retries, middleware, optional schema hooks, mocking, pagination — only after a version folder exists. Do **not** create empty future `versions/` stubs.
+**Next roadmap heading (approx v0.5.0):** AbortSignal, timeouts/retries, middleware, optional schema hooks, mocking, pagination — only after a version folder exists. Do **not** create empty future `versions/` stubs.
 
 ---
 
