@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-21 — Paginated mock pages through TanStack Query (#34)
+
+Kept `defineMockApi` honesty: `pagination: true` → `Page<T>` (`data`, `total`, `page`, `pageSize`, plus `previous` / `next` page numbers). Next example wires `useQuery` to the page envelope and reads `.data` in the UI — no unwrap helper.
+
 ## 2026-10-18 — Human and agent how-to guides (#32)
 
 Added `docs/guides/` with `humans/` and `agents/` folders: short task guides (extend `MockDatasetIds`, fix a small bug, plan-and-land via `/plan-change` + `/git-push`). Conventions and the docs Cursor rule point at the new tree so contributors and agents share the same how-to home.

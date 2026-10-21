@@ -1,4 +1,5 @@
 import { defineApi } from "@apixa/core";
+import { defineMockApi } from "@apixa/mocking";
 import { type User } from "@apixa/mocking/data";
 
 export type { User };
@@ -30,3 +31,12 @@ export const api = defineApi<AppApi>()({
     },
   },
 });
+
+export const mockApi = defineMockApi({
+  comments: {
+    type: "comments-mock",
+    size: 100,
+    pagination: true,
+  },
+});
+

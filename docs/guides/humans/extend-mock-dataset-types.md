@@ -28,3 +28,4 @@ Copy-paste shape and notes: [`packages/mocking/README.md`](../../../packages/moc
 - Importing only an entity type (for example `CountryCode`) does **not** add geography ids. Only modules that contain the `declare module` merge teach suggestions.
 - Typos still type-check: the type is “known ids **or** any string,” because custom registry ids are legal. Missing presets fail when the mock runs, not at compile time.
 - Do not edit Core to hardcode your id list.
+- With `defineMockApi` and `pagination: true`, `getAll()` returns a **page** (`data`, `total`, `page`, `pageSize`, `previous`, `next`), not `T[]`. In `useQuery`, keep that page as `data` and read `.data` / `.next` / `.previous` — do not default the whole page to `[]`.
