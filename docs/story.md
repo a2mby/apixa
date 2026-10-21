@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-21 — Ignore Next local scaffolding in git (#36)
+
+Git keeps only the Next demo API surface (`README`, `app/page.tsx`, `lib/api.ts`, `lib/comments.ts`, `lib/mock-api.ts`). Local scaffolding (`package.json`, `tsconfig.json`, layout/components/query client, etc.) stays on disk for running the app but is gitignored.
+
 ## 2026-10-21 — Paginated mock pages through TanStack Query (#34)
 
 Kept `defineMockApi` honesty: `pagination: true` → `Page<T>` (`data`, `total`, `page`, `pageSize`, plus `previous` / `next` page numbers). Next example wires `useQuery` to the page envelope and reads `.data` in the UI — no unwrap helper.

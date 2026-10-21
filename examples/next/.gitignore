@@ -1,0 +1,16 @@
+# Local Next app scaffolding — keep on disk for `pnpm example:next`, do not version
+.next
+node_modules
+out
+*.log
+.env*.local
+tsconfig.tsbuildinfo
+tsconfig.json
+next-env.d.ts
+next.config.ts
+package.json
+app/globals.css
+app/layout.tsx
+components/
+lib/query-client.tsx
+lib/users.ts
