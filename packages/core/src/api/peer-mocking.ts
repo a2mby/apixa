@@ -1,8 +1,16 @@
+/// <reference path="../ambient-mocking-register.d.ts" />
 import { createFetchTransport } from "../transport/fetch.js";
 import type { Transport } from "../types/transport.js";
 import type { DefineApiConfigBag } from "./processors.js";
 
-const RESERVED_KEYS = new Set(["baseURL", "headers", "transport", "timeout"]);
+const RESERVED_KEYS = new Set([
+  "baseURL",
+  "headers",
+  "transport",
+  "timeout",
+  "retry",
+  "middleware",
+]);
 
 export type PeerResourceMockSpec = {
   name: string;

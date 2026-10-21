@@ -82,6 +82,44 @@ Operations return native `Promise<T>` (response data is unwrapped). Built-ins ar
 
 Pass `transport` to inject a custom HTTP implementation (used in tests). The default is Fetch, shipped inside `@apixa/core`.
 
+### Request reliability (implemented)
+
+Per-call cancel and timeout via `RequestOptions` (call → operation → resource → api). Abort → `AbortError`; timeout → `TimeoutError`.
+
+```ts
+const controller = new AbortController();
+await api.users.getAll({ signal: controller.signal, timeout: 5_000 });
+controller.abort();
+```
+
+Opt-in retries (default methods `GET` / `HEAD`; network errors, `408` / `429` / `5xx`):
+
+```ts
+const api = defineApi({
+  baseURL: "https://api.example.com",
+  timeout: 10_000,
+  retry: { retries: 2, baseDelayMs: 200 },
+  users: { path: "/users" },
+});
+```
+
+Thin middleware runs once per logical call and wraps the full retry loop:
+
+```ts
+const api = defineApi({
+  baseURL: "https://api.example.com",
+  middleware: [
+    async (ctx, next) => {
+      ctx.request.headers.set("X-Trace", "1");
+      return next();
+    },
+  ],
+  users: { path: "/users" },
+});
+```
+
+See [`packages/core/README.md`](./packages/core/README.md) for retry fields and precedence.
+
 ### Simple Mocking (implemented)
 
 Standalone, in-memory mock API from local datasets — no `defineApi()`, no network, no backend:
@@ -123,12 +161,13 @@ See [`examples/next`](./examples/next) for the primary real-app playground (Next
 
 Apixa is being designed around a small, extensible core that can grow into a broader API development ecosystem.
 
-**Implemented:** `defineApi()` with default-first CRUD (v0.2.0), resource-only `defineApi<T>()(config)` with derived create/update + `BuiltinHeaders` (v0.4.0), URL/body/headers merge, Fetch transport, standardized errors, `@apixa/mocking` + local datasets (v0.5.0).
+**Implemented:** `defineApi()` with default-first CRUD (v0.2.0), resource-only `defineApi<T>()(config)` with derived create/update + `BuiltinHeaders` (v0.4.0), URL/body/headers merge, Fetch transport, standardized errors, `@apixa/mocking` + local datasets (v0.5.0), request reliability — abort, timeout, retries, thin middleware (v0.6.0).
 
 **Planned later:**
 
 - `crud<>()` preset and path-param template inference.
-- Runtime schema validation hooks, middleware, retries, pagination conventions.
+- Runtime schema validation hooks (no schema library in Core).
+- Live pagination, filtering, sorting, and search conventions.
 - Online dataset catalog (browse/download) — local datasets only today.
 - Optional TanStack Query integration package.
 - Browser and server packages.
@@ -159,7 +198,7 @@ scripts/            # Frontend run scripts (macOS / Linux / Windows)
 tests/              # Vitest suite for core + mocking
 docs/               # Living context, architecture, roadmap, ADRs
 versions/
-  v0.5.0/           # Current coding contract
+  v0.6.0/           # Current coding contract
 ```
 
 Planned later packages (not created yet): `transport-fetch`, `client`, `server`, `tanstack-query`, `openapi`.
@@ -172,13 +211,13 @@ Planned later packages (not created yet): `transport-fetch`, `client`, `server`,
 | [docs/architecture.md](./docs/architecture.md) | Core shape and request flow                           |
 | [docs/roadmap.md](./docs/roadmap.md)           | Milestones and future phases                          |
 | [docs/conventions.md](./docs/conventions.md)   | How we build and document                             |
-| [versions/v0.5.0/](./versions/v0.5.0/)         | **Current coding contract** (scope, plan, acceptance) |
+| [versions/v0.6.0/](./versions/v0.6.0/)         | **Current coding contract** (scope, plan, acceptance) |
 
 ## Project Status
 
-Apixa is in early development. Active milestone: **v0.5.0** (Simple Mocking). `@apixa/core` exposes `defineApi()` with default-first CRUD and injectable `Transport`. `@apixa/mocking` serves local JSON datasets without a live backend.
+Apixa is in early development. Active milestone: **v0.6.0** (Core request reliability). `@apixa/core` exposes `defineApi()` with default-first CRUD, injectable `Transport`, abort/timeout, opt-in retries, and thin middleware. `@apixa/mocking` serves local JSON datasets without a live backend.
 
-See [versions/v0.5.0/acceptance-criteria.md](./versions/v0.5.0/acceptance-criteria.md) for the milestone checklist.
+See [versions/v0.6.0/acceptance-criteria.md](./versions/v0.6.0/acceptance-criteria.md) for the milestone checklist.
 
 ## Author
 

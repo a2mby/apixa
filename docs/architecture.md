@@ -56,28 +56,29 @@ See also:
 
 1. Caller invokes a resource operation (for example `api.users.getByID("123")`).
 2. Core builds path, query, headers, and body from the definition and call arguments.
-3. Core calls `transport.request(...)`.
-4. On success, Core returns typed data as `Promise<T>` (prefer unwrapping response `data` for query-fn compatibility).
-5. On failure, Core throws a standardized `ApiError` subclass (`HttpError`, `NetworkError`, etc.).
+3. Optional `middleware` runs once around the logical call (including retries).
+4. Core calls `transport.request(...)` (with opt-in retry on safe failures).
+5. On success, Core returns typed data as `Promise<T>` (response body unwrapped).
+6. On failure, Core throws a standardized `ApiError` subclass (`HttpError`, `NetworkError`, `AbortError`, `TimeoutError`, etc.).
 
 ## Source map (`packages/core`)
 
-| Responsibility                          | Intended home | Notes                                                 |
-| --------------------------------------- | ------------- | ----------------------------------------------------- |
-| API / resource definition (`defineApi`) | `api/`        | `defineApi` + resource client wiring                  |
-| Operation helpers                       | `operation/`  | Convention defaults, arg parsing, operation callers   |
-| Request execution pipeline              | `request/`    | URL/headers/body → transport → unwrapped `Promise<T>` |
-| Fetch transport                         | `transport/`  | Default Fetch transport, kept in Core for v0.1.0      |
-| Errors                                  | `errors/`     | `ApiError` / `HttpError` / `NetworkError` / …         |
-| Shared types                            | `types/`      | HTTP, transport, definition, client inference         |
-| URL / serialization helpers             | `http/`       | Path, query, headers, body, timeout signal            |
-| Public exports                          | `index.ts`    | `defineApi`, types, errors, Fetch / `Transport`       |
+| Responsibility                          | Intended home | Notes                                                            |
+| --------------------------------------- | ------------- | ---------------------------------------------------------------- |
+| API / resource definition (`defineApi`) | `api/`        | `defineApi` + resource client wiring                             |
+| Operation helpers                       | `operation/`  | Convention defaults, arg parsing, operation callers              |
+| Request execution pipeline              | `request/`    | URL/headers/body → middleware → retry → transport → `Promise<T>` |
+| Fetch transport                         | `transport/`  | Default Fetch transport, kept in Core                            |
+| Errors                                  | `errors/`     | `ApiError` / `HttpError` / `NetworkError` / `AbortError` / …     |
+| Shared types                            | `types/`      | HTTP, transport, definition, retry, middleware, client inference |
+| URL / serialization helpers             | `http/`       | Path, query, headers, body, timeout signal                       |
+| Public exports                          | `index.ts`    | `defineApi`, types, errors, Fetch / `Transport`                  |
 
 Out of Core’s product mock engine (owned by `@apixa/mocking`):
 
 - Core exposes `registerDefineApiProcessor` so integrations can transform config before the client is built
 - Resource `mock` / `mockConfig`: Core strips keys and deferred-loads the optional `@apixa/mocking` peer (or uses a registered processor). No hard dependency; clear error if the peer is missing at request time
-- Auth helpers and logging middleware as Core product features
+- Full auth / logging frameworks (thin `middleware` only — v0.6.0)
 - Schema validation as a Core dependency
 
 ## Workspace today vs planned
@@ -110,4 +111,4 @@ Integrations always depend on Core. Core never depends on integrations.
 
 - Living context: [context.md](./context.md)
 - Roadmap: [roadmap.md](./roadmap.md)
-- Coding contract: [../versions/v0.5.0/](../versions/v0.5.0/)
+- Latest coding contract: [../versions/v0.6.0/](../versions/v0.6.0/) (shipped; see [versions/README.md](../versions/README.md))

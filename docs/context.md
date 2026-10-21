@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** none open — last shipped [v0.5.0](../versions/v0.5.0/) (Simple Mocking + local datasets + remove backend).
-> Previous: [v0.4.0](../versions/v0.4.0/) (entity-only `defineApi<T>()`); [v0.3.0](../versions/v0.3.0/) (`type<T>()`, removed later); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
+> **Current milestone:** none open — last shipped [v0.6.0](../versions/v0.6.0/) (Core request reliability: abort, retries, thin middleware).
+> Previous: [v0.5.0](../versions/v0.5.0/) (Simple Mocking); [v0.4.0](../versions/v0.4.0/) (entity-only `defineApi<T>()`); [v0.3.0](../versions/v0.3.0/) (`type<T>()`, removed later); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity
@@ -91,9 +91,9 @@ const users = await api.users.getAll();
 const user = await api.users.getByID("123");
 ```
 
-Built-in operations: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). `create` / `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). Root builtins (`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`) are typed by Core — not listed on `AppApi`. Optional runtime `operations` merges overrides and custom endpoints.
+Built-in operations: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). `create` / `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). Root builtins (`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core — not listed on `AppApi`. Optional runtime `operations` merges overrides and custom endpoints. Call options support `signal` / `timeout`; opt-in `retry` and thin `middleware` ship in v0.6.0.
 
-**Planned later:** `crud<>()` preset, path-param template inference, `idKey`, `getBySlug` / `getByUUID` / `getBy`, runtime schema validation hooks.
+**Planned later:** `crud<>()` preset, path-param template inference, `idKey`, `getBySlug` / `getByUUID` / `getBy`, runtime schema validation hooks, live pagination conventions.
 
 Prefer clear semantics. For example, `update()` is a clearer default than an ambiguous operation such as `appendUser()`.
 
@@ -200,12 +200,12 @@ Each folder owns one concern; keep modules short. Avoid speculative abstractions
 
 ### Reliability and developer experience
 
-- Cancellation and `AbortSignal`.
-- Timeouts and configurable retries.
-- Middleware and interceptors.
-- Optional schema validation.
-- Mocking and contract tests.
-- Pagination, filtering, sorting, and search conventions.
+- Cancellation and `AbortSignal` (**implemented** — v0.6.0).
+- Timeouts and configurable retries (**implemented** — v0.6.0).
+- Middleware and interceptors (**implemented** thin surface — v0.6.0).
+- Optional schema validation (planned).
+- Mocking and contract tests (**implemented** — v0.5.0).
+- Pagination, filtering, sorting, and search conventions (planned for live API).
 
 ### Environment and integrations
 

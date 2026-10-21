@@ -30,6 +30,10 @@ export type {
   ResolvedOperation,
 } from "./definition.js";
 
+export type { RetryConfig, ResolvedRetryConfig } from "./retry.js";
+
+export type { Middleware, MiddlewareContext, MiddlewareNext } from "./middleware.js";
+
 export type {
   BuiltinOpName,
   EffectivePath,

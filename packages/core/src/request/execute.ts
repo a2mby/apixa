@@ -1,4 +1,4 @@
-import { AbortError, ApiError, HttpError, TimeoutError } from "../errors/index.js";
+import { ApiError, HttpError } from "../errors/index.js";
 import {
   buildQueryString,
   createTimeoutSignal,
@@ -13,7 +13,11 @@ import type {
   ResolvedResourceConfig,
 } from "../types/definition.js";
 import type { PathParams, QueryParams } from "../types/http.js";
+import type { ResolvedRetryConfig } from "../types/retry.js";
 import type { ApiResponse, RequestConfig, RequestOptions } from "../types/transport.js";
+import { classifyRequestError, isAbortLike, isTimeoutLike } from "./classify-error.js";
+import { composeMiddleware } from "./middleware.js";
+import { computeRetryDelayMs, delay, resolveRetryConfig, shouldRetry } from "./retry.js";
 
 export interface ExecuteArgs {
   params?: PathParams;
@@ -34,6 +38,7 @@ export async function executeRequest<TData>(
   const url = `${joinURL(api.baseURL, path)}${buildQueryString(call.query)}`;
   const headers = mergeHeaders(api.headers, resource.headers, operation.headers, call.headers);
   const timeout = call.timeout ?? operation.timeout ?? resource.timeout ?? api.timeout;
+  const retry = resolveRetryConfig(operation.retry ?? resource.retry ?? api.retry);
   const { signal, cleanup } = createTimeoutSignal(timeout, call.signal);
 
   const request: RequestConfig = {
@@ -49,6 +54,59 @@ export async function executeRequest<TData>(
     timeout,
   };
 
+  const runAttempts = () => executeAttempts<TData>(api, operation, request, retry);
+
+  try {
+    if (!api.middleware?.length) {
+      return await runAttempts();
+    }
+
+    const result = await composeMiddleware(api.middleware)({ request }, runAttempts);
+    return result as TData;
+  } finally {
+    cleanup();
+  }
+}
+
+async function executeAttempts<TData>(
+  api: ResolvedApiConfig,
+  operation: ResolvedOperation,
+  request: RequestConfig,
+  retry: ResolvedRetryConfig | undefined,
+): Promise<TData> {
+  const maxRetries = retry?.retries ?? 0;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await singleAttempt<TData>(api, request);
+    } catch (error) {
+      lastError = error;
+
+      if (isAbortLike(error) && !isTimeoutLike(error)) {
+        classifyRequestError(error, request);
+      }
+
+      if (!retry || !shouldRetry(error, operation.method, retry, attempt)) {
+        classifyRequestError(error, request);
+      }
+
+      const waitMs = computeRetryDelayMs(attempt, retry);
+      try {
+        await delay(waitMs, request.signal);
+      } catch (abortError) {
+        classifyRequestError(abortError, request);
+      }
+    }
+  }
+
+  classifyRequestError(lastError, request);
+}
+
+async function singleAttempt<TData>(
+  api: ResolvedApiConfig,
+  request: RequestConfig,
+): Promise<TData> {
   try {
     const serializedBody = serializeBody(request.body, request.headers);
 
@@ -62,16 +120,7 @@ export async function executeRequest<TData>(
         signal: request.signal,
       });
     } catch (error) {
-      if (error instanceof ApiError) {
-        error.request ??= request;
-        throw error;
-      }
-
-      if (error instanceof Error && error.name === "AbortError") {
-        throw new AbortError("Request was aborted", { request, cause: error });
-      }
-
-      throw error;
+      classifyRequestError(error, request);
     }
 
     const apiResponse: ApiResponse<unknown> = {
@@ -95,20 +144,6 @@ export async function executeRequest<TData>(
     if (error instanceof ApiError) {
       throw error;
     }
-
-    if (error instanceof DOMException && error.name === "TimeoutError") {
-      throw new TimeoutError("Request timed out", { request, cause: error });
-    }
-
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new AbortError("Request was aborted", { request, cause: error });
-    }
-
-    throw new ApiError(error instanceof Error ? error.message : "Unknown error", {
-      request,
-      cause: error,
-    });
-  } finally {
-    cleanup();
+    classifyRequestError(error, request);
   }
 }

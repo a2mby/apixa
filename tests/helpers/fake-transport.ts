@@ -6,12 +6,41 @@ export interface FakeResult {
   headers?: HeadersInit;
 }
 
+function rejectionFromSignal(signal: AbortSignal): Error {
+  const reason = signal.reason;
+  if (reason instanceof DOMException && reason.name === "TimeoutError") {
+    return reason;
+  }
+  if (reason instanceof Error) {
+    return reason;
+  }
+  const error = new Error("The operation was aborted.");
+  error.name = "AbortError";
+  return error;
+}
+
+function abortRace(signal?: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    if (!signal) {
+      return;
+    }
+    if (signal.aborted) {
+      reject(rejectionFromSignal(signal));
+      return;
+    }
+    signal.addEventListener("abort", () => reject(rejectionFromSignal(signal)), { once: true });
+  });
+}
+
 export function createFakeTransport(
   handler: (request: TransportRequest) => FakeResult | Promise<FakeResult>,
 ): Transport {
   return {
     async request(input: TransportRequest): Promise<TransportResponse> {
-      const result = await handler(input);
+      const result = await Promise.race([
+        Promise.resolve().then(() => handler(input)),
+        abortRace(input.signal),
+      ]);
       const status = result.status ?? 200;
       const body = result.body ?? null;
       const headers = new Headers(result.headers);

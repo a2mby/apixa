@@ -21,17 +21,25 @@ Open http://localhost:3000
 
 ## API shape
 
-[`lib/api.ts`](./lib/api.ts) imports `@apixa/mocking` (registers the Core processor), then uses Core `defineApi` with:
+[`lib/api.ts`](./lib/api.ts) uses Core `defineApi` with resource-level mocking plus v0.6.0 reliability:
 
 ```ts
-users: {
-  path: "/users",
-  mock: true,
-  mockConfig: { type: "users-sample", size: 100, pagination: true },
-}
+defineApi<AppApi>()({
+  baseURL: "https://api.example.com",
+  timeout: 10_000,
+  retry: { retries: 2, methods: ["GET", "HEAD"], baseDelayMs: 150 },
+  middleware: [withTrace],
+  users: {
+    path: "/users",
+    mock: true,
+    mockConfig: { type: "users-sample", size: 100 },
+  },
+});
 ```
 
-Typed entity: `import type { User } from "@apixa/mocking/data/users"`.
+[`lib/users.ts`](./lib/users.ts) passes TanStack Query’s `signal` into `api.users.getAll({ signal })` so cancel maps to Core `AbortError`. Paginated envelopes stay on `mockApi.comments` in this example.
+
+Typed entity: `import type { User } from "@apixa/mocking/data"`.
 
 ## Standalone mock API
 

@@ -28,5 +28,6 @@ export function resolveOperation(
     hasBody,
     headers: definition.headers,
     timeout: definition.timeout,
+    retry: definition.retry,
   };
 }

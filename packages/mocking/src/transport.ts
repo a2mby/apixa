@@ -1,10 +1,17 @@
-import type { Transport, TransportRequest } from "@apixa/core";
+import { AbortError, type Transport, type TransportRequest } from "@apixa/core";
 import { findStore, handleStoreRequest, type MockStore } from "./store.js";
 
 export interface SelectiveMockTransportOptions {
   stores: MockStore[];
   /** Real network transport for non-mocked paths. */
   fallback: Transport;
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) {
+    return;
+  }
+  throw new AbortError("Request was aborted", { cause: signal.reason });
 }
 
 /**
@@ -17,6 +24,7 @@ export function createSelectiveMockTransport(options: SelectiveMockTransportOpti
 
   return {
     async request(input: TransportRequest) {
+      throwIfAborted(input.signal);
       const url = new URL(input.url, "https://mock.local");
       const match = findStore(stores, url.pathname);
       if (!match) {

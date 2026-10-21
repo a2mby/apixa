@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Fixed
+
+- `@apixa/mocking` selective mock transport honors `AbortSignal` (aborted → `AbortError`) so Core cancel works with resource `mock` / `mockConfig`.
+
+## 0.6.0
+
+### Added
+
+- First-class cancel / timeout on operation call options (`signal`, `timeout`) with documented `AbortError` / `TimeoutError`.
+- Opt-in `retry` on `defineApi` (resource / operation overrides; `false` disables). Safe defaults: `GET` / `HEAD`, network + `408` / `429` / `5xx`, exponential backoff.
+- Thin ordered `middleware` hooks (`ctx` + `next`) wrapping the full retry loop; header mutation before transport.
+- Public types: `RetryConfig`, `Middleware`, `MiddlewareContext`, `MiddlewareNext`.
+
+### Notes
+
+- No new packages; Fetch remains inside Core. Schema validation, client/server packages, and live pagination conventions remain planned.
+
+## Unreleased (post-0.5.0 mocking follow-ups)
+
 ### Added
 
 - `@apixa/mocking` — `defineMockApi()`: standalone, in-memory mock API seeded from local datasets (`type`, `size`, `pagination`); typed `getAll` / `getById` / `create` / `update` / `patch` / `delete`; no `defineApi()`, no network.

@@ -5,8 +5,9 @@ import type {
   PathParams,
   QueryParams,
 } from "./http.js";
-import type { RequestOptions } from "./transport.js";
 import type { ApiRootConfig, ReservedApiConfigKey } from "./definition.js";
+import type { RetryConfig } from "./retry.js";
+import type { RequestOptions } from "./transport.js";
 
 export type BuiltinOpName = "getAll" | "getByID" | "create" | "update" | "delete";
 
@@ -146,6 +147,7 @@ type RuntimeOperationValue = {
   path?: string;
   headers?: HeadersInitLike;
   timeout?: number;
+  retry?: RetryConfig | false;
   hasBody?: boolean;
 };
 
@@ -175,6 +177,7 @@ type ResourceRuntimeInput<_R> = {
   path: string;
   headers?: BuiltinHeaders | HeadersInitLike;
   timeout?: number;
+  retry?: RetryConfig | false;
   /** Runtime overrides / custom ops (value-only). Client typing comes from state `T`. */
   operations?: Record<string, RuntimeOperationValue>;
   /**
