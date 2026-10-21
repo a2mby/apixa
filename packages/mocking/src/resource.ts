@@ -5,7 +5,18 @@ export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
 
 export type PageParams = { page?: number; pageSize?: number };
-export type Page<T> = { data: T[]; total: number; page: number; pageSize: number };
+
+/** Envelope when a mock resource has `pagination: true`. `previous` / `next` are page numbers. */
+export type Page<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  /** Previous page number, or `null` on the first page. */
+  previous: number | null;
+  /** Next page number, or `null` on the last page. */
+  next: number | null;
+};
 
 type Id = string | number;
 
@@ -152,6 +163,8 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
         total: rows.length,
         page,
         pageSize,
+        previous: page > 1 ? page - 1 : null,
+        next: page < lastPage ? page + 1 : null,
       };
     },
 

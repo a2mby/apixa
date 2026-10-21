@@ -23,6 +23,12 @@ Add a `mockConfig.type` id that autocompletes and resolves at runtime, without C
 6. Rebuild `@apixa/mocking` (and Core if types changed) so `dist` matches source for local consumers.
 7. Example: only `examples/next` — import the module that carries the merge.
 
+## `defineMockApi` + TanStack Query lists
+
+- `pagination: true` → `getAll(): Promise<Page<EntityOf<type>>>` with `data`, `total`, `page`, `pageSize`, `previous`, `next`
+- `pagination` false/omitted → `getAll(): Promise<EntityOf<type>[]>`
+- For `useQuery`, keep the page as query data; UI reads `page.data` / `page.next` / `page.previous`. Do not `data = []` on a `Page`.
+
 ## Verify
 
 ```bash

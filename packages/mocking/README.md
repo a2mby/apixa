@@ -25,13 +25,34 @@ await mockApi.products.create({
 });
 ```
 
+### Pagination envelope
+
+With `pagination: true`, `getAll()` returns `Page<T>` — not `T[]`:
+
+```ts
+const page = await mockApi.users.getAll({ page: 1, pageSize: 10 });
+// page.data, page.total, page.page, page.pageSize, page.previous, page.next
+```
+
+`previous` / `next` are page numbers (or `null` at the ends). For TanStack Query, keep the page as `queryFn` data and read `.data` in the UI:
+
+```ts
+export const commentsQuery = {
+  queryKey: ["comments"] as const,
+  queryFn: () => mockApi.comments.getAll(),
+};
+
+const { data: commentsPage } = useQuery(commentsQuery);
+const comments = commentsPage?.data ?? [];
+```
+
 Each top-level key is a resource. There are no handlers to write — every resource gets the same CRUD operations, typed from its dataset.
 
-| Option       | Meaning                                                                                |
-| ------------ | -------------------------------------------------------------------------------------- |
-| `type`       | Dataset id (table below). Autocompletes; unknown ids throw `UNKNOWN_DATASET`.          |
-| `size`       | Load only the first `size` records. A seed limit, not a cap — the resource can grow.   |
-| `pagination` | `getAll()` returns `{ data, total, page, pageSize }` and accepts `{ page, pageSize }`. |
+| Option       | Meaning                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| `type`       | Dataset id (table below). Autocompletes; unknown ids throw `UNKNOWN_DATASET`.                          |
+| `size`       | Load only the first `size` records. A seed limit, not a cap — the resource can grow.                   |
+| `pagination` | `getAll()` returns `{ data, total, page, pageSize, previous, next }` and accepts `{ page, pageSize }`. |
 
 Any other option (`handlers`, `path`, `mock`, …) is a type error and throws `INVALID_CONFIG`.
 

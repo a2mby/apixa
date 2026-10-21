@@ -11,7 +11,7 @@ import {
   type MockApiErrorCode,
   type Page,
 } from "@apixa/mocking";
-import { users as usersPreset, type Product, type User } from "@apixa/mocking/data";
+import { users as usersPreset, type Comment, type Product, type User } from "@apixa/mocking/data";
 
 const datasetsRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)), "datasets");
 
@@ -110,11 +110,15 @@ describe("defineMockApi: configuration", () => {
       users: { type: "users-sample", pagination: true },
       products: { type: "products-mock" },
       currencies: { type: "currencies-parseapi" },
+      comments: { type: "comments-mock", pagination: true },
+      commentsFlat: { type: "comments-mock", pagination: false },
     });
     expectTypeOf(api.users.getAll).returns.resolves.toEqualTypeOf<Page<User>>();
     expectTypeOf(api.products.getAll).returns.resolves.toEqualTypeOf<Product[]>();
     expectTypeOf(api.products.getById).returns.resolves.toEqualTypeOf<Product>();
     expectTypeOf(api.currencies.getById).returns.resolves.toHaveProperty("symbol");
+    expectTypeOf(api.comments.getAll).returns.resolves.toEqualTypeOf<Page<Comment>>();
+    expectTypeOf(api.commentsFlat.getAll).returns.resolves.toEqualTypeOf<Comment[]>();
     // create(): the id is optional, every other field is required.
     expectTypeOf(api.products.create).parameter(0).toHaveProperty("title");
     expectTypeOf(api.products.create).parameter(0).not.toEqualTypeOf<Product>();
@@ -126,6 +130,29 @@ describe("defineMockApi: configuration", () => {
       void api.products.create({ title: 1 });
     };
     expect(_rejected).toBeTypeOf("function");
+  });
+
+  it("Page exposes previous / next page numbers for query consumers", async () => {
+    const api = defineMockApi({
+      comments: { type: "comments-mock", size: 45, pagination: true },
+    });
+    const first = await api.comments.getAll({ page: 1, pageSize: 20 });
+    expectTypeOf(first).toEqualTypeOf<Page<Comment>>();
+    expect(first.data).toHaveLength(20);
+    expect(first).toMatchObject({
+      total: 45,
+      page: 1,
+      pageSize: 20,
+      previous: null,
+      next: 2,
+    });
+
+    const mid = await api.comments.getAll({ page: 2, pageSize: 20 });
+    expect(mid).toMatchObject({ previous: 1, next: 3 });
+
+    const last = await api.comments.getAll({ page: 3, pageSize: 20 });
+    expect(last.data).toHaveLength(5);
+    expect(last).toMatchObject({ previous: 2, next: null });
   });
 });
 
@@ -438,7 +465,14 @@ describe("defineMockApi: pagination", () => {
 
   it("treats an empty resource as a single empty page", async () => {
     const api = defineMockApi({ none: { type: "products-mock", size: 0, pagination: true } });
-    expect(await api.none.getAll()).toEqual({ data: [], total: 0, page: 1, pageSize: 20 });
+    expect(await api.none.getAll()).toEqual({
+      data: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+      previous: null,
+      next: null,
+    });
     await expectCode(() => api.none.getAll({ page: 2 }), "INVALID_PAGINATION", /last page is 1/);
   });
 
