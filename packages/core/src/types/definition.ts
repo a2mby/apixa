@@ -1,4 +1,6 @@
 import type { BuiltinHeaders, HeadersInitLike, HttpMethod } from "./http.js";
+import type { Middleware } from "./middleware.js";
+import type { RetryConfig } from "./retry.js";
 import type { Transport } from "./transport.js";
 
 /**
@@ -11,6 +13,8 @@ export interface OperationDefinition {
   path?: string;
   headers?: HeadersInitLike;
   timeout?: number;
+  /** Opt-in retry override for this operation (`false` disables inherited retry). */
+  retry?: RetryConfig | false;
   /**
    * Whether the operation sends a JSON body. Builtin `create` / `update` default to true.
    * Set explicitly for custom body operations.
@@ -24,20 +28,30 @@ export interface ResourceDefinition {
   operations?: Record<string, OperationDefinition>;
   headers?: HeadersInitLike;
   timeout?: number;
+  /** Opt-in retry override for this resource (`false` disables inherited retry). */
+  retry?: RetryConfig | false;
 }
 
-export type ReservedApiConfigKey = "baseURL" | "headers" | "transport" | "timeout";
+export type ReservedApiConfigKey =
+  "baseURL" | "headers" | "transport" | "timeout" | "retry" | "middleware";
 
 export interface ApiRootConfig {
   baseURL: string;
   headers?: BuiltinHeaders | HeadersInitLike;
   transport?: Transport;
   timeout?: number;
+  /** Opt-in retries. Omitted / `false` means no retries. */
+  retry?: RetryConfig | false;
+  /**
+   * Ordered interceptors. Each runs once per logical call and wraps the full retry loop.
+   * Mutate `ctx.request` (e.g. headers) before `next()`.
+   */
+  middleware?: Middleware[];
 }
 
 /**
  * Developer state for `defineApi<T>()`: **resources only**.
- * Root builtins (`baseURL`, `headers`, `transport`, `timeout`) come from Core on the runtime config.
+ * Root builtins (`baseURL`, `headers`, `transport`, `timeout`, `retry`, `middleware`) come from Core on the runtime config.
  */
 export type ApiState = Record<string, ResourceState | unknown>;
 
@@ -61,6 +75,7 @@ export type ResourceState = {
   path: string;
   headers?: BuiltinHeaders | HeadersInitLike;
   timeout?: number;
+  retry?: RetryConfig | false;
   /** Entity for getAll / getByID and create/update response typing. */
   entity?: unknown;
   operations?: Record<string, OperationState>;
@@ -71,11 +86,14 @@ export interface ResolvedApiConfig {
   headers?: HeadersInitLike;
   transport: Transport;
   timeout?: number;
+  retry?: RetryConfig | false;
+  middleware?: Middleware[];
 }
 
 export interface ResolvedResourceConfig {
   headers?: HeadersInitLike;
   timeout?: number;
+  retry?: RetryConfig | false;
 }
 
 export interface ResolvedOperation {
@@ -85,4 +103,5 @@ export interface ResolvedOperation {
   hasBody: boolean;
   headers?: HeadersInitLike;
   timeout?: number;
+  retry?: RetryConfig | false;
 }

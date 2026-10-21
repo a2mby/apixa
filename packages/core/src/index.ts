@@ -42,4 +42,9 @@ export type {
   ResourceClient,
   ResourceMockConfigInput,
   MockDatasetIds,
+  RetryConfig,
+  ResolvedRetryConfig,
+  Middleware,
+  MiddlewareContext,
+  MiddlewareNext,
 } from "./types/index.js";

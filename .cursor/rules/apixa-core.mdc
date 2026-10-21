@@ -8,7 +8,7 @@ alwaysApply: true
 ## Before coding
 
 1. Read `docs/context.md` (principles). Do not recap it in chat.
-2. Read the **active** milestone under `versions/` (today: `versions/v0.2.0/`; see `versions/README.md`).
+2. Read the **active** milestone under `versions/` (see `versions/README.md`; none open after v0.6.0).
 3. Implement against that folder’s `scope.md`, `implementation-plan.md`, and `acceptance-criteria.md`.
 
 ## Structure (do not invent a different layout)

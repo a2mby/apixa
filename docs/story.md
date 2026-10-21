@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-10-21 — Land v0.6.0 Core request reliability (#39)
+
+Shipped abort/`AbortSignal` + timeout product surface (`AbortError` / `TimeoutError`), opt-in `retry` (safe `GET`/`HEAD` defaults, exponential backoff), and thin ordered `middleware` wrapping the retry loop. Selective mock transport honors `AbortSignal`; Next `lib/api.ts` demos the config. Core-only; schema hooks and live pagination conventions remain planned.
+
+## 2026-10-21 — Start v0.6.0 Core request reliability
+
+Opened [`versions/v0.6.0/`](../versions/v0.6.0/) for first-class abort/`AbortSignal`, documented timeouts, configurable retries, and thin middleware. Core-only; no client/server packages, schema library, TanStack package, or live pagination conventions. Contract and pointers only — no reliability implementation in this kickoff.
+
 ## 2026-10-21 — Ignore Next local scaffolding in git (#36)
 
 Git keeps only the Next demo API surface (`README`, `app/page.tsx`, `lib/api.ts`, `lib/comments.ts`, `lib/mock-api.ts`). Local scaffolding (`package.json`, `tsconfig.json`, layout/components/query client, etc.) stays on disk for running the app but is gitignored.

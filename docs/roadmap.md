@@ -40,15 +40,22 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Remove FastAPI `backend/` and backend scripts
 - No website; future online catalog documented as planned only
 
-## Next: Reliability and developer experience (approx. v0.6.0)
+## Completed: v0.6.0 — Core request reliability
+
+**Spec:** [versions/v0.6.0/](../versions/v0.6.0/)
 
 - Cancellation and `AbortSignal` as a first-class, documented surface
-- Timeouts and configurable retries
-- Middleware / interceptors as a stable public API
-- Optional schema validation hooks (without baking in a schema library)
-- Pagination, filtering, sorting, and search conventions
+- Documented timeouts (call / operation / resource / api)
+- Configurable opt-in retries (safe defaults for idempotent methods)
+- Thin middleware / interceptors as a stable public API
+- Core only — no client/server packages, schema library, or TanStack package
 
-## Later: Environment and integrations (approx. v0.6.0+)
+## Later: Developer experience follow-ups
+
+- Optional schema validation hooks (without baking in a schema library)
+- Pagination, filtering, sorting, and search conventions (live API)
+
+## Later: Environment and integrations
 
 - Browser and server packages
 - Secure server-only configuration (secrets must not leak to browser bundles)

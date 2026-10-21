@@ -10,9 +10,16 @@ import { applyPeerMockBridge, hasUnhandledMockKeys } from "./peer-mocking.js";
 import { applyDefineApiProcessors } from "./processors.js";
 import { createResourceClient } from "./resource-client.js";
 
-const RESERVED_KEYS = new Set(["baseURL", "headers", "transport", "timeout"]);
+const RESERVED_KEYS = new Set([
+  "baseURL",
+  "headers",
+  "transport",
+  "timeout",
+  "retry",
+  "middleware",
+]);
 
-const RESOURCE_HTTP_KEYS = new Set(["path", "operations", "headers", "timeout"]);
+const RESOURCE_HTTP_KEYS = new Set(["path", "operations", "headers", "timeout", "retry"]);
 
 function toHttpResource(value: Record<string, unknown>): ResourceDefinition {
   const resource: ResourceDefinition = {
@@ -26,6 +33,9 @@ function toHttpResource(value: Record<string, unknown>): ResourceDefinition {
   }
   if (value.timeout !== undefined) {
     resource.timeout = value.timeout as number;
+  }
+  if (value.retry !== undefined) {
+    resource.retry = value.retry as ResourceDefinition["retry"];
   }
   // Drop integration-only keys (mock, mockConfig, …) — processors / peer bridge strip them first.
   void RESOURCE_HTTP_KEYS;
@@ -52,6 +62,8 @@ function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient
     headers: config.headers,
     transport: config.transport ?? createFetchTransport(),
     timeout: config.timeout,
+    retry: config.retry,
+    middleware: config.middleware,
   };
 
   const client = {} as ApiClient<T>;

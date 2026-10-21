@@ -10,6 +10,7 @@ export function createResourceClient(api: ResolvedApiConfig, resource: ResourceD
   const resourceConfig: ResolvedResourceConfig = {
     headers: resource.headers,
     timeout: resource.timeout,
+    retry: resource.retry,
   };
 
   const operations = expandOperations(resource.operations);
