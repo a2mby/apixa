@@ -11,8 +11,17 @@ coverage
 .vite
 /.vscode
 
-# examples
+# examples — ignore playgrounds by default; track only the Next demo API surface
 examples/**
+!examples/next/
+!examples/next/.gitignore
+!examples/next/README.md
+!examples/next/app/
+!examples/next/app/page.tsx
+!examples/next/lib/
+!examples/next/lib/api.ts
+!examples/next/lib/comments.ts
+!examples/next/lib/mock-api.ts
 
 # dataset build cache (re-fetched by scripts/datasets/build-collection.mjs)
 scripts/datasets/.cache/
