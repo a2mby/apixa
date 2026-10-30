@@ -8,7 +8,7 @@ import type { OperationExtensions } from "./extensions.js";
 import type { PathParams, QueryParams } from "./http.js";
 import type { ApiResponse, RequestOptions } from "./transport.js";
 
-export type BuiltinOpName = "getAll" | "getByID" | "create" | "update" | "delete";
+export type BuiltinOpName = "getAll" | "getById" | "create" | "update" | "delete";
 
 type EntityOf<R> = R extends { entity: infer E } ? E : unknown;
 
@@ -40,13 +40,13 @@ type UpdateOf<R> = R extends { entity: infer E } ? Partial<E> : unknown;
 
 type EntityBuiltinOps<R> = {
   getAll: { path: ""; response: ListOf<R>; query: QueryOf<R> };
-  getByID: { path: "/:id"; response: EntityOf<R> };
+  getById: { path: "/:id"; response: EntityOf<R> };
   create: { path: ""; body: CreateOf<R>; response: EntityOf<R> };
   update: { path: "/:id"; body: UpdateOf<R>; response: EntityOf<R> };
   delete: { path: "/:id"; response: void };
 };
 
-type DefaultPath<Name extends string> = Name extends "getByID" | "update" | "delete" ? "/:id" : "";
+type DefaultPath<Name extends string> = Name extends "getById" | "update" | "delete" ? "/:id" : "";
 
 export type EffectivePath<Name extends string, Op> = Op extends { path: infer P }
   ? P extends string
@@ -206,11 +206,11 @@ export type EffectiveOps<R> = {
 
 /**
  * Resource client with **required** builtin method keys so IDEs complete
- * `api.users.getAll` / `getByID` / … without ReturnType hacks.
+ * `api.users.getAll` / `getById` / … without ReturnType hacks.
  */
 export type ResourceClient<R extends { path: string } = { path: string }> = {
   getAll: OperationFn<R, "getAll", EffectiveOpDef<"getAll", R>>;
-  getByID: OperationFn<R, "getByID", EffectiveOpDef<"getByID", R>>;
+  getById: OperationFn<R, "getById", EffectiveOpDef<"getById", R>>;
   create: OperationFn<R, "create", EffectiveOpDef<"create", R>>;
   update: OperationFn<R, "update", EffectiveOpDef<"update", R>>;
   delete: OperationFn<R, "delete", EffectiveOpDef<"delete", R>>;

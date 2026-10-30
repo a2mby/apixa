@@ -13,7 +13,7 @@ defineApi({ baseURL, headers, resources })
    typed API client
         │
         ├── resource (users, posts, …)
-        │       ├── generated operations (getAll, getByID, create, …)
+        │       ├── generated operations (getAll, getById, create, …)
         │       └── custom operations (explicit endpoints)
         │
         ▼
@@ -54,7 +54,7 @@ See also:
 
 ## Request flow
 
-1. Caller invokes a resource operation (for example `api.users.getByID("123")`).
+1. Caller invokes a resource operation (for example `api.users.getById("123")`).
 2. Core builds path, query, headers, and body from the definition and call arguments.
 3. Optional `middleware` runs once around the logical call (including retries).
 4. Core calls `transport.request(...)` (with opt-in retry on safe failures).

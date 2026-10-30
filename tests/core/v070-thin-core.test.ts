@@ -29,7 +29,7 @@ describe("v0.7.0 thin core", () => {
       users: { path: "/orgs/:orgId/users" },
     });
 
-    await api.users.getByID({ orgId: "acme", id: "1" });
+    await api.users.getById({ orgId: "acme", id: "1" });
     expect(seen[0]).toBe("https://api.example.com/orgs/acme/users/1");
   });
 

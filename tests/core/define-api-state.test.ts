@@ -27,7 +27,7 @@ describe("defineApi<T> entity-only state typing", () => {
 
     const users = await api.users.getAll();
     expectTypeOf(users).toEqualTypeOf<User[]>();
-    const user = await api.users.getByID("1");
+    const user = await api.users.getById("1");
     expectTypeOf(user).toEqualTypeOf<User>();
     expect(users[0]?.name).toBe("Ada");
   });
@@ -43,7 +43,7 @@ describe("defineApi<T> entity-only state typing", () => {
       users: { path: "/users" },
     });
 
-    expectTypeOf(await api.users.getByID("1")).toEqualTypeOf<User>();
+    expectTypeOf(await api.users.getById("1")).toEqualTypeOf<User>();
     expect(api.users).toHaveProperty("create");
   });
 

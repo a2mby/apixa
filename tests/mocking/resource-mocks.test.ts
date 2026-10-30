@@ -110,7 +110,7 @@ describe("resource-level mocking (processor)", () => {
     expect(updated).toMatchObject({ name: "Alan Turing" });
 
     await api.users.delete(id);
-    await expect(api.users.getByID(id)).rejects.toThrow();
+    await expect(api.users.getById(id)).rejects.toThrow();
   });
 
   it("applies slice then pagination envelope", async () => {

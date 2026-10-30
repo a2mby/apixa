@@ -30,12 +30,12 @@ describe("resource client TypeScript surface", () => {
     });
 
     expectTypeOf(api.users.getAll).toBeFunction();
-    expectTypeOf(api.users.getByID).toBeFunction();
+    expectTypeOf(api.users.getById).toBeFunction();
     expectTypeOf(api.users.create).toBeFunction();
     expectTypeOf(api.users.update).toBeFunction();
     expectTypeOf(api.users.delete).toBeFunction();
 
-    expectTypeOf(api.users.getByID).parameter(0).toEqualTypeOf<string | number>();
+    expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<string | number>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<unknown>();
     expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<string | number>();
     expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<unknown>();
@@ -53,7 +53,7 @@ describe("resource client TypeScript surface", () => {
     });
 
     expectTypeOf(api.users).toHaveProperty("getAll");
-    expectTypeOf(api.users).toHaveProperty("getByID");
+    expectTypeOf(api.users).toHaveProperty("getById");
     expectTypeOf(api.users).toHaveProperty("create");
     expectTypeOf(api.users).toHaveProperty("update");
     expectTypeOf(api.users).toHaveProperty("delete");
@@ -76,7 +76,7 @@ describe("resource client TypeScript surface", () => {
     });
 
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
-    expectTypeOf(api.users.getByID).toBeFunction();
+    expectTypeOf(api.users.getById).toBeFunction();
     expectTypeOf(api.users.search).toBeFunction();
     expectTypeOf(api.users.search)
       .parameter(0)

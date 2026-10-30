@@ -79,7 +79,7 @@ export type ResourceState = {
   headers?: HeadersInitLike;
   timeout?: number;
   retry?: RetryConfig | false;
-  /** Entity for getByID and create/update response typing. */
+  /** Entity for getById and create/update response typing. */
   entity?: unknown;
   /** Override getAll response type (default `Entity[]`). */
   list?: unknown;

@@ -36,7 +36,7 @@ await api.users.getAll(); // Promise<User[]>
 await api.users.create({ name: "Ada", email: "ada@example.com" }); // Omit<User,"id">
 ```
 
-Default-first CRUD on path resources: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). Optional runtime `operations` for overrides and custom endpoints. Typing: resource-only `defineApi<T>()(config)` with `path` + `entity`; create/update derived — **not** `type()`.
+Default-first CRUD on path resources: `getAll`, `getById`, `create`, `update`, `delete` (positional args). Optional runtime `operations` for overrides and custom endpoints. Typing: resource-only `defineApi<T>()(config)` with `path` + `entity`; create/update derived — **not** `type()`.
 
 ---
 

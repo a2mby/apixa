@@ -14,7 +14,7 @@ export function resolveOperation(
 
   if (!method) {
     throw new Error(
-      `Operation "${name}" is missing method. Convention names (getAll, getByID, create, update, delete) supply a default; custom operations must set method.`,
+      `Operation "${name}" is missing method. Convention names (getAll, getById, create, update, delete) supply a default; custom operations must set method.`,
     );
   }
 
