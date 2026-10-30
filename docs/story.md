@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-10-30 — Mock `slice`, full users-mock, drop users-sample; land v0.7.0 (#41)
+
+Renamed mock `size` → `slice` (`number` | `{ start, end }`) with `InvalidSliceError` under `MockingErrors`; Core `users-mock` now seeds all 100 rows; removed `users-sample` / `@apixa/mocking/data/users`. Also shipped v0.7.0 thin Core + plugin seams (path-param concat, `full` / re-callable middleware, extension interfaces, structured error codes).
+
+## 2026-10-21 — Start v0.7.0 Thin Core + plugin seams
+
+Opened [`versions/v0.7.0/`](../versions/v0.7.0/) to make Core thin and stable: types cleanup, body/query runtime, RequestOptions (`full` / `responseType` / `meta`), breaking middleware re-call model, retry hooks, extension seams (mock keys move to `@apixa/mocking` augmentation), and structured error codes. Auth/cache/validation/pagination helpers stay out. Contract and pointers only — no implementation in this kickoff.
+
 ## 2026-10-21 — Land v0.6.0 Core request reliability (#39)
 
 Shipped abort/`AbortSignal` + timeout product surface (`AbortError` / `TimeoutError`), opt-in `retry` (safe `GET`/`HEAD` defaults, exponential backoff), and thin ordered `middleware` wrapping the retry loop. Selective mock transport honors `AbortSignal`; Next `lib/api.ts` demos the config. Core-only; schema hooks and live pagination conventions remain planned.

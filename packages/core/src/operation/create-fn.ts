@@ -16,14 +16,19 @@ export function createOperationFn(
 
   return (...args: unknown[]) => {
     const parsed = parseOperationArgs(pathParamNames, operation.hasBody, args);
+    const options = parsed.options;
 
     return executeRequest(api, resource, operation, {
       params: parsed.params,
-      query: parsed.options?.query,
+      query: options?.query,
       body: parsed.body,
-      headers: parsed.options?.headers,
-      signal: parsed.options?.signal,
-      timeout: parsed.options?.timeout,
+      headers: options?.headers,
+      signal: options?.signal,
+      timeout: options?.timeout,
+      retry: options?.retry,
+      responseType: options?.responseType,
+      meta: options?.meta,
+      full: options?.full,
     });
   };
 }

@@ -10,14 +10,18 @@ const RESERVED_KEYS = new Set([
   "timeout",
   "retry",
   "middleware",
+  "queryArrayFormat",
+  "querySerializer",
 ]);
+
+export type PeerMockSlice = number | { start: number; end: number };
 
 export type PeerResourceMockSpec = {
   name: string;
   path: string;
   mockConfig: {
     type: string;
-    size?: number;
+    slice?: PeerMockSlice;
     pagination?: boolean;
   };
 };
@@ -27,12 +31,28 @@ type ResourceBag = {
   mock?: boolean;
   mockConfig?: {
     type?: string;
-    size?: number;
+    slice?: PeerMockSlice;
     pagination?: boolean;
     [key: string]: unknown;
   };
   [key: string]: unknown;
 };
+
+function pickSlice(value: unknown): PeerMockSlice | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value === "number") return value;
+  if (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "start" in value &&
+    "end" in value
+  ) {
+    return value as { start: number; end: number };
+  }
+  // Let `@apixa/mocking` reject invalid shapes when the store is built.
+  return value as PeerMockSlice;
+}
 
 function isResourceBag(value: unknown): value is ResourceBag {
   return Boolean(value && typeof value === "object" && "path" in (value as object));
@@ -69,7 +89,7 @@ export function extractAndStripMockSpecs(config: DefineApiConfigBag): {
       if (!mockConfig || typeof mockConfig.type !== "string" || !mockConfig.type) {
         throw new Error(
           `Resource "${key}" has mock: true but mockConfig.type is missing. ` +
-            `Set mockConfig: { type: "<dataset-id>" } (e.g. "users-sample").`,
+            `Set mockConfig: { type: "<dataset-id>" } (e.g. "users-mock").`,
         );
       }
       if (typeof rest.path !== "string" || !rest.path) {
@@ -80,7 +100,7 @@ export function extractAndStripMockSpecs(config: DefineApiConfigBag): {
         path: rest.path,
         mockConfig: {
           type: mockConfig.type,
-          size: typeof mockConfig.size === "number" ? mockConfig.size : undefined,
+          slice: pickSlice(mockConfig.slice),
           pagination: mockConfig.pagination === true,
         },
       });

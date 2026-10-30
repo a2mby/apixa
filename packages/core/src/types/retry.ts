@@ -1,4 +1,13 @@
 import type { HttpMethod } from "./http.js";
+import type { ApiResponse, RequestConfig } from "./transport.js";
+
+export type RetryHookContext = {
+  request: RequestConfig;
+  response?: ApiResponse<unknown>;
+  error?: unknown;
+  attempt: number;
+  method: HttpMethod;
+};
 
 /**
  * Opt-in retry policy. When omitted or `false`, Core does not retry.
@@ -18,6 +27,12 @@ export type RetryConfig = {
   maxDelayMs?: number;
   /** Add random jitter to delay. Default: `true`. */
   jitter?: boolean;
+  /** Honor `Retry-After` on HTTP responses when present. Default: `true`. */
+  respectRetryAfter?: boolean;
+  /** Override default retry decision. */
+  shouldRetry?: (ctx: RetryHookContext) => boolean;
+  /** Called before waiting for the next attempt. */
+  onRetry?: (ctx: RetryHookContext) => void | Promise<void>;
 };
 
 /** Resolved retry policy with defaults applied. */
@@ -28,4 +43,7 @@ export type ResolvedRetryConfig = {
   baseDelayMs: number;
   maxDelayMs: number;
   jitter: boolean;
+  respectRetryAfter: boolean;
+  shouldRetry?: (ctx: RetryHookContext) => boolean;
+  onRetry?: (ctx: RetryHookContext) => void | Promise<void>;
 };

@@ -11,7 +11,7 @@ import {
   enableResourceMocks,
   registerDatasetPreset,
 } from "@apixa/mocking";
-import { dataset as usersSample } from "@apixa/mocking/data/users";
+import { dataset as usersMock } from "@apixa/mocking/data/users-mock";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 function createRecordingTransport(hits: TransportRequest[]): Transport {
@@ -30,7 +30,7 @@ describe("resource-level mocking (processor)", () => {
   beforeEach(() => {
     clearDefineApiProcessors();
     clearDatasetPresets();
-    registerDatasetPreset("users-sample", usersSample);
+    registerDatasetPreset("users-mock", usersMock);
     enableResourceMocks();
   });
 
@@ -48,13 +48,13 @@ describe("resource-level mocking (processor)", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-sample" },
+        mockConfig: { type: "users-mock" },
       },
     });
 
     const users = await api.users.getAll();
     expect(hits).toHaveLength(0);
-    expect(users).toEqual(usersSample.records);
+    expect(users).toEqual(usersMock.records);
   });
 
   it("forwards non-mocked resources to the real transport", async () => {
@@ -77,7 +77,7 @@ describe("resource-level mocking (processor)", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-sample" },
+        mockConfig: { type: "users-mock" },
       },
       payments: {
         path: "/payments",
@@ -97,7 +97,7 @@ describe("resource-level mocking (processor)", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-sample" },
+        mockConfig: { type: "users-mock" },
       },
     });
 
@@ -113,13 +113,13 @@ describe("resource-level mocking (processor)", () => {
     await expect(api.users.getByID(id)).rejects.toThrow();
   });
 
-  it("applies size then pagination envelope", async () => {
+  it("applies slice then pagination envelope", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-sample", size: 2, pagination: true },
+        mockConfig: { type: "users-mock", slice: 2, pagination: true },
       },
     });
 

@@ -9,10 +9,14 @@
  * Node filesystem loaders live at `@apixa/mocking/node`; typed data at `@apixa/mocking/data`.
  */
 
+import "./core-augmentation.js";
+// applies ResourceExtensions mock / mockConfig merge
+
 export { defineMockApi } from "./mock-api.js";
 export type { MockApi, MockApiConfig, MockResourceConfig } from "./mock-api.js";
 export type { MockResource, Page, PageParams, ResourceInput } from "./resource.js";
-export { MockApiError, type MockApiErrorCode } from "./errors.js";
+export { MockingErrors, InvalidSliceError, MockApiError, type MockApiErrorCode } from "./errors.js";
+export type { MockSlice } from "./slice.js";
 export type { DatasetId } from "./catalog.js";
 
 export type {

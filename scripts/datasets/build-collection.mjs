@@ -134,45 +134,6 @@ async function main() {
   await ensureDir(CACHE);
   await ensureDir(DATASETS);
 
-  // --- Preserve / relocate users-sample ---
-  const legacySample = join(DATASETS, "users-sample");
-  try {
-    const meta = JSON.parse(await readFile(join(legacySample, "meta.json"), "utf8"));
-    const data = JSON.parse(await readFile(join(legacySample, "data.json"), "utf8"));
-    await writeDataset({
-      domain: "users",
-      id: "users-sample",
-      title: meta.title ?? "Users sample",
-      description: meta.description ?? "Small directory of example users for Apixa demos.",
-      license: meta.license ?? "MIT",
-      version: meta.version ?? "1.0.0",
-      sourceUrl: "https://github.com/a2mby/apixa",
-      attribution: "Apixa maintainers (original sample).",
-      origin: "generated",
-      resourcePath: "/users",
-      records: data,
-      notes: "Original Apixa sample; relocated under users/.",
-    });
-    await rm(legacySample, { recursive: true, force: true });
-  } catch {
-    await writeDataset({
-      domain: "users",
-      id: "users-sample",
-      title: "Users sample",
-      description: "Small directory of example users for Apixa demos.",
-      license: "MIT",
-      version: "1.0.0",
-      sourceUrl: "https://github.com/a2mby/apixa",
-      attribution: "Apixa maintainers (original sample).",
-      origin: "generated",
-      resourcePath: "/users",
-      records: [
-        { id: "1", name: "Ada Lovelace", email: "ada@example.com" },
-        { id: "2", name: "Grace Hopper", email: "grace@example.com" },
-      ],
-    });
-  }
-
   // --- 4–10 parseapi/lists (CC0-1.0) ---
   const parseapiBase = "https://raw.githubusercontent.com/parseapi/lists/main";
   const parseapiLicense = "CC0-1.0";

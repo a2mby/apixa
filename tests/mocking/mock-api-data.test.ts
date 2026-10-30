@@ -6,7 +6,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import * as mocking from "@apixa/mocking";
 import * as mockingNode from "@apixa/mocking/node";
 import * as data from "@apixa/mocking/data";
-import type { Comment, Company, MockUser, Order, Post, Product, User } from "@apixa/mocking/data";
+import type { Comment, Company, Order, Post, Product, User } from "@apixa/mocking/data";
 import { catalog, listDatasetIds } from "../../packages/mocking/src/catalog";
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
@@ -63,14 +63,13 @@ describe("dataset catalog", () => {
 
 describe("@apixa/mocking/data", () => {
   it("exports typed records that match the root datasets", async () => {
-    expect(data.users).toEqual(await readJson("users/users-sample/data.json"));
-    expect(data.mockUsers).toEqual(await readJson("users/users-mock/data.json"));
+    expect(data.users).toEqual(await readJson("users/users-mock/data.json"));
     expect(data.products).toEqual(await readJson("products/products-mock/data.json"));
     expect(data.companies).toEqual(await readJson("companies/companies-mock/data.json"));
     expect(data.orders).toEqual(await readJson("orders/orders-mock/data.json"));
     expect(data.posts).toEqual(await readJson("social/posts-mock/data.json"));
     expect(data.comments).toEqual(await readJson("comments/comments-mock/data.json"));
-    expect(data.mockUsers).toHaveLength(100); // the full set, not the 3-row legacy preset
+    expect(data.users).toHaveLength(100);
   });
 
   it("exposes the exports it documents, and nothing from the large datasets", () => {
@@ -80,7 +79,6 @@ describe("@apixa/mocking/data", () => {
         "commentsDataset",
         "companies",
         "companiesDataset",
-        "mockUsers",
         "orders",
         "ordersDataset",
         "posts",
@@ -94,7 +92,6 @@ describe("@apixa/mocking/data", () => {
 
   it("types records as read-only entities", () => {
     expectTypeOf(data.users).toEqualTypeOf<readonly User[]>();
-    expectTypeOf(data.mockUsers).toEqualTypeOf<readonly MockUser[]>();
     expectTypeOf(data.products).toEqualTypeOf<readonly Product[]>();
     expectTypeOf(data.companies).toEqualTypeOf<readonly Company[]>();
     expectTypeOf(data.orders).toEqualTypeOf<readonly Order[]>();
@@ -131,14 +128,7 @@ describe("package surface", () => {
       scripts: { build: string };
     };
     expect(Object.keys(pkg.exports)).toEqual(
-      expect.arrayContaining([
-        ".",
-        "./register",
-        "./node",
-        "./data",
-        "./data/users",
-        "./data/users-mock",
-      ]),
+      expect.arrayContaining([".", "./register", "./node", "./data", "./data/users-mock"]),
     );
     for (const [subpath, target] of Object.entries(pkg.exports)) {
       const source = target.import.replace("./dist/", "src/").replace(/\.js$/, ".ts");

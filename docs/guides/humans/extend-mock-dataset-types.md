@@ -2,7 +2,7 @@
 
 ## What you get
 
-When you use Core with `@apixa/mocking` and set `mock: true`, `mockConfig.type` picks which local dataset fills that resource. Built-in ids (like `"users-sample"`) show up in autocomplete after you import `@apixa/mocking/data`. You can add your own id the same way the package does.
+When you use Core with `@apixa/mocking` and set `mock: true`, `mockConfig.type` picks which local dataset fills that resource. Built-in ids (like `"users-mock"`) show up in autocomplete after you import `@apixa/mocking/data`. You can add your own id the same way the package does.
 
 ## How it works (simple)
 
@@ -21,7 +21,7 @@ Core never imports `@apixa/mocking`. Types are taught from the outside on purpos
 4. Add the matching `declare module "@apixa/core" { interface MockDatasetIds { "your-id": true } }`.
 5. Import that module from the file that calls `defineApi`.
 
-Copy-paste shape and notes: [`packages/mocking/README.md`](../../../packages/mocking/README.md) → **Customizing `mockConfig.type` suggestions**. Built-in example: [`packages/mocking/src/data/users.ts`](../../../packages/mocking/src/data/users.ts).
+Copy-paste shape and notes: [`packages/mocking/README.md`](../../../packages/mocking/README.md) → **Customizing `mockConfig.type` suggestions**. Built-in example: [`packages/mocking/src/data/users-mock.ts`](../../../packages/mocking/src/data/users-mock.ts).
 
 ## Things that surprise people
 

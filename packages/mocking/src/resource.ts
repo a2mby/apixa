@@ -1,5 +1,6 @@
 import { catalog, type DatasetId } from "./catalog.js";
 import { MockApiError } from "./errors.js";
+import { applySlice, type MockSlice } from "./slice.js";
 
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
@@ -54,7 +55,7 @@ export interface MockResource<
 type Row = Record<string, unknown>;
 type State = { rows: Row[]; generateId?: () => Id };
 
-export type ResourceOptions = { size?: number; pagination?: boolean };
+export type ResourceOptions = { slice?: MockSlice; pagination?: boolean };
 
 /** One resource's engine. Seeded lazily from the dataset on first use; state is private to this call. */
 export function createResource(name: string, type: DatasetId, options: ResourceOptions) {
@@ -68,7 +69,7 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
   async function seed(): Promise<State> {
     const all = (await load()).default;
     // The imported module is shared and read-only: always copy before storing.
-    const rows = (options.size === undefined ? all : all.slice(0, options.size)).map((r) =>
+    const rows = applySlice(all, options.slice, `Mock resource "${name}"`).map((r) =>
       structuredClone(r),
     );
 

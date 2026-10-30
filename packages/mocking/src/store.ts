@@ -1,5 +1,6 @@
 import type { TransportRequest } from "@apixa/core";
 import { mockResponse } from "./response.js";
+import { applySlice, type MockSlice } from "./slice.js";
 import type { Dataset } from "./types.js";
 
 export type MockStore = {
@@ -7,7 +8,6 @@ export type MockStore = {
   idField: string;
   records: Record<string, unknown>[];
   nextId: number;
-  size?: number;
   pagination?: boolean;
 };
 
@@ -47,16 +47,17 @@ export function maxNumericId(records: Record<string, unknown>[], idField: string
 
 export function buildStore(
   dataset: Dataset,
-  options: { path?: string; size?: number; pagination?: boolean } = {},
+  options: { path?: string; slice?: MockSlice; pagination?: boolean } = {},
 ): MockStore {
   const idField = dataset.meta.resource.idField ?? "id";
-  const records = cloneRecords(dataset.records);
+  const label = `Mock store "${normalizePath(options.path ?? dataset.meta.resource.path)}"`;
+  // Seed limit (same as defineMockApi): apply once; creates may grow past the window.
+  const records = applySlice(cloneRecords(dataset.records), options.slice, label);
   return {
     path: normalizePath(options.path ?? dataset.meta.resource.path),
     idField,
     records,
     nextId: maxNumericId(records, idField) + 1,
-    size: options.size,
     pagination: options.pagination,
   };
 }
@@ -82,13 +83,6 @@ export function findStore(
   return null;
 }
 
-function visibleRecords(store: MockStore): Record<string, unknown>[] {
-  if (typeof store.size === "number" && store.size >= 0) {
-    return store.records.slice(0, store.size);
-  }
-  return store.records;
-}
-
 function parsePageParams(url: URL): { page: number; pageSize: number } {
   const pageRaw = Number(url.searchParams.get("page") ?? "1");
   const pageSizeRaw = Number(url.searchParams.get("pageSize") ?? "20");
@@ -108,7 +102,7 @@ export function handleStoreRequest(store: MockStore, input: TransportRequest, ur
   const method = input.method.toUpperCase();
 
   if (method === "GET" && itemId === undefined) {
-    const all = visibleRecords(store);
+    const all = store.records;
     if (store.pagination) {
       const { page, pageSize } = parsePageParams(url);
       const start = (page - 1) * pageSize;

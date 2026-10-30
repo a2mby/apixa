@@ -6,7 +6,7 @@ describe("examples/next lib/api reliability", () => {
   it("loads mocked users through timeout + retry + middleware config", async () => {
     const users = await api.users.getAll();
     expect(Array.isArray(users)).toBe(true);
-    expect(users.length).toBeGreaterThan(0);
+    expect((users as { length: number }).length).toBeGreaterThan(0);
   });
 
   it("honors AbortSignal on getAll", async () => {

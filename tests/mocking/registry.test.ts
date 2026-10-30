@@ -8,8 +8,8 @@ const datasetsRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)), "
 describe("dataset registry", () => {
   it("lists local datasets without network", async () => {
     const list = await listDatasets({ basePath: datasetsRoot });
-    expect(list.some((d) => d.id === "users-sample")).toBe(true);
-    const users = list.find((d) => d.id === "users-sample")!;
+    expect(list.some((d) => d.id === "users-mock")).toBe(true);
+    const users = list.find((d) => d.id === "users-mock")!;
     expect(users.title).toBeTruthy();
     expect(users.license).toBeTruthy();
     expect(users.version).toBeTruthy();
@@ -17,8 +17,8 @@ describe("dataset registry", () => {
   });
 
   it("loads a dataset by id with meta and records", async () => {
-    const dataset = await loadDataset("users-sample", { basePath: datasetsRoot });
-    expect(dataset.meta.id).toBe("users-sample");
+    const dataset = await loadDataset("users-mock", { basePath: datasetsRoot });
+    expect(dataset.meta.id).toBe("users-mock");
     expect(dataset.meta.title).toBeTruthy();
     expect(dataset.meta.license).toBe("MIT");
     expect(dataset.meta.version).toBeTruthy();

@@ -14,7 +14,7 @@ Add a `mockConfig.type` id that autocompletes and resolves at runtime, without C
 ## Checklist
 
 1. Read `packages/core/src/types/inference.ts` (`MockDatasetIds`, `ResourceMockConfigInput`).
-2. Mirror `packages/mocking/src/data/users.ts`:
+2. Mirror `packages/mocking/src/data/users-mock.ts`:
    - `Dataset` + `registerDatasetPreset("…", dataset)`
    - `declare module "@apixa/core" { interface MockDatasetIds { "…": true } }`
 3. If the preset is a package builtin: wire `ensureBuiltinPresets` in `packages/mocking/src/presets/builtins.ts` and export/register from `packages/mocking/src/data/` as needed.

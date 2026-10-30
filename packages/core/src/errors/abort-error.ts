@@ -5,7 +5,7 @@ export class AbortError extends ApiError {
     message = "Request was aborted",
     options?: ConstructorParameters<typeof ApiError>[1],
   ) {
-    super(message, { code: "ABORT_ERROR", ...options });
+    super(message, { code: "ABORT", retryable: false, ...options });
     this.name = "AbortError";
   }
 }

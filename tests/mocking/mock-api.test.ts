@@ -35,8 +35,8 @@ async function expectCode(run: () => unknown, code: MockApiErrorCode, message?: 
 describe("defineMockApi: configuration", () => {
   it("builds one resource per top-level key with no transport, path, or defineApi()", () => {
     const api = defineMockApi({
-      users: { type: "users-sample", size: 100, pagination: true },
-      products: { type: "products-mock", size: 50 },
+      users: { type: "users-mock", slice: 100, pagination: true },
+      products: { type: "products-mock", slice: 50 },
       countries: { type: "countries-csc" },
     });
     expect(Object.keys(api)).toEqual(["users", "products", "countries"]);
@@ -57,7 +57,7 @@ describe("defineMockApi: configuration", () => {
     await expectCode(
       () => defineMockApi({ a: { type: "countries" as never } }),
       "UNKNOWN_DATASET",
-      /unknown dataset "countries".*users-sample.*products-mock/,
+      /unknown dataset "countries".*users-mock.*products-mock/,
     );
     await expectCode(() => defineMockApi({ a: {} as never }), "UNKNOWN_DATASET", /missing "type"/);
     await expectCode(() => defineMockApi({ a: { type: "toString" as never } }), "UNKNOWN_DATASET");
@@ -73,41 +73,41 @@ describe("defineMockApi: configuration", () => {
   it("rejects unsupported options such as handlers, path, mock, and mockConfig", async () => {
     for (const option of ["handlers", "path", "baseURL", "mock", "mockConfig", "operations"]) {
       await expectCode(
-        () => defineMockApi({ a: { type: "users-sample", [option]: true } as never }),
+        () => defineMockApi({ a: { type: "users-mock", [option]: true } as never }),
         "INVALID_CONFIG",
-        new RegExp(`unsupported option "${option}".*type, size, pagination`),
+        new RegExp(`unsupported option "${option}".*type, slice, pagination`),
       );
     }
     // The compiler rejects them too.
     expect(() =>
       defineMockApi({
         // @ts-expect-error `handlers` is not a supported option
-        a: { type: "users-sample", handlers: {} },
+        a: { type: "users-mock", handlers: {} },
       }),
     ).toThrow(MockApiError);
   });
 
-  it("rejects invalid size and pagination values", async () => {
+  it("rejects invalid slice and pagination values", async () => {
     for (const size of [-1, 1.5, "10", NaN, Infinity, null]) {
       await expectCode(
-        () => defineMockApi({ a: { type: "users-sample", size: size as never } }),
-        "INVALID_CONFIG",
-        /size must be a non-negative integer/,
+        () => defineMockApi({ a: { type: "users-mock", slice: size as never } }),
+        "INVALID_SLICE",
+        /slice must be a non-negative integer/,
       );
     }
     for (const pagination of ["yes", 1, null]) {
       await expectCode(
-        () => defineMockApi({ a: { type: "users-sample", pagination: pagination as never } }),
+        () => defineMockApi({ a: { type: "users-mock", pagination: pagination as never } }),
         "INVALID_CONFIG",
         /pagination must be a boolean/,
       );
     }
-    await expectCode(() => defineMockApi({ a: "users-sample" as never }), "INVALID_CONFIG");
+    await expectCode(() => defineMockApi({ a: "users-mock" as never }), "INVALID_CONFIG");
   });
 
   it("infers entity, id, and return types from the dataset", () => {
     const api = defineMockApi({
-      users: { type: "users-sample", pagination: true },
+      users: { type: "users-mock", pagination: true },
       products: { type: "products-mock" },
       currencies: { type: "currencies-parseapi" },
       comments: { type: "comments-mock", pagination: true },
@@ -134,7 +134,7 @@ describe("defineMockApi: configuration", () => {
 
   it("Page exposes previous / next page numbers for query consumers", async () => {
     const api = defineMockApi({
-      comments: { type: "comments-mock", size: 45, pagination: true },
+      comments: { type: "comments-mock", slice: 45, pagination: true },
     });
     const first = await api.comments.getAll({ page: 1, pageSize: 20 });
     expectTypeOf(first).toEqualTypeOf<Page<Comment>>();
@@ -159,52 +159,59 @@ describe("defineMockApi: configuration", () => {
 describe("defineMockApi: seeding and source data", () => {
   it("seeds from the real dataset (not a trimmed sample)", async () => {
     const api = defineMockApi({
-      users: { type: "users-sample" },
-      people: { type: "users-mock" },
+      users: { type: "users-mock" },
       countries: { type: "countries-csc" },
     });
-    expect(await api.users.getAll()).toEqual(await readDataset("users/users-sample"));
-    const people = await api.people.getAll();
-    expect(people).toHaveLength(100);
-    expect(people).toEqual(await readDataset("users/users-mock"));
+    expect(await api.users.getAll()).toEqual(await readDataset("users/users-mock"));
+    expect(await api.users.getAll()).toHaveLength(100);
     expect(await api.countries.getAll()).toHaveLength(250);
   });
 
-  it("applies size to the initial records only", async () => {
+  it("applies slice to the initial records only", async () => {
     const all = await readDataset<Product>("products/products-mock");
     const api = defineMockApi({
-      few: { type: "products-mock", size: 5 },
-      none: { type: "products-mock", size: 0 },
-      huge: { type: "products-mock", size: 10_000 },
+      few: { type: "products-mock", slice: 5 },
+      none: { type: "products-mock", slice: 0 },
+      huge: { type: "products-mock", slice: 10_000 },
     });
     expect(await api.few.getAll()).toEqual(all.slice(0, 5));
     expect(await api.none.getAll()).toEqual([]);
     expect(await api.huge.getAll()).toHaveLength(100);
 
-    // size is a seed limit, not a cap: the resource can grow past it.
+    // slice is a seed limit, not a cap: the resource can grow past it.
     const created = await api.few.create({ ...all[0]!, id: undefined } as never);
     expect(created.id).toBe("6");
     expect(await api.few.getAll()).toHaveLength(6);
   });
 
   it("never mutates the source dataset or the typed presets", async () => {
-    const before = await readDataset<User>("users/users-sample");
-    const api = defineMockApi({ users: { type: "users-sample" } });
-    await api.users.create({ name: "New", email: "new@example.com" });
+    const before = await readDataset<User>("users/users-mock");
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2 } });
+    await api.users.create({
+      name: "New",
+      email: "new@example.com",
+      username: "new",
+      companyId: "1",
+    });
     await api.users.patch("1", { name: "Changed" });
-    await api.users.update("2", { name: "Replaced", email: "r@example.com" });
+    await api.users.update("2", {
+      name: "Replaced",
+      email: "r@example.com",
+      username: "r",
+      companyId: "1",
+    });
     await api.users.delete("1");
 
     expect(usersPreset).toEqual(before);
-    const fresh = defineMockApi({ users: { type: "users-sample" } });
-    expect(await fresh.users.getAll()).toEqual(before);
+    const fresh = defineMockApi({ users: { type: "users-mock", slice: 2 } });
+    expect(await fresh.users.getAll()).toEqual(before.slice(0, 2));
   });
 
   it("performs no network requests", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
-    const api = defineMockApi({ users: { type: "users-sample", pagination: true } });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2, pagination: true } });
     await api.users.getAll();
-    await api.users.create({ name: "A", email: "a@example.com" });
+    await api.users.create({ name: "A", email: "a@example.com", username: "a", companyId: "1" });
     await api.users.delete("1");
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
@@ -213,19 +220,26 @@ describe("defineMockApi: seeding and source data", () => {
 
 describe("defineMockApi: CRUD", () => {
   it("getAll / getById", async () => {
-    const api = defineMockApi({ users: { type: "users-sample" } });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2 } });
     expect(await api.users.getById("1")).toEqual({
       id: "1",
-      name: "Ada Lovelace",
-      email: "ada@example.com",
+      name: "Jeremiah Turcotte",
+      email: "jeremiah11@yahoo.com",
+      username: "user001",
+      companyId: "1",
     });
     expect(await api.users.getById(2)).toMatchObject({ id: "2" }); // numbers match string ids
     await expectCode(() => api.users.getById("999"), "NOT_FOUND", /no record with id "999"/);
   });
 
   it("repeated calls observe earlier changes", async () => {
-    const api = defineMockApi({ users: { type: "users-sample" } });
-    const created = await api.users.create({ name: "Alan", email: "alan@example.com" });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2 } });
+    const created = await api.users.create({
+      name: "Alan",
+      email: "alan@example.com",
+      username: "alan",
+      companyId: "1",
+    });
     expect(await api.users.getById(created.id)).toEqual(created);
     await api.users.patch(created.id, { name: "Alan T." });
     expect((await api.users.getById(created.id)).name).toBe("Alan T.");
@@ -234,31 +248,73 @@ describe("defineMockApi: CRUD", () => {
   });
 
   it("create generates ids that follow the dataset convention and are never reused", async () => {
-    const api = defineMockApi({ users: { type: "users-sample" } });
-    const a = await api.users.create({ name: "A", email: "a@example.com" });
-    const b = await api.users.create({ name: "B", email: "b@example.com" });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2 } });
+    const a = await api.users.create({
+      name: "A",
+      email: "a@example.com",
+      username: "a",
+      companyId: "1",
+    });
+    const b = await api.users.create({
+      name: "B",
+      email: "b@example.com",
+      username: "b",
+      companyId: "1",
+    });
     expect([a.id, b.id]).toEqual(["3", "4"]);
     await api.users.delete("4");
-    expect((await api.users.create({ name: "C", email: "c@example.com" })).id).toBe("5");
+    expect(
+      (await api.users.create({ name: "C", email: "c@example.com", username: "c", companyId: "1" }))
+        .id,
+    ).toBe("5");
   });
 
   it("create accepts an explicit id and rejects duplicates", async () => {
-    const api = defineMockApi({ users: { type: "users-sample" } });
-    const custom = await api.users.create({ id: "u-42", name: "X", email: "x@example.com" });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2 } });
+    const custom = await api.users.create({
+      id: "u-42",
+      name: "X",
+      email: "x@example.com",
+      username: "x",
+      companyId: "1",
+    });
     expect(custom.id).toBe("u-42");
     await expectCode(
-      () => api.users.create({ id: "u-42", name: "Y", email: "y@example.com" }),
+      () =>
+        api.users.create({
+          id: "u-42",
+          name: "Y",
+          email: "y@example.com",
+          username: "y",
+          companyId: "1",
+        }),
       "DUPLICATE_ID",
       /id "u-42" already exists/,
     );
     await expectCode(
-      () => api.users.create({ id: 1 as never, name: "Z", email: "z@example.com" }),
+      () =>
+        api.users.create({
+          id: 1 as never,
+          name: "Z",
+          email: "z@example.com",
+          username: "z",
+          companyId: "1",
+        }),
       "DUPLICATE_ID",
     );
     // generated ids skip explicit ones already taken
-    const next = await api.users.create({ id: "3", name: "N", email: "n@example.com" });
+    const next = await api.users.create({
+      id: "3",
+      name: "N",
+      email: "n@example.com",
+      username: "n",
+      companyId: "1",
+    });
     expect(next.id).toBe("3");
-    expect((await api.users.create({ name: "M", email: "m@example.com" })).id).toBe("4");
+    expect(
+      (await api.users.create({ name: "M", email: "m@example.com", username: "m", companyId: "1" }))
+        .id,
+    ).toBe("4");
   });
 
   it("create requires an id on datasets whose ids are not numeric", async () => {
@@ -277,7 +333,7 @@ describe("defineMockApi: CRUD", () => {
   });
 
   it("update replaces the record and keeps its id", async () => {
-    const api = defineMockApi({ products: { type: "products-mock", size: 3 } });
+    const api = defineMockApi({ products: { type: "products-mock", slice: 3 } });
     const replaced = await api.products.update("2", {
       title: "Only title",
     } as never);
@@ -295,7 +351,7 @@ describe("defineMockApi: CRUD", () => {
   });
 
   it("patch changes only the supplied fields", async () => {
-    const api = defineMockApi({ products: { type: "products-mock", size: 3 } });
+    const api = defineMockApi({ products: { type: "products-mock", slice: 3 } });
     const before = await api.products.getById("1");
     const patched = await api.products.patch("1", { price: 1.5, stock: undefined });
     expect(patched).toEqual({ ...before, price: 1.5 }); // `undefined` is skipped, not applied
@@ -305,7 +361,7 @@ describe("defineMockApi: CRUD", () => {
   });
 
   it("delete removes the record; deleting a missing record rejects with NOT_FOUND", async () => {
-    const api = defineMockApi({ users: { type: "users-sample" } });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2 } });
     expect(await api.users.delete("1")).toBeUndefined();
     await expectCode(() => api.users.getById("1"), "NOT_FOUND");
     expect(await api.users.getAll()).toHaveLength(1);
@@ -313,7 +369,7 @@ describe("defineMockApi: CRUD", () => {
   });
 
   it("rejects invalid inputs and ids with INVALID_INPUT", async () => {
-    const api = defineMockApi({ users: { type: "users-sample" } });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2 } });
     for (const bad of [null, undefined, [], "text", 7]) {
       await expectCode(() => api.users.create(bad as never), "INVALID_INPUT", /create\(\) input/);
       await expectCode(() => api.users.update("1", bad as never), "INVALID_INPUT");
@@ -329,14 +385,15 @@ describe("defineMockApi: CRUD", () => {
       await expectCode(() => api.users.delete(badId as never), "INVALID_INPUT");
     }
     await expectCode(
-      () => api.users.create({ id: "" as never, name: "n", email: "e" }),
+      () =>
+        api.users.create({ id: "" as never, name: "n", email: "e", username: "n", companyId: "1" }),
       "INVALID_INPUT",
     );
     expect(await api.users.getAll()).toHaveLength(2); // nothing was stored
   });
 
   it("returns copies: callers cannot mutate stored records", async () => {
-    const api = defineMockApi({ posts: { type: "posts-mock", size: 2 } });
+    const api = defineMockApi({ posts: { type: "posts-mock", slice: 2 } });
     const list = await api.posts.getAll();
     list[0]!.title = "hacked";
     list[0]!.tags.push("x");
@@ -356,9 +413,11 @@ describe("defineMockApi: CRUD", () => {
   });
 
   it("stays consistent under concurrent calls", async () => {
-    const api = defineMockApi({ users: { type: "users-sample", pagination: true } });
+    const api = defineMockApi({ users: { type: "users-mock", slice: 2, pagination: true } });
     const created = await Promise.all(
-      Array.from({ length: 5 }, (_, i) => api.users.create({ name: `U${i}`, email: `u${i}@x.io` })),
+      Array.from({ length: 5 }, (_, i) =>
+        api.users.create({ name: `U${i}`, email: `u${i}@x.io`, username: `u${i}`, companyId: "1" }),
+      ),
     );
     expect(created.map((u) => u.id).sort()).toEqual(["3", "4", "5", "6", "7"]);
     expect((await api.users.getAll()).total).toBe(7);
@@ -367,17 +426,25 @@ describe("defineMockApi: CRUD", () => {
 
 describe("defineMockApi: state isolation", () => {
   it("keeps separate instances and separate resources independent", async () => {
-    const config = { users: { type: "users-sample" }, admins: { type: "users-sample" } } as const;
+    const config = {
+      users: { type: "users-mock", slice: 2 },
+      admins: { type: "users-mock", slice: 2 },
+    } as const;
     const one = defineMockApi(config);
     const two = defineMockApi(config);
 
-    await one.users.create({ name: "Only in one", email: "one@example.com" });
+    await one.users.create({
+      name: "Only in one",
+      email: "one@example.com",
+      username: "one",
+      companyId: "1",
+    });
     await one.users.delete("1");
 
     expect(await one.users.getAll()).toHaveLength(2);
     expect(await one.admins.getAll()).toHaveLength(2); // same dataset, different resource
     expect(await two.users.getAll()).toHaveLength(2);
-    expect(await two.users.getById("1")).toMatchObject({ name: "Ada Lovelace" });
+    expect(await two.users.getById("1")).toMatchObject({ name: "Jeremiah Turcotte" });
   });
 });
 
@@ -404,8 +471,8 @@ describe("defineMockApi: pagination", () => {
     expect((await api.products.getAll({ pageSize: 1000 })).data).toHaveLength(100);
   });
 
-  it("paginates the current records, so totals follow create / update / delete / size", async () => {
-    const api = defineMockApi({ products: { type: "products-mock", size: 50, pagination: true } });
+  it("paginates the current records, so totals follow create / update / delete / slice", async () => {
+    const api = defineMockApi({ products: { type: "products-mock", slice: 50, pagination: true } });
     expect((await api.products.getAll({ pageSize: 10 })).total).toBe(50);
 
     const created = await api.products.create({
@@ -464,7 +531,7 @@ describe("defineMockApi: pagination", () => {
   });
 
   it("treats an empty resource as a single empty page", async () => {
-    const api = defineMockApi({ none: { type: "products-mock", size: 0, pagination: true } });
+    const api = defineMockApi({ none: { type: "products-mock", slice: 0, pagination: true } });
     expect(await api.none.getAll()).toEqual({
       data: [],
       total: 0,
@@ -478,8 +545,8 @@ describe("defineMockApi: pagination", () => {
 
   it("returns a plain list, and rejects page options, when pagination is off", async () => {
     const api = defineMockApi({
-      off: { type: "users-sample" },
-      explicit: { type: "users-sample", pagination: false },
+      off: { type: "users-mock", slice: 2 },
+      explicit: { type: "users-mock", slice: 2, pagination: false },
     });
     expect(Array.isArray(await api.off.getAll())).toBe(true);
     expect(Array.isArray(await api.explicit.getAll())).toBe(true);
@@ -502,14 +569,24 @@ describe("defineMockApi alongside Core inline mocking", () => {
   });
 
   it("keeps the two systems independent", async () => {
-    const mockApi = defineMockApi({ users: { type: "users-sample" } });
+    const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2 } });
     const coreApi = defineApi({
       baseURL: "https://api.example.com",
-      users: { path: "/users", mock: true, mockConfig: { type: "users-sample" } },
+      users: { path: "/users", mock: true, mockConfig: { type: "users-mock", slice: 2 } },
     });
 
-    await coreApi.users.create({ name: "Via Core", email: "core@example.com" });
-    await mockApi.users.create({ name: "Via MockApi", email: "mock@example.com" });
+    await coreApi.users.create({
+      name: "Via Core",
+      email: "core@example.com",
+      username: "core",
+      companyId: "1",
+    });
+    await mockApi.users.create({
+      name: "Via MockApi",
+      email: "mock@example.com",
+      username: "mock",
+      companyId: "1",
+    });
 
     expect(await coreApi.users.getAll()).toHaveLength(3);
     expect(await mockApi.users.getAll()).toHaveLength(3);

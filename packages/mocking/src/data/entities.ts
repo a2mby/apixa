@@ -3,8 +3,7 @@
  * Shapes mirror the real `datasets/<domain>/<id>/data.json` records (not the looser
  * `meta.json` schema hints). `catalog.ts` type-checks each JSON file against these.
  */
-export type { User } from "./users.js";
-export type { MockUser } from "./users-mock.js";
+export type { User, MockUser } from "./users-mock.js";
 
 export type Product = {
   id: string;

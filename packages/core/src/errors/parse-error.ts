@@ -5,7 +5,7 @@ export class ParseError extends ApiError {
     message = "Failed to parse response",
     options?: ConstructorParameters<typeof ApiError>[1],
   ) {
-    super(message, { code: "PARSE_ERROR", ...options });
+    super(message, { code: "PARSE", retryable: false, ...options });
     this.name = "ParseError";
   }
 }

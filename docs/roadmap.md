@@ -50,6 +50,19 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Thin middleware / interceptors as a stable public API
 - Core only — no client/server packages, schema library, or TanStack package
 
+## Completed: v0.7.0 — Thin Core + plugin seams
+
+**Spec:** [versions/v0.7.0/](../versions/v0.7.0/)
+
+- Types cleanup (ApiState, path-param concat, list/query, delete dead types)
+- Runtime: hasBody-by-method, body passthrough, query array format / serializer
+- RequestOptions: retry, responseType, meta, full → ApiResponse
+- Breaking middleware reshape (re-callable next, richer context)
+- Retry hooks: respectRetryAfter, shouldRetry, onRetry
+- Plugin seams: ResourceExtensions / OperationExtensions; mock keys leave Core types
+- Error codes + isHttpError / isTimeoutError
+- Out: auth, cache, validation, pagination helpers
+
 ## Later: Developer experience follow-ups
 
 - Optional schema validation hooks (without baking in a schema library)

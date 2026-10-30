@@ -5,7 +5,7 @@ export class NetworkError extends ApiError {
     message = "Network request failed",
     options?: ConstructorParameters<typeof ApiError>[1],
   ) {
-    super(message, { code: "NETWORK_ERROR", ...options });
+    super(message, { code: "NETWORK", retryable: true, ...options });
     this.name = "NetworkError";
   }
 }

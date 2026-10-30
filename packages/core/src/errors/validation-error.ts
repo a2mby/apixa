@@ -5,7 +5,7 @@ export class ValidationError extends ApiError {
     message = "Response validation failed",
     options?: ConstructorParameters<typeof ApiError>[1],
   ) {
-    super(message, { code: "VALIDATION_ERROR", ...options });
+    super(message, { code: "VALIDATION", retryable: false, ...options });
     this.name = "ValidationError";
   }
 }

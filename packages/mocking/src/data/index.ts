@@ -7,10 +7,10 @@
  * Exports are read-only: `defineMockApi()` copies before it stores anything.
  *
  * Every dataset below also self-registers as a Core resource-mock preset (`mockConfig.type`)
- * and merges its id into `MockDatasetIds`, mirroring `./users.ts` / `./users-mock.ts` — importing
+ * and merges its id into `MockDatasetIds`, mirroring `./users-mock.ts` — importing
  * this module teaches `mockConfig.type` all of these ids for free.
  */
-import usersSample from "../../../../datasets/users/users-sample/data.json";
+import "../core-augmentation.js";
 import usersMock from "../../../../datasets/users/users-mock/data.json";
 import productsMock from "../../../../datasets/products/products-mock/data.json";
 import productsMockMeta from "../../../../datasets/products/products-mock/meta.json";
@@ -22,16 +22,14 @@ import postsMock from "../../../../datasets/social/posts-mock/data.json";
 import postsMockMeta from "../../../../datasets/social/posts-mock/meta.json";
 import commentsMock from "../../../../datasets/comments/comments-mock/data.json";
 import commentsMockMeta from "../../../../datasets/comments/comments-mock/meta.json";
-import type { Comment, Company, MockUser, Order, Post, Product, User } from "./entities.js";
+import type { Comment, Company, Order, Post, Product, User } from "./entities.js";
 import { registerDatasetPreset } from "../presets/registry.js";
 import type { Dataset, DatasetMeta } from "../types.js";
 
 export type * from "./entities.js";
 
-/** `users-sample` */
-export const users: readonly User[] = usersSample;
 /** `users-mock` */
-export const mockUsers: readonly MockUser[] = usersMock;
+export const users: readonly User[] = usersMock;
 /** `products-mock` */
 export const products: readonly Product[] = productsMock;
 /** `companies-mock` */

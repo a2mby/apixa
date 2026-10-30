@@ -2,9 +2,38 @@
 
 ## Unreleased
 
+### Breaking
+
+- `@apixa/mocking` — rename resource / `mockConfig` option `size` → `slice`. `slice` accepts a non-negative integer (first N rows) or `{ start, end }` (half-open). Overshooting the dataset returns all records; negatives and `end < start` throw `InvalidSliceError` (`INVALID_SLICE`) under `MockingErrors`.
+- Removed `users-sample` dataset and `@apixa/mocking/data/users`. Use `users-mock` / `@apixa/mocking/data/users-mock` (`User` entity).
+
 ### Fixed
 
-- `@apixa/mocking` selective mock transport honors `AbortSignal` (aborted → `AbortError`) so Core cancel works with resource `mock` / `mockConfig`.
+- Core `mockConfig.type: "users-mock"` now seeds the full 100-row dataset (was a 3-row browser stub).
+
+## 0.7.0
+
+### Breaking
+
+- **Middleware:** `next()` returns `Promise<ApiResponse<unknown>>` and may be called more than once. Context is `{ request, response?, attempt, meta }`. Hooks must `return next()` (or another `ApiResponse`), not arbitrary data.
+- **Mock keys left Core types:** `mock` / `mockConfig` are no longer on Core’s base resource input. Import `@apixa/mocking` (or `/data` / `/register`) so `declare module` adds them via `ResourceExtensions`.
+- **`hasBody` default:** derived from HTTP method (`POST` / `PUT` / `PATCH` → true). Convention-name defaults removed; set `hasBody` only to override.
+- **Error codes:** stable `ApiErrorCode` values are now `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT` (was `*_ERROR` strings).
+
+### Added
+
+- Types: tighter `ApiState`, resource+op path-param concat, `list` / `query` on `ResourceState`, `ResourceExtensions` / `OperationExtensions`, `CallResult` / `full` options.
+- Root `queryArrayFormat` / `querySerializer`; body passthrough for `FormData` / `Blob` / etc.
+- `RequestOptions`: `retry`, `responseType`, `meta`, `full`.
+- Retry: `respectRetryAfter`, `shouldRetry`, `onRetry`.
+- Errors: `retryable` / `attempt` on `ApiError`, `HttpError<D>`, `isHttpError`, `isTimeoutError`.
+
+### Migration
+
+1. Middleware: `return await next()`; use `res.status` / `res.data` instead of thrown HTTP for soft handling; call `next()` again to retry a transport attempt.
+2. Mocking: ensure `@apixa/mocking` is imported (types + runtime) wherever `mock` / `mockConfig` appear.
+3. Custom ops that POST without a body: set `hasBody: false`.
+4. Replace checks for `error.code === "NETWORK_ERROR"` (etc.) with `"NETWORK"` / `"HTTP"` / …
 
 ## 0.6.0
 

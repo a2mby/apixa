@@ -42,7 +42,7 @@ describe("defineApi processors and optional mocking peer", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-sample" },
+        mockConfig: { type: "users-mock" },
       },
     });
 
@@ -72,7 +72,7 @@ describe("defineApi processors and optional mocking peer", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-sample" },
+        mockConfig: { type: "users-mock" },
       },
     });
 

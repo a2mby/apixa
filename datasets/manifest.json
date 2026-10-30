@@ -282,21 +282,6 @@
       "origin": "generated",
       "notes": "Generator: @faker-js/faker seed=230523. Source URL listed as the skipped DummyJSON endpoint.",
       "substitutes": "https://dummyjson.com/users?limit=100"
-    },
-    {
-      "id": "users-sample",
-      "name": "Users sample",
-      "description": "Small directory of example users for Apixa demos.",
-      "sourceUrl": "https://github.com/a2mby/apixa",
-      "license": "MIT",
-      "attribution": "Apixa maintainers (original sample).",
-      "recordCount": 2,
-      "filePath": "users/users-sample/data.json",
-      "metaPath": "users/users-sample/meta.json",
-      "domain": "users",
-      "origin": "generated",
-      "notes": null,
-      "substitutes": null
     }
   ],
   "skipped": [

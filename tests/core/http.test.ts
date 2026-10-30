@@ -6,7 +6,7 @@ type User = { id: string; name: string; email: string };
 
 type HttpApi = {
   users: {
-    path: string;
+    path: "/users";
     entity: User;
     operations: {
       getAll: { query: { limit?: number; active?: boolean }; response: User[] };
@@ -146,7 +146,7 @@ describe("request execution", () => {
       expect(isApiError(error)).toBe(true);
       if (error instanceof NetworkError) {
         expect(error.message).toBe("failed to fetch");
-        expect(error.code).toBe("NETWORK_ERROR");
+        expect(error.code).toBe("NETWORK");
       }
       return true;
     });

@@ -2,7 +2,7 @@ import { joinPath } from "../http/path.js";
 import type { OperationDefinition, ResolvedOperation } from "../types/definition.js";
 import { CONVENTION_DEFAULTS } from "./conventions.js";
 
-const BODY_CONVENTIONS = new Set(["create", "update"]);
+const BODY_METHODS = new Set(["POST", "PUT", "PATCH"]);
 
 export function resolveOperation(
   name: string,
@@ -19,7 +19,7 @@ export function resolveOperation(
   }
 
   const relativePath = definition.path ?? defaults?.path ?? "";
-  const hasBody = definition.hasBody ?? (BODY_CONVENTIONS.has(name) && defaults !== undefined);
+  const hasBody = definition.hasBody ?? BODY_METHODS.has(method);
 
   return {
     name,

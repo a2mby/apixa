@@ -13,11 +13,11 @@ export type {
   TransportResponse,
   Transport,
   RequestOptions,
+  ResponseType,
 } from "./transport.js";
 
 export type {
   OperationDefinition,
-  ResourceDefinition,
   ReservedApiConfigKey,
   ApiRootConfig,
   ApiState,
@@ -25,14 +25,20 @@ export type {
   OperationState,
   ResourceTypeOnlyKey,
   OperationTypeOnlyKey,
+  ResourceRuntimeInput,
+  QueryArrayFormat,
   ResolvedApiConfig,
   ResolvedResourceConfig,
   ResolvedOperation,
 } from "./definition.js";
 
-export type { RetryConfig, ResolvedRetryConfig } from "./retry.js";
+export type { ResourceExtensions, OperationExtensions } from "./extensions.js";
+
+export type { RetryConfig, ResolvedRetryConfig, RetryHookContext } from "./retry.js";
 
 export type { Middleware, MiddlewareContext, MiddlewareNext } from "./middleware.js";
+
+export type { ApiErrorCode } from "./errors.js";
 
 export type {
   BuiltinOpName,
@@ -43,6 +49,10 @@ export type {
   ApiClient,
   ApiInput,
   ValidateApiConfig,
-  ResourceMockConfigInput,
   MockDatasetIds,
+  ListOf,
+  QueryOf,
+  CallResult,
+  FullPath,
+  ConcatPaths,
 } from "./inference.js";
