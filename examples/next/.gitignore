@@ -13,4 +13,3 @@ app/globals.css
 app/layout.tsx
 components/
 lib/query-client.tsx
-lib/users.ts

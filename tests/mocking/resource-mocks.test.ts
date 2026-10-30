@@ -138,6 +138,21 @@ describe("resource-level mocking (processor)", () => {
     expect(page.data).toHaveLength(1);
   });
 
+  it("returns a plain array when mockConfig pagination is absent", async () => {
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      users: {
+        path: "/users",
+        mock: true,
+        mockConfig: { type: "users-mock", slice: 2 },
+      },
+    });
+
+    const rows = await api.users.getAll();
+    expect(Array.isArray(rows)).toBe(true);
+    expect(rows).toHaveLength(2);
+  });
+
   it("fails fast when mock:true without mockConfig.type", () => {
     expect(() =>
       defineApi({

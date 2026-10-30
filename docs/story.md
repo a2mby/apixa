@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-30 — Align mockApi getAll typing with defineApi lists (#45)
+
+`defineMockApi` `getAll` is now strictly `T[]` or `Page<T>` (no `Page | T[]` fallback). Next `api` / `mockApi` users both return `User[]`; paginated `Page` stays on comments. Playground query uses `data ?? []` typed as `User[]` so TanStack defaults are not `never[]`.
+
 ## 2026-10-30 — Align Core builtin name with mocking: `getById` (#43)
 
 Renamed `defineApi`’s builtin `getByID` → `getById` (conventions, `BuiltinOpName`, `ResourceClient`, docs, tests) so it matches `defineMockApi`. Breaking; no alias. Shipped `versions/` folders left historical.

@@ -132,6 +132,19 @@ describe("defineMockApi: configuration", () => {
     expect(_rejected).toBeTypeOf("function");
   });
 
+  it("getAll is T[] or Page<T> only — never Page<T> | T[]", () => {
+    const api = defineMockApi({
+      paged: { type: "users-mock", pagination: true },
+      flat: { type: "users-mock" },
+      off: { type: "users-mock", pagination: false },
+    });
+    expectTypeOf(api.paged.getAll).returns.resolves.toEqualTypeOf<Page<User>>();
+    expectTypeOf(api.paged.getAll).returns.resolves.not.toEqualTypeOf<Page<User> | User[]>();
+    expectTypeOf(api.flat.getAll).returns.resolves.toEqualTypeOf<User[]>();
+    expectTypeOf(api.off.getAll).returns.resolves.toEqualTypeOf<User[]>();
+    expectTypeOf(api.flat.getAll).returns.resolves.not.toEqualTypeOf<Page<User> | User[]>();
+  });
+
   it("Page exposes previous / next page numbers for query consumers", async () => {
     const api = defineMockApi({
       comments: { type: "comments-mock", slice: 45, pagination: true },
@@ -592,5 +605,41 @@ describe("defineMockApi alongside Core inline mocking", () => {
     expect(await mockApi.users.getAll()).toHaveLength(3);
     expect(JSON.stringify(await coreApi.users.getAll())).not.toContain("Via MockApi");
     expect(JSON.stringify(await mockApi.users.getAll())).not.toContain("Via Core");
+  });
+
+  it("matches defineApi getAll list typing when pagination is off", () => {
+    const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2 } });
+    const coreApi = defineApi<{ users: { path: "/users"; entity: User } }>()({
+      baseURL: "https://api.example.com",
+      users: { path: "/users", mock: true, mockConfig: { type: "users-mock", slice: 2 } },
+    });
+    expectTypeOf(mockApi.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
+    expectTypeOf(coreApi.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
+  });
+
+  it("matches page envelope at runtime when both enable pagination", async () => {
+    const mockApi = defineMockApi({
+      users: { type: "users-mock", slice: 2, pagination: true },
+    });
+    const coreApi = defineApi<{
+      users: { path: "/users"; entity: User; list: Page<User> };
+    }>()({
+      baseURL: "https://api.example.com",
+      users: {
+        path: "/users",
+        mock: true,
+        mockConfig: { type: "users-mock", slice: 2, pagination: true },
+      },
+    });
+
+    expectTypeOf(mockApi.users.getAll).returns.resolves.toEqualTypeOf<Page<User>>();
+    expectTypeOf(coreApi.users.getAll).returns.resolves.toEqualTypeOf<Page<User>>();
+
+    const fromMock = await mockApi.users.getAll({ page: 1, pageSize: 1 });
+    const fromCore = await coreApi.users.getAll({ query: { page: 1, pageSize: 1 } });
+    expect(fromMock).toMatchObject({ total: 2, page: 1, pageSize: 1 });
+    expect(fromCore).toMatchObject({ total: 2, page: 1, pageSize: 1 });
+    expect(fromMock.data).toHaveLength(1);
+    expect(fromCore.data).toHaveLength(1);
   });
 });
