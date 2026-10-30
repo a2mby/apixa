@@ -17,6 +17,9 @@ export type AppApi = {
  *
  * Importing `@apixa/mocking/data` merges known preset ids into Core's `MockDatasetIds`,
  * so `mockConfig.type` autocompletes (e.g. `"users-mock"`).
+ *
+ * `api.users.getAll()` and `mockApi.users.getAll()` both return `User[]` here (no
+ * `pagination: true`). Paginated `Page<T>` stays on `mockApi.comments` — see `comments.ts`.
  */
 export const api = defineApi<AppApi>()({
   baseURL: "https://api.example.com",
@@ -31,6 +34,10 @@ export const api = defineApi<AppApi>()({
 });
 
 export const mockApi = defineMockApi({
+  users: {
+    type: "users-mock",
+    slice: 100,
+  },
   comments: {
     type: "comments-mock",
     slice: 100,

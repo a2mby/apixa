@@ -24,11 +24,10 @@ type Id = string | number;
 /** `create` / `update` input: the entity, with its id optional. */
 export type ResourceInput<T, IdKey extends keyof T> = Omit<T, IdKey> & Partial<Pick<T, IdKey>>;
 
+/** `pagination: true` → page envelope; anything else → plain `T[]` (never a `Page | T[]` union). */
 type GetAll<T, Paginated> = [Paginated] extends [true]
   ? (params?: PageParams) => Promise<Page<T>>
-  : [Paginated] extends [false | undefined]
-    ? () => Promise<T[]>
-    : (params?: PageParams) => Promise<Page<T> | T[]>;
+  : () => Promise<T[]>;
 
 /**
  * In-memory CRUD for one resource. No network, no persistence.

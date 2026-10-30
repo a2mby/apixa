@@ -23,14 +23,15 @@ export type MockResourceConfig = {
 
 export type MockApiConfig = Record<string, MockResourceConfig>;
 
-type PaginationOf<R> = R extends { readonly pagination: infer P } ? P : undefined;
+/** Only the literal `true` enables the page envelope; `false` / absent → plain list. */
+type PaginationOf<R> = R extends { readonly pagination: true }
+  ? true
+  : R extends { readonly pagination: false }
+    ? false
+    : undefined;
 
 export type MockApi<C extends MockApiConfig> = {
-  [R in keyof C]: MockResource<
-    EntityOf<C[R]["type"]>,
-    IdKeyOf<C[R]["type"]>,
-    PaginationOf<C[R]> & (boolean | undefined)
-  >;
+  [R in keyof C]: MockResource<EntityOf<C[R]["type"]>, IdKeyOf<C[R]["type"]>, PaginationOf<C[R]>>;
 };
 
 /** A generic constraint alone lets extra keys through; this makes e.g. `handlers` a type error. */
