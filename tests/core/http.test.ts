@@ -33,7 +33,7 @@ describe("request execution", () => {
         path: "/users",
         operations: {
           getAll: { method: "GET" },
-          getByID: { method: "GET", path: "/:id" },
+          getById: { method: "GET", path: "/:id" },
           getPost: {
             method: "GET",
             path: "/:userId/posts/:postId",
@@ -42,7 +42,7 @@ describe("request execution", () => {
       },
     });
 
-    await api.users.getByID("123");
+    await api.users.getById("123");
     await api.users.getAll({ query: { limit: 5, active: true } });
     await api.users.getPost({ userId: "u1", postId: "p9" });
 
@@ -88,12 +88,12 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/:id" },
+          getById: { method: "GET", path: "/:id" },
         },
       },
     });
 
-    const result = api.users.getByID("1");
+    const result = api.users.getById("1");
     expect(result).toBeInstanceOf(Promise);
     expect(await result).toEqual({ id: "1", name: "Ada", email: "ada@example.com" });
   });
@@ -108,12 +108,12 @@ describe("request execution", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/:id" },
+          getById: { method: "GET", path: "/:id" },
         },
       },
     });
 
-    await expect(api.users.getByID("missing")).rejects.toSatisfy((error: unknown) => {
+    await expect(api.users.getById("missing")).rejects.toSatisfy((error: unknown) => {
       expect(error).toBeInstanceOf(HttpError);
       expect(isApiError(error)).toBe(true);
       if (error instanceof HttpError) {

@@ -22,7 +22,7 @@ describe("defineApi", () => {
         path: "/users",
         operations: {
           getAll: {},
-          getByID: {},
+          getById: {},
           create: {},
         },
       },
@@ -32,7 +32,7 @@ describe("defineApi", () => {
       "create",
       "delete",
       "getAll",
-      "getByID",
+      "getById",
       "update",
     ]);
 
@@ -56,12 +56,12 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: {},
+          getById: {},
         },
       },
     });
 
-    await api.users.getByID("1");
+    await api.users.getById("1");
     expect(urls).toEqual(["GET https://api.example.com/users/1"]);
   });
 
@@ -77,12 +77,12 @@ describe("defineApi", () => {
       users: {
         path: "/users",
         operations: {
-          getByID: { method: "GET", path: "/by-uuid/:id" },
+          getById: { method: "GET", path: "/by-uuid/:id" },
         },
       },
     });
 
-    await api.users.getByID("abc");
+    await api.users.getById("abc");
     expect(urls).toEqual(["https://api.example.com/users/by-uuid/abc"]);
   });
 
@@ -103,13 +103,13 @@ describe("defineApi", () => {
       },
     });
 
-    expectTypeOf(api.users.getByID).parameter(0).toEqualTypeOf<string | number>();
+    expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<string | number>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
     expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<string | number>();
     expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<Partial<User>>();
 
     const created = await api.users.create({ name: "Ada", email: "ada@example.com" });
-    const user = await api.users.getByID("1");
+    const user = await api.users.getById("1");
     expectTypeOf(created).toEqualTypeOf<User>();
     expectTypeOf(user).toEqualTypeOf<User>();
 

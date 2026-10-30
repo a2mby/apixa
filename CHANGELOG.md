@@ -4,6 +4,7 @@
 
 ### Breaking
 
+- `@apixa/core` — rename builtin operation `getByID` → `getById` so `defineApi` matches `defineMockApi`. Call sites and `operations` overrides must use `getById` (no alias).
 - `@apixa/mocking` — rename resource / `mockConfig` option `size` → `slice`. `slice` accepts a non-negative integer (first N rows) or `{ start, end }` (half-open). Overshooting the dataset returns all records; negatives and `end < start` throw `InvalidSliceError` (`INVALID_SLICE`) under `MockingErrors`.
 - Removed `users-sample` dataset and `@apixa/mocking/data/users`. Use `users-mock` / `@apixa/mocking/data/users-mock` (`User` entity).
 

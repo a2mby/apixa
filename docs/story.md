@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-10-30 — Align Core builtin name with mocking: `getById` (#43)
+
+Renamed `defineApi`’s builtin `getByID` → `getById` (conventions, `BuiltinOpName`, `ResourceClient`, docs, tests) so it matches `defineMockApi`. Breaking; no alias. Shipped `versions/` folders left historical.
+
 ## 2026-10-30 — Mock `slice`, full users-mock, drop users-sample; land v0.7.0 (#41)
 
 Renamed mock `size` → `slice` (`number` | `{ start, end }`) with `InvalidSliceError` under `MockingErrors`; Core `users-mock` now seeds all 100 rows; removed `users-sample` / `@apixa/mocking/data/users`. Also shipped v0.7.0 thin Core + plugin seams (path-param concat, `full` / re-callable middleware, extension interfaces, structured error codes).

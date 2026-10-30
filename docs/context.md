@@ -88,10 +88,10 @@ const api = defineApi<AppApi>()({
 });
 
 const users = await api.users.getAll();
-const user = await api.users.getByID("123");
+const user = await api.users.getById("123");
 ```
 
-Built-in operations: `getAll`, `getByID`, `create`, `update`, `delete` (positional args). `create` / `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). Root builtins (`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core — not listed on `AppApi`. Optional runtime `operations` merges overrides and custom endpoints. Call options support `signal` / `timeout`; opt-in `retry` and thin `middleware` ship in v0.6.0.
+Built-in operations: `getAll`, `getById`, `create`, `update`, `delete` (positional args). `create` / `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). Root builtins (`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core — not listed on `AppApi`. Optional runtime `operations` merges overrides and custom endpoints. Call options support `signal` / `timeout`; opt-in `retry` and thin `middleware` ship in v0.6.0.
 
 **Planned later:** `crud<>()` preset, path-param template inference, `idKey`, `getBySlug` / `getByUUID` / `getBy`, runtime schema validation hooks, live pagination conventions.
 

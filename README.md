@@ -43,7 +43,7 @@ const api = defineApi({
 });
 
 await api.users.getAll();
-await api.users.getByID("123");
+await api.users.getById("123");
 await api.users.create({ name: "Ada", email: "ada@example.com" });
 await api.users.update("123", { name: "Ada Lovelace" });
 await api.users.delete("123");
@@ -78,7 +78,7 @@ const api = defineApi<AppApi>()({
 });
 ```
 
-Operations return native `Promise<T>` (response data is unwrapped). Built-ins are `getAll`, `getByID`, `create`, `update`, and `delete`. `operations` is optional and merges onto those defaults; custom operation names coexist with builtins.
+Operations return native `Promise<T>` (response data is unwrapped). Built-ins are `getAll`, `getById`, `create`, `update`, and `delete`. `operations` is optional and merges onto those defaults; custom operation names coexist with builtins.
 
 Pass `transport` to inject a custom HTTP implementation (used in tests). The default is Fetch, shipped inside `@apixa/core`.
 

@@ -55,18 +55,18 @@ describe("default-first operations", () => {
       "create",
       "delete",
       "getAll",
-      "getByID",
+      "getById",
       "update",
     ]);
 
     expectTypeOf(api.users).toHaveProperty("getAll");
-    expectTypeOf(api.users).toHaveProperty("getByID");
+    expectTypeOf(api.users).toHaveProperty("getById");
     expectTypeOf(api.users).toHaveProperty("create");
     expectTypeOf(api.users).toHaveProperty("update");
     expectTypeOf(api.users).toHaveProperty("delete");
 
     await api.users.getAll();
-    await api.users.getByID("1");
+    await api.users.getById("1");
     await api.users.create({ name: "Ada", email: "ada@example.com" });
     await api.users.update("1", { name: "Ada Lovelace" });
     await api.users.delete("1");
@@ -102,12 +102,12 @@ describe("default-first operations", () => {
       "create",
       "delete",
       "getAll",
-      "getByID",
+      "getById",
       "update",
     ]);
 
     await api.users.getAll();
-    await api.users.getByID("1");
+    await api.users.getById("1");
     await api.users.update("1", { name: "Ada" });
 
     expect(calls).toEqual([
