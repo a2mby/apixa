@@ -9,7 +9,6 @@ import type {
   CountryParseapi,
   Currency,
   Language,
-  MockUser,
   Order,
   Post,
   Product,
@@ -25,8 +24,7 @@ type Entry<Entity, IdKey extends keyof Entity> = { entity: Entity; idKey: IdKey 
  * sets also have non-unique id fields, so `getById` would be ambiguous).
  */
 export interface DatasetCatalog {
-  "users-sample": Entry<User, "id">;
-  "users-mock": Entry<MockUser, "id">;
+  "users-mock": Entry<User, "id">;
   "products-mock": Entry<Product, "id">;
   "companies-mock": Entry<Company, "id">;
   "orders-mock": Entry<Order, "id">;
@@ -55,10 +53,6 @@ type CatalogEntry<K extends DatasetId> = {
 
 /** The root `datasets/` folder stays the single source of truth — these are direct JSON imports. */
 export const catalog = {
-  "users-sample": {
-    idKey: "id",
-    load: () => import("../../../datasets/users/users-sample/data.json"),
-  },
   "users-mock": {
     idKey: "id",
     load: () => import("../../../datasets/users/users-mock/data.json"),

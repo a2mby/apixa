@@ -1,22 +1,30 @@
+import type { QueryArrayFormat } from "../types/definition.js";
 import type { QueryParams } from "../types/http.js";
 
-export function buildQueryString(query?: QueryParams): string {
+export function buildQueryString(query?: QueryParams, format: QueryArrayFormat = "repeat"): string {
   if (!query) return "";
 
-  const search = new URLSearchParams();
+  const parts: string[] = [];
 
   for (const [key, value] of Object.entries(query)) {
     if (value === undefined || value === null) continue;
 
     if (Array.isArray(value)) {
-      for (const item of value) {
-        search.append(key, String(item));
+      if (format === "comma") {
+        parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value.map(String).join(","))}`);
+      } else if (format === "brackets") {
+        for (const item of value) {
+          parts.push(`${encodeURIComponent(key)}[]=${encodeURIComponent(String(item))}`);
+        }
+      } else {
+        for (const item of value) {
+          parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(item))}`);
+        }
       }
     } else {
-      search.set(key, String(value));
+      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
     }
   }
 
-  const qs = search.toString();
-  return qs ? `?${qs}` : "";
+  return parts.length ? `?${parts.join("&")}` : "";
 }

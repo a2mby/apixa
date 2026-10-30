@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** none open — last shipped [v0.6.0](../versions/v0.6.0/) (Core request reliability: abort, retries, thin middleware).
-> Previous: [v0.5.0](../versions/v0.5.0/) (Simple Mocking); [v0.4.0](../versions/v0.4.0/) (entity-only `defineApi<T>()`); [v0.3.0](../versions/v0.3.0/) (`type<T>()`, removed later); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
+> **Current milestone:** none open — last shipped [v0.7.0](../versions/v0.7.0/) (Thin Core + plugin seams).
+> Previous: [v0.6.0](../versions/v0.6.0/) (request reliability); [v0.5.0](../versions/v0.5.0/) (Simple Mocking); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity

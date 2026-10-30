@@ -10,7 +10,7 @@ declare module "@apixa/mocking/register" {
     path: string;
     mockConfig: {
       type: string;
-      size?: number;
+      slice?: number | { start: number; end: number };
       pagination?: boolean;
     };
   };

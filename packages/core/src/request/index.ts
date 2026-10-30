@@ -4,6 +4,8 @@ export { composeMiddleware } from "./middleware.js";
 export {
   resolveRetryConfig,
   shouldRetry,
+  defaultShouldRetry,
+  decideRetry,
   isRetryableStatus,
   computeRetryDelayMs,
   delay,

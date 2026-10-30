@@ -7,12 +7,16 @@ import {
 } from "./catalog.js";
 import { MockApiError } from "./errors.js";
 import { createResource, type MockResource } from "./resource.js";
+import { assertSliceConfig, type MockSlice } from "./slice.js";
 
 export type MockResourceConfig = {
   /** Dataset id from the catalog (`datasets/manifest.json`). */
   type: DatasetId;
-  /** Load only the first `size` records. */
-  size?: number;
+  /**
+   * Seed window: first N records, or half-open `{ start, end }` (Array.slice).
+   * Overshooting the dataset returns all records. A seed limit, not a growth cap.
+   */
+  slice?: MockSlice;
   /** `getAll()` returns `{ data, total, page, pageSize }` and accepts `{ page, pageSize }`. */
   pagination?: boolean;
 };
@@ -34,13 +38,13 @@ type Exact<C extends MockApiConfig> = {
   [R in keyof C]: { [K in Exclude<keyof C[R], keyof MockResourceConfig>]: never };
 };
 
-const OPTIONS = ["type", "size", "pagination"];
+const OPTIONS = ["type", "slice", "pagination"];
 
 function assertConfig(config: unknown): asserts config is MockApiConfig {
   if (config === null || typeof config !== "object" || Array.isArray(config)) {
     throw new MockApiError(
       "INVALID_CONFIG",
-      'defineMockApi() expects an object of resources, e.g. { users: { type: "users-sample" } }.',
+      'defineMockApi() expects an object of resources, e.g. { users: { type: "users-mock" } }.',
     );
   }
   const entries = Object.entries(config);
@@ -53,7 +57,7 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
     if (resource === null || typeof resource !== "object" || Array.isArray(resource)) {
       throw new MockApiError(
         "INVALID_CONFIG",
-        `${label} must be an object like { type: "users-sample" }.`,
+        `${label} must be an object like { type: "users-mock" }.`,
       );
     }
     for (const key of Object.keys(resource)) {
@@ -65,7 +69,7 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
       }
     }
 
-    const { type, size, pagination } = resource as Record<string, unknown>;
+    const { type, slice, pagination } = resource as Record<string, unknown>;
     if (!isDatasetId(type)) {
       throw new MockApiError(
         "UNKNOWN_DATASET",
@@ -73,11 +77,8 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
           `Available: ${listDatasetIds().join(", ")}.`,
       );
     }
-    if (size !== undefined && (!Number.isInteger(size) || (size as number) < 0)) {
-      throw new MockApiError(
-        "INVALID_CONFIG",
-        `${label}: size must be a non-negative integer (got ${String(size)}).`,
-      );
+    if (slice !== undefined) {
+      assertSliceConfig(slice, label);
     }
     if (pagination !== undefined && typeof pagination !== "boolean") {
       throw new MockApiError(
@@ -95,8 +96,8 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
  *
  * @example
  * const mockApi = defineMockApi({
- *   users: { type: "users-sample", size: 100, pagination: true },
- *   products: { type: "products-mock", size: 50 },
+ *   users: { type: "users-mock", slice: 100, pagination: true },
+ *   products: { type: "products-mock", slice: 50 },
  * });
  * const { data, total } = await mockApi.users.getAll({ page: 1, pageSize: 10 });
  */

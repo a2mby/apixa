@@ -51,9 +51,9 @@ describe("datasets integrity", () => {
   });
 
   it("loads nested path and short id for the same dataset", async () => {
-    const byId = await loadDataset("users-sample", { basePath: datasetsRoot });
-    const byPath = await loadDataset("users/users-sample", { basePath: datasetsRoot });
-    expect(byId.meta.id).toBe("users-sample");
+    const byId = await loadDataset("users-mock", { basePath: datasetsRoot });
+    const byPath = await loadDataset("users/users-mock", { basePath: datasetsRoot });
+    expect(byId.meta.id).toBe("users-mock");
     expect(byPath.records).toEqual(byId.records);
   });
 

@@ -2,8 +2,8 @@ import { createFetchTransport } from "../transport/fetch.js";
 import type {
   ApiRootConfig,
   ApiState,
-  ResourceDefinition,
   ResolvedApiConfig,
+  ResourceRuntimeInput,
 } from "../types/definition.js";
 import type { ApiClient, ApiInput } from "../types/inference.js";
 import { applyPeerMockBridge, hasUnhandledMockKeys } from "./peer-mocking.js";
@@ -17,35 +17,32 @@ const RESERVED_KEYS = new Set([
   "timeout",
   "retry",
   "middleware",
+  "queryArrayFormat",
+  "querySerializer",
 ]);
 
-const RESOURCE_HTTP_KEYS = new Set(["path", "operations", "headers", "timeout", "retry"]);
-
-function toHttpResource(value: Record<string, unknown>): ResourceDefinition {
-  const resource: ResourceDefinition = {
+function toHttpResource(value: Record<string, unknown>): ResourceRuntimeInput {
+  const resource: ResourceRuntimeInput = {
     path: value.path as string,
   };
   if (value.operations !== undefined) {
-    resource.operations = value.operations as ResourceDefinition["operations"];
+    resource.operations = value.operations as ResourceRuntimeInput["operations"];
   }
   if (value.headers !== undefined) {
-    resource.headers = value.headers as ResourceDefinition["headers"];
+    resource.headers = value.headers as ResourceRuntimeInput["headers"];
   }
   if (value.timeout !== undefined) {
     resource.timeout = value.timeout as number;
   }
   if (value.retry !== undefined) {
-    resource.retry = value.retry as ResourceDefinition["retry"];
+    resource.retry = value.retry as ResourceRuntimeInput["retry"];
   }
-  // Drop integration-only keys (mock, mockConfig, …) — processors / peer bridge strip them first.
-  void RESOURCE_HTTP_KEYS;
   return resource;
 }
 
 function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient<T> {
   let config = applyDefineApiProcessors({ ...raw });
 
-  // Optional peer: if mock keys remain, Core defers to `@apixa/mocking` on first request.
   if (hasUnhandledMockKeys(config)) {
     config = applyPeerMockBridge(config);
   }
@@ -64,6 +61,8 @@ function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient
     timeout: config.timeout,
     retry: config.retry,
     middleware: config.middleware,
+    queryArrayFormat: config.queryArrayFormat,
+    querySerializer: config.querySerializer,
   };
 
   const client = {} as ApiClient<T>;

@@ -1,6 +1,7 @@
 import { AbortError, HttpError, NetworkError, TimeoutError } from "../errors/index.js";
 import type { HttpMethod } from "../types/http.js";
-import type { ResolvedRetryConfig, RetryConfig } from "../types/retry.js";
+import type { ResolvedRetryConfig, RetryConfig, RetryHookContext } from "../types/retry.js";
+import type { ApiResponse } from "../types/transport.js";
 
 const DEFAULT_METHODS: HttpMethod[] = ["GET", "HEAD"];
 const DEFAULT_BASE_DELAY_MS = 200;
@@ -24,6 +25,9 @@ export function resolveRetryConfig(
     baseDelayMs: value.baseDelayMs ?? DEFAULT_BASE_DELAY_MS,
     maxDelayMs: value.maxDelayMs ?? DEFAULT_MAX_DELAY_MS,
     jitter: value.jitter ?? true,
+    respectRetryAfter: value.respectRetryAfter ?? true,
+    shouldRetry: value.shouldRetry,
+    onRetry: value.onRetry,
   };
 }
 
@@ -37,7 +41,7 @@ export function isRetryableStatus(status: number, statusCodes?: number[]): boole
   return status >= 500 && status <= 599;
 }
 
-export function shouldRetry(
+export function defaultShouldRetry(
   error: unknown,
   method: HttpMethod,
   retry: ResolvedRetryConfig,
@@ -66,7 +70,36 @@ export function shouldRetry(
   return false;
 }
 
-export function computeRetryDelayMs(attempt: number, retry: ResolvedRetryConfig): number {
+export function decideRetry(
+  retry: ResolvedRetryConfig,
+  ctx: RetryHookContext,
+  error: unknown,
+): boolean {
+  if (retry.shouldRetry) {
+    return retry.shouldRetry({ ...ctx, error });
+  }
+  return defaultShouldRetry(error, ctx.method, retry, ctx.attempt);
+}
+
+export function computeRetryDelayMs(
+  attempt: number,
+  retry: ResolvedRetryConfig,
+  response?: ApiResponse<unknown>,
+): number {
+  if (retry.respectRetryAfter && response) {
+    const header = response.headers.get("retry-after");
+    if (header) {
+      const seconds = Number(header);
+      if (Number.isFinite(seconds) && seconds >= 0) {
+        return Math.min(seconds * 1000, retry.maxDelayMs);
+      }
+      const dateMs = Date.parse(header);
+      if (!Number.isNaN(dateMs)) {
+        return Math.min(Math.max(0, dateMs - Date.now()), retry.maxDelayMs);
+      }
+    }
+  }
+
   const exp = retry.baseDelayMs * 2 ** attempt;
   const capped = Math.min(exp, retry.maxDelayMs);
   if (!retry.jitter) {
@@ -111,3 +144,6 @@ function createAbortRejection(signal: AbortSignal): Error {
   error.name = "AbortError";
   return error;
 }
+
+/** @deprecated Use `defaultShouldRetry` / `decideRetry`. Kept for test imports. */
+export const shouldRetry = defaultShouldRetry;

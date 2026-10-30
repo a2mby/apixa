@@ -44,7 +44,7 @@ export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport
 
       let body: unknown;
       try {
-        body = await readBody(response);
+        body = await readBody(response, input.responseType ?? "json");
       } catch (error) {
         body = null;
         // Keep raw response available even if body parsing fails at transport layer.

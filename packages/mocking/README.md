@@ -8,8 +8,8 @@ Standalone, in-memory mock APIs built from local JSON datasets. **No network req
 import { defineMockApi } from "@apixa/mocking";
 
 export const mockApi = defineMockApi({
-  users: { type: "users-sample", size: 100, pagination: true },
-  products: { type: "products-mock", size: 50 },
+  users: { type: "users-mock", slice: 100, pagination: true },
+  products: { type: "products-mock", slice: 50 },
   countries: { type: "countries-csc" },
 });
 
@@ -48,11 +48,11 @@ const comments = commentsPage?.data ?? [];
 
 Each top-level key is a resource. There are no handlers to write — every resource gets the same CRUD operations, typed from its dataset.
 
-| Option       | Meaning                                                                                                |
-| ------------ | ------------------------------------------------------------------------------------------------------ |
-| `type`       | Dataset id (table below). Autocompletes; unknown ids throw `UNKNOWN_DATASET`.                          |
-| `size`       | Load only the first `size` records. A seed limit, not a cap — the resource can grow.                   |
-| `pagination` | `getAll()` returns `{ data, total, page, pageSize, previous, next }` and accepts `{ page, pageSize }`. |
+| Option       | Meaning                                                                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`       | Dataset id (table below). Autocompletes; unknown ids throw `UNKNOWN_DATASET`.                                                                                    |
+| `slice`      | First N records, or `{ start, end }` (half-open). Overshoot returns all rows; negatives / `end < start` throw `InvalidSliceError`. Seed limit, not a growth cap. |
+| `pagination` | `getAll()` returns `{ data, total, page, pageSize, previous, next }` and accepts `{ page, pageSize }`.                                                           |
 
 Any other option (`handlers`, `path`, `mock`, …) is a type error and throws `INVALID_CONFIG`.
 
@@ -75,14 +75,14 @@ Any other option (`handlers`, `path`, `mock`, …) is a type error and throws `I
 
 ### Pagination
 
-One-based. Defaults: `page = 1`, `pageSize = 20`. `total` is the current record count (after `size`, creates and deletes).
+One-based. Defaults: `page = 1`, `pageSize = 20`. `total` is the current record count (after `slice`, creates and deletes).
 
 `page` and `pageSize` must be integers `>= 1`, and `page` can't exceed the last page (an empty resource has one empty page) — otherwise `getAll()` throws `INVALID_PAGINATION`. Passing options to a resource without `pagination: true` throws the same error.
 
 ### Errors
 
-Everything throws `MockApiError`; branch on `error.code`:
-`INVALID_CONFIG` · `UNKNOWN_DATASET` · `NOT_FOUND` · `DUPLICATE_ID` · `INVALID_INPUT` · `INVALID_PAGINATION`.
+Failures extend `MockingErrors` (`MockApiError`, `InvalidSliceError`); branch on `error.code`:
+`INVALID_CONFIG` · `UNKNOWN_DATASET` · `NOT_FOUND` · `DUPLICATE_ID` · `INVALID_INPUT` · `INVALID_PAGINATION` · `INVALID_SLICE`.
 
 ## Datasets
 
@@ -90,8 +90,7 @@ Loaded from the root [`datasets/`](../../datasets/) catalog (`manifest.json` sta
 
 | Dataset id            | Entity type       | Id field    | Records | License  |
 | --------------------- | ----------------- | ----------- | ------: | -------- |
-| `users-sample`        | `User`            | `id`        |       2 | MIT      |
-| `users-mock`          | `MockUser`        | `id`        |     100 | MIT      |
+| `users-mock`          | `User`            | `id`        |     100 | MIT      |
 | `products-mock`       | `Product`         | `id`        |     100 | MIT      |
 | `companies-mock`      | `Company`         | `id`        |      40 | MIT      |
 | `orders-mock`         | `Order`           | `id`        |      80 | MIT      |
@@ -116,7 +115,7 @@ import { users, products } from "@apixa/mocking/data";
 import type { User, Product } from "@apixa/mocking/data";
 ```
 
-Read-only typed records for the small synthetic sets (`users`, `mockUsers`, `products`, `companies`, `orders`, `posts`, `comments`) straight from the root JSON — no copies. Entity types for **every** dataset above are exported too; reference sets (countries, currencies, …) are types only, so importing them costs nothing at runtime.
+Read-only typed records for the small synthetic sets (`users`, `products`, `companies`, `orders`, `posts`, `comments`) straight from the root JSON — no copies. Entity types for **every** dataset above are exported too; reference sets (countries, currencies, …) are types only, so importing them costs nothing at runtime.
 
 ## Core inline mocking
 
@@ -131,7 +130,7 @@ const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
   users: {
     path: "/users",
     mock: true,
-    mockConfig: { type: "users-sample", size: 100, pagination: true },
+    mockConfig: { type: "users-mock", slice: 100, pagination: true },
   },
   payments: { path: "/payments" }, // real network
 });
@@ -140,7 +139,7 @@ const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
 - `mock: true` requires `mockConfig.type` (a registered preset id).
 - Mocked resources never hit the network; others use the normal transport.
 - With `pagination: true`, list GET returns `{ data, total, page, pageSize }` (`page` / `pageSize` query; defaults `1` / `20`).
-- Built-in presets for this path live under `@apixa/mocking/data` (and `@apixa/mocking/data/users`, `…/users-mock`). Importing `@apixa/mocking/data` also teaches TypeScript the known ids (see below).
+- Built-in presets for this path live under `@apixa/mocking/data` (and `@apixa/mocking/data/users-mock`). Importing `@apixa/mocking/data` also teaches TypeScript the known ids (see below).
 
 ### Customizing `mockConfig.type` suggestions
 
@@ -196,7 +195,7 @@ export const api = defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
     mock: true,
     mockConfig: {
       type: "pets-sample", // ← suggested alongside built-in ids
-      size: 50,
+      slice: 50,
       pagination: true,
     },
   },
@@ -208,7 +207,7 @@ Notes:
 - Do not edit `@apixa/core`. Each app or package merges its own ids; they accumulate.
 - A type-only import of an unrelated entity (e.g. only `CountryCode`) does **not** add geography catalog ids — only modules that contain a `declare module "@apixa/core"` merge contribute suggestions.
 - `mockConfig.type` is `keyof MockDatasetIds | (string & {})`: known ids autocomplete, custom strings still type-check (the registry is open). Unknown ids fail at **runtime** when the preset is missing.
-- Built-in reference: [`src/data/users.ts`](./src/data/users.ts) (same `registerDatasetPreset` + `declare module` pair).
+- Built-in reference: [`src/data/users-mock.ts`](./src/data/users-mock.ts) (same `registerDatasetPreset` + `declare module` pair).
 
 ## Node loaders
 

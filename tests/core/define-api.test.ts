@@ -6,7 +6,7 @@ type User = { id: string; name: string; email: string };
 
 type UsersApi = {
   users: {
-    path: string;
+    path: "/users";
     entity: User;
   };
 };
@@ -38,9 +38,9 @@ describe("defineApi", () => {
 
     expectTypeOf(api.users).toHaveProperty("update");
     expectTypeOf(api.users).toHaveProperty("delete");
-    expectTypeOf(api.users.getAll).returns.toEqualTypeOf<Promise<User[]>>();
 
     const users = await api.users.getAll();
+    expectTypeOf(users).toEqualTypeOf<User[]>();
     expect(users).toEqual([{ id: "1", name: "Ada", email: "ada@example.com" }]);
   });
 
@@ -103,17 +103,15 @@ describe("defineApi", () => {
       },
     });
 
-    expectTypeOf(api.users.getAll).returns.toEqualTypeOf<Promise<User[]>>();
     expectTypeOf(api.users.getByID).parameter(0).toEqualTypeOf<string | number>();
-    expectTypeOf(api.users.getByID).returns.toEqualTypeOf<Promise<User>>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
-    expectTypeOf(api.users.create).returns.toEqualTypeOf<Promise<User>>();
     expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<string | number>();
     expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<Partial<User>>();
-    expectTypeOf(api.users.delete).returns.toEqualTypeOf<Promise<void>>();
 
     const created = await api.users.create({ name: "Ada", email: "ada@example.com" });
     const user = await api.users.getByID("1");
+    expectTypeOf(created).toEqualTypeOf<User>();
+    expectTypeOf(user).toEqualTypeOf<User>();
 
     expect(created.id).toBe("3");
     expect(user.email).toBe("ada@example.com");

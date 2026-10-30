@@ -1,13 +1,19 @@
-import type { RequestConfig } from "./transport.js";
+import type { ApiResponse, RequestConfig } from "./transport.js";
 
-export type MiddlewareNext = () => Promise<unknown>;
+export type MiddlewareNext = () => Promise<ApiResponse<unknown>>;
 
 /**
- * Thin request interceptor. Runs once per logical call (wraps the full retry loop).
- * Mutate `ctx.request` (e.g. `ctx.request.headers.set(...)`) before calling `next()`.
+ * Request interceptor. `next()` runs the remaining chain + one transport attempt
+ * and may be called more than once (e.g. refresh token then retry).
  */
-export type Middleware = (ctx: MiddlewareContext, next: MiddlewareNext) => Promise<unknown>;
+export type Middleware = (
+  ctx: MiddlewareContext,
+  next: MiddlewareNext,
+) => Promise<ApiResponse<unknown>>;
 
 export type MiddlewareContext = {
   request: RequestConfig;
+  response?: ApiResponse<unknown>;
+  attempt: number;
+  meta: Record<string, unknown>;
 };

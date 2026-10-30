@@ -2,55 +2,46 @@
 
 TypeScript API client: `defineApi()`, default-first resource CRUD, Fetch transport, standardized errors.
 
-## Request reliability
-
-### Cancel and timeout
-
-Pass `signal` and/or `timeout` on any operation call (`RequestOptions`). Precedence: **call → operation → resource → api**.
-
-| Outcome                     | Error          |
-| --------------------------- | -------------- |
-| Caller aborts `AbortSignal` | `AbortError`   |
-| Configured timeout elapses  | `TimeoutError` |
+## Request options
 
 ```ts
-const controller = new AbortController();
-await api.users.getByID("1", { signal: controller.signal, timeout: 5_000 });
-controller.abort();
+await api.users.getAll({
+  query: { active: true },
+  signal,
+  timeout: 5_000,
+  retry: { retries: 1 },
+  meta: { reason: "warmup" },
+  full: true, // → ApiResponse<T>
+  responseType: "json",
+});
 ```
 
-### Retries (opt-in)
+## Retries
 
-Root `retry` (optional overrides on resource / operation; `false` disables):
+Opt-in `retry` on api / resource / operation / call. Defaults: methods `GET`/`HEAD`, status `408`/`429`/`5xx`, exponential backoff. Also: `respectRetryAfter`, `shouldRetry(ctx)`, `onRetry(ctx)`.
 
-| Field         | Default                       |
-| ------------- | ----------------------------- |
-| `retries`     | required when `retry` is set  |
-| `methods`     | `["GET", "HEAD"]`             |
-| `statusCodes` | `408`, `429`, and `500`–`599` |
-| `baseDelayMs` | `200`                         |
-| `maxDelayMs`  | `2000`                        |
-| `jitter`      | `true`                        |
-
-Retries also apply to `NetworkError` and `TimeoutError`. **Never** after `AbortError`. Backoff is exponential (`baseDelayMs * 2^attempt`), capped, optionally jittered.
-
-### Middleware
-
-Ordered `middleware` on `defineApi`. Each hook runs **once per logical call** and wraps the full retry loop:
+## Middleware
 
 ```ts
-import type { Middleware } from "@apixa/core";
-
-const withTrace: Middleware = async (ctx, next) => {
-  ctx.request.headers.set("X-Trace", "1");
-  return next();
+const refresh: Middleware = async (ctx, next) => {
+  let res = await next(); // ApiResponse — may call again
+  if (res.status === 401) res = await next();
+  return res;
 };
 ```
 
-Mutate `ctx.request` before `next()`. This is not a full auth or logging product.
+Context: `{ request, response?, attempt, meta }`.
+
+## Plugin seams
+
+Empty `ResourceExtensions` / `OperationExtensions` — integrations augment via `declare module "@apixa/core"`. Resource `mock` / `mockConfig` live in `@apixa/mocking`.
+
+## Errors
+
+`ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT`.  
+`ApiError` has `code`, `retryable`, `attempt`. Guards: `isApiError`, `isHttpError`, `isTimeoutError`.
 
 ## Notes
 
-- Operations return native `Promise<T>` (response body unwrapped).
-- No React / Next / TanStack Query dependencies.
-- Mocking lives in optional peer `@apixa/mocking` — not on the production hot path.
+- Operations return native `Promise<T>` (unwrap) unless `full: true`.
+- No React / Next / TanStack Query in Core.

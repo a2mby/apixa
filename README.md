@@ -103,7 +103,7 @@ const api = defineApi({
 });
 ```
 
-Thin middleware runs once per logical call and wraps the full retry loop:
+Thin middleware: `next()` returns `ApiResponse` and may be called more than once (e.g. refresh then retry):
 
 ```ts
 const api = defineApi({
@@ -118,7 +118,7 @@ const api = defineApi({
 });
 ```
 
-See [`packages/core/README.md`](./packages/core/README.md) for retry fields and precedence.
+See [`packages/core/README.md`](./packages/core/README.md) and CHANGELOG v0.7.0 migration notes.
 
 ### Simple Mocking (implemented)
 
@@ -128,8 +128,8 @@ Standalone, in-memory mock API from local datasets — no `defineApi()`, no netw
 import { defineMockApi } from "@apixa/mocking";
 
 const mockApi = defineMockApi({
-  users: { type: "users-sample", size: 100, pagination: true },
-  products: { type: "products-mock", size: 50 },
+  users: { type: "users-mock", slice: 100, pagination: true },
+  products: { type: "products-mock", slice: 50 },
 });
 
 const { data, total } = await mockApi.users.getAll({ page: 1, pageSize: 10 });
@@ -147,7 +147,7 @@ const api = defineApi({
   users: {
     path: "/users",
     mock: true,
-    mockConfig: { type: "users-sample", pagination: true },
+    mockConfig: { type: "users-mock", pagination: true },
   },
   payments: { path: "/payments" }, // real network
 });
@@ -161,11 +161,11 @@ See [`examples/next`](./examples/next) for the primary real-app playground (Next
 
 Apixa is being designed around a small, extensible core that can grow into a broader API development ecosystem.
 
-**Implemented:** `defineApi()` with default-first CRUD (v0.2.0), resource-only `defineApi<T>()(config)` with derived create/update + `BuiltinHeaders` (v0.4.0), URL/body/headers merge, Fetch transport, standardized errors, `@apixa/mocking` + local datasets (v0.5.0), request reliability — abort, timeout, retries, thin middleware (v0.6.0).
+**Implemented:** `defineApi()` with default-first CRUD (v0.2.0), resource-only `defineApi<T>()(config)` (v0.4.0), `@apixa/mocking` + datasets (v0.5.0), request reliability (v0.6.0), thin Core + plugin seams — path-param concat, `full` / middleware re-call, extension interfaces, structured error codes (v0.7.0).
 
 **Planned later:**
 
-- `crud<>()` preset and path-param template inference.
+- `crud<>()` preset.
 - Runtime schema validation hooks (no schema library in Core).
 - Live pagination, filtering, sorting, and search conventions.
 - Online dataset catalog (browse/download) — local datasets only today.
@@ -198,26 +198,26 @@ scripts/            # Frontend run scripts (macOS / Linux / Windows)
 tests/              # Vitest suite for core + mocking
 docs/               # Living context, architecture, roadmap, ADRs
 versions/
-  v0.6.0/           # Current coding contract
+  v0.7.0/           # Latest coding contract (shipped)
 ```
 
 Planned later packages (not created yet): `transport-fetch`, `client`, `server`, `tanstack-query`, `openapi`.
 
 ## Documentation
 
-| Doc                                            | Purpose                                               |
-| ---------------------------------------------- | ----------------------------------------------------- |
-| [docs/context.md](./docs/context.md)           | Project identity, principles, constraints             |
-| [docs/architecture.md](./docs/architecture.md) | Core shape and request flow                           |
-| [docs/roadmap.md](./docs/roadmap.md)           | Milestones and future phases                          |
-| [docs/conventions.md](./docs/conventions.md)   | How we build and document                             |
-| [versions/v0.6.0/](./versions/v0.6.0/)         | **Current coding contract** (scope, plan, acceptance) |
+| Doc                                            | Purpose                                              |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| [docs/context.md](./docs/context.md)           | Project identity, principles, constraints            |
+| [docs/architecture.md](./docs/architecture.md) | Core shape and request flow                          |
+| [docs/roadmap.md](./docs/roadmap.md)           | Milestones and future phases                         |
+| [docs/conventions.md](./docs/conventions.md)   | How we build and document                            |
+| [versions/v0.7.0/](./versions/v0.7.0/)         | **Latest coding contract** (scope, plan, acceptance) |
 
 ## Project Status
 
-Apixa is in early development. Active milestone: **v0.6.0** (Core request reliability). `@apixa/core` exposes `defineApi()` with default-first CRUD, injectable `Transport`, abort/timeout, opt-in retries, and thin middleware. `@apixa/mocking` serves local JSON datasets without a live backend.
+Apixa is in early development. Last shipped: **v0.7.0** (thin Core + plugin seams). `@apixa/core` exposes `defineApi()` with default-first CRUD, reliability, re-callable middleware, and extension seams. `@apixa/mocking` augments Core for resource mocks.
 
-See [versions/v0.6.0/acceptance-criteria.md](./versions/v0.6.0/acceptance-criteria.md) for the milestone checklist.
+See [versions/v0.7.0/acceptance-criteria.md](./versions/v0.7.0/acceptance-criteria.md) for the milestone checklist.
 
 ## Author
 

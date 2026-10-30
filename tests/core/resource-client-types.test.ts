@@ -6,7 +6,7 @@ type User = { id: string; name: string; email: string };
 
 type TypedUsersApi = {
   users: {
-    path: string;
+    path: "/users";
     entity: User;
     operations: {
       search: {
@@ -75,7 +75,6 @@ describe("resource client TypeScript surface", () => {
       },
     });
 
-    expectTypeOf(api.users.getAll).returns.toEqualTypeOf<Promise<User[]>>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
     expectTypeOf(api.users.getByID).toBeFunction();
     expectTypeOf(api.users.search).toBeFunction();

@@ -5,4 +5,5 @@ export { ParseError } from "./parse-error.js";
 export { ValidationError } from "./validation-error.js";
 export { TimeoutError } from "./timeout-error.js";
 export { AbortError } from "./abort-error.js";
-export { isApiError } from "./guards.js";
+export { isApiError, isHttpError, isTimeoutError } from "./guards.js";
+export type { ApiErrorCode } from "../types/errors.js";

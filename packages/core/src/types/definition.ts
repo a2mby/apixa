@@ -1,7 +1,11 @@
-import type { BuiltinHeaders, HeadersInitLike, HttpMethod } from "./http.js";
+import type { OperationExtensions, ResourceExtensions } from "./extensions.js";
+import type { HeadersInitLike, HttpMethod, QueryParams } from "./http.js";
 import type { Middleware } from "./middleware.js";
 import type { RetryConfig } from "./retry.js";
 import type { Transport } from "./transport.js";
+
+/** How array query values are encoded. Default: `"repeat"`. */
+export type QueryArrayFormat = "repeat" | "comma" | "brackets";
 
 /**
  * Runtime operation config. Payload types live on the `defineApi<T>` state generic,
@@ -16,47 +20,46 @@ export interface OperationDefinition {
   /** Opt-in retry override for this operation (`false` disables inherited retry). */
   retry?: RetryConfig | false;
   /**
-   * Whether the operation sends a JSON body. Builtin `create` / `update` default to true.
-   * Set explicitly for custom body operations.
+   * Override body presence. Default: `true` for POST / PUT / PATCH, else `false`.
    */
   hasBody?: boolean;
 }
 
-export interface ResourceDefinition {
-  path: string;
-  /** Optional. When omitted, built-in CRUD operations are generated. When present, merges onto builtins. */
-  operations?: Record<string, OperationDefinition>;
-  headers?: HeadersInitLike;
-  timeout?: number;
-  /** Opt-in retry override for this resource (`false` disables inherited retry). */
-  retry?: RetryConfig | false;
-}
-
 export type ReservedApiConfigKey =
-  "baseURL" | "headers" | "transport" | "timeout" | "retry" | "middleware";
+  | "baseURL"
+  | "headers"
+  | "transport"
+  | "timeout"
+  | "retry"
+  | "middleware"
+  | "queryArrayFormat"
+  | "querySerializer";
 
 export interface ApiRootConfig {
   baseURL: string;
-  headers?: BuiltinHeaders | HeadersInitLike;
+  headers?: HeadersInitLike;
   transport?: Transport;
   timeout?: number;
   /** Opt-in retries. Omitted / `false` means no retries. */
   retry?: RetryConfig | false;
   /**
-   * Ordered interceptors. Each runs once per logical call and wraps the full retry loop.
-   * Mutate `ctx.request` (e.g. headers) before `next()`.
+   * Ordered interceptors. `next()` returns `ApiResponse` and may be called more than once.
    */
   middleware?: Middleware[];
+  /** Array encoding for query strings. Default: `"repeat"`. */
+  queryArrayFormat?: QueryArrayFormat;
+  /** When set, replaces Core’s query string builder entirely. */
+  querySerializer?: (query: QueryParams) => string;
 }
 
 /**
  * Developer state for `defineApi<T>()`: **resources only**.
- * Root builtins (`baseURL`, `headers`, `transport`, `timeout`, `retry`, `middleware`) come from Core on the runtime config.
+ * Root builtins come from Core on the runtime config.
  */
-export type ApiState = Record<string, ResourceState | unknown>;
+export type ApiState = Record<string, ResourceState>;
 
 /** Type-only keys on a resource state (not required at runtime). */
-export type ResourceTypeOnlyKey = "entity";
+export type ResourceTypeOnlyKey = "entity" | "list" | "query";
 
 /** Type-only keys on an operation state (not required at runtime). */
 export type OperationTypeOnlyKey = "body" | "response" | "query";
@@ -68,18 +71,31 @@ export type OperationState = OperationDefinition & {
 };
 
 /**
- * Resource state: developer declares `path` + `entity`.
+ * Resource state: developer declares `path` + `entity` (and optional `list` / `query`).
  * `create` / `update` bodies are derived as `Omit<Entity,"id">` / `Partial<Entity>`.
  */
 export type ResourceState = {
   path: string;
-  headers?: BuiltinHeaders | HeadersInitLike;
+  headers?: HeadersInitLike;
   timeout?: number;
   retry?: RetryConfig | false;
-  /** Entity for getAll / getByID and create/update response typing. */
+  /** Entity for getByID and create/update response typing. */
   entity?: unknown;
+  /** Override getAll response type (default `Entity[]`). */
+  list?: unknown;
+  /** Default query type for getAll when op does not declare `query`. */
+  query?: unknown;
   operations?: Record<string, OperationState>;
 };
+
+/** Runtime resource bag (value-only) + plugin seam. */
+export type ResourceRuntimeInput = {
+  path: string;
+  headers?: HeadersInitLike;
+  timeout?: number;
+  retry?: RetryConfig | false;
+  operations?: Record<string, OperationDefinition & OperationExtensions>;
+} & ResourceExtensions;
 
 export interface ResolvedApiConfig {
   baseURL: string;
@@ -88,6 +104,8 @@ export interface ResolvedApiConfig {
   timeout?: number;
   retry?: RetryConfig | false;
   middleware?: Middleware[];
+  queryArrayFormat?: QueryArrayFormat;
+  querySerializer?: (query: QueryParams) => string;
 }
 
 export interface ResolvedResourceConfig {

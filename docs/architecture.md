@@ -111,4 +111,4 @@ Integrations always depend on Core. Core never depends on integrations.
 
 - Living context: [context.md](./context.md)
 - Roadmap: [roadmap.md](./roadmap.md)
-- Latest coding contract: [../versions/v0.6.0/](../versions/v0.6.0/) (shipped; see [versions/README.md](../versions/README.md))
+- Latest coding contract: [../versions/v0.7.0/](../versions/v0.7.0/) (shipped; see [versions/README.md](../versions/README.md))

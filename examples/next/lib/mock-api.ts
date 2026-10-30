@@ -5,8 +5,8 @@ import { defineMockApi } from "@apixa/mocking";
  * No network requests and no `defineApi()` — separate from `api.ts`, they share no state.
  */
 export const mockApi = defineMockApi({
-  users: { type: "users-sample", pagination: true },
-  products: { type: "products-mock", size: 50 },
+  users: { type: "users-mock", pagination: true },
+  products: { type: "products-mock", slice: 50 },
 });
 
 // await mockApi.users.getAll({ page: 1, pageSize: 10 }); // { data, total, page, pageSize }

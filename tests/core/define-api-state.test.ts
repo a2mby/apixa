@@ -22,29 +22,28 @@ describe("defineApi<T> entity-only state typing", () => {
       users: { path: "/users" },
     });
 
-    expectTypeOf(api.users.getAll).returns.toEqualTypeOf<Promise<User[]>>();
-    expectTypeOf(api.users.getByID).returns.toEqualTypeOf<Promise<User>>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
-    expectTypeOf(api.users.create).returns.toEqualTypeOf<Promise<User>>();
     expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<Partial<User>>();
-    expectTypeOf(api.users.delete).returns.toEqualTypeOf<Promise<void>>();
 
     const users = await api.users.getAll();
+    expectTypeOf(users).toEqualTypeOf<User[]>();
+    const user = await api.users.getByID("1");
+    expectTypeOf(user).toEqualTypeOf<User>();
     expect(users[0]?.name).toBe("Ada");
   });
 
-  it("does not require root keys on AppApi", () => {
+  it("does not require root keys on AppApi", async () => {
     type ResourcesOnly = {
-      users: { path: string; entity: User };
+      users: { path: "/users"; entity: User };
     };
 
     const api = defineApi<ResourcesOnly>()({
       baseURL: "https://api.example.com",
-      transport: createFakeTransport(() => ({ body: null })),
+      transport: createFakeTransport(() => ({ body: { id: "1", name: "Ada", email: "a@b.c" } })),
       users: { path: "/users" },
     });
 
-    expectTypeOf(api.users.getByID).returns.toEqualTypeOf<Promise<User>>();
+    expectTypeOf(await api.users.getByID("1")).toEqualTypeOf<User>();
     expect(api.users).toHaveProperty("create");
   });
 
@@ -66,21 +65,21 @@ describe("defineApi<T> entity-only state typing", () => {
     expect(api.users).toHaveProperty("getAll");
   });
 
-  it("yields unknown payloads when entity is omitted", () => {
+  it("yields unknown payloads when entity is omitted", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      transport: createFakeTransport(() => ({ body: null })),
+      transport: createFakeTransport(() => ({ body: [] })),
       users: { path: "/users" },
     });
 
-    expectTypeOf(api.users.getAll).returns.toEqualTypeOf<Promise<unknown[]>>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<unknown>();
+    expectTypeOf(await api.users.getAll()).toEqualTypeOf<unknown[]>();
   });
 
   it("refines custom operations from state operations bag", async () => {
     type SearchApi = {
       users: {
-        path: string;
+        path: "/users";
         entity: User;
         operations: {
           search: {
@@ -107,9 +106,7 @@ describe("defineApi<T> entity-only state typing", () => {
     expectTypeOf(api.users.search)
       .parameter(0)
       .toMatchTypeOf<{ query?: { q: string } } | undefined>();
-    expectTypeOf(api.users.search).returns.toEqualTypeOf<Promise<User[]>>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
-
-    await api.users.search({ query: { q: "ada" } });
+    expectTypeOf(await api.users.search({ query: { q: "ada" } })).toEqualTypeOf<User[]>();
   });
 });

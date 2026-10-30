@@ -15,7 +15,10 @@ export {
   TimeoutError,
   AbortError,
   isApiError,
+  isHttpError,
+  isTimeoutError,
 } from "./errors/index.js";
+export type { ApiErrorCode } from "./errors/index.js";
 
 export { createFetchTransport } from "./transport/index.js";
 
@@ -31,20 +34,27 @@ export type {
   TransportResponse,
   Transport,
   OperationDefinition,
-  ResourceDefinition,
   RequestOptions,
+  ResponseType,
   ApiRootConfig,
   ApiState,
   ResourceState,
   OperationState,
+  ResourceRuntimeInput,
+  QueryArrayFormat,
   ApiInput,
   ApiClient,
   ResourceClient,
-  ResourceMockConfigInput,
   MockDatasetIds,
   RetryConfig,
   ResolvedRetryConfig,
+  RetryHookContext,
   Middleware,
   MiddlewareContext,
   MiddlewareNext,
+  ResourceExtensions,
+  OperationExtensions,
+  ListOf,
+  QueryOf,
+  CallResult,
 } from "./types/index.js";

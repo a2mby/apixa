@@ -20,7 +20,7 @@ describe("defineApi lazy optional mocking peer", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-sample" },
+        mockConfig: { type: "users-mock" },
       },
     });
 

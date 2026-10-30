@@ -32,7 +32,7 @@ defineApi<AppApi>()({
   users: {
     path: "/users",
     mock: true,
-    mockConfig: { type: "users-sample", size: 100 },
+    mockConfig: { type: "users-mock", slice: 100 },
   },
 });
 ```
@@ -47,8 +47,8 @@ Typed entity: `import type { User } from "@apixa/mocking/data"`.
 
 ```ts
 export const mockApi = defineMockApi({
-  users: { type: "users-sample", pagination: true },
-  products: { type: "products-mock", size: 50 },
+  users: { type: "users-mock", pagination: true },
+  products: { type: "products-mock", slice: 50 },
 });
 ```
 

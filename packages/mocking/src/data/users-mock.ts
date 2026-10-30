@@ -1,7 +1,8 @@
 import type { Dataset, DatasetMeta } from "../types.js";
 import { registerDatasetPreset } from "../presets/registry.js";
+import usersMockJson from "../../../../datasets/users/users-mock/data.json";
 
-/** Entity type for the `users-mock` synthetic preset (first slice for typed DX). */
+/** Entity type for the `users-mock` synthetic preset. */
 export type MockUser = {
   id: string;
   name: string;
@@ -9,6 +10,9 @@ export type MockUser = {
   username: string;
   companyId: string;
 };
+
+/** Alias used by some WIP / entity re-exports. */
+export type User = MockUser;
 
 const meta: DatasetMeta = {
   id: "users-mock",
@@ -29,33 +33,8 @@ const meta: DatasetMeta = {
   records: 100,
 };
 
-/**
- * Compact typed sample of `users-mock` for browser imports (not the full 100-row dump).
- * Full catalog remains under root `datasets/users/users-mock/`.
- */
-export const data: MockUser[] = [
-  {
-    id: "1",
-    name: "Jeremiah Turcotte",
-    email: "jeremiah11@yahoo.com",
-    username: "user001",
-    companyId: "1",
-  },
-  {
-    id: "2",
-    name: "Timothy Wehner Sr.",
-    email: "timothy.white@gmail.com",
-    username: "user002",
-    companyId: "2",
-  },
-  {
-    id: "3",
-    name: "Elijah Schimmel",
-    email: "elijah_kilback@yahoo.com",
-    username: "user003",
-    companyId: "3",
-  },
-];
+/** Full `users-mock` records (same as root `datasets/users/users-mock/data.json`). */
+export const data: MockUser[] = usersMockJson as MockUser[];
 
 export const dataset: Dataset = {
   meta: { ...meta, records: data.length },

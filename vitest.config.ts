@@ -11,7 +11,6 @@ export default defineConfig({
     alias: {
       "@apixa/core": resolve(root, "packages/core/src/index.ts"),
       "@apixa/mocking/data/users-mock": resolve(root, "packages/mocking/src/data/users-mock.ts"),
-      "@apixa/mocking/data/users": resolve(root, "packages/mocking/src/data/users.ts"),
       "@apixa/mocking/data": resolve(root, "packages/mocking/src/data/index.ts"),
       "@apixa/mocking/node": resolve(root, "packages/mocking/src/node.ts"),
       "@apixa/mocking/register": resolve(root, "packages/mocking/src/register-entry.ts"),

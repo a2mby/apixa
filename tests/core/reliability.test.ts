@@ -138,7 +138,7 @@ describe("request reliability", () => {
     }
   });
 
-  it("runs middleware once and lets it mutate request headers before transport", async () => {
+  it("runs middleware per attempt and mutates request headers before transport", async () => {
     const seen: string[] = [];
     let middlewareCalls = 0;
 
@@ -163,8 +163,36 @@ describe("request reliability", () => {
     });
 
     await api.users.getAll();
-    expect(middlewareCalls).toBe(1);
+    expect(middlewareCalls).toBe(2);
     expect(seen).toEqual(["1", "1"]);
+  });
+
+  it("allows middleware to call next() more than once", async () => {
+    let transportCalls = 0;
+
+    const refresh: Middleware = async (_ctx, next) => {
+      let res = await next();
+      if (res.status === 401) {
+        res = await next();
+      }
+      return res;
+    };
+
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      middleware: [refresh],
+      transport: createFakeTransport(() => {
+        transportCalls += 1;
+        if (transportCalls === 1) {
+          return { status: 401, body: { detail: "unauthorized" } };
+        }
+        return { body: [{ id: "1" }] };
+      }),
+      users: { path: "/users" },
+    });
+
+    await expect(api.users.getAll()).resolves.toEqual([{ id: "1" }]);
+    expect(transportCalls).toBe(2);
   });
 
   it("preserves middleware error path as documented ApiError types", async () => {

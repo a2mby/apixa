@@ -26,6 +26,7 @@ None — open the next milestone with `/start-version` when ready.
 
 | Version | Status                                                               | Path                 |
 | ------- | -------------------------------------------------------------------- | -------------------- |
+| v0.7.0  | Shipped — Thin Core + plugin seams (types, middleware, errors)       | [v0.7.0/](./v0.7.0/) |
 | v0.6.0  | Shipped — Core request reliability (abort, retries, thin middleware) | [v0.6.0/](./v0.6.0/) |
 | v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend           | [v0.5.0/](./v0.5.0/) |
 | v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing                  | [v0.4.0/](./v0.4.0/) |

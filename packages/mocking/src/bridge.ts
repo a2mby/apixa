@@ -1,6 +1,7 @@
 import { createFetchTransport, type DefineApiConfigBag, type Transport } from "@apixa/core";
 import { ensureBuiltinPresets } from "./presets/builtins.js";
 import { getDatasetPreset, listDatasetPresetIds } from "./presets/registry.js";
+import { readSliceOption, type MockSlice } from "./slice.js";
 import { buildStore, type MockStore } from "./store.js";
 import { createSelectiveMockTransport } from "./transport.js";
 import type { Dataset } from "./types.js";
@@ -12,7 +13,7 @@ export type ResourceMockSpec = {
   path: string;
   mockConfig: {
     type: string;
-    size?: number;
+    slice?: MockSlice;
     pagination?: boolean;
   };
 };
@@ -22,7 +23,7 @@ type ResourceBag = {
   mock?: boolean;
   mockConfig?: {
     type?: string;
-    size?: number;
+    slice?: MockSlice;
     pagination?: boolean;
     [key: string]: unknown;
   };
@@ -49,7 +50,7 @@ function storeFromSpec(spec: ResourceMockSpec): MockStore {
   const dataset = resolveDataset(spec.mockConfig.type);
   return buildStore(dataset, {
     path: spec.path || dataset.meta.resource.path,
-    size: spec.mockConfig.size,
+    slice: spec.mockConfig.slice,
     pagination: spec.mockConfig.pagination === true,
   });
 }
@@ -81,7 +82,7 @@ export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineAp
       if (!mockConfig || typeof mockConfig.type !== "string" || !mockConfig.type) {
         throw new Error(
           `Resource "${key}" has mock: true but mockConfig.type is missing. ` +
-            `Set mockConfig: { type: "<dataset-id>" } (e.g. "users-sample").`,
+            `Set mockConfig: { type: "<dataset-id>" } (e.g. "users-mock").`,
         );
       }
 
@@ -91,7 +92,7 @@ export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineAp
           path: typeof rest.path === "string" ? rest.path : "",
           mockConfig: {
             type: mockConfig.type,
-            size: typeof mockConfig.size === "number" ? mockConfig.size : undefined,
+            slice: readSliceOption(mockConfig.slice, `Resource "${key}" mockConfig`),
             pagination: mockConfig.pagination === true,
           },
         }),
