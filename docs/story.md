@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-10-30 — Land v0.8.0 Unified TanStack Query resource integration
+
+Shipped `@apixa/tanstack-query` with primary `useResourceQuery` (list state + Promise CRUD/`getById` + invalidate + `mutations.*`). Internals: key factory, controller `queryOptions`/`mutationOptions`, invalidate-first cache with D1 callback order. Escape hatch `@apixa/tanstack-query/advanced`. Next playground migrated; tests under `tests/tanstack-query/`. Core remains React-free. Deferred: `patch-list`, optimistic helpers, infinite queries, auto custom ops.
+
+## 2026-10-30 — Start v0.8.0 Unified TanStack Query resource integration
+
+Opened [`versions/v0.8.0/`](../versions/v0.8.0/) for optional `@apixa/tanstack-query` with non-negotiable unified `useResourceQuery` DX. Locked D1–D5 in the implementation plan: callback composition order, mutation concurrency/pending semantics, inference from Apixa signatures, query-key identity (scope + list params), and invalidate-first v1 cache (defer `patch-list` / optimistic / infinite). Contract and pointers only — no package implementation in this kickoff.
+
 ## 2026-10-30 — Align mockApi getAll typing with defineApi lists (#45)
 
 `defineMockApi` `getAll` is now strictly `T[]` or `Page<T>` (no `Page | T[]` fallback). Next `api` / `mockApi` users both return `User[]`; paginated `Page` stays on comments. Playground query uses `data ?? []` typed as `User[]` so TanStack defaults are not `never[]`.

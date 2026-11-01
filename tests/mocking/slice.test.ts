@@ -53,13 +53,14 @@ describe("mock slice", () => {
     ).toThrow(InvalidSliceError);
   });
 
-  it("defineApi mockConfig users-mock + slice: 100 yields 100 users", async () => {
+  it("defineApi users-mock + slice: 100 yields 100 users", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-mock", slice: 100 },
+        slice: 100,
+        mockConfig: { type: "users-mock" },
       },
     });
     const users = (await api.users.getAll()) as User[];

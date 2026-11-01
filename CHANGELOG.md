@@ -6,11 +6,30 @@
 
 - `@apixa/core` — rename builtin operation `getByID` → `getById` so `defineApi` matches `defineMockApi`. Call sites and `operations` overrides must use `getById` (no alias).
 - `@apixa/mocking` — rename resource / `mockConfig` option `size` → `slice`. `slice` accepts a non-negative integer (first N rows) or `{ start, end }` (half-open). Overshooting the dataset returns all records; negatives and `end < start` throw `InvalidSliceError` (`INVALID_SLICE`) under `MockingErrors`.
+- `@apixa/core` — `slice`, `mock`, and `mockConfig` are first-class on `ResourceExtensions` (no `@apixa/mocking` import required for types/autocomplete). `slice` caps `getAll` array results; with `mock: true` the optional mocking peer also uses it as the seed window. Putting `slice` inside `mockConfig` throws.
 - Removed `users-sample` dataset and `@apixa/mocking/data/users`. Use `users-mock` / `@apixa/mocking/data/users-mock` (`User` entity).
 
 ### Fixed
 
 - Core `mockConfig.type: "users-mock"` now seeds the full 100-row dataset (was a 3-row browser stub).
+
+## 0.8.0
+
+### Added
+
+- **`@apixa/tanstack-query`** — optional TanStack Query integration.
+  - Primary API: `useResourceQuery(resource, { queryKey, scope?, query?, … })`.
+  - One object: list query state (`data`, `isPending`, `isLoading`, `isFetching`, `error`, …), Promise ops (`create` / `update` / `delete` / `getById`), `invalidate` / `refetch` / `keys`, and `mutations.create|update|delete`.
+  - Default cache: invalidate list queries after successful mutations; seed/remove detail keys.
+  - Types inferred from the Apixa resource client.
+  - Escape hatch: `@apixa/tanstack-query/advanced` (`createResourceController`, keys, cache helpers).
+- Next example migrated to `useResourceQuery`.
+
+### Notes
+
+- List loading state never includes mutation pending — use `mutations.*.isPending`.
+- `patch-list`, optimistic helpers, and infinite-query helpers are **not** in 0.8.0.
+- `@apixa/core` remains free of React / TanStack Query.
 
 ## 0.7.0
 

@@ -7,7 +7,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     alias: {
       "@apixa/core": resolve(root, "packages/core/src/index.ts"),
       "@apixa/mocking/data/users-mock": resolve(root, "packages/mocking/src/data/users-mock.ts"),
@@ -15,6 +15,8 @@ export default defineConfig({
       "@apixa/mocking/node": resolve(root, "packages/mocking/src/node.ts"),
       "@apixa/mocking/register": resolve(root, "packages/mocking/src/register-entry.ts"),
       "@apixa/mocking": resolve(root, "packages/mocking/src/index.ts"),
+      "@apixa/tanstack-query": resolve(root, "packages/tanstack-query/src/index.ts"),
+      "@apixa/tanstack-query/advanced": resolve(root, "packages/tanstack-query/src/advanced.ts"),
     },
   },
 });

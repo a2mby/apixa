@@ -63,6 +63,15 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Error codes + isHttpError / isTimeoutError
 - Out: auth, cache, validation, pagination helpers
 
+## Completed: v0.8.0 — Unified TanStack Query resource integration
+
+**Spec:** [versions/v0.8.0/](../versions/v0.8.0/)
+
+- Optional package `@apixa/tanstack-query` with unified `useResourceQuery`
+- List query state, Promise CRUD, invalidate-first cache, per-mutation state, Apixa inference
+- Advanced escape hatch export; Next playground migrated; Core stays framework-agnostic
+- Deferred: `patch-list` / optimistic helpers, infinite queries, auto custom ops
+
 ## Later: Developer experience follow-ups
 
 - Optional schema validation hooks (without baking in a schema library)
@@ -72,7 +81,7 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 
 - Browser and server packages
 - Secure server-only configuration (secrets must not leak to browser bundles)
-- Optional `@apixa/tanstack-query` integration
+- Further `@apixa/tanstack-query` depth (infinite queries, optimistic/`patch-list` helpers) after v0.8.0
 - Other data-fetching library integrations
 - File uploads, downloads, and streaming where appropriate
 

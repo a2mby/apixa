@@ -119,7 +119,7 @@ Read-only typed records for the small synthetic sets (`users`, `products`, `comp
 
 ## Core inline mocking
 
-Install `@apixa/mocking` next to `@apixa/core`. When a resource has `mock` / `mockConfig`, Core lazy-loads `@apixa/mocking/register` on first request — no side-effect `import "@apixa/mocking"` required. You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly (e.g. to fail fast at `defineApi` time via the processor).
+Install `@apixa/mocking` next to `@apixa/core` for **runtime** mocks. Types for `mock` / `mockConfig` / `slice` ship on Core — no mocking import needed for autocomplete. When a resource has `mock` / `mockConfig`, Core lazy-loads `@apixa/mocking/register` on first request. You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly (e.g. to fail fast at `defineApi` time via the processor).
 
 ```ts
 import { defineApi } from "@apixa/core";
@@ -130,13 +130,15 @@ const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
   users: {
     path: "/users",
     mock: true,
-    mockConfig: { type: "users-mock", slice: 100, pagination: true },
+    slice: 100,
+    mockConfig: { type: "users-mock", pagination: true },
   },
   payments: { path: "/payments" }, // real network
 });
 ```
 
 - `mock: true` requires `mockConfig.type` (a registered preset id).
+- `slice` is a Core resource option (next to `path`): on live resources it caps `getAll` array results; with `mock: true` it seeds the mock store (creates may still grow past the seed). Not inside `mockConfig`.
 - Mocked resources never hit the network; others use the normal transport.
 - With `pagination: true`, list GET returns `{ data, total, page, pageSize }` (`page` / `pageSize` query; defaults `1` / `20`).
 - Built-in presets for this path live under `@apixa/mocking/data` (and `@apixa/mocking/data/users-mock`). Importing `@apixa/mocking/data` also teaches TypeScript the known ids (see below).
@@ -193,9 +195,9 @@ export const api = defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
   pets: {
     path: "/pets",
     mock: true,
+    slice: 50,
     mockConfig: {
       type: "pets-sample", // ← suggested alongside built-in ids
-      slice: 50,
       pagination: true,
     },
   },

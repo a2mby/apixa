@@ -21,9 +21,10 @@ export type ResourceMockSpec = {
 type ResourceBag = {
   path?: string;
   mock?: boolean;
+  /** Seed window — sibling of `mock` / `mockConfig`, not nested under `mockConfig`. */
+  slice?: MockSlice;
   mockConfig?: {
     type?: string;
-    slice?: MockSlice;
     pagination?: boolean;
     [key: string]: unknown;
   };
@@ -85,6 +86,11 @@ export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineAp
             `Set mockConfig: { type: "<dataset-id>" } (e.g. "users-mock").`,
         );
       }
+      if ("slice" in (mockConfig as object) && (mockConfig as { slice?: unknown }).slice != null) {
+        throw new Error(
+          `Resource "${key}": put slice on the resource (next to path), not inside mockConfig.`,
+        );
+      }
 
       stores.push(
         storeFromSpec({
@@ -92,18 +98,20 @@ export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineAp
           path: typeof rest.path === "string" ? rest.path : "",
           mockConfig: {
             type: mockConfig.type,
-            slice: readSliceOption(mockConfig.slice, `Resource "${key}" mockConfig`),
+            slice: readSliceOption(rest.slice, `Resource "${key}" slice`),
             pagination: mockConfig.pagination === true,
           },
         }),
       );
+      const { slice: _seedSlice, ...withoutSlice } = rest;
+      next[key] = withoutSlice;
     } else if (mockConfig != null) {
       throw new Error(
         `Resource "${key}" has mockConfig but mock is not true. Set mock: true to enable mocking.`,
       );
+    } else {
+      next[key] = rest;
     }
-
-    next[key] = rest;
   }
 
   if (stores.length === 0) {
