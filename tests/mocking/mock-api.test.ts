@@ -102,7 +102,25 @@ describe("defineMockApi: configuration", () => {
         /pagination must be a boolean/,
       );
     }
-    await expectCode(() => defineMockApi({ a: "users-mock" as never }), "INVALID_CONFIG");
+    await expectCode(() => defineMockApi({ a: 42 as never }), "INVALID_CONFIG");
+  });
+
+  it("accepts a dataset id string as resource shorthand", async () => {
+    const api = defineMockApi({ users: "users-mock" });
+    expectTypeOf(api.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
+    const rows = await api.users.getAll();
+    expect(rows.length).toBeGreaterThan(0);
+  });
+
+  it("accepts mixed string and object resources", async () => {
+    const api = defineMockApi({
+      users: "users-mock",
+      products: { type: "products-mock", slice: 3, pagination: true },
+    });
+    expect(Array.isArray(await api.users.getAll())).toBe(true);
+    const page = await api.products.getAll({ page: 1, pageSize: 1 });
+    expect(page).toMatchObject({ total: 3, page: 1, pageSize: 1 });
+    expect(page.data).toHaveLength(1);
   });
 
   it("infers entity, id, and return types from the dataset", () => {
@@ -585,7 +603,7 @@ describe("defineMockApi alongside Core inline mocking", () => {
     const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2 } });
     const coreApi = defineApi({
       baseURL: "https://api.example.com",
-      users: { path: "/users", mock: true, slice: 2, mockConfig: { type: "users-mock" } },
+      users: { path: "/users", mock: "users-mock", slice: 2 },
     });
 
     await coreApi.users.create({
@@ -611,7 +629,7 @@ describe("defineMockApi alongside Core inline mocking", () => {
     const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2 } });
     const coreApi = defineApi<{ users: { path: "/users"; entity: User } }>()({
       baseURL: "https://api.example.com",
-      users: { path: "/users", mock: true, slice: 2, mockConfig: { type: "users-mock" } },
+      users: { path: "/users", mock: "users-mock", slice: 2 },
     });
     expectTypeOf(mockApi.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
     expectTypeOf(coreApi.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
@@ -627,9 +645,9 @@ describe("defineMockApi alongside Core inline mocking", () => {
       baseURL: "https://api.example.com",
       users: {
         path: "/users",
-        mock: true,
+        mock: "users-mock",
         slice: 2,
-        mockConfig: { type: "users-mock", pagination: true },
+        pagination: true,
       },
     });
 

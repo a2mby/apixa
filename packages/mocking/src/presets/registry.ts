@@ -2,7 +2,7 @@ import type { Dataset } from "../types.js";
 
 const presets = new Map<string, Dataset>();
 
-/** Register a typed preset dataset by id (`mockConfig.type`). */
+/** Register a typed preset dataset by id (`mock: "<id>"` / `defineMockApi` `type`). */
 export function registerDatasetPreset(id: string, dataset: Dataset): void {
   presets.set(id, dataset);
 }

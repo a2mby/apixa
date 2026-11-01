@@ -19,23 +19,18 @@ export type PeerMockSlice = number | { start: number; end: number };
 export type PeerResourceMockSpec = {
   name: string;
   path: string;
-  mockConfig: {
-    type: string;
-    slice?: PeerMockSlice;
-    pagination?: boolean;
-  };
+  type: string;
+  slice?: PeerMockSlice;
+  pagination?: boolean;
 };
 
 type ResourceBag = {
   path?: string;
-  mock?: boolean;
-  /** Core list cap / mock seed — sibling of `path`, not nested under `mockConfig`. */
+  mock?: unknown;
+  /** Core list cap / mock seed — sibling of `path`, not nested under mock. */
   slice?: PeerMockSlice;
-  mockConfig?: {
-    type?: string;
-    pagination?: boolean;
-    [key: string]: unknown;
-  };
+  pagination?: boolean;
+  mockConfig?: unknown;
   [key: string]: unknown;
 };
 
@@ -59,19 +54,23 @@ function isResourceBag(value: unknown): value is ResourceBag {
   return Boolean(value && typeof value === "object" && "path" in (value as object));
 }
 
-/** True when any resource still has mock / mockConfig keys. */
+const LEGACY_HINT = `Use mock: "<dataset-id>" (e.g. mock: "users-mock") and put pagination next to path / slice.`;
+
+/** True when any resource still has mock / legacy mockConfig keys. */
 export function hasUnhandledMockKeys(config: Record<string, unknown>): boolean {
   for (const [key, value] of Object.entries(config)) {
     if (RESERVED_KEYS.has(key)) continue;
     if (!isResourceBag(value)) continue;
-    if (value.mock === true || value.mockConfig != null) return true;
+    if (typeof value.mock === "string") return true;
+    if (typeof value.mock === "boolean") return true;
+    if (value.mockConfig != null) return true;
   }
   return false;
 }
 
 /**
  * Validate and extract mock specs; strip mock keys from the config bag.
- * Throws on invalid mock / mockConfig shape (no dataset resolution — that stays in mocking).
+ * Throws on invalid / legacy mock shape (no dataset resolution — that stays in mocking).
  */
 export function extractAndStripMockSpecs(config: DefineApiConfigBag): {
   config: DefineApiConfigBag;
@@ -84,41 +83,44 @@ export function extractAndStripMockSpecs(config: DefineApiConfigBag): {
     if (RESERVED_KEYS.has(key)) continue;
     if (!isResourceBag(value)) continue;
 
-    const { mock, mockConfig, ...rest } = value;
+    const { mock, mockConfig, pagination, ...rest } = value;
 
-    if (mock === true) {
-      if (!mockConfig || typeof mockConfig.type !== "string" || !mockConfig.type) {
+    if (mockConfig != null) {
+      throw new Error(`Resource "${key}" no longer supports mockConfig. ${LEGACY_HINT}`);
+    }
+
+    if (typeof mock === "boolean") {
+      throw new Error(
+        `Resource "${key}": mock must be a dataset id string, not ${mock}. ${LEGACY_HINT}`,
+      );
+    }
+
+    if (typeof mock === "string") {
+      if (!mock) {
         throw new Error(
-          `Resource "${key}" has mock: true but mockConfig.type is missing. ` +
-            `Set mockConfig: { type: "<dataset-id>" } (e.g. "users-mock").`,
+          `Resource "${key}" has an empty mock id. Set mock: "<dataset-id>" (e.g. "users-mock").`,
         );
       }
       if (typeof rest.path !== "string" || !rest.path) {
-        throw new Error(`Resource "${key}" has mock: true but path is missing.`);
-      }
-      if ("slice" in (mockConfig as object) && (mockConfig as { slice?: unknown }).slice != null) {
-        throw new Error(
-          `Resource "${key}": put slice on the resource (next to path), not inside mockConfig.`,
-        );
+        throw new Error(`Resource "${key}" has mock but path is missing.`);
       }
       specs.push({
         name: key,
         path: rest.path,
-        mockConfig: {
-          type: mockConfig.type,
-          slice: pickSlice(rest.slice),
-          pagination: mockConfig.pagination === true,
-        },
+        type: mock,
+        slice: pickSlice(rest.slice),
+        pagination: pagination === true,
       });
       // Seed uses `slice`; do not also cap getAll (creates may grow past the seed).
       const { slice: _seedSlice, ...withoutSlice } = rest;
       next[key] = withoutSlice;
-    } else if (mockConfig != null) {
+    } else if (mock != null) {
       throw new Error(
-        `Resource "${key}" has mockConfig but mock is not true. Set mock: true to enable mocking.`,
+        `Resource "${key}": mock must be a dataset id string (got ${typeof mock}). ${LEGACY_HINT}`,
       );
     } else {
       // Live resource: keep `slice` so Core can cap getAll array responses.
+      // Drop unused `pagination` so it does not linger on the runtime bag.
       next[key] = rest;
     }
   }

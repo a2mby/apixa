@@ -8,11 +8,9 @@ declare module "@apixa/mocking/register" {
   export type ResourceMockSpec = {
     name: string;
     path: string;
-    mockConfig: {
-      type: string;
-      slice?: number | { start: number; end: number };
-      pagination?: boolean;
-    };
+    type: string;
+    slice?: number | { start: number; end: number };
+    pagination?: boolean;
   };
 
   export function createSelectiveMockTransportFromSpecs(

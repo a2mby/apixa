@@ -12,7 +12,7 @@ function isPlainSliceRange(value: unknown): value is { start: number; end: numbe
   );
 }
 
-/** Config-time check for `defineMockApi` / mockConfig shape (not range order). */
+/** Config-time check for `defineMockApi` / resource `slice` shape (not range order). */
 export function assertSliceConfig(slice: unknown, label: string): asserts slice is MockSlice {
   if (typeof slice === "number") {
     if (!Number.isInteger(slice) || slice < 0) {
@@ -85,7 +85,7 @@ export function applySlice<T>(records: T[], slice: MockSlice | undefined, label 
   return records.slice(start, end);
 }
 
-/** Parse optional slice from a mockConfig / resource bag; throws on bad shape. */
+/** Parse optional slice from a resource bag; throws on bad shape. */
 export function readSliceOption(value: unknown, label: string): MockSlice | undefined {
   if (value === undefined) return undefined;
   assertSliceConfig(value, label);

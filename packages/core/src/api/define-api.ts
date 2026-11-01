@@ -53,7 +53,7 @@ function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient
   if (hasUnhandledMockKeys(config)) {
     throw new Error(
       `Resource mock keys remain unhandled after the optional @apixa/mocking peer bridge. ` +
-        `Install "@apixa/mocking" or remove mock / mockConfig from the resource definition.`,
+        `Install "@apixa/mocking" or remove mock from the resource definition.`,
     );
   }
 

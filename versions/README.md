@@ -26,6 +26,7 @@ None — open the next milestone with `/start-version` when ready.
 
 | Version | Status                                                                     | Path                 |
 | ------- | -------------------------------------------------------------------------- | -------------------- |
+| v0.9.0  | Shipped — Flatten Core mock syntax (`mock: "<dataset-id>"`)                | [v0.9.0/](./v0.9.0/) |
 | v0.8.0  | Shipped — Unified TanStack Query resource integration (`useResourceQuery`) | [v0.8.0/](./v0.8.0/) |
 | v0.7.0  | Shipped — Thin Core + plugin seams (types, middleware, errors)             | [v0.7.0/](./v0.7.0/) |
 | v0.6.0  | Shipped — Core request reliability (abort, retries, thin middleware)       | [v0.6.0/](./v0.6.0/) |

@@ -2,7 +2,7 @@
 
 This document describes the architecture Apixa is building toward, and how the current codebase maps to it.
 
-Apixa Core owns definitions and live HTTP execution. `@apixa/mocking` is a separate package: a standalone in-memory mock API (`defineMockApi()`) plus resource `mock` / `mockConfig` support. Core lists mocking as an **optional peer** and lazy-loads `@apixa/mocking/register` when those keys are present — it does not embed a mock engine. Other optional packages (client, server, TanStack Query, OpenAPI) remain planned boundaries.
+Apixa Core owns definitions and live HTTP execution. `@apixa/mocking` is a separate package: a standalone in-memory mock API (`defineMockApi()`) plus resource `mock: "<dataset-id>"` support. Core lists mocking as an **optional peer** and lazy-loads `@apixa/mocking/register` when `mock` is present — it does not embed a mock engine. Other optional packages (client, server, TanStack Query, OpenAPI) remain planned boundaries.
 
 ## High-level shape
 
@@ -77,7 +77,7 @@ See also:
 Out of Core’s product mock engine (owned by `@apixa/mocking`):
 
 - Core exposes `registerDefineApiProcessor` so integrations can transform config before the client is built
-- Resource `mock` / `mockConfig`: Core strips keys and deferred-loads the optional `@apixa/mocking` peer (or uses a registered processor). No hard dependency; clear error if the peer is missing at request time
+- Resource `mock: "<dataset-id>"` (+ sibling `slice` / `pagination`): Core strips keys and deferred-loads the optional `@apixa/mocking` peer (or uses a registered processor). No hard dependency; clear error if the peer is missing at request time
 - Full auth / logging frameworks (thin `middleware` only — v0.6.0)
 - Schema validation as a Core dependency
 
@@ -87,7 +87,7 @@ Out of Core’s product mock engine (owned by `@apixa/mocking`):
 
 ```text
 packages/core/
-packages/mocking/          # defineMockApi + typed data + Core mock/mockConfig processor
+packages/mocking/          # defineMockApi + typed data + Core mock processor
 packages/tanstack-query/   # optional; unified useResourceQuery (v0.8.0)
 datasets/                  # version-controlled JSON fixtures
 examples/next/             # primary playground (uses mocking + tanstack-query)

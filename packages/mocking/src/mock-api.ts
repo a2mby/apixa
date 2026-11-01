@@ -21,7 +21,18 @@ export type MockResourceConfig = {
   pagination?: boolean;
 };
 
+/** Per-resource input: dataset id string, or full config object. */
+export type MockApiResourceInput = DatasetId | MockResourceConfig;
+
+export type MockApiConfigInput = Record<string, MockApiResourceInput>;
+
 export type MockApiConfig = Record<string, MockResourceConfig>;
+
+type ResolvedConfig<R> = R extends DatasetId
+  ? { readonly type: R }
+  : R extends MockResourceConfig
+    ? R
+    : never;
 
 /** Only the literal `true` enables the page envelope; `false` / absent → plain list. */
 type PaginationOf<R> = R extends { readonly pagination: true }
@@ -30,22 +41,42 @@ type PaginationOf<R> = R extends { readonly pagination: true }
     ? false
     : undefined;
 
-export type MockApi<C extends MockApiConfig> = {
-  [R in keyof C]: MockResource<EntityOf<C[R]["type"]>, IdKeyOf<C[R]["type"]>, PaginationOf<C[R]>>;
+export type MockApi<C extends MockApiConfigInput> = {
+  [R in keyof C]: MockResource<
+    EntityOf<ResolvedConfig<C[R]>["type"]>,
+    IdKeyOf<ResolvedConfig<C[R]>["type"]>,
+    PaginationOf<ResolvedConfig<C[R]>>
+  >;
 };
 
-/** A generic constraint alone lets extra keys through; this makes e.g. `handlers` a type error. */
-type Exact<C extends MockApiConfig> = {
-  [R in keyof C]: { [K in Exclude<keyof C[R], keyof MockResourceConfig>]: never };
+/** Extra keys on object resources are a type error; strings pass through. */
+type ExactInput<C extends MockApiConfigInput> = {
+  [R in keyof C]: C[R] extends string
+    ? C[R]
+    : C[R] extends MockResourceConfig
+      ? C[R] & { [K in Exclude<keyof C[R], keyof MockResourceConfig>]: never }
+      : never;
 };
 
 const OPTIONS = ["type", "slice", "pagination"];
+
+function normalizeConfig(config: Record<string, unknown>): MockApiConfig {
+  const out: MockApiConfig = {};
+  for (const [name, resource] of Object.entries(config)) {
+    if (typeof resource === "string") {
+      out[name] = { type: resource as DatasetId };
+    } else {
+      out[name] = resource as MockResourceConfig;
+    }
+  }
+  return out;
+}
 
 function assertConfig(config: unknown): asserts config is MockApiConfig {
   if (config === null || typeof config !== "object" || Array.isArray(config)) {
     throw new MockApiError(
       "INVALID_CONFIG",
-      'defineMockApi() expects an object of resources, e.g. { users: { type: "users-mock" } }.',
+      'defineMockApi() expects an object of resources, e.g. { users: "users-mock" } or { users: { type: "users-mock" } }.',
     );
   }
   const entries = Object.entries(config);
@@ -58,7 +89,7 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
     if (resource === null || typeof resource !== "object" || Array.isArray(resource)) {
       throw new MockApiError(
         "INVALID_CONFIG",
-        `${label} must be an object like { type: "users-mock" }.`,
+        `${label} must be a dataset id string or an object like { type: "users-mock" }.`,
       );
     }
     for (const key of Object.keys(resource)) {
@@ -97,15 +128,24 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
  *
  * @example
  * const mockApi = defineMockApi({
- *   users: { type: "users-mock", slice: 100, pagination: true },
- *   products: { type: "products-mock", slice: 50 },
+ *   users: "users-mock",
+ *   products: { type: "products-mock", slice: 50, pagination: true },
  * });
- * const { data, total } = await mockApi.users.getAll({ page: 1, pageSize: 10 });
+ * const { data, total } = await mockApi.products.getAll({ page: 1, pageSize: 10 });
  */
-export function defineMockApi<const C extends MockApiConfig>(config: C & Exact<C>): MockApi<C> {
-  assertConfig(config);
+export function defineMockApi<const C extends MockApiConfigInput>(
+  config: C & ExactInput<C>,
+): MockApi<C> {
+  if (config === null || typeof config !== "object" || Array.isArray(config)) {
+    throw new MockApiError(
+      "INVALID_CONFIG",
+      'defineMockApi() expects an object of resources, e.g. { users: "users-mock" } or { users: { type: "users-mock" } }.',
+    );
+  }
+  const normalized = normalizeConfig(config as Record<string, unknown>);
+  assertConfig(normalized);
   const api: Record<string, unknown> = {};
-  for (const [name, resource] of Object.entries(config)) {
+  for (const [name, resource] of Object.entries(normalized)) {
     api[name] = createResource(name, resource.type, resource);
   }
   return api as MockApi<C>;

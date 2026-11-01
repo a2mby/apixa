@@ -2,16 +2,22 @@
 
 ## Unreleased
 
-### Breaking
+### Breaking (v0.9.0)
+
+- `@apixa/core` / `@apixa/mocking` — resource mocking is now `mock: "<dataset-id>"` (string). Removed `mock: true` / `false` and `mockConfig`. Put `pagination` next to `path` / `slice` / `mock`.
+- Core `MockDatasetIds` lists known catalog ids so `mock` autocompletes without importing `@apixa/mocking`.
+- `defineMockApi` accepts a dataset id string per resource (`users: "users-mock"`) or the existing `{ type, slice?, pagination? }` object.
+
+### Breaking (prior unreleased)
 
 - `@apixa/core` — rename builtin operation `getByID` → `getById` so `defineApi` matches `defineMockApi`. Call sites and `operations` overrides must use `getById` (no alias).
-- `@apixa/mocking` — rename resource / `mockConfig` option `size` → `slice`. `slice` accepts a non-negative integer (first N rows) or `{ start, end }` (half-open). Overshooting the dataset returns all records; negatives and `end < start` throw `InvalidSliceError` (`INVALID_SLICE`) under `MockingErrors`.
-- `@apixa/core` — `slice`, `mock`, and `mockConfig` are first-class on `ResourceExtensions` (no `@apixa/mocking` import required for types/autocomplete). `slice` caps `getAll` array results; with `mock: true` the optional mocking peer also uses it as the seed window. Putting `slice` inside `mockConfig` throws.
+- `@apixa/mocking` — rename resource option `size` → `slice`. `slice` accepts a non-negative integer (first N rows) or `{ start, end }` (half-open). Overshooting the dataset returns all records; negatives and `end < start` throw `InvalidSliceError` (`INVALID_SLICE`) under `MockingErrors`.
+- `@apixa/core` — `slice`, `mock`, and `pagination` are first-class on `ResourceExtensions` (no `@apixa/mocking` import required for types/autocomplete). `slice` caps `getAll` array results; with `mock` set the optional mocking peer also uses it as the seed window.
 - Removed `users-sample` dataset and `@apixa/mocking/data/users`. Use `users-mock` / `@apixa/mocking/data/users-mock` (`User` entity).
 
 ### Fixed
 
-- Core `mockConfig.type: "users-mock"` now seeds the full 100-row dataset (was a 3-row browser stub).
+- Core `mock: "users-mock"` now seeds the full 100-row dataset (was a 3-row browser stub).
 
 ## 0.8.0
 

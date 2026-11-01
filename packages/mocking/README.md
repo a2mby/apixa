@@ -8,12 +8,12 @@ Standalone, in-memory mock APIs built from local JSON datasets. **No network req
 import { defineMockApi } from "@apixa/mocking";
 
 export const mockApi = defineMockApi({
-  users: { type: "users-mock", slice: 100, pagination: true },
+  users: "users-mock",
   products: { type: "products-mock", slice: 50 },
-  countries: { type: "countries-csc" },
+  countries: { type: "countries-csc", pagination: true },
 });
 
-const { data, total } = await mockApi.users.getAll({ page: 1, pageSize: 10 });
+const { data, total } = await mockApi.countries.getAll({ page: 1, pageSize: 10 });
 const product = await mockApi.products.getById("1");
 await mockApi.products.create({
   title: "Lamp",
@@ -119,7 +119,7 @@ Read-only typed records for the small synthetic sets (`users`, `products`, `comp
 
 ## Core inline mocking
 
-Install `@apixa/mocking` next to `@apixa/core` for **runtime** mocks. Types for `mock` / `mockConfig` / `slice` ship on Core — no mocking import needed for autocomplete. When a resource has `mock` / `mockConfig`, Core lazy-loads `@apixa/mocking/register` on first request. You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly (e.g. to fail fast at `defineApi` time via the processor).
+Install `@apixa/mocking` next to `@apixa/core` for **runtime** mocks. Types for `mock` / `slice` / `pagination` and known catalog ids ship on Core — no mocking import needed for autocomplete. When a resource has `mock: "<dataset-id>"`, Core lazy-loads `@apixa/mocking/register` on first request. You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly (e.g. to fail fast at `defineApi` time via the processor).
 
 ```ts
 import { defineApi } from "@apixa/core";
@@ -129,23 +129,23 @@ const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
   baseURL: "https://api.example.com",
   users: {
     path: "/users",
-    mock: true,
+    mock: "users-mock",
     slice: 100,
-    mockConfig: { type: "users-mock", pagination: true },
+    pagination: true,
   },
   payments: { path: "/payments" }, // real network
 });
 ```
 
-- `mock: true` requires `mockConfig.type` (a registered preset id).
-- `slice` is a Core resource option (next to `path`): on live resources it caps `getAll` array results; with `mock: true` it seeds the mock store (creates may still grow past the seed). Not inside `mockConfig`.
+- `mock` is a dataset id string (a registered preset id).
+- `slice` and `pagination` are Core resource options (next to `path` / `mock`): on live resources `slice` caps `getAll` array results; with `mock` set it seeds the mock store (creates may still grow past the seed).
 - Mocked resources never hit the network; others use the normal transport.
-- With `pagination: true`, list GET returns `{ data, total, page, pageSize }` (`page` / `pageSize` query; defaults `1` / `20`).
-- Built-in presets for this path live under `@apixa/mocking/data` (and `@apixa/mocking/data/users-mock`). Importing `@apixa/mocking/data` also teaches TypeScript the known ids (see below).
+- With `pagination: true`, list GET returns `{ data, total, page, pageSize, previous, next }` (`page` / `pageSize` query; defaults `1` / `20`).
+- Built-in presets for this path live under `@apixa/mocking/data` (and `@apixa/mocking/data/users-mock`).
 
-### Customizing `mockConfig.type` suggestions
+### Customizing `mock` suggestions
 
-Core ships an empty, extensible interface. Dataset modules merge their ids into it (same idea as runtime `registerDatasetPreset`). Import that module in the app that calls `defineApi`, and the id appears in `mockConfig.type` autocomplete.
+Core ships known catalog ids on `MockDatasetIds`. App-specific ids still merge via `declare module` (same idea as runtime `registerDatasetPreset`). Import that module in the app that calls `defineApi`, and the id appears in `mock` autocomplete.
 
 **1. Register + teach the type (keep these in the same file):**
 
@@ -194,22 +194,18 @@ export const api = defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
   baseURL: "https://api.example.com",
   pets: {
     path: "/pets",
-    mock: true,
+    mock: "pets-sample", // ← suggested alongside built-in ids
     slice: 50,
-    mockConfig: {
-      type: "pets-sample", // ← suggested alongside built-in ids
-      pagination: true,
-    },
+    pagination: true,
   },
 });
 ```
 
 Notes:
 
-- Do not edit `@apixa/core`. Each app or package merges its own ids; they accumulate.
-- A type-only import of an unrelated entity (e.g. only `CountryCode`) does **not** add geography catalog ids — only modules that contain a `declare module "@apixa/core"` merge contribute suggestions.
-- `mockConfig.type` is `keyof MockDatasetIds | (string & {})`: known ids autocomplete, custom strings still type-check (the registry is open). Unknown ids fail at **runtime** when the preset is missing.
-- Built-in reference: [`src/data/users-mock.ts`](./src/data/users-mock.ts) (same `registerDatasetPreset` + `declare module` pair).
+- Built-in catalog ids live in Core’s `MockDatasetIds`. Custom app ids still merge from the outside; they accumulate.
+- A type-only import of an unrelated entity does **not** add custom ids — only modules that contain a `declare module "@apixa/core"` merge contribute suggestions.
+- `mock` is `keyof MockDatasetIds | (string & {})`: known ids autocomplete, custom strings still type-check (the registry is open). Unknown ids fail at **runtime** when the preset is missing.
 
 ## Node loaders
 
@@ -217,4 +213,4 @@ Notes:
 
 ## Removed
 
-`createMockTransport()` (and the unusable `createSelectiveMockTransport` export) are gone. Use `defineMockApi()` for a standalone mock, or `mock: true` / `mockConfig` to mock resources of a Core client.
+`createMockTransport()` (and the unusable `createSelectiveMockTransport` export) are gone. Use `defineMockApi()` for a standalone mock, or `mock: "<dataset-id>"` to mock resources of a Core client.

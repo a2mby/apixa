@@ -128,11 +128,11 @@ Standalone, in-memory mock API from local datasets — no `defineApi()`, no netw
 import { defineMockApi } from "@apixa/mocking";
 
 const mockApi = defineMockApi({
-  users: { type: "users-mock", slice: 100, pagination: true },
-  products: { type: "products-mock", slice: 50 },
+  users: "users-mock",
+  products: { type: "products-mock", slice: 50, pagination: true },
 });
 
-const { data, total } = await mockApi.users.getAll({ page: 1, pageSize: 10 });
+const { data, total } = await mockApi.products.getAll({ page: 1, pageSize: 10 });
 ```
 
 Typed data: `import { users, type User } from "@apixa/mocking/data"`.
@@ -146,8 +146,8 @@ const api = defineApi({
   baseURL: "https://api.example.com",
   users: {
     path: "/users",
-    mock: true,
-    mockConfig: { type: "users-mock", pagination: true },
+    mock: "users-mock",
+    pagination: true,
   },
   payments: { path: "/payments" }, // real network
 });

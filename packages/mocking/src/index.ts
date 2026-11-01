@@ -2,18 +2,23 @@
  * Browser-safe public surface.
  *
  * - `defineMockApi()` — standalone, in-memory mock API (no `defineApi()`, no network).
- * - Resource-level `mock` / `mockConfig` on Core `defineApi`: Core lazy-loads
- *   `@apixa/mocking/register` when those keys are present (no side-effect import required).
+ * - Resource-level `mock: "<dataset-id>"` on Core `defineApi`: Core lazy-loads
+ *   `@apixa/mocking/register` when that key is present (no side-effect import required).
  *   You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly.
  *
  * Node filesystem loaders live at `@apixa/mocking/node`; typed data at `@apixa/mocking/data`.
  */
 
 import "./core-augmentation.js";
-// applies ResourceExtensions mock / mockConfig merge
 
 export { defineMockApi } from "./mock-api.js";
-export type { MockApi, MockApiConfig, MockResourceConfig } from "./mock-api.js";
+export type {
+  MockApi,
+  MockApiConfig,
+  MockApiConfigInput,
+  MockApiResourceInput,
+  MockResourceConfig,
+} from "./mock-api.js";
 export type { MockResource, Page, PageParams, ResourceInput } from "./resource.js";
 export { MockingErrors, InvalidSliceError, MockApiError, type MockApiErrorCode } from "./errors.js";
 export type { MockSlice } from "./slice.js";

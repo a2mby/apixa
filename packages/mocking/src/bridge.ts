@@ -11,23 +11,18 @@ const RESERVED = new Set(["baseURL", "headers", "transport", "timeout"]);
 export type ResourceMockSpec = {
   name: string;
   path: string;
-  mockConfig: {
-    type: string;
-    slice?: MockSlice;
-    pagination?: boolean;
-  };
+  type: string;
+  slice?: MockSlice;
+  pagination?: boolean;
 };
 
 type ResourceBag = {
   path?: string;
-  mock?: boolean;
-  /** Seed window — sibling of `mock` / `mockConfig`, not nested under `mockConfig`. */
+  mock?: unknown;
+  /** Seed window — sibling of `path` / `mock` / `pagination`. */
   slice?: MockSlice;
-  mockConfig?: {
-    type?: string;
-    pagination?: boolean;
-    [key: string]: unknown;
-  };
+  pagination?: boolean;
+  mockConfig?: unknown;
   [key: string]: unknown;
 };
 
@@ -35,24 +30,26 @@ function isResourceBag(value: unknown): value is ResourceBag {
   return Boolean(value && typeof value === "object" && "path" in (value as object));
 }
 
+const LEGACY_HINT = `Use mock: "<dataset-id>" (e.g. mock: "users-mock") and put pagination next to path / slice.`;
+
 function resolveDataset(type: string): Dataset {
   ensureBuiltinPresets();
   const preset = getDatasetPreset(type);
   if (preset) return preset;
   const known = listDatasetPresetIds();
   throw new Error(
-    `Unknown mockConfig.type "${type}". Import a typed preset from @apixa/mocking/data/* ` +
-      `(or registerDatasetPreset). Known presets: ${known.length ? known.join(", ") : "(none registered)"}. ` +
+    `Unknown mock dataset "${type}". Register a preset (or import @apixa/mocking/data). ` +
+      `Known presets: ${known.length ? known.join(", ") : "(none registered)"}. ` +
       `Full catalog ids live in datasets/manifest.json.`,
   );
 }
 
 function storeFromSpec(spec: ResourceMockSpec): MockStore {
-  const dataset = resolveDataset(spec.mockConfig.type);
+  const dataset = resolveDataset(spec.type);
   return buildStore(dataset, {
     path: spec.path || dataset.meta.resource.path,
-    slice: spec.mockConfig.slice,
-    pagination: spec.mockConfig.pagination === true,
+    slice: spec.slice,
+    pagination: spec.pagination === true,
   });
 }
 
@@ -66,7 +63,7 @@ export function createSelectiveMockTransportFromSpecs(
 }
 
 /**
- * Apply resource `mock` / `mockConfig` on a defineApi config bag.
+ * Apply resource `mock` (dataset id) on a defineApi config bag.
  * Strips mock keys and installs a selective Transport when any resource is mocked.
  */
 export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineApiConfigBag {
@@ -77,18 +74,22 @@ export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineAp
     if (RESERVED.has(key)) continue;
     if (!isResourceBag(value)) continue;
 
-    const { mock, mockConfig, ...rest } = value;
+    const { mock, mockConfig, pagination, ...rest } = value;
 
-    if (mock === true) {
-      if (!mockConfig || typeof mockConfig.type !== "string" || !mockConfig.type) {
+    if (mockConfig != null) {
+      throw new Error(`Resource "${key}" no longer supports mockConfig. ${LEGACY_HINT}`);
+    }
+
+    if (typeof mock === "boolean") {
+      throw new Error(
+        `Resource "${key}": mock must be a dataset id string, not ${mock}. ${LEGACY_HINT}`,
+      );
+    }
+
+    if (typeof mock === "string") {
+      if (!mock) {
         throw new Error(
-          `Resource "${key}" has mock: true but mockConfig.type is missing. ` +
-            `Set mockConfig: { type: "<dataset-id>" } (e.g. "users-mock").`,
-        );
-      }
-      if ("slice" in (mockConfig as object) && (mockConfig as { slice?: unknown }).slice != null) {
-        throw new Error(
-          `Resource "${key}": put slice on the resource (next to path), not inside mockConfig.`,
+          `Resource "${key}" has an empty mock id. Set mock: "<dataset-id>" (e.g. "users-mock").`,
         );
       }
 
@@ -96,18 +97,16 @@ export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineAp
         storeFromSpec({
           name: key,
           path: typeof rest.path === "string" ? rest.path : "",
-          mockConfig: {
-            type: mockConfig.type,
-            slice: readSliceOption(rest.slice, `Resource "${key}" slice`),
-            pagination: mockConfig.pagination === true,
-          },
+          type: mock,
+          slice: readSliceOption(rest.slice, `Resource "${key}" slice`),
+          pagination: pagination === true,
         }),
       );
       const { slice: _seedSlice, ...withoutSlice } = rest;
       next[key] = withoutSlice;
-    } else if (mockConfig != null) {
+    } else if (mock != null) {
       throw new Error(
-        `Resource "${key}" has mockConfig but mock is not true. Set mock: true to enable mocking.`,
+        `Resource "${key}": mock must be a dataset id string (got ${typeof mock}). ${LEGACY_HINT}`,
       );
     } else {
       next[key] = rest;
