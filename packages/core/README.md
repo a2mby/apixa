@@ -34,7 +34,7 @@ Context: `{ request, response?, attempt, meta }`.
 
 ## Plugin seams
 
-Empty `ResourceExtensions` / `OperationExtensions` — integrations augment via `declare module "@apixa/core"`. Resource `mock` / `mockConfig` live in `@apixa/mocking`.
+`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. Runtime mocking stays in optional peer `@apixa/mocking` (`mock: "<dataset-id>"`).
 
 ## Errors
 

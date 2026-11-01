@@ -15,7 +15,7 @@ function throwIfAborted(signal?: AbortSignal): void {
 }
 
 /**
- * Core `defineApi` bridge only (used by the resource `mock` / `mockConfig` processor).
+ * Core `defineApi` bridge only (used by the resource `mock` processor).
  * Route matched paths to mock stores; everything else goes to `fallback`.
  * Not part of the standalone `defineMockApi()` path.
  */

@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** none open — last shipped [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`).
-> Previous: [v0.7.0](../versions/v0.7.0/) (Thin Core + plugin seams); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
+> **Current milestone:** none open — last shipped [v0.9.0](../versions/v0.9.0/) (Flatten Core mock syntax).
+> Previous: [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`); [v0.7.0](../versions/v0.7.0/); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity
@@ -162,7 +162,7 @@ The intended responsibilities are:
 - `transport-fetch`: Fetch transport implementation, if separation proves useful.
 - `client`: Browser-specific configuration and behavior.
 - `server`: Server-specific configuration and behavior.
-- `mocking`: **Implemented (v0.5.0)** — local JSON datasets, `defineMockApi()`, and resource-level `mock` / `mockConfig` (optional Core peer; lazy `@apixa/mocking/register` — Core does not embed a mock engine).
+- `mocking`: **Implemented (v0.5.0; syntax flattened in v0.9.0)** — local JSON datasets, `defineMockApi()`, and resource-level `mock: "<dataset-id>"` with sibling `slice` / `pagination` (optional Core peer; lazy `@apixa/mocking/register` — Core does not embed a mock engine).
 - `tanstack-query`: Optional TanStack Query integration (planned).
 - `openapi`: OpenAPI interoperability (planned).
 

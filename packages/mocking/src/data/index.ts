@@ -6,9 +6,8 @@
  * lazily with `defineMockApi({ countries: { type: "countries-csc" } })`.
  * Exports are read-only: `defineMockApi()` copies before it stores anything.
  *
- * Every dataset below also self-registers as a Core resource-mock preset (`mockConfig.type`)
- * and merges its id into `MockDatasetIds`, mirroring `./users-mock.ts` — importing
- * this module teaches `mockConfig.type` all of these ids for free.
+ * Synthetic datasets below also self-register as Core resource-mock presets for
+ * `mock: "<dataset-id>"`. Known ids for autocomplete live on Core’s `MockDatasetIds`.
  */
 import "../core-augmentation.js";
 import usersMock from "../../../../datasets/users/users-mock/data.json";
@@ -68,13 +67,3 @@ registerDatasetPreset("companies-mock", companiesDataset);
 registerDatasetPreset("orders-mock", ordersDataset);
 registerDatasetPreset("posts-mock", postsDataset);
 registerDatasetPreset("comments-mock", commentsDataset);
-
-declare module "@apixa/core" {
-  interface MockDatasetIds {
-    "products-mock": true;
-    "companies-mock": true;
-    "orders-mock": true;
-    "posts-mock": true;
-    "comments-mock": true;
-  }
-}

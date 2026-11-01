@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-01 — Land v0.9.0 Flatten Core mock syntax
+
+Shipped `mock: "<dataset-id>"` on `defineApi` resources (removed `mock: true` / `mockConfig`). Resource-level `pagination` sits next to `path` / `slice` / `mock`. Core `MockDatasetIds` lists known catalog ids for autocomplete without importing `@apixa/mocking`. `defineMockApi` accepts string shorthand. Next playground + docs/tests updated.
+
+## 2026-11-01 — Start v0.9.0 Flatten Core mock syntax
+
+Opened [`versions/v0.9.0/`](../versions/v0.9.0/) to collapse `mock: true` + `mockConfig` into `mock: "<dataset-id>"`, put `pagination` beside `path` / `slice` / `mock`, fill Core `MockDatasetIds` for autocomplete without importing `@apixa/mocking`, and add `defineMockApi` string shorthand. Contract and pointers only — no package implementation in this kickoff.
+
 ## 2026-10-30 — Land v0.8.0 Unified TanStack Query resource integration
 
 Shipped `@apixa/tanstack-query` with primary `useResourceQuery` (list state + Promise CRUD/`getById` + invalidate + `mutations.*`). Internals: key factory, controller `queryOptions`/`mutationOptions`, invalidate-first cache with D1 callback order. Escape hatch `@apixa/tanstack-query/advanced`. Next playground migrated; tests under `tests/tanstack-query/`. Core remains React-free. Deferred: `patch-list`, optimistic helpers, infinite queries, auto custom ops.

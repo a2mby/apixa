@@ -58,9 +58,8 @@ describe("mock slice", () => {
       baseURL: "https://api.example.com",
       users: {
         path: "/users",
-        mock: true,
+        mock: "users-mock",
         slice: 100,
-        mockConfig: { type: "users-mock" },
       },
     });
     const users = (await api.users.getAll()) as User[];

@@ -8,18 +8,19 @@ export interface ResourceExtensions {
   /**
    * Cap how much list data this resource returns from `getAll` (array responses).
    * First N rows, or half-open `{ start, end }`. Overshoot returns all rows.
-   * When `mock: true`, `@apixa/mocking` also uses this as the seed window.
+   * When `mock` is set, `@apixa/mocking` also uses this as the seed window.
    */
   slice?: number | { start: number; end: number };
   /**
-   * When true, `@apixa/mocking` handles this resource (optional peer at runtime).
+   * Dataset id — enables `@apixa/mocking` for this resource (optional peer at runtime).
+   * Known ids autocomplete from `MockDatasetIds`; custom strings still type-check.
    */
-  mock?: boolean;
-  mockConfig?: {
-    type: keyof MockDatasetIds | (string & {});
-    pagination?: boolean;
-    [key: string]: unknown;
-  };
+  mock?: keyof MockDatasetIds | (string & {});
+  /**
+   * When true with `mock`, list GET / `getAll` returns a page envelope
+   * (`data`, `total`, `page`, `pageSize`, `previous`, `next`).
+   */
+  pagination?: boolean;
 }
 
 export interface OperationExtensions {}

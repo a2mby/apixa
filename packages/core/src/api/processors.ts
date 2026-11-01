@@ -5,7 +5,7 @@ export type DefineApiConfigBag = ApiRootConfig & Record<string, unknown>;
 
 /**
  * Integration hook: transform config before Core builds resource clients.
- * Used by `@apixa/mocking` to honor resource `mock` / `mockConfig` without Core implementing mocks.
+ * Used by `@apixa/mocking` to honor resource `mock` (dataset id) without Core implementing mocks.
  */
 export type DefineApiProcessor = (config: DefineApiConfigBag) => DefineApiConfigBag;
 

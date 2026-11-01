@@ -23,7 +23,7 @@ describe("defineApi processors and optional mocking peer", () => {
     registerDefineApiProcessor((config) => {
       seen = true;
       const users = config.users as Record<string, unknown>;
-      const { mock: _m, mockConfig: _c, ...rest } = users;
+      const { mock: _m, pagination: _p, ...rest } = users;
       return { ...config, users: rest };
     });
 
@@ -41,8 +41,7 @@ describe("defineApi processors and optional mocking peer", () => {
       } satisfies Transport,
       users: {
         path: "/users",
-        mock: true,
-        mockConfig: { type: "users-mock" },
+        mock: "users-mock",
       },
     });
 
@@ -50,16 +49,16 @@ describe("defineApi processors and optional mocking peer", () => {
     expect(api.users).toBeDefined();
   });
 
-  it("fails at defineApi when mock:true lacks mockConfig.type (peer bridge validation)", () => {
+  it("fails at defineApi when mock is a boolean (peer bridge validation)", () => {
     expect(() =>
       defineApi({
         baseURL: "https://api.example.com",
         users: {
           path: "/users",
-          mock: true,
+          mock: true as never,
         },
       }),
-    ).toThrow(/mockConfig.type/);
+    ).toThrow(/dataset id string/);
   });
 
   it("yields a clear error when the mocking peer cannot be resolved", async () => {
@@ -71,8 +70,7 @@ describe("defineApi processors and optional mocking peer", () => {
       baseURL: "https://api.example.com",
       users: {
         path: "/users",
-        mock: true,
-        mockConfig: { type: "users-mock" },
+        mock: "users-mock",
       },
     });
 

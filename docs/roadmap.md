@@ -72,6 +72,15 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Advanced escape hatch export; Next playground migrated; Core stays framework-agnostic
 - Deferred: `patch-list` / optimistic helpers, infinite queries, auto custom ops
 
+## Completed: v0.9.0 — Flatten Core mock syntax
+
+**Spec:** [versions/v0.9.0/](../versions/v0.9.0/)
+
+- Replace `mock: true` + `mockConfig` with `mock: "<dataset-id>"`
+- Move mock `pagination` to resource level (sibling of `path` / `slice` / `mock`)
+- Fill Core `MockDatasetIds` so autocomplete needs no `@apixa/mocking` import
+- `defineMockApi` string shorthand; docs/tests migration; no new mock engine features
+
 ## Later: Developer experience follow-ups
 
 - Optional schema validation hooks (without baking in a schema library)
