@@ -5,6 +5,7 @@ import type {
   ResolvedResourceConfig,
   ResourceRuntimeInput,
 } from "../types/definition.js";
+import { applyResourceSliceToListResult } from "../utils/slice.js";
 
 export function createResourceClient(api: ResolvedApiConfig, resource: ResourceRuntimeInput) {
   const client: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
@@ -20,7 +21,16 @@ export function createResourceClient(api: ResolvedApiConfig, resource: ResourceR
 
   for (const [name, definition] of Object.entries(operations)) {
     const operation = resolveOperation(name, resource.path, definition);
-    client[name] = createOperationFn(api, resourceConfig, operation);
+    const run = createOperationFn(api, resourceConfig, operation);
+
+    if (name === "getAll" && resource.slice !== undefined) {
+      client[name] = async (...args: unknown[]) => {
+        const data = await run(...args);
+        return applyResourceSliceToListResult(data, resource.slice);
+      };
+    } else {
+      client[name] = run;
+    }
   }
 
   return client;

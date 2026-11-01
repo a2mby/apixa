@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** none open — last shipped [v0.7.0](../versions/v0.7.0/) (Thin Core + plugin seams).
-> Previous: [v0.6.0](../versions/v0.6.0/) (request reliability); [v0.5.0](../versions/v0.5.0/) (Simple Mocking); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
+> **Current milestone:** none open — last shipped [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`).
+> Previous: [v0.7.0](../versions/v0.7.0/) (Thin Core + plugin seams); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity
@@ -99,9 +99,9 @@ Prefer clear semantics. For example, `update()` is a clearer default than an amb
 
 ## 6. TanStack Query Compatibility
 
-TanStack Query is a future optional integration, not a Core dependency.
+TanStack Query is an **optional** integration, never a Core dependency.
 
-Apixa operations must behave naturally as query and mutation functions:
+Apixa operations remain plain `Promise<T>` functions so they work as `queryFn` / `mutationFn` without adapters:
 
 ```ts
 useQuery({
@@ -114,19 +114,21 @@ useMutation({
 });
 ```
 
-The exact types depend on the final operation signatures.
+**Implemented ([v0.8.0](../versions/v0.8.0/)):** optional `@apixa/tanstack-query` with unified primary API:
+
+```tsx
+import { useResourceQuery } from "@apixa/tanstack-query";
+
+const users = useResourceQuery(api.users, { queryKey: ["users"] });
+users.data;
+users.isLoading;
+await users.create(input);
+users.mutations.create.isPending;
+```
+
+Internals use TanStack Query (`useQuery`, `useMutation`, `queryOptions`, cache APIs). Correctness-first list invalidation is the default. Pagination/infinite helpers and optimistic/`patch-list` strategies stay later. Escape hatch: `@apixa/tanstack-query/advanced`.
 
 Core must not implement its own caching or state-management system just to support TanStack Query.
-
-A future `@apixa/tanstack-query` package may provide:
-
-- Query-key factories.
-- Query-options factories.
-- Mutation helpers.
-- Cache invalidation conveniences.
-- Pagination and infinite-query helpers.
-
-The same architecture should permit future integrations with other data-fetching libraries.
 
 **Dependency direction:** Integrations depend on Core. Core never depends on integrations.
 

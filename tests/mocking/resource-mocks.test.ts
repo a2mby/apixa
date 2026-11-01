@@ -119,7 +119,8 @@ describe("resource-level mocking (processor)", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-mock", slice: 2, pagination: true },
+        slice: 2,
+        mockConfig: { type: "users-mock", pagination: true },
       },
     });
 
@@ -144,7 +145,8 @@ describe("resource-level mocking (processor)", () => {
       users: {
         path: "/users",
         mock: true,
-        mockConfig: { type: "users-mock", slice: 2 },
+        slice: 2,
+        mockConfig: { type: "users-mock" },
       },
     });
 

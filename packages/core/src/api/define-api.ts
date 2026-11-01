@@ -37,6 +37,9 @@ function toHttpResource(value: Record<string, unknown>): ResourceRuntimeInput {
   if (value.retry !== undefined) {
     resource.retry = value.retry as ResourceRuntimeInput["retry"];
   }
+  if (value.slice !== undefined) {
+    resource.slice = value.slice as ResourceRuntimeInput["slice"];
+  }
   return resource;
 }
 

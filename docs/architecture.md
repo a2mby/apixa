@@ -87,10 +87,11 @@ Out of Core’s product mock engine (owned by `@apixa/mocking`):
 
 ```text
 packages/core/
-packages/mocking/   # defineMockApi + typed data + Core mock/mockConfig processor
-datasets/           # version-controlled JSON fixtures
-examples/next/      # primary playground (uses mocking)
-tests/              # vitest — Core + mocking
+packages/mocking/          # defineMockApi + typed data + Core mock/mockConfig processor
+packages/tanstack-query/   # optional; unified useResourceQuery (v0.8.0)
+datasets/                  # version-controlled JSON fixtures
+examples/next/             # primary playground (uses mocking + tanstack-query)
+tests/                     # vitest — Core + mocking + tanstack-query
 ```
 
 **Planned later (do not create yet):**
@@ -99,7 +100,6 @@ tests/              # vitest — Core + mocking
 packages/transport-fetch/
 packages/client/
 packages/server/
-packages/tanstack-query/
 packages/openapi/
 ```
 
@@ -111,4 +111,4 @@ Integrations always depend on Core. Core never depends on integrations.
 
 - Living context: [context.md](./context.md)
 - Roadmap: [roadmap.md](./roadmap.md)
-- Latest coding contract: [../versions/v0.7.0/](../versions/v0.7.0/) (shipped; see [versions/README.md](../versions/README.md))
+- Latest coding contract: [../versions/v0.8.0/](../versions/v0.8.0/) (shipped; see [versions/README.md](../versions/README.md))

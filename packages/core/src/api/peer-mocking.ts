@@ -29,9 +29,10 @@ export type PeerResourceMockSpec = {
 type ResourceBag = {
   path?: string;
   mock?: boolean;
+  /** Core list cap / mock seed — sibling of `path`, not nested under `mockConfig`. */
+  slice?: PeerMockSlice;
   mockConfig?: {
     type?: string;
-    slice?: PeerMockSlice;
     pagination?: boolean;
     [key: string]: unknown;
   };
@@ -95,22 +96,31 @@ export function extractAndStripMockSpecs(config: DefineApiConfigBag): {
       if (typeof rest.path !== "string" || !rest.path) {
         throw new Error(`Resource "${key}" has mock: true but path is missing.`);
       }
+      if ("slice" in (mockConfig as object) && (mockConfig as { slice?: unknown }).slice != null) {
+        throw new Error(
+          `Resource "${key}": put slice on the resource (next to path), not inside mockConfig.`,
+        );
+      }
       specs.push({
         name: key,
         path: rest.path,
         mockConfig: {
           type: mockConfig.type,
-          slice: pickSlice(mockConfig.slice),
+          slice: pickSlice(rest.slice),
           pagination: mockConfig.pagination === true,
         },
       });
+      // Seed uses `slice`; do not also cap getAll (creates may grow past the seed).
+      const { slice: _seedSlice, ...withoutSlice } = rest;
+      next[key] = withoutSlice;
     } else if (mockConfig != null) {
       throw new Error(
         `Resource "${key}" has mockConfig but mock is not true. Set mock: true to enable mocking.`,
       );
+    } else {
+      // Live resource: keep `slice` so Core can cap getAll array responses.
+      next[key] = rest;
     }
-
-    next[key] = rest;
   }
 
   return { config: next, specs };

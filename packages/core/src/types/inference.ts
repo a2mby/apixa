@@ -233,11 +233,7 @@ export type ApiClient<T> = {
   ]: T[K] extends { path: string } ? ResourceClient<T[K]> : never;
 };
 
-/**
- * Known `mockConfig.type` ids (empty in Core). Integrations merge ids via
- * `declare module "@apixa/core"`.
- */
-export interface MockDatasetIds {}
+export type { MockDatasetIds } from "./mock-dataset-ids.js";
 
 /**
  * Runtime config: Core root builtins + one runtime resource bag per key of `T`.
