@@ -2,7 +2,7 @@ import { createFetchTransport, type DefineApiConfigBag, type Transport } from "@
 import { ensureBuiltinPresets } from "./presets/builtins.js";
 import { getDatasetPreset, listDatasetPresetIds } from "./presets/registry.js";
 import { readSliceOption, type MockSlice } from "./slice.js";
-import { buildStore, type MockStore } from "./store.js";
+import { buildStore, type ExtendedRouteOverrides, type MockStore } from "./store.js";
 import { createSelectiveMockTransport } from "./transport.js";
 import type { Dataset } from "./types.js";
 
@@ -14,6 +14,8 @@ export type ResourceMockSpec = {
   type: string;
   slice?: MockSlice;
   pagination?: boolean;
+  /** Per-operation `false` / `{ method?, path? }` override for the 5 extended static routes. */
+  extendedRoutes?: ExtendedRouteOverrides;
 };
 
 type ResourceBag = {
@@ -23,8 +25,33 @@ type ResourceBag = {
   slice?: MockSlice;
   pagination?: boolean;
   mockConfig?: unknown;
+  /** Same `operations` surface `defineApi` resources accept — mirrored onto the mock store. */
+  operations?: Record<string, unknown>;
   [key: string]: unknown;
 };
+
+const EXTENDED_ROUTE_NAMES = ["getBySlug", "count", "search", "bulkCreate", "bulkDelete"] as const;
+
+/** Pull the `{ method?, path? }` / `false` override for each extended static route, if any. */
+function extendedRouteOverridesFrom(
+  operations: Record<string, unknown> | undefined,
+): ExtendedRouteOverrides | undefined {
+  if (!operations) return undefined;
+  const overrides: ExtendedRouteOverrides = {};
+  let hasAny = false;
+  for (const name of EXTENDED_ROUTE_NAMES) {
+    const value = operations[name];
+    if (value === false) {
+      overrides[name] = false;
+      hasAny = true;
+    } else if (value && typeof value === "object") {
+      const { method, path } = value as { method?: string; path?: string };
+      overrides[name] = { method, path };
+      hasAny = true;
+    }
+  }
+  return hasAny ? overrides : undefined;
+}
 
 function isResourceBag(value: unknown): value is ResourceBag {
   return Boolean(value && typeof value === "object" && "path" in (value as object));
@@ -50,6 +77,7 @@ function storeFromSpec(spec: ResourceMockSpec): MockStore {
     path: spec.path || dataset.meta.resource.path,
     slice: spec.slice,
     pagination: spec.pagination === true,
+    extendedRoutes: spec.extendedRoutes,
   });
 }
 
@@ -100,6 +128,7 @@ export function applyResourceMocksToConfig(config: DefineApiConfigBag): DefineAp
           type: mock,
           slice: readSliceOption(rest.slice, `Resource "${key}" slice`),
           pagination: pagination === true,
+          extendedRoutes: extendedRouteOverridesFrom(rest.operations),
         }),
       );
       const { slice: _seedSlice, ...withoutSlice } = rest;

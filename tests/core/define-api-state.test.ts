@@ -110,3 +110,37 @@ describe("defineApi<T> entity-only state typing", () => {
     expectTypeOf(await api.users.search({ query: { q: "ada" } })).toEqualTypeOf<User[]>();
   });
 });
+
+describe("defineApi<T> accepts interfaces", () => {
+  it("works with interface state, not just type aliases", async () => {
+    interface User {
+      id: string;
+      name: string;
+    }
+    interface UsersResource {
+      path: "/users";
+      entity: User;
+    }
+    interface AppApi {
+      users: UsersResource;
+    }
+
+    const api = defineApi<AppApi>()({
+      baseURL: "https://api.example.com",
+      users: { path: "/users" },
+      transport: {
+        async request() {
+          return {
+            status: 200,
+            headers: new Headers({ "content-type": "application/json" }),
+            raw: new Response(),
+            body: { id: "1", name: "Ada" },
+          };
+        },
+      },
+    });
+
+    const user = await api.users.getById("1");
+    expect(user.name).toBe("Ada");
+  });
+});

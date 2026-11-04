@@ -21,6 +21,53 @@ Shared rules for building Apixa Core, writing docs, and shipping version milesto
 - Do **not** expose server-only secrets to browser code.
 - Do **not** add abstractions only because they might be useful later.
 
+## Operation customization (v0.10.0)
+
+A resource's `operations` accepts, per key, a config object, a function, or `false`:
+
+- **Config object** — the existing `{ method, path, headers, timeout, retry, hasBody }` shape.
+- **Function** — `(ctx, ...args) => Promise<T>`. `ctx.request(init)` runs the call through Core's
+  normal pipeline (headers inheritance, retry, middleware, error classification) instead of
+  reimplementing it. Called exactly like a generated operation: `api.resource.<name>(...)`.
+- **`false`** — removes a builtin from the generated client. Removing a name that was never
+  active is a no-op.
+
+A custom definition (object or function) with a builtin's name always overrides the convention.
+`operations` suggests the 16 known names below for autocomplete while still accepting arbitrary
+custom keys.
+
+Every builtin below — the original 5 and the 11 added in v0.10.0 — is **always-on** for any
+resource with a `path`, the same default-first behavior as the original 5 since v0.2.0. `false`
+removes one; removing a name that was never a builtin at all is a no-op. Calling a route-based one
+against a backend that hasn't implemented it 404s, the same as calling any unconfigured endpoint —
+Apixa doesn't pretend the route exists, it just doesn't require you to opt in by name first.
+
+| Name         | Method | Default path       | Basis                                                                          |
+| ------------ | ------ | ------------------ | ------------------------------------------------------------------------------ |
+| `getAll`     | GET    | _(resource path)_  | convention                                                                     |
+| `getById`    | GET    | `/:id`             | convention                                                                     |
+| `create`     | POST   | _(resource path)_  | convention                                                                     |
+| `update`     | PUT    | `/:id`             | convention                                                                     |
+| `delete`     | DELETE | `/:id`             | convention                                                                     |
+| `getBySlug`  | GET    | `/slug/:slug`      | convention                                                                     |
+| `patch`      | PATCH  | `/:id`             | convention — new method on an existing path                                    |
+| `upsert`     | PUT    | `/:id`             | convention — alias of `update`'s path                                          |
+| `count`      | GET    | `/count`           | convention                                                                     |
+| `search`     | GET    | `/search`          | convention                                                                     |
+| `bulkCreate` | POST   | `/bulk`            | convention                                                                     |
+| `bulkDelete` | DELETE | `/bulk`            | convention                                                                     |
+| `getMany`    | GET    | _(resource path)_  | composed (query `id[]`), no new route                                          |
+| `exists`     | —      | —                  | composed over `getById`, maps 404 → `false`                                    |
+| `findFirst`  | —      | —                  | composed over `getAll`, first match or `null`                                  |
+| `getBy`      | GET    | _(given per call)_ | composed — general lookup: `getBy(field, value)` or `getBy("/path/:x", value)` |
+
+`@apixa/mocking` mirrors the same always-on, add/remove/override surface on its own resources
+(both `mock: "<dataset-id>"` and `defineMockApi`), implemented as in-memory data operations rather
+than new HTTP routes. A Core mock resource gets the same `operations`-generated methods as a live
+one — `mock` only swaps the transport. The mock store simulates the wire shapes it already
+understands (including `patch` / `upsert` on `/:id`); routes it does not know still 404 — the same
+honesty as an unimplemented real backend route.
+
 ## Types
 
 - Infer types from definitions where possible.

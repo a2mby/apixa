@@ -52,11 +52,22 @@ describe("default-first operations", () => {
     });
 
     expect(Object.keys(api.users).sort()).toEqual([
+      "bulkCreate",
+      "bulkDelete",
+      "count",
       "create",
       "delete",
+      "exists",
+      "findFirst",
       "getAll",
+      "getBy",
       "getById",
+      "getBySlug",
+      "getMany",
+      "patch",
+      "search",
       "update",
+      "upsert",
     ]);
 
     expectTypeOf(api.users).toHaveProperty("getAll");
@@ -99,11 +110,22 @@ describe("default-first operations", () => {
     });
 
     expect(Object.keys(api.users).sort()).toEqual([
+      "bulkCreate",
+      "bulkDelete",
+      "count",
       "create",
       "delete",
+      "exists",
+      "findFirst",
       "getAll",
+      "getBy",
       "getById",
+      "getBySlug",
+      "getMany",
+      "patch",
+      "search",
       "update",
+      "upsert",
     ]);
 
     await api.users.getAll();

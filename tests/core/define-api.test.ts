@@ -29,11 +29,22 @@ describe("defineApi", () => {
     });
 
     expect(Object.keys(api.users).sort()).toEqual([
+      "bulkCreate",
+      "bulkDelete",
+      "count",
       "create",
       "delete",
+      "exists",
+      "findFirst",
       "getAll",
+      "getBy",
       "getById",
+      "getBySlug",
+      "getMany",
+      "patch",
+      "search",
       "update",
+      "upsert",
     ]);
 
     expectTypeOf(api.users).toHaveProperty("update");
@@ -115,5 +126,23 @@ describe("defineApi", () => {
 
     expect(created.id).toBe("3");
     expect(user.email).toBe("ada@example.com");
+  });
+
+  it("throws a clear error when a resource is missing path (v0.11.0 fix)", () => {
+    expect(() =>
+      defineApi({
+        baseURL: "https://api.example.com",
+        users: { entity: {} } as never,
+      }),
+    ).toThrow(/resource "users" is missing a string "path"/);
+  });
+
+  it("throws the same clear error on the explicit-state overload", () => {
+    expect(() =>
+      defineApi<UsersApi>()({
+        baseURL: "https://api.example.com",
+        users: {} as never,
+      }),
+    ).toThrow(/resource "users" is missing a string "path"/);
   });
 });

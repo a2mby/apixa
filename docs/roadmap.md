@@ -81,10 +81,26 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Fill Core `MockDatasetIds` so autocomplete needs no `@apixa/mocking` import
 - `defineMockApi` string shorthand; docs/tests migration; no new mock engine features
 
+## Completed: v0.10.0 — Fully customizable resource operations
+
+**Spec:** [versions/v0.10.0/](../versions/v0.10.0/)
+
+- `operations` accepts a config object, a function, or `false` (removes a built-in) per key
+- Custom and built-in operations surface identically: `api.resource.<name>()`
+- Suggested-keys typing on `operations` for autocomplete of known operation names
+- 11 new always-on builtins (same default-first treatment as the original 5): `getBySlug`, `patch`,
+  `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`, `findFirst`, `getBy`
+- Mirrored surface on `@apixa/mocking` (both `mock: "<id>"` and `defineMockApi`)
+
 ## Later: Developer experience follow-ups
 
+- Harden the v0.10.0 surface (parse failures, mock-bridge gaps, composed-builtin overrides, TanStack
+  coverage of all builtins) — candidate for a v0.11.0 milestone
 - Optional schema validation hooks (without baking in a schema library)
-- Pagination, filtering, sorting, and search conventions (live API)
+- Operation `deprecated` / versioning metadata (ties to the v1.0.0 API-versioning item below;
+  premature before then)
+- Request deduplication / in-flight coalescing in `@apixa/tanstack-query` (not Core)
+- Dataset catalog codegen from `datasets/manifest.json` (tooling, not library surface)
 
 ## Later: Environment and integrations
 
