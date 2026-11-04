@@ -2,6 +2,13 @@
 
 Project log. Newest entry first.
 
+## 2026-11-04 — Add proposed backlog version catalog under docs/ (#60)
+
+Checked in the planning-only tree at `docs/apixa-backlog-versions/` — eighteen proposed
+milestones (`v0.12.0`–`v0.29.0`) with context/scope/plan/acceptance drafts, kept outside
+`versions/` so none become an active coding contract until `/start-version`. Index at
+`docs/apixa-backlog-versions/backlog/README.md`; roadmap links to it for later work.
+
 ## 2026-11-04 — Complete the defineApi architecture: resources, defineApis, client-scoped mocking (#58)
 
 Implemented Parts C–F of the defineApi architecture specification on top of #57.
