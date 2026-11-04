@@ -101,6 +101,15 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Documents `pagination` / `readOnly` and mock-bridge extended routes (much of that surface already
   landed with v0.10.0 via shared files)
 
+## Later: Proposed backlog catalog (planning only)
+
+Eighteen separately scoped proposals (`v0.12.0`–`v0.29.0`) live under
+[`docs/apixa-backlog-versions/`](./apixa-backlog-versions/backlog/README.md). They are **not**
+active coding contracts and must not be copied into `versions/` until `/start-version`
+promotes one. Topics include TanStack hardening, Zod, unified package/public API cleanup, CI,
+uploads/downloads, WebSockets, webhooks, auth adapters, SSE, OpenAPI, observability, and
+benchmarks.
+
 ## Later: Developer experience follow-ups
 
 - Optional schema validation hooks (without baking in a schema library)
