@@ -48,7 +48,7 @@ export type UseResourceMutationOptions<TData, TArgs> = {
 
 /**
  * Generic mutation hook for any resource operation — the 11 builtins added in v0.10.0
- * (`patch`, `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`,
+ * (`patch`, `upsert`, `count`, `search`, `createMany`, `deleteMany`, `getMany`, `exists`,
  * `findFirst`, `getBySlug`, `getBy`) or a fully custom operation — that `useResourceQuery`
  * doesn't wire individually. Correctness-first: invalidates the resource's queries on success
  * by default, same as the built-in `create` / `update` / `delete` mutations do.

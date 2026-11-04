@@ -24,10 +24,10 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     });
 
     expect(Object.keys(api.users).sort()).toEqual([
-      "bulkCreate",
-      "bulkDelete",
       "count",
       "create",
+      "createMany",
+      "deleteMany",
       "exists",
       "findFirst",
       "getAll",
@@ -104,22 +104,22 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     expect(results.some((row: { id: string }) => row.id === target.id)).toBe(true);
   });
 
-  it("bulkCreate and bulkDelete operate on many records in one call", async () => {
+  it("createMany and deleteMany operate on many records in one call", async () => {
     const api = defineMockApi({
       users: {
         type: "users-mock",
-        operations: { bulkCreate: true, bulkDelete: true },
+        operations: { createMany: true, deleteMany: true },
       },
     });
     const anyUsers = api.users as any;
 
-    const created = await anyUsers.bulkCreate([
+    const created = await anyUsers.createMany([
       { name: "A", email: "a@example.com", username: "a", companyId: "1" },
       { name: "B", email: "b@example.com", username: "b", companyId: "1" },
     ]);
     expect(created).toHaveLength(2);
 
-    await anyUsers.bulkDelete(created.map((row: { id: string }) => row.id));
+    await anyUsers.deleteMany(created.map((row: { id: string }) => row.id));
 
     for (const row of created) {
       await expect(api.users.getById(row.id)).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -238,7 +238,7 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     expect((patched as { name: string }).name).toBe("Patched");
 
     // `count` / `search` are simulated by the mock bridge too (v0.11.0) — closing the gap where
-    // these previously 404'd against it; `getBySlug` / `bulkCreate` / `bulkDelete` get the same
+    // these previously 404'd against it; `getBySlug` / `createMany` / `deleteMany` get the same
     // treatment, same as `defineMockApi` already offered.
     expect(await api.users.count()).toBe(100);
     const matches = (await api.users.search({ query: { username: "user001" } })) as Array<{
@@ -247,24 +247,24 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     expect(matches).toHaveLength(1);
     expect(matches[0]!.username).toBe("user001");
 
-    // `exists` is composed over `getById`, which already reaches the mock bridge for free.
+    // `exists` makes its own conventional GET, which the mock bridge handles.
     expect(await api.users.exists(first.id)).toBe(true);
     expect(await api.users.exists("no-such-id")).toBe(false);
   });
 
-  it('simulates getBySlug, bulkCreate, and bulkDelete on a Core mock: "<dataset-id>" resource', async () => {
+  it('simulates getBySlug, createMany, and deleteMany on a Core mock: "<dataset-id>" resource', async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       companies: {
         path: "/companies",
         mock: "companies-mock",
-        operations: { getBySlug: {}, bulkCreate: {}, bulkDelete: {} },
+        operations: { getBySlug: {}, createMany: {}, deleteMany: {} },
       },
     });
 
     const before = (await api.companies.getAll()) as Array<{ id: string }>;
 
-    const created = (await (api.companies as any).bulkCreate([
+    const created = (await (api.companies as any).createMany([
       { name: "Acme", slug: "acme" },
       { name: "Globex", slug: "globex" },
     ])) as Array<{ id: string; slug: string }>;
@@ -273,7 +273,7 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     const bySlug = await (api.companies as any).getBySlug("acme");
     expect((bySlug as { slug: string }).slug).toBe("acme");
 
-    await (api.companies as any).bulkDelete(created.map((c) => c.id));
+    await (api.companies as any).deleteMany(created.map((c) => c.id));
     const after = (await api.companies.getAll()) as Array<{ id: string }>;
     expect(after).toHaveLength(before.length);
   });
@@ -294,5 +294,30 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     byId.name = "mutated via getById";
     const byIdAgain = (await api.users.getById(second[0]!.id)) as { name: string };
     expect(byIdAgain.name).not.toBe("mutated via getById");
+  });
+});
+
+describe("Core inline mock operation routes", () => {
+  it("filters getMany by requested IDs instead of returning the entire mock dataset", async () => {
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      users: { path: "/users", mock: "users-mock" },
+    });
+    const all = (await api.users.getAll()) as Array<{ id: string }>;
+    const ids = [all[2]!.id, all[4]!.id];
+    const selected = (await api.users.getMany(ids)) as Array<{ id: string }>;
+    expect(selected.map((row) => row.id)).toEqual(ids);
+  });
+
+  it("honors a declarative extended-route path override", async () => {
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      users: {
+        path: "/users",
+        mock: "users-mock",
+        operations: { count: { path: "/stats/count" } },
+      },
+    });
+    expect(await api.users.count()).toBe(100);
   });
 });

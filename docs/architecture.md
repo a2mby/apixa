@@ -46,7 +46,7 @@ flowchart TD
 4. **Native promises** — no custom Promise wrappers in Core.
 5. **Framework-agnostic** — Core must not depend on React, Next.js, or TanStack Query.
 6. **Transport-backed** — HTTP runs through a `Transport` interface; Fetch is the default implementation and stays **inside Core** until a package split is justified.
-7. **Operations are add / remove / override, by name** (v0.10.0) — `operations` accepts a config object, a function, or `false` per key. `false` removes a builtin; a function runs through the same pipeline via a bound `ctx.request()`. 11 builtins added in v0.10.0 (`getBySlug`, `patch`, `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`, `findFirst`, `getBy`) are always-on, the same default-first treatment as the original 5 (see [conventions.md](./conventions.md#operation-customization-v0100)).
+7. **Operations are add / remove / override, by name** — all 16 builtins are enabled by default. `defaultOperations`, read/write flags, groups, and individual entries resolve once at client construction. Each builtin has its own resolved request definition; custom functions use the shared `ctx.request()` pipeline. Runtime config controls the client shape and paths, while generic metadata controls payload types (see [conventions.md](./conventions.md#operation-customization)).
 
 See also:
 

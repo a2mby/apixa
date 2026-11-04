@@ -54,6 +54,9 @@ export async function executeRequest<TData>(
       ? querySuffix
       : `?${querySuffix}`;
   const url = `${joinURL(api.baseURL, path)}${qs}`;
+  if (new URL(url).origin !== new URL(api.baseURL).origin) {
+    throw new Error(`Operation path resolves outside the API origin: ${url}`);
+  }
   const headers = mergeHeaders(api.headers, resource.headers, operation.headers, call.headers);
   const timeout = call.timeout ?? operation.timeout ?? resource.timeout ?? api.timeout;
   const retry = resolveRetryConfig(

@@ -53,6 +53,22 @@ function wrap(client: QueryClient) {
 }
 
 describe("useResourceQuery", () => {
+  it("omits mutation wrappers for a read-only resource", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const resource = {
+      getAll: async () => [{ id: "1", name: "Ada" }],
+      getById: async (id: string) => ({ id, name: "Ada" }),
+    };
+    const { result } = renderHook(() => useResourceQuery(resource, { queryKey: ["users"] }), {
+      wrapper: wrap(client),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current).not.toHaveProperty("create");
+    expect(result.current).not.toHaveProperty("update");
+    expect(result.current).not.toHaveProperty("delete");
+    expect(result.current.mutations).toEqual({});
+  });
+
   it("exposes list state separately from mutation pending", async () => {
     const gate = createDeferred<User>();
     const resource = createFakeUsers({ gateCreate: gate });

@@ -3,7 +3,7 @@ import { mockResponse } from "./response.js";
 import { applySlice, type MockSlice } from "./slice.js";
 import type { Dataset } from "./types.js";
 
-export type ExtendedRouteName = "getBySlug" | "count" | "search" | "bulkCreate" | "bulkDelete";
+export type ExtendedRouteName = "getBySlug" | "count" | "search" | "createMany" | "deleteMany";
 
 export type ExtendedRouteOverride = { method?: string; path?: string } | false;
 export type ExtendedRouteOverrides = Partial<Record<ExtendedRouteName, ExtendedRouteOverride>>;
@@ -18,15 +18,15 @@ export type ExtendedRoute = {
 /**
  * Local mirror of Core's `EXTENDED_CONVENTION_DEFAULTS` for just the 5 builtins that need a new
  * static route (`patch` / `upsert` already reuse the generic `/:id` handling below for free;
- * `getMany` / `exists` / `findFirst` / `getBy` are composed over `getAll` / `getById` on the Core
- * side and so already reach this same generic handling without any extra wiring here).
+ * `getMany` / `exists` / `findFirst` / `getBy` execute their own Core requests and reach the
+ * generic handlers below without extra static routes.
  */
 const EXTENDED_ROUTE_DEFAULTS: Record<ExtendedRouteName, { method: string; path: string }> = {
   getBySlug: { method: "GET", path: "slug/:slug" },
   count: { method: "GET", path: "count" },
   search: { method: "GET", path: "search" },
-  bulkCreate: { method: "POST", path: "bulk" },
-  bulkDelete: { method: "DELETE", path: "bulk" },
+  createMany: { method: "POST", path: "bulk" },
+  deleteMany: { method: "DELETE", path: "bulk" },
 };
 
 /** Resolve which extended static routes this store should simulate, honoring `operations` overrides. */
@@ -210,7 +210,7 @@ function handleExtendedRoute(
       return mockResponse(200, cloneRecords(matches));
     }
 
-    case "bulkCreate": {
+    case "createMany": {
       const inputs = parseBodyArray(input);
       const created = inputs.map((item) => {
         const body =
@@ -227,7 +227,7 @@ function handleExtendedRoute(
       return mockResponse(201, cloneRecords(created));
     }
 
-    case "bulkDelete": {
+    case "deleteMany": {
       const ids = parseBodyArray(input).map((id) => String(id));
       for (const id of ids) {
         const index = store.records.findIndex((r) => String(r[store.idField]) === id);
@@ -265,7 +265,10 @@ export function handleStoreRequest(
   const itemId = rest !== undefined && !rest.includes("/") ? decodeURIComponent(rest) : undefined;
 
   if (method === "GET" && rest === undefined) {
-    const all = store.records;
+    const requestedIds = [...url.searchParams.getAll("id"), ...url.searchParams.getAll("id[]")];
+    const all = requestedIds.length
+      ? store.records.filter((row) => requestedIds.includes(String(row[store.idField])))
+      : store.records;
     if (store.pagination) {
       const { page, pageSize } = parsePageParams(url);
       const start = (page - 1) * pageSize;

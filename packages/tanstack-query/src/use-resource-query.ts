@@ -64,24 +64,37 @@ export type ResourceQueryResult<TResource extends ResourceLike> = {
   isSuccess: boolean;
   status: UseQueryResult<InferListData<TResource>, Error>["status"];
   query: UseQueryResult<InferListData<TResource>, Error>;
-  getById: (id: InferGetByIdArg<TResource>) => Promise<InferEntity<TResource>>;
-  create: (input: InferCreateBody<TResource>) => Promise<InferEntity<TResource>>;
-  update: (
-    id: InferUpdateId<TResource>,
-    body: InferUpdateBody<TResource>,
-  ) => Promise<InferEntity<TResource>>;
-  delete: (id: InferDeleteId<TResource>) => Promise<void>;
   invalidate: (filters?: InvalidateQueryFilters) => Promise<void>;
   refetch: () => Promise<UseQueryResult<InferListData<TResource>, Error>>;
   keys: ResourceKeyFactory;
-  mutations: {
-    create: UseMutationResult<InferEntity<TResource>, Error, InferCreateBody<TResource>>;
-    update: UseMutationResult<InferEntity<TResource>, Error, UpdateVariables<TResource>>;
-    delete: UseMutationResult<void, Error, InferDeleteId<TResource>>;
-  };
+  mutations: (TResource extends { create: NonNullable<ResourceLike["create"]> }
+    ? { create: UseMutationResult<InferEntity<TResource>, Error, InferCreateBody<TResource>> }
+    : {}) &
+    (TResource extends { update: NonNullable<ResourceLike["update"]> }
+      ? { update: UseMutationResult<InferEntity<TResource>, Error, UpdateVariables<TResource>> }
+      : {}) &
+    (TResource extends { delete: NonNullable<ResourceLike["delete"]> }
+      ? { delete: UseMutationResult<void, Error, InferDeleteId<TResource>> }
+      : {});
   /** @advanced shared controller (keys / options factories). */
   controller: ResourceController<TResource>;
-};
+} & (TResource extends { getById: NonNullable<ResourceLike["getById"]> }
+  ? { getById: (id: InferGetByIdArg<TResource>) => Promise<InferEntity<TResource>> }
+  : {}) &
+  (TResource extends { create: NonNullable<ResourceLike["create"]> }
+    ? { create: (input: InferCreateBody<TResource>) => Promise<InferEntity<TResource>> }
+    : {}) &
+  (TResource extends { update: NonNullable<ResourceLike["update"]> }
+    ? {
+        update: (
+          id: InferUpdateId<TResource>,
+          body: InferUpdateBody<TResource>,
+        ) => Promise<InferEntity<TResource>>;
+      }
+    : {}) &
+  (TResource extends { delete: NonNullable<ResourceLike["delete"]> }
+    ? { delete: (id: InferDeleteId<TResource>) => Promise<void> }
+    : {});
 
 /**
  * Unified Apixa × TanStack Query resource hook.
@@ -162,18 +175,18 @@ export function useResourceQuery<TResource extends ResourceLike>(
     isSuccess: listQuery.isSuccess,
     status: listQuery.status,
     query: listQuery,
-    getById,
-    create,
-    update,
-    delete: remove,
+    ...(resource.getById ? { getById } : {}),
+    ...(resource.create ? { create } : {}),
+    ...(resource.update ? { update } : {}),
+    ...(resource.delete ? { delete: remove } : {}),
     invalidate,
     refetch,
     keys: controller.keys,
     mutations: {
-      create: createMutation,
-      update: updateMutation,
-      delete: deleteMutation,
+      ...(resource.create ? { create: createMutation } : {}),
+      ...(resource.update ? { update: updateMutation } : {}),
+      ...(resource.delete ? { delete: deleteMutation } : {}),
     },
     controller,
-  };
+  } as ResourceQueryResult<TResource>;
 }

@@ -11,7 +11,7 @@ import type {
   ResourceRuntimeInput,
 } from "./definition.js";
 import type { OperationExtensions } from "./extensions.js";
-import type { PathParams, QueryParams } from "./http.js";
+import type { HttpMethod, PathParams, QueryParams } from "./http.js";
 import type { ApiResponse, RequestOptions } from "./transport.js";
 
 export type { BuiltinOpName, ExtendedBuiltinOpName, AllBuiltinOpName } from "./builtins.js";
@@ -71,11 +71,11 @@ type EntityBuiltinOps<R> = {
 };
 
 /**
- * Default shapes for the 10 builtins added in v0.10.0 — always-on for a resource with `path`,
- * same as the original 5. `getBySlug` / `patch` / `upsert` / `count` / `search` / `bulkCreate` /
- * `bulkDelete` are config-object conventions (same inference pipeline as the original 5).
- * `exists` / `findFirst` / `getMany` / `getBy` are composed from `getById` / `getAll` and declared
- * as plain function signatures — no new backend route is assumed for them.
+ * Default shapes for the 11 builtins added in v0.10.0 — always-on for a resource with `path`,
+ * same as the original 5. `getBySlug` / `patch` / `upsert` / `count` / `search` / `createMany` /
+ * `deleteMany` are config-object conventions (same inference pipeline as the original 5).
+ * `exists` / `findFirst` / `getMany` / `getBy` keep their public function signatures while each
+ * executes its own resolved request.
  */
 type ExtendedBuiltinOps<R> = {
   getBySlug: { path: "/slug/:slug"; response: EntityOf<R> };
@@ -83,8 +83,8 @@ type ExtendedBuiltinOps<R> = {
   upsert: { path: "/:id"; body: Partial<EntityOf<R>>; response: EntityOf<R> };
   count: { path: "/count"; response: number; query: QueryOf<R> };
   search: { path: "/search"; response: ListOf<R>; query: QueryOf<R> };
-  bulkCreate: { path: "/bulk"; body: CreateOf<R>[]; response: EntityOf<R>[] };
-  bulkDelete: { path: "/bulk"; body: (string | number)[]; response: void };
+  createMany: { path: "/bulk"; body: CreateOf<R>[]; response: EntityOf<R>[] };
+  deleteMany: { path: "/bulk"; body: (string | number)[]; response: void };
   getMany: (ids: (string | number)[]) => Promise<EntityOf<R>[]>;
   exists: (id: string | number) => Promise<boolean>;
   findFirst: (query?: QueryOf<R>) => Promise<EntityOf<R> | null>;
@@ -99,7 +99,10 @@ type StripCtx<F> = F extends (ctx: OperationFnContext, ...args: infer A) => infe
   ? (...args: A) => Ret
   : F;
 
-type DefaultPath<Name extends string> = Name extends "getById" | "update" | "delete" ? "/:id" : "";
+type Conventions = typeof import("../operation/conventions.js").BUILTIN_CONVENTIONS;
+type DefaultPath<Name extends string> = Name extends keyof Conventions
+  ? Conventions[Name]["path"]
+  : "";
 
 export type EffectivePath<Name extends string, Op> = Op extends { path: infer P }
   ? P extends string
@@ -108,89 +111,80 @@ export type EffectivePath<Name extends string, Op> = Op extends { path: infer P 
   : DefaultPath<Name>;
 
 type ResourcePathOf<R> = R extends { path: infer P } ? (P extends string ? P : "") : "";
-
 type TrimTrailingSlash<S extends string> = S extends `${infer R}/` ? TrimTrailingSlash<R> : S;
 
-/** Join resource path + relative op path for param inference. */
 export type ConcatPaths<Base extends string, Rel extends string> = Rel extends ""
   ? TrimTrailingSlash<Base>
-  : Rel extends `/${string}`
-    ? `${TrimTrailingSlash<Base>}${Rel}`
-    : `${TrimTrailingSlash<Base>}/${Rel}`;
+  : Rel extends `http://${string}` | `https://${string}`
+    ? Rel
+    : Rel extends `/${string}`
+      ? `${TrimTrailingSlash<Base>}${Rel}`
+      : `${TrimTrailingSlash<Base>}/${Rel}`;
 
 export type FullPath<R, Name extends string, Op> =
   ResourcePathOf<R> extends infer Base
     ? Base extends string
       ? string extends Base
-        ? EffectivePath<Name, Op> // wide `path: string` — count op params only
+        ? EffectivePath<Name, Op>
         : ConcatPaths<Base, EffectivePath<Name, Op>>
       : EffectivePath<Name, Op>
     : EffectivePath<Name, Op>;
 
-type PathParamName<T extends string> = T extends `${string}:${infer Param}/${infer Rest}`
-  ? Param | PathParamName<`/${Rest}`>
-  : T extends `${string}:${infer Param}`
-    ? Param
-    : never;
-
+type PathParamName<T extends string> = T extends `http://${infer Rest}` | `https://${infer Rest}`
+  ? Rest extends `${string}/${infer Path}`
+    ? PathParamName<`/${Path}`>
+    : never
+  : T extends `${string}:${infer Param}/${infer Rest}`
+    ? Param | PathParamName<`/${Rest}`>
+    : T extends `${string}:${infer Param}`
+      ? Param
+      : never;
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
   k: infer I,
 ) => void
   ? I
   : never;
-
 type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
-
 type PathArity<Path extends string> = [PathParamName<Path>] extends [never]
   ? 0
   : IsUnion<PathParamName<Path>> extends true
     ? 2
     : 1;
-
 type PathParamsOf<Path extends string> = [PathParamName<Path>] extends [never]
   ? PathParams
   : { [K in PathParamName<Path>]: string | number };
 
 type InferResponse<Op> = Op extends { response: infer R } ? R : unknown;
-type InferQuery<Name extends string, Op, R> = Op extends { query: infer Q }
+type InferQuery<Name extends string, Op, Meta> = Op extends { query: infer Q }
   ? Q
   : Name extends "getAll"
-    ? QueryOf<R>
+    ? QueryOf<Meta>
     : QueryParams;
-
-/**
- * Body presence: explicit `body` on the op, else create/update builtins.
- * (Avoid `[unknown] extends [undefined]` pitfalls with inferred CreateOf.)
- */
-type HasBody<Name extends string, Op> = Op extends { body: infer B }
-  ? [B] extends [never]
-    ? false
-    : true
-  : Name extends "create" | "update"
+type DefaultMethod<Name extends string> = Name extends keyof Conventions
+  ? Conventions[Name]["method"]
+  : never;
+type BodyMethod = "POST" | "PUT" | "PATCH";
+type HasBody<Name extends string, Op> = Op extends { hasBody: infer H }
+  ? H
+  : Name extends "deleteMany"
     ? true
-    : false;
+    : (Op extends { method: infer M } ? M : DefaultMethod<Name>) extends BodyMethod
+      ? true
+      : false;
+type InferBody<Op> = Op extends { body: infer B } ? B : unknown;
 
-type InferBody<Name extends string, Op, R> = Op extends { body: infer B }
-  ? B
-  : Name extends "create"
-    ? CreateOf<R>
-    : Name extends "update"
-      ? UpdateOf<R>
-      : undefined;
-
-/** Resolve unwrapped data vs full `ApiResponse` from call options. */
 export type CallResult<Data, O> = [O] extends [undefined]
   ? Data
   : O extends { full: true }
     ? ApiResponse<Data>
     : Data;
 
-type OperationFn<R, Name extends string, Op> = BuildOperationFn<
+type OperationFn<R, Name extends string, Op, Meta> = BuildOperationFn<
   PathArity<FullPath<R, Name, Op>>,
   PathParamsOf<FullPath<R, Name, Op>>,
-  HasBody<Name, Op> extends true ? InferBody<Name, Op, R> : undefined,
+  HasBody<Name, Op> extends true ? InferBody<Op> : undefined,
   InferResponse<Op>,
-  InferQuery<Name, Op, R>
+  InferQuery<Name, Op, Meta>
 >;
 
 type BuildOperationFn<Arity extends 0 | 1 | 2, Params, Body, Result, Query> = [Body] extends [
@@ -230,115 +224,256 @@ type MergeOp<Base, Override> = [Override] extends [never]
   ? Base
   : [Override] extends [undefined]
     ? Base
-    : Override extends (...args: never[]) => unknown
-      ? StripCtx<Override> // developer supplied a function override/implementation
-      : Base extends (...args: never[]) => unknown
-        ? Base // composed builtin (exists/findFirst/getMany) — object override doesn't change the signature
-        : Omit<Base, keyof Override> & Override;
+    : Override extends true
+      ? Base
+      : Override extends (...args: never[]) => unknown
+        ? StripCtx<Override>
+        : Base extends (...args: never[]) => unknown
+          ? Base
+          : Omit<Base, keyof Override> & Override;
 
-/** Declared `operations` on the resource state (may include type-only fields). `false` (removal) is excluded. */
-export type ResourceOpsOf<R> = R extends { operations?: infer Ops }
-  ? [Ops] extends [undefined]
-    ? {}
-    : Ops extends Record<string, unknown>
-      ? {
-          [
-            K in keyof Ops as [Ops[K]] extends [undefined]
-              ? never
-              : [Ops[K]] extends [false]
-                ? never
-                : K
-          ]-?: Exclude<Ops[K], undefined | false>;
-        }
-      : {}
+/** Non-disabled runtime operation entries. */
+export type ResourceOpsOf<R> = R extends { operations: infer Ops }
+  ? Ops extends Record<string, unknown>
+    ? { [K in keyof Ops as Ops[K] extends false ? never : K]-?: Exclude<Ops[K], false | undefined> }
+    : {}
   : {};
-
-/** Raw `operations` entries, including `false` — used only to detect removed builtins. */
-type RawOperations<R> = R extends { operations?: infer Ops }
-  ? [Ops] extends [undefined]
-    ? {}
-    : Ops
+type RawOperations<R> = R extends { operations: infer Ops } ? Ops : {};
+type MetaOperation<Meta, Name extends string> = Meta extends { operations?: infer Ops }
+  ? Name extends keyof NonNullable<Ops>
+    ? NonNullable<Ops>[Name]
+    : never
+  : never;
+type PayloadFields<Op> = Op extends object
+  ? Pick<Op, Extract<keyof Op, "body" | "response" | "query">>
   : {};
+type ApplyPayload<Base, Meta, Name extends string> = Base extends (...args: never[]) => unknown
+  ? Base
+  : MergeOp<Base, PayloadFields<MetaOperation<Meta, Name>>>;
 
-type RemovedOpName<R> = {
-  [K in keyof RawOperations<R>]: RawOperations<R>[K] extends false ? K : never;
-}[keyof RawOperations<R>];
-
-/** The 7 write-op names `readOnly: true` removes, same set `operation/expand.ts` uses at runtime. */
-type WriteOpName =
-  "create" | "update" | "patch" | "upsert" | "delete" | "bulkCreate" | "bulkDelete";
-
-/** `readOnly: true` removes the 7 write ops, unless `operations` has its own explicit entry for one. */
-type ReadOnlyRemovedOpName<R> = R extends { readOnly: true }
-  ? Exclude<WriteOpName, keyof RawOperations<R>>
+type GroupChoice<R, Group extends string> = "operationGroups" extends keyof R
+  ? Group extends keyof NonNullable<R[keyof R & "operationGroups"]>
+    ? NonNullable<R[keyof R & "operationGroups"]>[Group]
+    : never
   : never;
-
-/** All 16 builtins (original 5 + the 10 added in v0.10.0) are always-on, minus any set to `false`
- *  or implicitly removed by `readOnly: true`. */
-type KnownOpName<R> = Exclude<AllBuiltinOpName, RemovedOpName<R> | ReadOnlyRemovedOpName<R>>;
-
-type EffectiveOpDef<Name extends AllBuiltinOpName, R> = Name extends keyof ResourceOpsOf<R>
-  ? MergeOp<AllBuiltinOps<R>[Name], ResourceOpsOf<R>[Name]>
-  : AllBuiltinOps<R>[Name];
-
-/** The client method type for a known (always-on or referenced opt-in) builtin. */
-type ClientFnFor<Name extends AllBuiltinOpName, R> =
-  EffectiveOpDef<Name, R> extends (...args: never[]) => unknown
-    ? EffectiveOpDef<Name, R>
-    : OperationFn<R, Name, EffectiveOpDef<Name, R>>;
-
-/** Fully custom operation names — not one of the 16 known builtins. */
-type CustomOpName<R> = Exclude<keyof ResourceOpsOf<R>, BuiltinOpName | ExtendedBuiltinOpName>;
-
-type CustomClientFn<R, K> = K extends keyof ResourceOpsOf<R>
-  ? ResourceOpsOf<R>[K] extends (...args: never[]) => unknown
-    ? StripCtx<ResourceOpsOf<R>[K]>
-    : OperationFn<
-        R,
-        Extract<K, string>,
-        ResourceOpsOf<R>[K] & OperationDefinition & OperationExtensions
-      >
-  : never;
-
-/** All 16 always-on builtins (minus any set to `false`) ∪ fully custom declared operations. */
-export type EffectiveOps<R> = {
-  [K in KnownOpName<R>]: EffectiveOpDef<K, R>;
-} & {
-  [K in CustomOpName<R>]: ResourceOpsOf<R>[K];
-};
-
-/**
- * Resource client with **required** builtin method keys for all 16 always-on operations (original
- * 5 + the 10 added in v0.10.0, minus any set to `false`) so IDEs complete `api.users.getAll` /
- * `getById` / `count` / `exists` / … without ReturnType hacks, plus any fully custom operation the
- * resource declares.
- */
-export type ResourceClient<R extends { path: string } = { path: string }> = {
-  [K in KnownOpName<R>]: ClientFnFor<K, R>;
-} & {
-  [K in CustomOpName<R>]: CustomClientFn<R, K>;
-};
-
-/** Drop reserved / non-resource keys via key remapping (not `never` values). */
-export type ApiClient<T> = {
-  [
-    K in keyof T as K extends ReservedApiConfigKey
+type GroupOr<Choice, Fallback> = [Choice] extends [never]
+  ? Fallback
+  : undefined extends Choice
+    ? Exclude<Choice, undefined> | Fallback
+    : Choice;
+type Convention<Name extends AllBuiltinOpName> = Conventions[Name];
+type InitialDefault<R> = "defaultOperations" extends keyof R
+  ? R extends { defaultOperations: false }
+    ? false
+    : R extends { defaultOperations: true }
+      ? true
+      : boolean
+  : true;
+type ReadOnlyDefault<R, Name extends AllBuiltinOpName> = "readOnly" extends keyof R
+  ? Convention<Name>["access"] extends "write"
+    ? R extends { readOnly: true }
+      ? false
+      : R extends { readOnly: false }
+        ? InitialDefault<R>
+        : InitialDefault<R> | false
+    : InitialDefault<R>
+  : InitialDefault<R>;
+type FlagDefault<R, Name extends AllBuiltinOpName> = "writeOnly" extends keyof R
+  ? Convention<Name>["access"] extends "read"
+    ? R extends { writeOnly: true }
+      ? false
+      : R extends { writeOnly: false }
+        ? ReadOnlyDefault<R, Name>
+        : ReadOnlyDefault<R, Name> | false
+    : ReadOnlyDefault<R, Name>
+  : ReadOnlyDefault<R, Name>;
+type GroupSelected<R, Name extends AllBuiltinOpName> = GroupOr<
+  Convention<Name>["many"] extends true ? GroupChoice<R, "many"> : never,
+  GroupOr<
+    GroupChoice<R, Convention<Name>["access"]>,
+    GroupOr<
+      Convention<Name>["extended"] extends true ? GroupChoice<R, "extended"> : never,
+      FlagDefault<R, Name>
+    >
+  >
+>;
+type Selected<R, Name extends AllBuiltinOpName> = "operations" extends keyof R
+  ? R extends { operations: infer Ops }
+    ? string extends keyof Ops
+      ? boolean
+      : Name extends keyof Ops
+        ? [Extract<Ops[Name], false>] extends [never]
+          ? true
+          : [Exclude<Ops[Name], false>] extends [never]
+            ? false
+            : boolean
+        : GroupSelected<R, Name>
+    : boolean
+  : GroupSelected<R, Name>;
+type KnownOpName<R> = {
+  [Name in AllBuiltinOpName]: [Selected<R, Name>] extends [true] ? Name : never;
+}[AllBuiltinOpName];
+type MaybeOpName<R> = {
+  [Name in AllBuiltinOpName]: [Selected<R, Name>] extends [true | false]
+    ? [Selected<R, Name>] extends [true] | [false]
       ? never
-      : T[K] extends { path: string }
+      : Name
+    : never;
+}[AllBuiltinOpName];
+
+type EffectiveOpDef<Name extends AllBuiltinOpName, R, Meta> = ApplyPayload<
+  MergeOp<
+    AllBuiltinOps<Meta>[Name],
+    Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+  >,
+  Meta,
+  Name
+>;
+type RuntimeOperation<R, Name extends string> = Name extends keyof ResourceOpsOf<R>
+  ? ResourceOpsOf<R>[Name]
+  : never;
+type ResourceParamName<R> = PathParamName<ResourcePathOf<R>>;
+type ResourceParams<R> = { [K in ResourceParamName<R>]: string | number };
+type HasResourceParams<R> = [ResourceParamName<R>] extends [never] ? false : true;
+type SpecialClientFn<Name extends string, R, Meta> = Name extends "exists"
+  ? HasResourceParams<R> extends true
+    ? (id: string | number, params: ResourceParams<R>) => Promise<boolean>
+    : (id: string | number) => Promise<boolean>
+  : Name extends "getMany"
+    ? HasResourceParams<R> extends true
+      ? (ids: (string | number)[], params: ResourceParams<R>) => Promise<EntityOf<Meta>[]>
+      : (ids: (string | number)[]) => Promise<EntityOf<Meta>[]>
+    : Name extends "findFirst"
+      ? HasResourceParams<R> extends true
+        ? (
+            query: QueryOf<Meta> | undefined,
+            params: ResourceParams<R>,
+          ) => Promise<EntityOf<Meta> | null>
+        : (query?: QueryOf<Meta>) => Promise<EntityOf<Meta> | null>
+      : Name extends "getBy"
+        ? HasResourceParams<R> extends true
+          ? (
+              fieldOrPath: string,
+              value: string | number,
+              params: ResourceParams<R>,
+            ) => Promise<EntityOf<Meta>>
+          : (fieldOrPath: string, value: string | number) => Promise<EntityOf<Meta>>
+        : never;
+type ClientFnFor<Name extends AllBuiltinOpName, R, Meta> = [RuntimeOperation<R, Name>] extends [
+  never,
+]
+  ? Name extends "exists" | "getMany" | "findFirst" | "getBy"
+    ? SpecialClientFn<Name, R, Meta>
+    : OperationFn<R, Name, EffectiveOpDef<Name, R, Meta>, Meta>
+  : RuntimeOperation<R, Name> extends (...args: never[]) => unknown
+    ? StripCtx<RuntimeOperation<R, Name>>
+    : Name extends "exists" | "getMany" | "findFirst" | "getBy"
+      ? SpecialClientFn<Name, R, Meta>
+      : OperationFn<R, Name, EffectiveOpDef<Name, R, Meta>, Meta>;
+
+type CustomOpName<R> = Exclude<keyof ResourceOpsOf<R>, AllBuiltinOpName>;
+type CustomClientFn<R, Meta, Name extends CustomOpName<R>> = ResourceOpsOf<R>[Name] extends (
+  ...args: never[]
+) => unknown
+  ? StripCtx<ResourceOpsOf<R>[Name]>
+  : OperationFn<
+      R,
+      Extract<Name, string>,
+      ApplyPayload<ResourceOpsOf<R>[Name], Meta, Extract<Name, string>>,
+      Meta
+    >;
+
+export type EffectiveOps<R, Meta = {}> = {
+  [Name in KnownOpName<R>]: EffectiveOpDef<Name, R, Meta>;
+} & { [Name in CustomOpName<R>]: ResourceOpsOf<R>[Name] };
+
+/** Runtime config controls method names and paths; metadata controls payload types. */
+export type ResourceClient<R extends { path: string } = { path: string }, Meta = R> = {
+  [Name in KnownOpName<R>]: ClientFnFor<Name, R, Meta>;
+} & { [Name in MaybeOpName<R>]?: ClientFnFor<Name, R, Meta> } & {
+  [Name in CustomOpName<R>]: CustomClientFn<R, Meta, Name>;
+};
+
+export type ApiClient<Meta, Config = Meta> = {
+  [
+    K in keyof Config as K extends ReservedApiConfigKey
+      ? never
+      : Config[K] extends { path: string }
         ? K
         : never
-  ]: T[K] extends { path: string } ? ResourceClient<T[K]> : never;
+  ]: Config[K] extends { path: string }
+    ? ResourceClient<Config[K], K extends keyof Meta ? Meta[K] : {}>
+    : never;
 };
 
 export type { MockDatasetIds } from "./mock-dataset-ids.js";
 
-/**
- * Runtime config: Core root builtins + one runtime resource bag per key of `T`.
- * Type-only `entity` / `list` / `query` (and op `body` / `response` / `query`) are not required.
- */
-export type ApiInput<T> = ApiRootConfig & {
-  [K in keyof T]: T[K] extends { path: string } ? ResourceRuntimeInput : never;
-};
+/** Require every declared resource at runtime, while allowing extra runtime resources. */
+export type ApiInput<T> = ApiRootConfig & { [K in keyof T]: ResourceRuntimeInput };
 
-/** @deprecated Prefer ApiInput — kept name for call-site clarity in older docs. */
 export type ValidateApiConfig<T> = ApiInput<T>;
+
+/** Metadata for a custom operation cannot expose a method with no runtime implementation. */
+type MissingCustomOps<Meta, Config> = {
+  [K in keyof Meta]-?: K extends keyof Config
+    ? Meta[K] extends { operations: infer M }
+      ? M extends object
+        ? {
+            [Name in Exclude<keyof M, AllBuiltinOpName>]-?: Config[K] extends {
+              operations: infer O;
+            }
+              ? Name extends keyof O
+                ? O[Name] extends false
+                  ? Name
+                  : never
+                : Name
+              : Name;
+          }[Exclude<keyof M, AllBuiltinOpName>]
+        : never
+      : never
+    : never;
+}[keyof Meta];
+type InvalidFlags<Config> = {
+  [K in keyof Config]-?: [Config[K]] extends [never]
+    ? never
+    : Config[K] extends { readOnly: true; writeOnly: true }
+      ? K
+      : never;
+}[keyof Config];
+type InvalidCustomTrue<Config> = {
+  [K in keyof Config]-?: Config[K] extends { operations: infer Ops }
+    ? Ops extends object
+      ? {
+          [Name in Exclude<keyof Ops, AllBuiltinOpName>]-?: Ops[Name] extends true ? Name : never;
+        }[Exclude<keyof Ops, AllBuiltinOpName>]
+      : never
+    : never;
+}[keyof Config];
+type InvalidCustomDefinition<Config> = {
+  [K in keyof Config]-?: Config[K] extends { operations: infer Ops }
+    ? Ops extends object
+      ? {
+          [Name in Exclude<keyof Ops, AllBuiltinOpName>]-?: Ops[Name] extends
+            false | ((...args: never[]) => unknown) | { method: HttpMethod }
+            ? never
+            : Name;
+        }[Exclude<keyof Ops, AllBuiltinOpName>]
+      : never
+    : never;
+}[keyof Config];
+
+export type ValidateRuntimeConfig<Meta, Config> = [MissingCustomOps<Meta, Config>] extends [never]
+  ? [InvalidFlags<Config>] extends [never]
+    ? [InvalidCustomTrue<Config>] extends [never]
+      ? [InvalidCustomDefinition<Config>] extends [never]
+        ? unknown
+        : { readonly __invalidCustomDefinition: InvalidCustomDefinition<Config> }
+      : { readonly __invalidCustomTrue: InvalidCustomTrue<Config> }
+    : { readonly __readOnlyAndWriteOnlyConflict: InvalidFlags<Config> }
+  : { readonly __missingCustomOperations: MissingCustomOps<Meta, Config> };
+
+/** A rest tuple keeps literal config inference independent from validation. */
+export type ValidationArgs<Meta, Config> =
+  unknown extends ValidateRuntimeConfig<Meta, Config>
+    ? []
+    : [validation: ValidateRuntimeConfig<Meta, Config>];

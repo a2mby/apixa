@@ -9,10 +9,10 @@ type AsyncFn = (...args: any[]) => Promise<any>;
 /** Minimal structural shape of an Apixa resource client (builtins). */
 export type ResourceLike = {
   getAll: AsyncFn;
-  getById: AsyncFn;
-  create: AsyncFn;
-  update: AsyncFn;
-  delete: AsyncFn;
+  getById?: AsyncFn;
+  create?: AsyncFn;
+  update?: AsyncFn;
+  delete?: AsyncFn;
 };
 
 type PromiseData<F> = F extends (...args: never[]) => Promise<infer R>
@@ -22,12 +22,34 @@ type PromiseData<F> = F extends (...args: never[]) => Promise<infer R>
     : never;
 
 export type InferListData<R extends ResourceLike> = PromiseData<R["getAll"]>;
-export type InferEntity<R extends ResourceLike> = PromiseData<R["getById"]>;
-export type InferCreateBody<R extends ResourceLike> = Parameters<R["create"]>[0];
-export type InferUpdateId<R extends ResourceLike> = Parameters<R["update"]>[0];
-export type InferUpdateBody<R extends ResourceLike> = Parameters<R["update"]>[1];
-export type InferDeleteId<R extends ResourceLike> = Parameters<R["delete"]>[0];
-export type InferGetByIdArg<R extends ResourceLike> = Parameters<R["getById"]>[0];
+export type InferEntity<R extends ResourceLike> = R extends { getById: infer F }
+  ? PromiseData<F>
+  : unknown;
+export type InferCreateBody<R extends ResourceLike> = R extends {
+  create: (...args: infer A) => Promise<unknown>;
+}
+  ? A[0]
+  : never;
+export type InferUpdateId<R extends ResourceLike> = R extends {
+  update: (...args: infer A) => Promise<unknown>;
+}
+  ? A[0]
+  : never;
+export type InferUpdateBody<R extends ResourceLike> = R extends {
+  update: (...args: infer A) => Promise<unknown>;
+}
+  ? A[1]
+  : never;
+export type InferDeleteId<R extends ResourceLike> = R extends {
+  delete: (...args: infer A) => Promise<unknown>;
+}
+  ? A[0]
+  : never;
+export type InferGetByIdArg<R extends ResourceLike> = R extends {
+  getById: (...args: infer A) => Promise<unknown>;
+}
+  ? A[0]
+  : never;
 
 /** Query bag passed to `getAll` options (when present). */
 export type InferListQuery<R extends ResourceLike> = Parameters<R["getAll"]>[0] extends

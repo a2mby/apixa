@@ -1,23 +1,16 @@
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
 import type { RetryConfig } from "./retry.js";
 import type { ResponseType } from "./transport.js";
+import type { BuiltinConventionName } from "../operation/conventions.js";
 
 /** The 5 conventions every path-only resource gets by default (unchanged since v0.2.0). */
-export type BuiltinOpName = "getAll" | "getById" | "create" | "update" | "delete";
+export type BuiltinOpName = Extract<
+  BuiltinConventionName,
+  "getAll" | "getById" | "create" | "update" | "delete"
+>;
 
 /** Added in v0.10.0 — always-on for a resource with `path`, same as the original 5 (default-first). */
-export type ExtendedBuiltinOpName =
-  | "getBySlug"
-  | "patch"
-  | "upsert"
-  | "count"
-  | "search"
-  | "bulkCreate"
-  | "bulkDelete"
-  | "getMany"
-  | "exists"
-  | "findFirst"
-  | "getBy";
+export type ExtendedBuiltinOpName = Exclude<BuiltinConventionName, BuiltinOpName>;
 
 export type AllBuiltinOpName = BuiltinOpName | ExtendedBuiltinOpName;
 

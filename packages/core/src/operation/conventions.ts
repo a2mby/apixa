@@ -1,26 +1,80 @@
 import type { HttpMethod } from "../types/http.js";
 
-export type ConventionDefault = { method: HttpMethod; path: string; hasBody?: boolean };
-
-export const CONVENTION_DEFAULTS: Record<string, ConventionDefault> = {
-  getAll: { method: "GET", path: "" },
-  getById: { method: "GET", path: "/:id" },
-  create: { method: "POST", path: "" },
-  update: { method: "PUT", path: "/:id" },
-  delete: { method: "DELETE", path: "/:id" },
+type Convention = {
+  method: HttpMethod;
+  path: string;
+  hasBody?: boolean;
+  access: "read" | "write";
+  extended: boolean;
+  many: boolean;
+  strategy?: "exists" | "findFirst" | "getMany" | "getBy";
 };
 
-/**
- * Always-on conventions (v0.10.0) — the same default-first treatment as `CONVENTION_DEFAULTS`
- * above, since v0.2.0. No `operations` entry is needed to use one of these; `false` removes it.
- * Kept in a separate table only so the original 5 stay visibly untouched.
- */
-export const EXTENDED_CONVENTION_DEFAULTS: Record<string, ConventionDefault> = {
-  getBySlug: { method: "GET", path: "/slug/:slug" },
-  patch: { method: "PATCH", path: "/:id" },
-  upsert: { method: "PUT", path: "/:id" },
-  count: { method: "GET", path: "/count" },
-  search: { method: "GET", path: "/search" },
-  bulkCreate: { method: "POST", path: "/bulk" },
-  bulkDelete: { method: "DELETE", path: "/bulk", hasBody: true },
-};
+/** Shared source for runtime selection and public builtin-name types. */
+export const BUILTIN_CONVENTIONS = {
+  getAll: { method: "GET", path: "", access: "read", extended: false, many: false },
+  getById: { method: "GET", path: "/:id", access: "read", extended: false, many: false },
+  create: { method: "POST", path: "", access: "write", extended: false, many: false },
+  update: { method: "PUT", path: "/:id", access: "write", extended: false, many: false },
+  delete: { method: "DELETE", path: "/:id", access: "write", extended: false, many: false },
+  getBySlug: { method: "GET", path: "/slug/:slug", access: "read", extended: true, many: false },
+  patch: { method: "PATCH", path: "/:id", access: "write", extended: true, many: false },
+  upsert: { method: "PUT", path: "/:id", access: "write", extended: true, many: false },
+  count: { method: "GET", path: "/count", access: "read", extended: true, many: false },
+  search: { method: "GET", path: "/search", access: "read", extended: true, many: false },
+  createMany: { method: "POST", path: "/bulk", access: "write", extended: true, many: true },
+  deleteMany: {
+    method: "DELETE",
+    path: "/bulk",
+    hasBody: true,
+    access: "write",
+    extended: true,
+    many: true,
+  },
+  getMany: {
+    method: "GET",
+    path: "",
+    access: "read",
+    extended: true,
+    many: true,
+    strategy: "getMany",
+  },
+  exists: {
+    method: "GET",
+    path: "/:id",
+    access: "read",
+    extended: true,
+    many: false,
+    strategy: "exists",
+  },
+  findFirst: {
+    method: "GET",
+    path: "",
+    access: "read",
+    extended: true,
+    many: false,
+    strategy: "findFirst",
+  },
+  getBy: {
+    method: "GET",
+    path: "",
+    access: "read",
+    extended: true,
+    many: false,
+    strategy: "getBy",
+  },
+} as const satisfies Record<string, Convention>;
+
+export type BuiltinConventionName = keyof typeof BUILTIN_CONVENTIONS;
+
+export function isBuiltinName(name: string): name is BuiltinConventionName {
+  return Object.prototype.hasOwnProperty.call(BUILTIN_CONVENTIONS, name);
+}
+
+/** Kept as public subsets for existing consumers of the operation module. */
+export const CONVENTION_DEFAULTS = Object.fromEntries(
+  Object.entries(BUILTIN_CONVENTIONS).filter(([, value]) => !value.extended),
+);
+export const EXTENDED_CONVENTION_DEFAULTS = Object.fromEntries(
+  Object.entries(BUILTIN_CONVENTIONS).filter(([, value]) => value.extended),
+);

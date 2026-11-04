@@ -29,11 +29,11 @@ describe("defineApi", () => {
     });
 
     expect(Object.keys(api.users).sort()).toEqual([
-      "bulkCreate",
-      "bulkDelete",
       "count",
       "create",
+      "createMany",
       "delete",
+      "deleteMany",
       "exists",
       "findFirst",
       "getAll",

@@ -1,76 +1,72 @@
 import type { OperationDefinition } from "../types/definition.js";
 import type { OperationFn } from "../types/builtins.js";
-import { COMPOSED_BUILTINS } from "./builtins.js";
-import { CONVENTION_DEFAULTS, EXTENDED_CONVENTION_DEFAULTS } from "./conventions.js";
+import { BUILTIN_CONVENTIONS, isBuiltinName } from "./conventions.js";
 
-export type OperationInput = OperationDefinition | OperationFn | false;
+export type OperationInput = OperationDefinition | OperationFn | boolean;
 export type ExpandedOperation = OperationDefinition | OperationFn;
+export type OperationGroup = "read" | "write" | "extended" | "many";
 
 export interface ExpandOperationsOptions {
-  /**
-   * Sugar for implicitly removing the 7 write-op names (`create`, `update`, `patch`, `upsert`,
-   * `delete`, `bulkCreate`, `bulkDelete`) unless `operations` has its own explicit entry for one
-   * — an explicit override (object, function, or `false`) for a write-op name still wins.
-   */
+  defaultOperations?: boolean;
   readOnly?: boolean;
+  writeOnly?: boolean;
+  operationGroups?: Partial<Record<OperationGroup, boolean>>;
 }
 
-const WRITE_OP_NAMES = new Set([
-  "create",
-  "update",
-  "patch",
-  "upsert",
-  "delete",
-  "bulkCreate",
-  "bulkDelete",
-]);
+/** Broad groups resolve before `many`; individual entries always resolve last. */
+const GROUP_ORDER: readonly OperationGroup[] = ["extended", "read", "write", "many"];
 
-/**
- * Every builtin — the original 5 CRUD conventions plus the 10 added later (7 declarative, 3
- * composed over getAll/getById) — is always-on for a resource with `path`, same default-first
- * behavior as the original 5 since v0.2.0. `false` removes one; a developer's own object/function
- * at that name overrides the default; any other name is a fully custom operation.
- */
 export function expandOperations(
   operations?: Record<string, OperationInput>,
-  options?: ExpandOperationsOptions,
+  options: ExpandOperationsOptions = {},
 ): Record<string, ExpandedOperation> {
+  if (options.readOnly && options.writeOnly) {
+    throw new Error("A resource cannot set both readOnly and writeOnly to true.");
+  }
+
+  const enabled = new Map<string, boolean>();
+  for (const [name, convention] of Object.entries(BUILTIN_CONVENTIONS)) {
+    enabled.set(name, options.defaultOperations !== false);
+    if (options.readOnly && convention.access === "write") enabled.set(name, false);
+    if (options.writeOnly && convention.access === "read") enabled.set(name, false);
+  }
+
+  for (const group of GROUP_ORDER) {
+    const choice = options.operationGroups?.[group];
+    if (choice === undefined) continue;
+    if (typeof choice !== "boolean") throw new Error(`operationGroups.${group} must be boolean.`);
+    for (const [name, convention] of Object.entries(BUILTIN_CONVENTIONS)) {
+      if (
+        (group === "extended" && convention.extended) ||
+        (group === "many" && convention.many) ||
+        group === convention.access
+      ) {
+        enabled.set(name, choice);
+      }
+    }
+  }
+  for (const group of Object.keys(options.operationGroups ?? {})) {
+    if (!GROUP_ORDER.includes(group as OperationGroup)) {
+      throw new Error(`Unknown operation group "${group}".`);
+    }
+  }
+
   const expanded: Record<string, ExpandedOperation> = {};
-  const readOnly = options?.readOnly === true;
-
-  const isImplicitlyRemoved = (name: string) =>
-    readOnly && WRITE_OP_NAMES.has(name) && !(operations && name in operations);
-
-  for (const name of Object.keys(CONVENTION_DEFAULTS)) {
-    if (isImplicitlyRemoved(name)) continue;
+  for (const name of Object.keys(BUILTIN_CONVENTIONS)) {
     const override = operations?.[name];
-    if (override === false) continue;
-    expanded[name] = typeof override === "function" ? override : { ...(override ?? {}) };
+    if (override === false || (override === undefined && !enabled.get(name))) continue;
+    expanded[name] =
+      typeof override === "function" ? override : override === true ? {} : { ...(override ?? {}) };
   }
 
-  for (const name of Object.keys(EXTENDED_CONVENTION_DEFAULTS)) {
-    if (isImplicitlyRemoved(name)) continue;
-    const override = operations?.[name];
-    if (override === false) continue;
-    expanded[name] = typeof override === "function" ? override : { ...(override ?? {}) };
+  for (const [name, definition] of Object.entries(operations ?? {})) {
+    if (isBuiltinName(name) || definition === false || definition === undefined) continue;
+    if (definition === true) {
+      throw new Error(
+        `Custom operation "${name}" needs a method/path configuration or function; true cannot create it.`,
+      );
+    }
+    expanded[name] = definition;
   }
-
-  for (const name of Object.keys(COMPOSED_BUILTINS)) {
-    const override = operations?.[name];
-    if (override === false) continue;
-    expanded[name] = typeof override === "function" ? override : COMPOSED_BUILTINS[name]!;
-  }
-
-  if (!operations) {
-    return expanded;
-  }
-
-  for (const [name, definition] of Object.entries(operations)) {
-    if (name in expanded) continue; // already handled above
-    if (definition === false || definition === undefined) continue; // no-op removal of an inactive name
-
-    expanded[name] = typeof definition === "function" ? definition : { ...definition };
-  }
-
   return expanded;
 }
