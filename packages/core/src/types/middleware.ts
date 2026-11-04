@@ -1,19 +1,44 @@
-import type { ApiResponse, RequestConfig } from "./transport.js";
+import type { ApiRequest, ApiResponse } from "./transport.js";
 
-export type MiddlewareNext = () => Promise<ApiResponse<unknown>>;
+/** Runs once per logical request, before transport. Return a request (or nothing to keep it). */
+export type RequestMiddleware = (
+  request: ApiRequest,
+) => ApiRequest | void | Promise<ApiRequest | void>;
+
+/** Runs after response key transforms. Return a response (or nothing to keep it). */
+export type ResponseMiddleware = (
+  response: ApiResponse<unknown>,
+) => ApiResponse<unknown> | void | Promise<ApiResponse<unknown> | void>;
 
 /**
- * Request interceptor. `next()` runs the remaining chain + one transport attempt
- * and may be called more than once (e.g. refresh token then retry).
+ * Runs when the call fails (HTTP, network, timeout, abort, mock, config, transform, …).
+ * - throw → that error continues to the next handler (and is finally thrown to the caller);
+ * - return a value other than `undefined` → the call recovers and resolves to that value;
+ * - return `undefined` → not handled, the same error continues.
+ *
+ * `context.replay()` re-runs the whole call once (fresh headers, middleware, retries, a new
+ * timeout budget) — e.g. refresh a token on 401, then `return context.replay()`. It is
+ * `undefined` inside a replay, so a replay can never loop.
  */
-export type Middleware = (
-  ctx: MiddlewareContext,
-  next: MiddlewareNext,
-) => Promise<ApiResponse<unknown>>;
+export type ErrorMiddleware = (
+  error: unknown,
+  context: { request?: ApiRequest; replay?: () => Promise<unknown> },
+) => unknown | Promise<unknown>;
 
-export type MiddlewareContext = {
-  request: RequestConfig;
-  response?: ApiResponse<unknown>;
-  attempt: number;
-  meta: Record<string, unknown>;
-};
+/** General middleware: any of the three stages in one object. */
+export interface MiddlewareHooks {
+  onRequest?: RequestMiddleware;
+  onResponse?: ResponseMiddleware;
+  onError?: ErrorMiddleware;
+}
+
+/**
+ * Middleware options accepted at root, resource, and operation level. All three styles feed
+ * one pipeline. Order per stage: root → resource → operation; within a level `middleware`
+ * runs before the `requestMiddleware` / `responseMiddleware` arrays (in array order).
+ */
+export interface MiddlewareOptions {
+  middleware?: MiddlewareHooks;
+  requestMiddleware?: RequestMiddleware[];
+  responseMiddleware?: ResponseMiddleware[];
+}

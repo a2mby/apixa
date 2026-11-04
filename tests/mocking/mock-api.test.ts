@@ -1,16 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
-import { clearDefineApiProcessors, defineApi } from "@apixa/core";
-import {
-  defineMockApi,
-  disableResourceMocks,
-  enableResourceMocks,
-  MockApiError,
-  type MockApiErrorCode,
-  type Page,
-} from "@apixa/mocking";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
+import { defineApi } from "@apixa/core";
+import { defineMockApi, MockApiError, type MockApiErrorCode, type Page } from "@apixa/mocking";
 import { users as usersPreset, type Comment, type Product, type User } from "@apixa/mocking/data";
 
 const datasetsRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)), "datasets");
@@ -606,21 +599,12 @@ describe("defineMockApi: pagination", () => {
   });
 });
 
-describe("defineMockApi alongside Core inline mocking", () => {
-  beforeEach(() => {
-    clearDefineApiProcessors();
-    enableResourceMocks();
-  });
-  afterEach(() => {
-    disableResourceMocks();
-    clearDefineApiProcessors();
-  });
-
-  it("keeps the two systems independent", async () => {
+describe("defineMockApi alongside Core mocked resources (one shared engine)", () => {
+  it("keeps the two systems' state independent", async () => {
     const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2 } });
     const coreApi = defineApi({
       baseURL: "https://api.example.com",
-      users: { path: "/users", mock: "users-mock", slice: 2 },
+      resources: { users: { path: "/users", mock: { data: "users-mock", seed: { limit: 2 } } } },
     });
 
     await coreApi.users.create({
@@ -642,40 +626,37 @@ describe("defineMockApi alongside Core inline mocking", () => {
     expect(JSON.stringify(await mockApi.users.getAll())).not.toContain("Via Core");
   });
 
-  it("matches defineApi getAll list typing when pagination is off", () => {
+  it("infers the same entity type from the dataset id, with no metadata", () => {
     const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2 } });
-    const coreApi = defineApi<{ users: { path: "/users"; entity: User } }>()({
+    const coreApi = defineApi({
       baseURL: "https://api.example.com",
-      users: { path: "/users", mock: "users-mock", slice: 2 },
+      resources: { users: { path: "/users", mock: "users-mock" } },
     });
     expectTypeOf(mockApi.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
     expectTypeOf(coreApi.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
   });
 
-  it("matches page envelope at runtime when both enable pagination", async () => {
-    const mockApi = defineMockApi({
-      users: { type: "users-mock", slice: 2, pagination: true },
-    });
-    const coreApi = defineApi<{
-      users: { path: "/users"; entity: User; list: Page<User> };
-    }>()({
+  it("generates the same ids and page totals from the same seed", async () => {
+    const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2, pagination: true } });
+    const coreApi = defineApi({
       baseURL: "https://api.example.com",
-      users: {
-        path: "/users",
-        mock: "users-mock",
-        slice: 2,
-        pagination: true,
+      resources: {
+        users: {
+          path: "/users",
+          mock: { data: "users-mock", seed: { limit: 2 } },
+          pagination: "page",
+        },
       },
     });
-
-    expectTypeOf(mockApi.users.getAll).returns.resolves.toEqualTypeOf<Page<User>>();
-    expectTypeOf(coreApi.users.getAll).returns.resolves.toEqualTypeOf<Page<User>>();
-
     const fromMock = await mockApi.users.getAll({ page: 1, pageSize: 1 });
     const fromCore = await coreApi.users.getAll({ query: { page: 1, pageSize: 1 } });
+    expectTypeOf(fromCore).toEqualTypeOf<{
+      data: User[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
     expect(fromMock).toMatchObject({ total: 2, page: 1, pageSize: 1 });
-    expect(fromCore).toMatchObject({ total: 2, page: 1, pageSize: 1 });
-    expect(fromMock.data).toHaveLength(1);
-    expect(fromCore.data).toHaveLength(1);
+    expect(fromCore).toEqual({ data: fromMock.data, total: 2, page: 1, pageSize: 1 });
   });
 });

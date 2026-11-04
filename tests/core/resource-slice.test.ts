@@ -6,9 +6,11 @@ describe("resource slice", () => {
   it("is typed on the resource bag without importing @apixa/mocking", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      users: {
-        path: "/users",
-        slice: 2,
+      resources: {
+        users: {
+          path: "/users",
+          slice: 2,
+        },
       },
     });
     expect(api.users.getAll).toBeTypeOf("function");
@@ -20,9 +22,11 @@ describe("resource slice", () => {
       transport: createFakeTransport(() => ({
         body: [{ id: "1" }, { id: "2" }, { id: "3" }],
       })),
-      users: {
-        path: "/users",
-        slice: 2,
+      resources: {
+        users: {
+          path: "/users",
+          slice: 2,
+        },
       },
     });
 
@@ -34,9 +38,11 @@ describe("resource slice", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: page })),
-      users: {
-        path: "/users",
-        slice: 1,
+      resources: {
+        users: {
+          path: "/users",
+          slice: 1,
+        },
       },
     });
 

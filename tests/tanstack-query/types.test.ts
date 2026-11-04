@@ -1,5 +1,6 @@
 import { defineApi } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
+import type { CreateBodyOf } from "../helpers/types.js";
 import { createResourceController } from "../../packages/tanstack-query/src/controller.js";
 import { useResourceQuery } from "../../packages/tanstack-query/src/use-resource-query.js";
 import type {
@@ -20,14 +21,16 @@ describe("tanstack-query inference from Apixa ResourceClient", () => {
   const api = defineApi<AppApi>()({
     baseURL: "https://api.example.com",
     transport: createFakeTransport(() => ({ body: [] })),
-    users: { path: "/users" },
+    resources: {
+      users: { path: "/users" },
+    },
   });
 
   it("infers list, entity, create, and update bodies from the resource", () => {
     type R = typeof api.users;
     expectTypeOf<InferListData<R>>().toEqualTypeOf<User[]>();
     expectTypeOf<InferEntity<R>>().toEqualTypeOf<User>();
-    expectTypeOf<InferCreateBody<R>>().toEqualTypeOf<Omit<User, "id">>();
+    expectTypeOf<InferCreateBody<R>>().toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf<InferUpdateBody<R>>().toEqualTypeOf<Partial<User>>();
 
     const controller = createResourceController(api.users, { queryKey: ["users"] });
@@ -37,16 +40,20 @@ describe("tanstack-query inference from Apixa ResourceClient", () => {
   it("accepts read-only and partially disabled Core resources without exposing absent methods", () => {
     const readOnly = defineApi<AppApi>()({
       baseURL: "https://api.example.com",
-      users: { path: "/users", readOnly: true },
+      resources: {
+        users: { path: "/users", readOnly: true },
+      },
     });
     const noDetail = defineApi<AppApi>()({
       baseURL: "https://api.example.com",
-      users: { path: "/users", operations: { getById: false } },
+      resources: {
+        users: { path: "/users", operations: { getById: false } },
+      },
     });
     if (false) {
       const read = useResourceQuery(readOnly.users, { queryKey: ["users"] });
       expectTypeOf(read.data).toEqualTypeOf<User[] | undefined>();
-      expectTypeOf(read.getById).parameter(0).toEqualTypeOf<string | number>();
+      expectTypeOf(read.getById).parameter(0).toEqualTypeOf<User["id"]>();
       // @ts-expect-error read-only resource has no create mutation
       read.create({ name: "Ada" });
       // @ts-expect-error read-only resource has no create mutation entry

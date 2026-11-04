@@ -70,11 +70,3 @@ export type BuiltinConventionName = keyof typeof BUILTIN_CONVENTIONS;
 export function isBuiltinName(name: string): name is BuiltinConventionName {
   return Object.prototype.hasOwnProperty.call(BUILTIN_CONVENTIONS, name);
 }
-
-/** Kept as public subsets for existing consumers of the operation module. */
-export const CONVENTION_DEFAULTS = Object.fromEntries(
-  Object.entries(BUILTIN_CONVENTIONS).filter(([, value]) => !value.extended),
-);
-export const EXTENDED_CONVENTION_DEFAULTS = Object.fromEntries(
-  Object.entries(BUILTIN_CONVENTIONS).filter(([, value]) => value.extended),
-);

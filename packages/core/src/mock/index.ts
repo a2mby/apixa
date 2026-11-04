@@ -1,0 +1,15 @@
+export { MockStore } from "./store.js";
+export { normalizeMockSource, validateRecords, type MockSource, type Row } from "./source.js";
+export {
+  runBuiltin,
+  routeToIntent,
+  type BuiltinIntent,
+  type MockResult,
+  type PaginationMode,
+} from "./execute.js";
+export {
+  MOCK_DATASETS,
+  isMockDatasetId,
+  listMockDatasetIds,
+  loadNamedDataset,
+} from "./datasets.js";

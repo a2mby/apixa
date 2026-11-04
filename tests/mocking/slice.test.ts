@@ -22,23 +22,19 @@ describe("mock slice", () => {
     expect(rows.map((r) => r.id)).toEqual(["3", "4", "5"]);
   });
 
-  it("slice: { start, end } returns all records when end exceeds length", async () => {
+  it("slice: { start, end } follows Array.slice when end exceeds length (shared seed semantics)", async () => {
     const api = defineMockApi({
       overshoot: { type: "products-mock", slice: { start: 10, end: 10_000 } },
     });
-    expect(await api.overshoot.getAll()).toHaveLength(100);
+    expect(await api.overshoot.getAll()).toHaveLength(90);
   });
 
-  it("rejects end before start with InvalidSliceError when the resource responds", async () => {
-    const api = defineMockApi({
-      bad: { type: "products-mock", slice: { start: 10, end: 3 } },
-    });
-    await expect(api.bad.getAll()).rejects.toBeInstanceOf(InvalidSliceError);
-    await expect(api.bad.getAll()).rejects.toMatchObject({
-      code: "INVALID_SLICE",
-      message: expect.stringMatching(/end \(3\).*before.*start \(10\)/),
-    });
-    await expect(api.bad.getAll()).rejects.toBeInstanceOf(MockingErrors);
+  it("rejects end before start with InvalidSliceError when the API is built", () => {
+    const build = () =>
+      defineMockApi({ bad: { type: "products-mock", slice: { start: 10, end: 3 } } });
+    expect(build).toThrow(InvalidSliceError);
+    expect(build).toThrow(MockingErrors);
+    expect(build).toThrow(/end \(3\).*before.*start \(10\)/);
   });
 
   it("rejects negative slice values", () => {
@@ -56,10 +52,12 @@ describe("mock slice", () => {
   it("defineApi users-mock + slice: 100 yields 100 users", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      users: {
-        path: "/users",
-        mock: "users-mock",
-        slice: 100,
+      resources: {
+        users: {
+          path: "/users",
+          mock: "users-mock",
+          slice: 100,
+        },
       },
     });
     const users = (await api.users.getAll()) as User[];

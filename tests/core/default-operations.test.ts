@@ -46,8 +46,10 @@ describe("default-first operations", () => {
         }
         return { body: { id: "1", name: "Ada", email: "ada@example.com" } };
       }),
-      users: {
-        path: "/users",
+      resources: {
+        users: {
+          path: "/users",
+        },
       },
     });
 
@@ -100,11 +102,13 @@ describe("default-first operations", () => {
         calls.push(`${request.method} ${request.url}`);
         return { body: [] };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getAll: { path: "/active" },
-          update: { method: "PATCH" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: { path: "/active" },
+            update: { method: "PATCH" },
+          },
         },
       },
     });
@@ -148,12 +152,14 @@ describe("default-first operations", () => {
         calls.push(`${request.method} ${request.url}`);
         return { body: [] };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          search: {
-            method: "GET",
-            path: "/search",
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            search: {
+              method: "GET",
+              path: "/search",
+            },
           },
         },
       },

@@ -3,10 +3,12 @@ export type {
   PathParams,
   QueryParams,
   HeadersInitLike,
+  HeadersSource,
   BuiltinHeaders,
 } from "./http.js";
 
 export type {
+  ApiRequest,
   RequestConfig,
   ApiResponse,
   TransportRequest,
@@ -18,7 +20,12 @@ export type {
 
 export type {
   OperationDefinition,
-  ReservedApiConfigKey,
+  OperationValue,
+  OperationGroupName,
+  LayerOptions,
+  MockData,
+  MockOption,
+  ResourceDefinition,
   ApiRootConfig,
   ApiState,
   ApiStateOf,
@@ -27,20 +34,22 @@ export type {
   OperationsBag,
   ResourceTypeOnlyKey,
   OperationTypeOnlyKey,
-  ResourceRuntimeInput,
   QueryArrayFormat,
-  ResolvedApiConfig,
-  ResolvedResourceConfig,
-  ResolvedOperation,
 } from "./definition.js";
 
-export type { ResourceExtensions, OperationExtensions } from "./extensions.js";
+export type { RetryConfig, RetryOption, ResolvedRetryConfig, RetryHookContext } from "./retry.js";
 
-export type { RetryConfig, ResolvedRetryConfig, RetryHookContext } from "./retry.js";
-
-export type { Middleware, MiddlewareContext, MiddlewareNext } from "./middleware.js";
+export type {
+  RequestMiddleware,
+  ResponseMiddleware,
+  ErrorMiddleware,
+  MiddlewareHooks,
+  MiddlewareOptions,
+} from "./middleware.js";
 
 export type { ApiErrorCode } from "./errors.js";
+
+export type { KeyCase, TransformsConfig, TransformKeys, ConvertKey } from "./transform.js";
 
 export type {
   BuiltinOpName,
@@ -51,18 +60,34 @@ export type {
   OperationFnRequestInit,
 } from "./builtins.js";
 
+export type * from "./mock-datasets.js";
+
 export type {
-  EffectivePath,
-  EffectiveOps,
-  ResourceOpsOf,
-  ResourceClient,
   ApiClient,
+  ApisClient,
   ApiInput,
-  ValidateApiConfig,
-  MockDatasetIds,
+  ApisInput,
+  InferredApiInput,
+  InferredApisInput,
+  ValidateConfig,
+  ValidateApisConfig,
+  ResourceClient,
+  MockedResource,
+  ApixaClient,
+  MergeRecords,
+  ConfigTypeError,
+  EntityOf,
+  IdOf,
   ListOf,
   QueryOf,
+  PaginatedListOf,
   CallResult,
+  EffectivePath,
   FullPath,
   ConcatPaths,
+  ResourceOpsOf,
+  MockEntityOf,
+  Widen,
+  RootTypes,
+  RootTypesOf,
 } from "./inference.js";

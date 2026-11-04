@@ -13,9 +13,11 @@ describe("configuration merge", () => {
         expect(request.headers.get("x-client")).toBe("dashboard");
         return { body: [] };
       }),
-      users: {
-        path: "/users",
-        headers: { "X-Client": "dashboard" },
+      resources: {
+        users: {
+          path: "/users",
+          headers: { "X-Client": "dashboard" },
+        },
       },
     });
 
@@ -32,12 +34,14 @@ describe("configuration merge", () => {
         expect(request.headers.get("accept")).toBe("application/json");
         return { body: [] };
       }),
-      users: {
-        path: "/users",
-        headers: { "X-Level": "resource", "X-Client": "dashboard" },
-        operations: {
-          getAll: {
-            headers: { "X-Level": "operation" },
+      resources: {
+        users: {
+          path: "/users",
+          headers: { "X-Level": "resource", "X-Client": "dashboard" },
+          operations: {
+            getAll: {
+              headers: { "X-Level": "operation" },
+            },
           },
         },
       },
@@ -53,11 +57,13 @@ describe("configuration merge", () => {
         expect(request.headers.get("x-level")).toBe("call");
         return { body: [] };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getAll: {
-            headers: { "X-Level": "operation" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: {
+              headers: { "X-Level": "operation" },
+            },
           },
         },
       },

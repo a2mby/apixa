@@ -38,6 +38,11 @@ export function assertSliceConfig(slice: unknown, label: string): asserts slice 
       `${label}: slice.end must be a non-negative integer (got ${String(end)}).`,
     );
   }
+  if (end < start) {
+    throw new InvalidSliceError(
+      `${label}: slice.end (${end}) must not be before slice.start (${start}).`,
+    );
+  }
 }
 
 /**

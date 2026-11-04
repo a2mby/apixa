@@ -1,12 +1,16 @@
-export { executeRequest } from "./execute.js";
-export type { ExecuteArgs } from "./execute.js";
-export { composeMiddleware } from "./middleware.js";
+export {
+  runOperation,
+  type CallInput,
+  type ClientRuntime,
+  type PreparedOperation,
+  type ResourceRuntime,
+} from "./pipeline.js";
 export {
   resolveRetryConfig,
-  shouldRetry,
   defaultShouldRetry,
   decideRetry,
   isRetryableStatus,
-  computeRetryDelayMs,
+  computeBackoffMs,
+  parseRetryAfter,
   delay,
 } from "./retry.js";

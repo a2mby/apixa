@@ -1,6 +1,7 @@
+import { MockError, MockStore, type MockSource } from "@apixa/core";
 import { catalog, type DatasetId } from "./catalog.js";
-import { MockApiError } from "./errors.js";
-import { applySlice, type MockSlice } from "./slice.js";
+import { MockApiError, type MockApiErrorCode } from "./errors.js";
+import type { MockSlice } from "./slice.js";
 
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
@@ -29,7 +30,7 @@ type GetAll<T, Paginated> = [Paginated] extends [true]
   ? (params?: PageParams) => Promise<Page<T>>
   : () => Promise<T[]>;
 
-/** Always-on default CRUD, reusable by custom operation functions via `ctx.defaults`. */
+/** Plain CRUD helpers custom operation functions may reuse through `ctx.defaults`. */
 export type MockResourceDefaults<T extends object> = {
   getAll(): Promise<T[]>;
   getById(id: Id): Promise<T>;
@@ -44,79 +45,77 @@ export interface MockOperationContext<T extends object = Record<string, unknown>
   idKey: string;
   /** Live, mutable rows — read or write directly for a custom operation. */
   rows(): Promise<T[]>;
-  fail(code: ConstructorParameters<typeof MockApiError>[0], message: string): MockApiError;
+  fail(code: MockApiErrorCode, message: string): MockApiError;
   defaults: MockResourceDefaults<T>;
 }
 
-/**
- * A fully custom mock operation: called exactly like a builtin — `mockApi.resource.<name>(...)`.
- * The first parameter (`ctx`) is bound; callers never pass it.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MockOperationFn<T extends object = Record<string, unknown>> = (
-  ctx: MockOperationContext<T>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ...args: any[]
-) => Promise<unknown>;
+/** A fully custom mock operation; `ctx` is bound, callers never pass it. */
+export type MockOperationFn<T extends object = Record<string, unknown>> = {
+  bivariant(ctx: MockOperationContext<T>, ...args: unknown[]): Promise<unknown>;
+}["bivariant"];
 
-/**
- * Per-operation customization: `false` removes a builtin, a function replaces it. `true` is
- * accepted as a no-op ("use the default impl") since every builtin below is already on by
- * default — kept for explicitness and backward compatibility.
- */
+/** Per-operation customization: `false` removes a builtin, a function replaces it, `true` keeps it. */
 export type MockOperationValue = boolean | MockOperationFn;
 
-/** The original 6, always present unless set to `false`. */
-export const ALWAYS_ON_MOCK_OPS = [
+/** The 16 builtins — the same names and in-memory semantics as Core mocked resources. */
+export const MOCK_BUILTINS = [
   "getAll",
   "getById",
+  "getBySlug",
+  "getMany",
+  "getBy",
+  "findFirst",
+  "search",
+  "exists",
+  "count",
   "create",
   "update",
   "patch",
-  "delete",
-] as const;
-
-/** Added in v0.10.0 — present by default, same as the original 6, unless set to `false`. */
-export const EXTENDED_MOCK_OPS = [
-  "getBySlug",
   "upsert",
-  "count",
-  "search",
+  "delete",
   "createMany",
   "deleteMany",
-  "getMany",
-  "exists",
-  "findFirst",
-  "getBy",
 ] as const;
 
 /**
- * In-memory CRUD for one resource. No network, no persistence.
- * Every method returns a fresh copy, so callers can never mutate stored records.
- * Missing records reject with `MockApiError` code `NOT_FOUND` — including `delete()`.
+ * In-memory CRUD for one resource. No network, no persistence. Every method returns a fresh
+ * copy. Failures reject with `MockApiError` (check `code`).
  */
 export interface MockResource<
   T extends object,
   IdKey extends keyof T,
   Paginated extends boolean | undefined = undefined,
 > {
-  /** Plain list, or `{ data, total, page, pageSize }` when the resource has `pagination: true`. */
   getAll: GetAll<T, Paginated>;
   getById(id: Id): Promise<T>;
-  /** Missing id → generated (numeric-id datasets only). Duplicate id → `DUPLICATE_ID`. */
+  /** Missing id → generated (numeric-id data only). Duplicate id → `DUPLICATE_ID`. */
   create(input: ResourceInput<T, IdKey>): Promise<T>;
   /** Replaces the record. The id is kept; passing a different id is `INVALID_INPUT`. */
   update(id: Id, input: ResourceInput<T, IdKey>): Promise<T>;
   /** Merges the supplied fields (keys set to `undefined` are skipped). */
   patch(id: Id, partial: Partial<T>): Promise<T>;
   delete(id: Id): Promise<void>;
-  /** Builtins added in v0.10.0 (present by default) and fully custom operations. */
+  /** The other 10 builtins and custom operations. */
   [operation: string]: (...args: never[]) => Promise<unknown>;
 }
 
-type Row = Record<string, unknown>;
-/** `byId` mirrors `rows` by reference — O(1) `getById` / `exists` / `patch` instead of a linear scan. */
-type State = { rows: Row[]; byId: Map<string, Row>; generateId?: () => Id };
+const CODES: Record<string, MockApiErrorCode> = {
+  MOCK_NOT_FOUND: "NOT_FOUND",
+  MOCK_DUPLICATE_ID: "DUPLICATE_ID",
+  MOCK_INVALID_INPUT: "INVALID_INPUT",
+  MOCK_UNSUPPORTED: "INVALID_CONFIG",
+  MOCK_LOAD: "UNKNOWN_DATASET",
+};
+
+/** Keep `defineMockApi`'s documented `MockApiError` surface over Core's shared engine. */
+function translate(error: unknown): never {
+  if (error instanceof MockError) {
+    const translated = new MockApiError(CODES[error.code] ?? "INVALID_INPUT", error.message);
+    (translated as { cause?: unknown }).cause = error;
+    throw translated;
+  }
+  throw error;
+}
 
 export type ResourceOptions = {
   slice?: MockSlice;
@@ -124,327 +123,146 @@ export type ResourceOptions = {
   operations?: Record<string, MockOperationValue>;
 };
 
-/** One resource's engine. Seeded lazily from the dataset on first use; state is private to this call. */
+function seedFromSlice(slice: MockSlice | undefined): MockSource["seed"] {
+  if (slice === undefined) return undefined;
+  if (typeof slice === "number") return { limit: slice };
+  return { offset: slice.start, limit: slice.end - slice.start };
+}
+
+/** One resource: Core's `MockStore` (shared engine) plus `defineMockApi`'s calling conventions. */
 export function createResource(name: string, type: DatasetId, options: ResourceOptions) {
-  const { idKey, load } = catalog[type] as {
+  const label = `Mock resource "${name}"`;
+  const entry = catalog[type] as {
     idKey: string;
-    load: () => Promise<{ default: Row[] }>;
+    load: () => Promise<{ default: readonly unknown[] }>;
   };
-  const fail = (code: ConstructorParameters<typeof MockApiError>[0], message: string) =>
-    new MockApiError(code, `Mock resource "${name}": ${message}`);
+  const store = new MockStore({
+    label,
+    idKey: entry.idKey,
+    load: async () => (await entry.load()).default,
+    seed: seedFromSlice(options.slice),
+  });
+  const fail = (code: MockApiErrorCode, message: string) =>
+    new MockApiError(code, `${label}: ${message}`);
 
-  async function seed(): Promise<State> {
-    const all = (await load()).default;
-    // The imported module is shared and read-only: always copy before storing.
-    const rows = applySlice(all, options.slice, `Mock resource "${name}"`).map((r) =>
-      structuredClone(r),
-    );
-    const byId = new Map(rows.map((r) => [String(r[idKey]), r] as const));
-
-    // Generate ids only where the dataset's own convention is numeric (e.g. "1", "2", …).
-    if (!all.every((r) => /^\d+$/.test(String(r[idKey])))) return { rows, byId };
-    const numberIds = typeof all[0]?.[idKey] === "number";
-    let counter = Math.max(0, ...rows.map((r) => Number(r[idKey])));
-    return {
-      rows,
-      byId,
-      generateId: () => {
-        do counter++;
-        while (byId.has(String(counter)));
-        return numberIds ? counter : String(counter);
-      },
+  /** Run against the loaded store; engine errors surface as `MockApiError`. */
+  const use =
+    <A extends unknown[], R>(fn: (...args: A) => R) =>
+    async (...args: A): Promise<Awaited<R>> => {
+      try {
+        await store.ready();
+        return await fn(...args);
+      } catch (error) {
+        return translate(error);
+      }
     };
-  }
 
-  let ready: Promise<State> | undefined;
-  const state = () =>
-    (ready ??= seed().catch((error: unknown) => {
-      ready = undefined; // let the next call retry a failed load
-      throw error;
-    }));
-
-  const indexOf = (rows: Row[], id: Id) => rows.findIndex((r) => String(r[idKey]) === String(id));
-
-  function assertValidId(id: unknown): string {
-    if ((typeof id !== "string" && typeof id !== "number") || id === "") {
-      throw fail("INVALID_INPUT", `id must be a non-empty string or number (got ${String(id)})`);
-    }
-    return String(id);
-  }
-
-  /** O(1) row lookup by id (via the `byId` map) — used by `getById` / `patch` / `exists`. */
-  function locateRow(byId: Map<string, Row>, id: unknown): Row {
-    const key = assertValidId(id);
-    const row = byId.get(key);
-    if (!row) throw fail("NOT_FOUND", `no record with ${idKey} "${key}"`);
-    return row;
-  }
-
-  /** O(n) index lookup — only `update` / `delete` need the array index itself (for splice/replace). */
-  function locate(rows: Row[], id: unknown): number {
-    const key = assertValidId(id);
-    const index = indexOf(rows, key);
-    if (index < 0) throw fail("NOT_FOUND", `no record with ${idKey} "${key}"`);
-    return index;
-  }
-
-  function copyInput(value: unknown, what: string): Row {
-    if (value === null || typeof value !== "object" || Array.isArray(value)) {
-      throw fail("INVALID_INPUT", `${what} must be a plain object`);
-    }
-    try {
-      return structuredClone(value) as Row;
-    } catch {
-      throw fail("INVALID_INPUT", `${what} must only contain structured-cloneable values`);
-    }
-  }
-
-  function assertSameId(input: Row, current: Row) {
-    if (input[idKey] !== undefined && String(input[idKey]) !== String(current[idKey])) {
-      throw fail("INVALID_INPUT", `cannot change ${idKey} from "${String(current[idKey])}"`);
-    }
-  }
-
-  function resolvePage(params: unknown) {
+  function resolvePage(params: unknown): { page: number; pageSize: number } {
     if (params === undefined) return { page: DEFAULT_PAGE, pageSize: DEFAULT_PAGE_SIZE };
     if (params === null || typeof params !== "object" || Array.isArray(params)) {
       throw fail("INVALID_PAGINATION", "getAll() options must be { page?, pageSize? }");
     }
     for (const key of Object.keys(params)) {
-      if (key !== "page" && key !== "pageSize") {
+      if (key !== "page" && key !== "pageSize")
         throw fail("INVALID_PAGINATION", `unknown option "${key}" (use page, pageSize)`);
-      }
     }
     const { page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE } = params as PageParams;
-    for (const [label, value] of [
+    for (const [field, value] of [
       ["page", page],
       ["pageSize", pageSize],
     ] as const) {
       if (!Number.isInteger(value) || value < 1) {
-        throw fail("INVALID_PAGINATION", `${label} must be an integer >= 1 (got ${String(value)})`);
+        throw fail("INVALID_PAGINATION", `${field} must be an integer >= 1 (got ${String(value)})`);
       }
     }
     return { page, pageSize };
   }
 
-  // ---- always-on default CRUD (unchanged behavior; reusable via ctx.defaults) ----
-  const defaults: MockResourceDefaults<Row> = {
-    async getAll() {
-      const { rows } = await state();
-      return rows.map((r) => structuredClone(r));
-    },
-
-    async getById(id: Id) {
-      const { byId } = await state();
-      return structuredClone(locateRow(byId, id));
-    },
-
-    async create(input: unknown) {
-      const row = copyInput(input, "create() input");
-      const { rows, byId, generateId } = await state();
-      if (row[idKey] === undefined) {
-        if (!generateId) {
-          throw fail(
-            "INVALID_INPUT",
-            `create() needs "${idKey}": this dataset has non-numeric ids`,
-          );
-        }
-        row[idKey] = generateId();
-      } else if (
-        (typeof row[idKey] !== "string" && typeof row[idKey] !== "number") ||
-        row[idKey] === ""
-      ) {
-        throw fail("INVALID_INPUT", `${idKey} must be a non-empty string or number`);
-      } else if (byId.has(String(row[idKey]))) {
-        throw fail("DUPLICATE_ID", `a record with ${idKey} "${String(row[idKey])}" already exists`);
+  const builtins: Record<(typeof MOCK_BUILTINS)[number], (...args: never[]) => Promise<unknown>> = {
+    getAll: use((params?: PageParams) => {
+      const rows = store.list();
+      if (!options.pagination) {
+        if (params !== undefined)
+          throw fail("INVALID_PAGINATION", "pagination is not enabled; set pagination: true");
+        return rows;
       }
-      rows.push(row);
-      byId.set(String(row[idKey]), row);
-      return structuredClone(row);
-    },
-
-    async update(id: Id, input: unknown) {
-      const row = copyInput(input, "update() input");
-      const { rows, byId } = await state();
-      const index = locate(rows, id);
-      const current = rows[index]!;
-      assertSameId(row, current);
-      const { [idKey]: _id, ...fields } = row;
-      const updated = { [idKey]: current[idKey], ...fields };
-      rows[index] = updated;
-      byId.set(String(current[idKey]), updated);
-      return structuredClone(updated);
-    },
-
-    async patch(id: Id, partial: unknown) {
-      const changes = copyInput(partial, "patch() input");
-      const { byId } = await state();
-      const current = locateRow(byId, id);
-      assertSameId(changes, current);
-      for (const [key, value] of Object.entries(changes)) {
-        if (value !== undefined && key !== idKey) current[key] = value;
-      }
-      return structuredClone(current);
-    },
-
-    async delete(id: Id) {
-      const { rows, byId } = await state();
-      const index = locate(rows, id);
-      byId.delete(String(rows[index]![idKey]));
-      rows.splice(index, 1);
-    },
+      const { page, pageSize } = resolvePage(params);
+      const lastPage = Math.max(1, Math.ceil(rows.length / pageSize));
+      if (page > lastPage)
+        throw fail("INVALID_PAGINATION", `page ${page} is out of range (last page is ${lastPage})`);
+      const start = (page - 1) * pageSize;
+      return {
+        data: rows.slice(start, start + pageSize),
+        total: rows.length,
+        page,
+        pageSize,
+        previous: page > 1 ? page - 1 : null,
+        next: page < lastPage ? page + 1 : null,
+      };
+    }),
+    getById: use((id: Id) => store.get(id)),
+    getBySlug: use((slug: Id) => store.getBy("slug", slug)),
+    getMany: use((ids: Id[]) => store.getMany(ids)),
+    getBy: use((field: string, value: Id) => store.getBy(field, value)),
+    findFirst: use((query?: Record<string, unknown>) => store.findFirst(query)),
+    search: use((query?: Record<string, unknown>) => store.search(query)),
+    exists: use((id: Id) => store.exists(id)),
+    count: use((query?: Record<string, unknown>) => store.count(query)),
+    create: use((input: unknown) => store.create(input)),
+    update: use((id: Id, input: unknown) => store.update(id, input)),
+    patch: use((id: Id, input: unknown) => store.patch(id, input)),
+    upsert: use((id: Id, input: unknown) => store.upsert(id, input)),
+    delete: use((id: Id) => store.delete(id)),
+    createMany: use((inputs: unknown[]) => store.createMany(inputs)),
+    deleteMany: use((ids: Id[]) => store.deleteMany(ids)),
   };
 
-  async function getAllPublic(params?: PageParams) {
-    const { rows } = await state();
-    if (!options.pagination) {
-      if (params !== undefined) {
-        throw fail("INVALID_PAGINATION", "pagination is not enabled; set pagination: true");
-      }
-      return rows.map((r) => structuredClone(r));
-    }
-    const { page, pageSize } = resolvePage(params);
-    const lastPage = Math.max(1, Math.ceil(rows.length / pageSize));
-    if (page > lastPage) {
-      throw fail("INVALID_PAGINATION", `page ${page} is out of range (last page is ${lastPage})`);
-    }
-    const start = (page - 1) * pageSize;
-    return {
-      data: rows.slice(start, start + pageSize).map((r) => structuredClone(r)),
-      total: rows.length,
-      page,
-      pageSize,
-      previous: page > 1 ? page - 1 : null,
-      next: page < lastPage ? page + 1 : null,
-    };
-  }
-
+  type Row = Record<string, unknown>;
   const ctx: MockOperationContext<Row> = {
-    idKey,
-    rows: async () => (await state()).rows,
+    idKey: entry.idKey,
+    rows: async () => {
+      await store.ready().catch(translate);
+      return store.liveRows();
+    },
     fail,
-    defaults,
+    defaults: {
+      getAll: use(() => store.list()),
+      getById: use((id: Id) => store.get(id)),
+      create: use((input: unknown) => store.create(input)),
+      update: use((id: Id, input: unknown) => store.update(id, input)),
+      patch: use((id: Id, input: unknown) => store.patch(id, input)),
+      delete: use((id: Id) => store.delete(id)),
+    },
   };
 
-  // ---- builtins added in v0.10.0 — pure data operations, present by default ----
-  const extendedDefaults: Record<string, MockOperationFn<Row>> = {
-    async getBySlug(opCtx, slug: Id) {
-      const rows = await opCtx.rows();
-      const row = rows.find((r) => String(r.slug) === String(slug));
-      if (!row) throw opCtx.fail("NOT_FOUND", `no record with slug "${String(slug)}"`);
-      return structuredClone(row);
-    },
-
-    async getBy(opCtx, field: string, value: Id) {
-      const rows = await opCtx.rows();
-      const row = rows.find((r) => String(r[field]) === String(value));
-      if (!row) throw opCtx.fail("NOT_FOUND", `no record with ${field} "${String(value)}"`);
-      return structuredClone(row);
-    },
-
-    async upsert(opCtx, id: Id, input: unknown) {
-      const rows = await opCtx.rows();
-      return indexOf(rows, id) >= 0
-        ? opCtx.defaults.update(id, input)
-        : opCtx.defaults.create({ ...copyInput(input, "upsert() input"), [idKey]: id });
-    },
-
-    async count(opCtx) {
-      const rows = await opCtx.rows();
-      return rows.length;
-    },
-
-    async search(opCtx, query?: Record<string, unknown>) {
-      const rows = await opCtx.rows();
-      if (query === undefined || query === null) {
-        return rows.map((r) => structuredClone(r));
-      }
-      const entries = Object.entries(query);
-      return rows
-        .filter((row) =>
-          entries.every(([key, value]) =>
-            String(row[key] ?? "")
-              .toLowerCase()
-              .includes(String(value).toLowerCase()),
-          ),
-        )
-        .map((r) => structuredClone(r));
-    },
-
-    async createMany(opCtx, inputs: unknown[]) {
-      const created: Row[] = [];
-      for (const input of inputs) {
-        created.push((await opCtx.defaults.create(input)) as Row);
-      }
-      return created;
-    },
-
-    async deleteMany(opCtx, ids: Id[]) {
-      for (const id of ids) {
-        await opCtx.defaults.delete(id);
-      }
-    },
-
-    async getMany(opCtx, ids: Id[]) {
-      const rows = await opCtx.rows();
-      return ids.map((id) => {
-        const row = rows.find((r) => String(r[idKey]) === String(id));
-        if (!row) throw opCtx.fail("NOT_FOUND", `no record with ${idKey} "${String(id)}"`);
-        return structuredClone(row);
-      });
-    },
-
-    async exists(opCtx, id: Id) {
+  const custom =
+    (fn: MockOperationFn<Row>) =>
+    async (...args: unknown[]) => {
       try {
-        await opCtx.defaults.getById(id);
-        return true;
-      } catch (error) {
-        if (error instanceof MockApiError && error.code === "NOT_FOUND") return false;
-        throw error;
+        return await fn(ctx, ...args);
+      } finally {
+        store.reindex();
       }
-    },
+    };
 
-    async findFirst(opCtx, query?: Record<string, unknown>) {
-      const matches = (await extendedDefaults.search!(opCtx, query)) as Row[];
-      return matches[0] ?? null;
-    },
-  };
-
-  const resource: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-  const BUILTIN_NAMES = [...ALWAYS_ON_MOCK_OPS, ...EXTENDED_MOCK_OPS] as readonly string[];
-
-  // All 16 builtins (original 6 + the 10 added in v0.10.0) are on by default, same philosophy
-  // as Core: `false` removes one, a function replaces it.
-  for (const opName of BUILTIN_NAMES) {
+  const resource: Record<string, (...args: never[]) => Promise<unknown>> = {};
+  for (const opName of MOCK_BUILTINS) {
     const override = options.operations?.[opName];
     if (override === false) continue;
-
-    if (typeof override === "function") {
-      resource[opName] = (...args: unknown[]) => override(ctx, ...args);
-    } else if (opName === "getAll") {
-      resource[opName] = (...args: unknown[]) => getAllPublic(args[0] as PageParams | undefined);
-    } else if ((ALWAYS_ON_MOCK_OPS as readonly string[]).includes(opName)) {
-      resource[opName] = defaults[opName as keyof MockResourceDefaults<Row>] as (
-        ...args: unknown[]
-      ) => Promise<unknown>;
-    } else {
-      const impl = extendedDefaults[opName]!;
-      resource[opName] = (...args: unknown[]) => impl(ctx, ...args);
-    }
+    resource[opName] = typeof override === "function" ? custom(override) : builtins[opName];
   }
-
   for (const [opName, override] of Object.entries(options.operations ?? {})) {
-    if (BUILTIN_NAMES.includes(opName)) continue; // handled above
-    if (override === false || override === undefined) continue; // not enabled / no-op removal
-
+    if (
+      (MOCK_BUILTINS as readonly string[]).includes(opName) ||
+      override === false ||
+      override === undefined
+    )
+      continue;
     if (typeof override === "function") {
-      resource[opName] = (...args: unknown[]) => override(ctx, ...args);
+      resource[opName] = custom(override);
       continue;
     }
-
-    // `true` on a name with no default implementation — nothing to enable.
     throw fail("INVALID_CONFIG", `unknown builtin operation "${opName}"`);
   }
-
   return resource as unknown as MockResource<Row, string, boolean | undefined>;
 }

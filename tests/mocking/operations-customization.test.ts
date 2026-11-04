@@ -1,21 +1,6 @@
-import { clearDefineApiProcessors, defineApi } from "@apixa/core";
-import {
-  defineMockApi,
-  disableResourceMocks,
-  enableResourceMocks,
-  MockApiError,
-  type MockOperationContext,
-} from "@apixa/mocking";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
-beforeEach(() => {
-  enableResourceMocks();
-});
-
-afterEach(() => {
-  disableResourceMocks();
-  clearDefineApiProcessors();
-});
+import { defineApi } from "@apixa/core";
+import { defineMockApi, MockApiError, type MockOperationContext } from "@apixa/mocking";
+import { describe, expect, it } from "vitest";
 
 describe("defineMockApi: operations customization (v0.10.0)", () => {
   it("removes a builtin when set to false", async () => {
@@ -220,10 +205,12 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     // `mock` only swaps the transport, not which methods exist.
     const api = defineApi({
       baseURL: "https://api.example.com",
-      users: {
-        path: "/users",
-        mock: "users-mock",
-        operations: { patch: {}, count: {}, search: {}, exists: {} },
+      resources: {
+        users: {
+          path: "/users",
+          mock: "users-mock",
+          operations: { patch: {}, count: {}, search: {}, exists: {} },
+        },
       },
     });
 
@@ -255,10 +242,12 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
   it('simulates getBySlug, createMany, and deleteMany on a Core mock: "<dataset-id>" resource', async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      companies: {
-        path: "/companies",
-        mock: "companies-mock",
-        operations: { getBySlug: {}, createMany: {}, deleteMany: {} },
+      resources: {
+        companies: {
+          path: "/companies",
+          mock: "companies-mock",
+          operations: { getBySlug: {}, createMany: {}, deleteMany: {} },
+        },
       },
     });
 
@@ -281,7 +270,9 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
   it('never leaks a live store reference through a Core mock: "<dataset-id>" resource', async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      users: { path: "/users", mock: "users-mock" },
+      resources: {
+        users: { path: "/users", mock: "users-mock" },
+      },
     });
 
     const first = (await api.users.getAll()) as Array<{ id: string; name: string }>;
@@ -301,7 +292,9 @@ describe("Core inline mock operation routes", () => {
   it("filters getMany by requested IDs instead of returning the entire mock dataset", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      users: { path: "/users", mock: "users-mock" },
+      resources: {
+        users: { path: "/users", mock: "users-mock" },
+      },
     });
     const all = (await api.users.getAll()) as Array<{ id: string }>;
     const ids = [all[2]!.id, all[4]!.id];
@@ -312,10 +305,12 @@ describe("Core inline mock operation routes", () => {
   it("honors a declarative extended-route path override", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      users: {
-        path: "/users",
-        mock: "users-mock",
-        operations: { count: { path: "/stats/count" } },
+      resources: {
+        users: {
+          path: "/users",
+          mock: "users-mock",
+          operations: { count: { path: "/stats/count" } },
+        },
       },
     });
     expect(await api.users.count()).toBe(100);

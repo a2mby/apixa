@@ -1,8 +1,9 @@
 import type { AllBuiltinOpName, OperationFn } from "./builtins.js";
-import type { OperationExtensions, ResourceExtensions } from "./extensions.js";
-import type { HeadersInitLike, HttpMethod, QueryParams } from "./http.js";
-import type { Middleware } from "./middleware.js";
-import type { RetryConfig } from "./retry.js";
+import type { HeadersSource, HttpMethod, QueryParams } from "./http.js";
+import type { MiddlewareOptions } from "./middleware.js";
+import type { MockDatasetId } from "./mock-datasets.js";
+import type { RetryOption } from "./retry.js";
+import type { TransformsConfig } from "./transform.js";
 import type { Transport } from "./transport.js";
 
 /**
@@ -14,153 +15,115 @@ export type OperationsBag<V> = Partial<Record<AllBuiltinOpName, V>> & Record<str
 /** How array query values are encoded. Default: `"repeat"`. */
 export type QueryArrayFormat = "repeat" | "comma" | "brackets";
 
-/**
- * Runtime operation config. Payload types live on the `defineApi<T>` state generic,
- * not as runtime marker values.
- */
-export interface OperationDefinition {
-  method?: HttpMethod;
-  /** Path relative to the resource `path`. Convention names default when omitted. */
-  path?: string;
-  headers?: HeadersInitLike;
+/** Settings shared by root, resource, and operation levels (most specific wins). */
+export interface LayerOptions extends MiddlewareOptions {
+  headers?: HeadersSource;
+  /** Overall budget per call in ms, including retries and backoff. */
   timeout?: number;
-  /** Opt-in retry override for this operation (`false` disables inherited retry). */
-  retry?: RetryConfig | false;
-  /**
-   * Override body presence. Default: `true` for POST / PUT / PATCH, else `false`.
-   */
+  retry?: RetryOption;
+  transforms?: TransformsConfig;
+}
+
+/**
+ * Runtime operation config: overrides merge with the builtin convention (unspecified fields keep
+ * their defaults). Payload types live on the `defineApi<T>()` metadata, not here.
+ */
+export interface OperationDefinition extends LayerOptions {
+  method?: HttpMethod;
+  /** Path relative to the resource `path`, or an absolute URL on the API origin. */
+  path?: string;
+  /** Override body presence. Default: `true` for POST / PUT / PATCH (and `deleteMany`). */
   hasBody?: boolean;
 }
 
-export type ReservedApiConfigKey =
-  | "baseURL"
-  | "headers"
-  | "transport"
-  | "timeout"
-  | "retry"
-  | "middleware"
-  | "queryArrayFormat"
-  | "querySerializer";
+export type OperationValue = boolean | OperationDefinition | OperationFn;
 
-export interface ApiRootConfig {
-  baseURL: string;
-  headers?: HeadersInitLike;
-  transport?: Transport;
-  timeout?: number;
-  /** Opt-in retries. Omitted / `false` means no retries. */
-  retry?: RetryConfig | false;
+/** Records for a mocked resource: inline, or loaded on first use. */
+export type MockData =
+  | MockDatasetId
+  | readonly object[]
+  /** Providers may return `unknown[]` (typed `unknown`); records are validated when loaded. */
+  | (() => readonly unknown[] | Promise<readonly unknown[]>);
+
+/** `mock` value: data source only — operation behavior always lives in `operations`. */
+export type MockOption =
+  | MockData
+  | {
+      data: MockData;
+      /** Identity field. Default `"id"` (datasets use their catalog identity). */
+      idKey?: string;
+      /** How many initial records enter the store (not a cap — creates can grow it). */
+      seed?: { limit?: number; offset?: number };
+    };
+
+export type OperationGroupName = "read" | "write" | "many" | "extended";
+
+/** Runtime resource definition under `resources`. */
+export interface ResourceDefinition extends LayerOptions {
+  path: string;
+  /** `false` starts with no builtins (enable some through `operations` / `operationGroups`). */
+  defaultOperations?: boolean;
+  /** Removes the 7 write builtins (explicit groups / operations still win). */
+  readOnly?: boolean;
+  /** Removes the 9 read builtins (explicit groups / operations still win). */
+  writeOnly?: boolean;
+  operationGroups?: Partial<Record<OperationGroupName, boolean>>;
+  operations?: OperationsBag<OperationValue>;
+  /** Data source for client-scoped Mocking. A mocked resource never touches the network. */
+  mock?: MockOption;
   /**
-   * Ordered interceptors. `next()` returns `ApiResponse` and may be called more than once.
+   * List envelope contract shared by live and mocked resources. Live: describes what the
+   * server returns (types only). Mocked: the engine produces this envelope.
    */
-  middleware?: Middleware[];
-  /** Array encoding for query strings. Default: `"repeat"`. */
-  queryArrayFormat?: QueryArrayFormat;
-  /** When set, replaces Core’s query string builder entirely. */
-  querySerializer?: (query: QueryParams) => string;
+  pagination?: "page" | "cursor";
+  /** Cap array `getAll` responses: first N rows or `{ start, end }`. Not mock seeding. */
+  slice?: number | { start: number; end: number };
 }
 
-/**
- * Developer state for `defineApi<T>()`: **resources only**.
- * Root builtins come from Core on the runtime config.
- */
+/** Root `defineApi` configuration. Resources live only under `resources`. */
+export interface ApiRootConfig extends LayerOptions {
+  baseURL: string;
+  transport?: Transport;
+  /** Array encoding for query strings. Default: `"repeat"`. */
+  queryArrayFormat?: QueryArrayFormat;
+  /** Replaces Core's query string builder entirely. */
+  querySerializer?: (query: QueryParams) => string;
+  resources: Record<string, ResourceDefinition>;
+}
+
+/** Developer metadata for `defineApi<T>()`: types only, keyed by resource name. */
 export type ApiState = Record<string, ResourceState>;
 
 /**
  * Self-referential constraint for `defineApi<T>()`: every key of `T` must be a `ResourceState`.
- * Unlike `Record<string, ResourceState>`, this needs no index signature, so both
- * `type AppApi = {…}` and `interface AppApi {…}` satisfy it.
+ * Works for both `type AppApi = {…}` and `interface AppApi {…}`.
  */
 export type ApiStateOf<T> = { [K in keyof T]: ResourceState };
 
-/** Type-only keys on a resource state (not required at runtime). */
-export type ResourceTypeOnlyKey = "entity" | "list" | "query" | "pagination";
-
-/** Type-only keys on an operation state (not required at runtime). */
+export type ResourceTypeOnlyKey = "entity" | "list" | "query";
 export type OperationTypeOnlyKey = "body" | "response" | "query";
 
-export type OperationState =
-  | (OperationDefinition & {
-      body?: unknown;
-      response?: unknown;
-      query?: unknown;
-    })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | ((...args: any[]) => Promise<any>)
-  | boolean;
-
-/**
- * Resource state: developer declares payload metadata; runtime config owns paths and selection.
- * `create` / `update` bodies are derived as `Omit<Entity,"id">` / `Partial<Entity>`.
- */
-export type ResourceState = {
-  /** Legacy metadata path, ignored in favor of the runtime path. */
-  path?: string;
-  headers?: HeadersInitLike;
-  timeout?: number;
-  retry?: RetryConfig | false;
-  /** Entity for getById and create/update response typing. */
-  entity?: unknown;
-  /** Override getAll response type (default `Entity[]`). */
-  list?: unknown;
-  /** Default query type for getAll when op does not declare `query`. */
+/** Payload metadata for one operation. */
+export type OperationState = {
+  body?: unknown;
+  response?: unknown;
   query?: unknown;
-  /**
-   * Opt-in `getAll` envelope (v0.11.0) — type-only, same as `entity` / `list` / `query`. Absent by
-   * default: zero behavior or type change unless declared. `"page"` types `getAll` as
-   * `{ data, total, page, pageSize }` with a matching `page`/`pageSize` query; `"cursor"` types it
-   * as `{ data, nextCursor }` with a `cursor`/`pageSize` query. Apixa does not parse or invent this
-   * envelope — the backend already returns whatever shape it returns; this only shapes types.
-   */
-  pagination?: "page" | "cursor";
-  /**
-   * Sugar for `operations: { create: false, update: false, patch: false, upsert: false,
-   * delete: false, createMany: false, deleteMany: false }`. An explicit `operations` entry for
-   * any of those names still overrides this shorthand.
-   */
-  readOnly?: boolean;
-  writeOnly?: boolean;
-  defaultOperations?: boolean;
-  /** Config object, function, or `false` (removes a builtin) — per key, suggested + custom names. */
-  operations?: OperationsBag<OperationState>;
 };
 
-/** Runtime resource bag (value-only) + plugin seam. */
-export type ResourceRuntimeInput = {
-  path: string;
-  headers?: HeadersInitLike;
-  timeout?: number;
-  retry?: RetryConfig | false;
-  /** Sugar for removing the 7 write ops via `operations`; an explicit override still wins. */
-  readOnly?: boolean;
-  writeOnly?: boolean;
-  defaultOperations?: boolean;
-  operationGroups?: Partial<Record<"read" | "write" | "many" | "extended", boolean>>;
-  operations?: OperationsBag<(OperationDefinition & OperationExtensions) | OperationFn | boolean>;
-} & ResourceExtensions;
-
-export interface ResolvedApiConfig {
-  baseURL: string;
-  headers?: HeadersInitLike;
-  transport: Transport;
-  timeout?: number;
-  retry?: RetryConfig | false;
-  middleware?: Middleware[];
-  queryArrayFormat?: QueryArrayFormat;
-  querySerializer?: (query: QueryParams) => string;
-}
-
-export interface ResolvedResourceConfig {
-  headers?: HeadersInitLike;
-  timeout?: number;
-  retry?: RetryConfig | false;
-}
-
-export interface ResolvedOperation {
-  name: string;
-  method: HttpMethod;
-  path: string;
-  hasBody: boolean;
-  headers?: HeadersInitLike;
-  timeout?: number;
-  retry?: RetryConfig | false;
-}
+/**
+ * Resource metadata — types only. Runtime config owns paths, selection, and mocks; a key here
+ * never creates a runtime resource or operation.
+ */
+export type ResourceState = {
+  /** Entity for reads and write responses. */
+  entity?: unknown;
+  /** Override the `getAll` list type (default `Entity[]`). */
+  list?: unknown;
+  /** Default query type for list reads. */
+  query?: unknown;
+  /**
+   * Payload types for operations that the runtime config actually defines (a function type is
+   * accepted for custom operations; the runtime function's own signature still wins).
+   */
+  operations?: Record<string, OperationState | ((...args: never[]) => unknown)>;
+};

@@ -12,7 +12,9 @@ describe("operation origin boundary", () => {
         calls.push(request.url);
         return { body: {} };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
     await expect(api.users.getBy("https://other.example/steal", "1")).rejects.toThrow(
       /outside the API origin/,
@@ -29,11 +31,13 @@ describe("operation origin boundary", () => {
         calls.push(request.url);
         return { body: {} };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          count: { path: "https://other.example/count" },
-          search: { path: "https://api.example.com/search" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            count: { path: "https://other.example/count" },
+            search: { path: "https://api.example.com/search" },
+          },
         },
       },
     });

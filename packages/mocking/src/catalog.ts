@@ -1,45 +1,13 @@
-import type {
-  AreaCode,
-  CapitalCity,
-  Comment,
-  Company,
-  CountryCode,
-  CountryCsc,
-  CountryMledoze,
-  CountryParseapi,
-  Currency,
-  Language,
-  Order,
-  Post,
-  Product,
-  Timezone,
-  User,
-} from "./data/entities.js";
-
-type Entry<Entity, IdKey extends keyof Entity> = { entity: Entity; idKey: IdKey };
+import type { MockDatasetCatalog } from "@apixa/core";
 
 /**
- * Datasets `defineMockApi()` can load: dataset id → entity type + the field that identifies a record.
- * Not exposed: `states-csc`, `states-parseapi`, `counties-parseapi` (each >500 KB; the two parseapi
- * sets also have non-unique id fields, so `getById` would be ambiguous).
+ * Datasets this package ships: id → entity type + identity field. The type catalog is owned by
+ * Core (`MockDatasetCatalog`) so `defineApi` autocompletes ids without importing this package;
+ * the runtime loaders below must cover exactly the same ids (checked in tests).
+ * Not exposed: `states-csc`, `states-parseapi`, `counties-parseapi` (each >500 KB; the two
+ * parseapi sets also have non-unique id fields, so `getById` would be ambiguous).
  */
-export interface DatasetCatalog {
-  "users-mock": Entry<User, "id">;
-  "products-mock": Entry<Product, "id">;
-  "companies-mock": Entry<Company, "id">;
-  "orders-mock": Entry<Order, "id">;
-  "posts-mock": Entry<Post, "id">;
-  "comments-mock": Entry<Comment, "id">;
-  "countries-csc": Entry<CountryCsc, "id">;
-  "countries-mledoze": Entry<CountryMledoze, "id">;
-  "countries-parseapi": Entry<CountryParseapi, "country">;
-  "country-codes-iso": Entry<CountryCode, "id">;
-  "cities-capitals": Entry<CapitalCity, "id">;
-  "currencies-parseapi": Entry<Currency, "currency">;
-  "languages-parseapi": Entry<Language, "language">;
-  "timezones-parseapi": Entry<Timezone, "timezone">;
-  "area-codes-parseapi": Entry<AreaCode, "area_code">;
-}
+export type DatasetCatalog = MockDatasetCatalog;
 
 export type DatasetId = keyof DatasetCatalog;
 export type EntityOf<K extends DatasetId> = DatasetCatalog[K]["entity"];

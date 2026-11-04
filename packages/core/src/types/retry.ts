@@ -1,39 +1,41 @@
 import type { HttpMethod } from "./http.js";
-import type { ApiResponse, RequestConfig } from "./transport.js";
+import type { ApiRequest, ApiResponse } from "./transport.js";
 
 export type RetryHookContext = {
-  request: RequestConfig;
+  request: ApiRequest;
   response?: ApiResponse<unknown>;
   error?: unknown;
+  /** Zero-based attempt that just failed. */
   attempt: number;
   method: HttpMethod;
 };
 
 /**
- * Opt-in retry policy. When omitted or `false`, Core does not retry.
- * `retries` is the number of retries after the first attempt (total attempts = retries + 1).
+ * Opt-in retry policy (`retry: 2` is shorthand for `{ retries: 2 }`). Omitted / `false` means no
+ * retries. `retries` counts retries after the first attempt. Only HTTP transport attempts are
+ * retried; middleware and header providers run once per logical call.
  */
 export type RetryConfig = {
   retries: number;
-  /** Methods eligible for retry. Default: `GET`, `HEAD`. */
+  /** Methods eligible for retry. Default: `GET`, `HEAD`, `OPTIONS`. Writes need explicit opt-in. */
   methods?: HttpMethod[];
-  /**
-   * Exact status codes to retry. When omitted, Core retries `408`, `429`, and `500`–`599`.
-   */
+  /** Exact status codes to retry. Default: `408`, `429`, `500`–`599`. */
   statusCodes?: number[];
-  /** Initial backoff delay in ms. Default: `200`. */
+  /** Initial backoff in ms. Default `200`; doubles each attempt. */
   baseDelayMs?: number;
-  /** Cap for exponential backoff. Default: `2000`. */
+  /** Backoff cap in ms. Default `2000`. A `Retry-After` longer than this stops retrying. */
   maxDelayMs?: number;
-  /** Add random jitter to delay. Default: `true`. */
+  /** Randomize each backoff within [delay/2, delay]. Default `true`. */
   jitter?: boolean;
-  /** Honor `Retry-After` on HTTP responses when present. Default: `true`. */
+  /** Honor a valid `Retry-After` header (seconds or HTTP date). Default `true`. */
   respectRetryAfter?: boolean;
-  /** Override default retry decision. */
+  /** Override the retry decision (never consulted after timeout or cancellation). */
   shouldRetry?: (ctx: RetryHookContext) => boolean;
   /** Called before waiting for the next attempt. */
   onRetry?: (ctx: RetryHookContext) => void | Promise<void>;
 };
+
+export type RetryOption = number | RetryConfig | false;
 
 /** Resolved retry policy with defaults applied. */
 export type ResolvedRetryConfig = {

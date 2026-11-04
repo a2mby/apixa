@@ -29,14 +29,16 @@ describe("request execution", () => {
         seen.push(request.url);
         return { body: { id: "123", name: "Ada", email: "ada@example.com" } };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getAll: { method: "GET" },
-          getById: { method: "GET", path: "/:id" },
-          getPost: {
-            method: "GET",
-            path: "/:userId/posts/:postId",
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: { method: "GET" },
+            getById: { method: "GET", path: "/:id" },
+            getPost: {
+              method: "GET",
+              path: "/:userId/posts/:postId",
+            },
           },
         },
       },
@@ -67,11 +69,13 @@ describe("request execution", () => {
           body: { id: "3", name: "Ada", email: "ada@example.com" } satisfies User,
         };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          create: { method: "POST" },
-          getPost: { method: "GET", path: "/:userId/posts/:postId" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            create: { method: "POST" },
+            getPost: { method: "GET", path: "/:userId/posts/:postId" },
+          },
         },
       },
     });
@@ -86,11 +90,13 @@ describe("request execution", () => {
       transport: createFakeTransport(() => ({
         body: { id: "1", name: "Ada", email: "ada@example.com" } satisfies User,
       })),
-      users: {
-        path: "/users",
-        operations: {
-          getById: { method: "GET", path: "/:id" },
-          getPost: { method: "GET", path: "/:userId/posts/:postId" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getById: { method: "GET", path: "/:id" },
+            getPost: { method: "GET", path: "/:userId/posts/:postId" },
+          },
         },
       },
     });
@@ -107,11 +113,13 @@ describe("request execution", () => {
         status: 404,
         body: { detail: "User not found" },
       })),
-      users: {
-        path: "/users",
-        operations: {
-          getById: { method: "GET", path: "/:id" },
-          getPost: { method: "GET", path: "/:userId/posts/:postId" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getById: { method: "GET", path: "/:id" },
+            getPost: { method: "GET", path: "/:userId/posts/:postId" },
+          },
         },
       },
     });
@@ -136,10 +144,12 @@ describe("request execution", () => {
           throw new NetworkError("failed to fetch");
         },
       },
-      users: {
-        path: "/users",
-        operations: {
-          getAll: { method: "GET" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: { method: "GET" },
+          },
         },
       },
     });

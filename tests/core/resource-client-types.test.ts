@@ -1,5 +1,6 @@
 import { defineApi } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
+import type { CreateBodyOf } from "../helpers/types.js";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
@@ -24,8 +25,10 @@ describe("resource client TypeScript surface", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
+      resources: {
+        users: {
+          path: "/users",
+        },
       },
     });
 
@@ -46,9 +49,11 @@ describe("resource client TypeScript surface", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
-        operations: {},
+      resources: {
+        users: {
+          path: "/users",
+          operations: {},
+        },
       },
     });
 
@@ -64,18 +69,20 @@ describe("resource client TypeScript surface", () => {
     const api = defineApi<TypedUsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
-        operations: {
-          search: {
-            method: "GET",
-            path: "/search",
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            search: {
+              method: "GET",
+              path: "/search",
+            },
           },
         },
       },
     });
 
-    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
+    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(api.users.getById).toBeFunction();
     expectTypeOf(api.users.search).toBeFunction();
     expectTypeOf(api.users.search)
