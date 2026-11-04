@@ -1,0 +1,24 @@
+{
+  "name": "@apixa/example-query-ssr-next",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev --port 3010",
+    "build": "next build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apixa/core": "workspace:*",
+    "@apixa/tanstack-query": "workspace:*",
+    "@tanstack/react-query": "^5.104.4",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.8.2"
+  }
+}

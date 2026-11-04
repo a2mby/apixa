@@ -1,7 +1,7 @@
 {
   "name": "@apixa/tanstack-query",
   "version": "0.8.0",
-  "description": "Unified TanStack Query resource integration for Apixa — useResourceQuery.",
+  "description": "Resource-aware TanStack Query reads and writes for Apixa.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,8 +22,8 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts src/advanced.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts src/advanced.ts --format esm --dts --watch",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsup",
+    "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {

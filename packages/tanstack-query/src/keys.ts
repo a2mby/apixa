@@ -21,6 +21,7 @@ export function createResourceKeys(input: CreateResourceKeysInput): ResourceKeyF
     lists: () => [...root, "list"],
     list: (query?: unknown) => (query === undefined ? [...root, "list"] : [...root, "list", query]),
     detail: (id: unknown) => [...root, "detail", id],
+    operation: (op, parts = []) => [...root, "operation", op, ...parts],
     mutation: (op) => [...root, "mutation", op],
   };
 }

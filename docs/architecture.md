@@ -112,9 +112,10 @@ that returns a value other than `undefined` recovers the call.
 ```text
 packages/core/
 packages/mocking/          # dataset records (lazy), defineMockApi adapter, Node loaders
-packages/tanstack-query/   # optional; unified useResourceQuery (v0.8.0)
+packages/tanstack-query/   # optional; native Query reads + separate Mutation writes
 datasets/                  # version-controlled JSON fixtures
 examples/next/             # primary playground (uses mocking + tanstack-query)
+examples/query-ssr-next/   # tracked App Router prefetch/hydration example
 tests/                     # vitest — Core + mocking + tanstack-query
 ```
 

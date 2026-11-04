@@ -1,9 +1,13 @@
-import type { OperationDefinition, OperationGroupName } from "../types/definition.js";
+import type {
+  OperationDefinition,
+  OperationGroupName,
+  OperationRunDefinition,
+} from "../types/definition.js";
 import type { OperationFn } from "../types/builtins.js";
 import { BUILTIN_CONVENTIONS, isBuiltinName } from "./conventions.js";
 
-export type OperationInput = OperationDefinition | OperationFn | boolean;
-export type ExpandedOperation = OperationDefinition | OperationFn;
+export type OperationInput = OperationDefinition | OperationRunDefinition | OperationFn | boolean;
+export type ExpandedOperation = OperationDefinition | OperationRunDefinition | OperationFn;
 export type OperationGroup = OperationGroupName;
 
 export interface ExpandOperationsOptions {

@@ -2,6 +2,61 @@
 
 ## Unreleased
 
+### Added — v1.0.0 TanStack integration (Core classification, mutations, facade)
+
+- `@apixa/core` — custom operations accept `kind: "read" | "write"` (default `"write"`) on config
+  objects and a new `{ kind?, run }` function form. Builtins keep their convention; `kind` on a
+  builtin is rejected. Every resource client exposes non-enumerable, typed operation metadata
+  (`OPERATION_METADATA`, `getOperationMetadata`, `OperationKindsOf`) with `kind`, `builtin`,
+  `implementation`, and the `RequestOptions` argument position. Execution is unchanged.
+- `@apixa/tanstack-query` — `useResourceMutation(resource, { queryKey, mutations })` inherits every
+  enabled Core operation (custom included) as a directly callable method with Core's exact
+  arguments and result, native per-operation `states`, all native `UseMutationOptions` per
+  operation, client-only operations via `mutationFn`, and typed invalidation (`"all"` default for
+  writes, `"lists"`, details, callback, `false`). Backed by lazily created native
+  `MutationObserver`s behind one external store; the single-operation form remains.
+- `@apixa/tanstack-query` — `useResource(resource, { queryKey, query, mutation })`: a thin facade
+  over both hooks with flat query state, flat operations, `operations.*` for every operation,
+  `states.*` for writes, and read/write routing from Core's classification.
+- `useResourceQuery` inherits every enabled read (builtin and `kind: "read"`) as a cached
+  imperative call plus `operations.*`, and supports operation-only resources without `getAll`.
+
+### Fixed — v1.0.0 TanStack integration
+
+- `useResourceQuery` no longer spreads TanStack's tracked result: components re-render only for
+  fields they read (render-count parity with `useQuery`).
+- Signals bind at Core's recorded `RequestOptions` position instead of guessing by property names;
+  function operations (custom or overriding a builtin) never get an injected argument.
+- Equivalent detail requests share one cache entry, and `invalidateDetail(id)` also invalidates
+  keyed detail variants.
+
+### Added — v1.0.0 Query workstream
+
+- `useResourceQuery` now accepts the installed TanStack v5 query options, preserves the complete
+  native result surface, and infers `select` and defined `initialData` from Core resource methods.
+- Explicit read selectors cover the nine built-in reads and declared custom reads, with typed
+  argument tuples, response types, signal binding, and operation-specific cache keys.
+- `@apixa/tanstack-query/advanced` exports `createResourceQueryOptions` for native `useQuery`,
+  `useQueries`, `useSuspenseQuery`, prefetching, and server hydration. The query controller adds
+  list/detail invalidation and QueryClient-backed cache actions.
+- The main package build retains `"use client"`; the advanced factory entry remains usable in
+  server code. Added a runnable App Router hydration example and a reproducible query baseline.
+
+### Changed — breaking (`@apixa/tanstack-query`, TanStack overhaul step 1)
+
+- `useResourceQuery` is now query-only: it no longer returns `create`, `update`, `delete`, or
+  `mutations`, no longer accepts the `mutations` option, and mounts no `useMutation` observers.
+  It keeps `data`, list state, `query`, `getById`, `refetch`, `invalidate`, `keys`, and
+  `controller` (now the query controller).
+- Run writes with `useResourceMutation(resource, "create" | "update" | "delete" | …, { queryKey })`
+  and tuple args — e.g. `users.create(body)` → `createUser.mutateAsync([body])`,
+  `users.update(id, body)` → `updateUser.mutateAsync([id, body])`. On success it awaits
+  invalidation of every query under the resource key, then runs consumer `onSuccess`.
+- `controller.ts` is split into `createResourceQueryController` and
+  `createResourceMutationController` (plus `operationMutationOptions`), exported from
+  `@apixa/tanstack-query/advanced`. `createResourceController` remains as a compatibility
+  composition of both. `ResourceKeyFactory.mutation` accepts any operation name.
+
 ### Fixed (v0.11.0)
 
 - `@apixa/core` — a malformed/truncated body declared `application/json` now throws `ParseError`

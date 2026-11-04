@@ -4,6 +4,7 @@ import type { PathParams, QueryParams } from "./http.js";
 import type { MockDatasetCatalog, MockDatasetId } from "./mock-datasets.js";
 import type { KeyCase, TransformKeys } from "./transform.js";
 import type { ApiResponse, RequestOptions } from "./transport.js";
+import type { OPERATION_METADATA, OperationMetadata } from "../api/metadata.js";
 
 export type { BuiltinOpName, ExtendedBuiltinOpName, AllBuiltinOpName } from "./builtins.js";
 export type { MockDatasetIds } from "./mock-datasets.js";
@@ -251,6 +252,13 @@ type EntityBuiltinOps<R, Meta, Root extends RootTypes> = {
   deleteMany: { path: "/bulk"; body: IdOf<R, Meta, Root>[]; response: void };
 };
 
+/** The function behind a function operation (`fn` or `{ run: fn }`); `never` otherwise. */
+type FnOf<Op> = Op extends (...args: never[]) => unknown
+  ? Op
+  : Op extends { run: infer F extends (...args: never[]) => unknown }
+    ? F
+    : never;
+
 /** Strip the leading `OperationFnContext` parameter a runtime custom-operation function takes. */
 type StripCtx<F> = F extends (ctx: OperationFnContext, ...args: infer A) => infer Ret
   ? (...args: A) => Ret
@@ -406,9 +414,9 @@ type MergeOp<Base, Override> = [Override] extends [never]
     ? Base
     : Override extends true
       ? Base
-      : Override extends (...args: never[]) => unknown
-        ? StripCtx<Override>
-        : Omit<Base, keyof Override> & Override;
+      : [FnOf<Override>] extends [never]
+        ? Omit<Base, keyof Override> & Override
+        : StripCtx<FnOf<Override>>;
 
 /** Non-disabled runtime operation entries. */
 export type ResourceOpsOf<R> = R extends { operations: infer Ops }
@@ -549,12 +557,10 @@ type SpecialClientFn<Name extends string, R, Meta, Root extends RootTypes> = Nam
 type SpecialName = "exists" | "getMany" | "findFirst" | "getBy";
 
 type ClientFnFor<Name extends AllBuiltinOpName, R, Meta, Root extends RootTypes> = [
-  RuntimeOperation<R, Name>,
-] extends [(...args: never[]) => unknown]
-  ? [RuntimeOperation<R, Name>] extends [never]
-    ? BuiltinFn<Name, R, Meta, Root>
-    : StripCtx<RuntimeOperation<R, Name>>
-  : BuiltinFn<Name, R, Meta, Root>;
+  FnOf<RuntimeOperation<R, Name>>,
+] extends [never]
+  ? BuiltinFn<Name, R, Meta, Root>
+  : StripCtx<FnOf<RuntimeOperation<R, Name>>>;
 type BuiltinFn<
   Name extends AllBuiltinOpName,
   R0,
@@ -572,14 +578,10 @@ type WithOpTransforms<R, Op> = [Op] extends [never]
     ? Omit<R, "transforms"> & { transforms: { response: { keys: K } } }
     : R;
 type CustomOpName<R> = Exclude<keyof ResourceOpsOf<R>, AllBuiltinOpName>;
-type CustomClientFn<
-  R,
-  Meta,
-  Root extends RootTypes,
-  Name extends CustomOpName<R>,
-> = ResourceOpsOf<R>[Name] extends (...args: never[]) => unknown
-  ? StripCtx<ResourceOpsOf<R>[Name]>
-  : SignatureOf<
+type CustomClientFn<R, Meta, Root extends RootTypes, Name extends CustomOpName<R>> = [
+  FnOf<ResourceOpsOf<R>[Name]>,
+] extends [never]
+  ? SignatureOf<
       WithOpTransforms<R, ResourceOpsOf<R>[Name]>,
       Extract<Name, string>,
       ApplyPayload<
@@ -590,7 +592,35 @@ type CustomClientFn<
         Root
       >,
       IdOf<R, Meta, Root>
+    >
+  : StripCtx<FnOf<ResourceOpsOf<R>[Name]>>;
+
+/** Read/write classification of one operation: builtin convention, else custom `kind` (default write). */
+export type OperationKindOf<R, Name> = Name extends AllBuiltinOpName
+  ? Conventions[Name]["access"]
+  : Name extends keyof ResourceOpsOf<R>
+    ? ResourceOpsOf<R>[Name] extends { kind: "read" }
+      ? "read"
+      : "write"
+    : "write";
+
+/** Typed view of the non-enumerable metadata every resource client carries. */
+export type OperationMetadataBrand<R> = {
+  readonly [OPERATION_METADATA]: {
+    readonly [Name in KnownOpName<R> | CustomOpName<R>]: OperationMetadata<
+      OperationKindOf<R, Name>
     >;
+  } & {
+    readonly [Name in MaybeOpName<R>]?: OperationMetadata<OperationKindOf<R, Name>>;
+  };
+};
+
+/** Operation-name → `"read" | "write"` map of a resource client type (`never` for non-Apixa objects). */
+export type OperationKindsOf<Client> = Client extends {
+  readonly [OPERATION_METADATA]: infer M;
+}
+  ? { [K in keyof M]-?: NonNullable<M[K]> extends OperationMetadata<infer Kind> ? Kind : never }
+  : never;
 
 declare const mockedResource: unique symbol;
 declare const apixaClient: unique symbol;
@@ -610,7 +640,8 @@ export type ResourceClient<
   [Name in KnownOpName<R>]: ClientFnFor<Name, R, Meta, Root>;
 } & { [Name in MaybeOpName<R>]?: ClientFnFor<Name, R, Meta, Root> } & {
   [Name in CustomOpName<R>]: CustomClientFn<R, Meta, Root, Name>;
-} & (HasMock<R> extends true ? MockedResource : {});
+} & OperationMetadataBrand<R> &
+  (HasMock<R> extends true ? MockedResource : {});
 
 type ResourcesOf<Config> = Config extends { resources: infer Res } ? Res : {};
 
@@ -656,6 +687,16 @@ type Exact<T, Shape> = {
 
 type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
   ? unknown
+  : Name extends AllBuiltinOpName
+    ? Op extends { kind: unknown }
+      ? {
+          kind: ConfigTypeError<`builtin "${Name & string}" has a fixed kind; kind is for custom operations`>;
+        }
+      : ValidateOperationShape<Name, Op>
+    : ValidateOperationShape<Name, Op>;
+
+type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
+  ? Exact<Op, { kind: unknown; run: unknown }>
   : Op extends true
     ? Name extends AllBuiltinOpName
       ? unknown

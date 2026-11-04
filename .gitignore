@@ -13,6 +13,8 @@ coverage
 
 # examples — ignore all playgrounds for now (including Next)
 examples/**
+!examples/query-ssr-next/
+!examples/query-ssr-next/**
 
 # dataset build cache (re-fetched by scripts/datasets/build-collection.mjs)
 scripts/datasets/.cache/

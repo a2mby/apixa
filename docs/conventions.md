@@ -34,6 +34,19 @@ A resource's `operations` accepts, per key, `true`, `false`, a config object, or
 - **`true`** — enables a builtin with its default method and path. A custom name needs a config
   with `method` or a function; `true` alone cannot create an implementation.
 
+- **`{ kind?, run }`** — a function operation with metadata; executes exactly like the plain
+  function form.
+
+**Read/write classification.** Builtins are fixed by their convention (`access` in
+`operation/conventions.ts`; overriding a builtin keeps it). Custom operations take
+`kind: "read" | "write"` on the config object or `{ run }` form; omitted means `"write"`. `kind`
+on a builtin name is a configuration error. Every resource client carries the result as
+non-enumerable, frozen metadata under `OPERATION_METADATA` (`getOperationMetadata(resource)`):
+`{ kind, builtin, implementation: "request" | "function", optionsIndex }`, where `optionsIndex` is
+the position of the trailing `RequestOptions` argument (`null` for function operations, whose
+signature Core does not own). It is typed per operation (`OperationKindsOf<typeof api.users>`) and
+never changes execution — integrations use it instead of guessing from names or HTTP verbs.
+
 A custom definition (object or function) with a builtin's name always overrides the convention.
 `operations` suggests the 16 known names below for autocomplete while still accepting arbitrary
 custom keys.

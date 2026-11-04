@@ -1,192 +1,280 @@
 "use client";
 
 import {
-  useMutation,
+  hashKey,
+  skipToken,
   useQuery,
   useQueryClient,
+  type DefinedUseQueryResult,
   type InvalidateQueryFilters,
+  type QueryClient,
+  type QueryFunctionContext,
   type QueryKey,
-  type UseMutationOptions,
-  type UseMutationResult,
+  type QueryObserverBaseResult,
   type UseQueryResult,
 } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
-import { createResourceController, type ResourceController } from "./controller.js";
+import { useMemo } from "react";
+import { composeResult } from "./compose.js";
+import { createResourceKeys } from "./keys.js";
+import { describeOperations } from "./operations.js";
+import {
+  buildResourceQueryOptions,
+  type DefaultResourceQueryOptions,
+  type ExplicitResourceQueryOptions,
+} from "./query-options.js";
+import { createResourceQueryController, type ResourceQueryController } from "./query-controller.js";
 import type {
-  InferCreateBody,
-  InferDeleteId,
-  InferEntity,
+  AsyncFn,
+  CallableOperationName,
   InferGetByIdArg,
-  InferListData,
-  InferListQuery,
-  InferUpdateBody,
-  InferUpdateId,
-  ResourceKeyFactory,
-  ResourceLike,
-  UpdateVariables,
+  InheritedReads,
+  OperationReturn,
+  QueryOperationName,
 } from "./types.js";
 
-export type UseResourceQueryOptions<TResource extends ResourceLike> = {
-  /** Required root key segment(s). */
-  queryKey: QueryKey;
-  /** Optional tenant/env prefix prepended to every key. */
-  scope?: QueryKey;
-  /** List `getAll` query params — included in the list query key. */
-  query?: InferListQuery<TResource>;
-  enabled?: boolean;
-  staleTime?: number;
-  gcTime?: number;
-  refetchOnWindowFocus?: boolean | "always";
-  /** Per-operation mutation option overrides (composed after Apixa cache sync). */
-  mutations?: {
-    create?: Pick<
-      UseMutationOptions<InferEntity<TResource>, Error, InferCreateBody<TResource>>,
-      "onSuccess" | "onError" | "onSettled" | "onMutate" | "retry" | "meta"
-    >;
-    update?: Pick<
-      UseMutationOptions<InferEntity<TResource>, Error, UpdateVariables<TResource>>,
-      "onSuccess" | "onError" | "onSettled" | "onMutate" | "retry" | "meta"
-    >;
-    delete?: Pick<
-      UseMutationOptions<void, Error, InferDeleteId<TResource>>,
-      "onSuccess" | "onError" | "onSettled" | "onMutate" | "retry" | "meta"
-    >;
-  };
+/** `getAll` of a resource as a required method (optional `getAll` included). */
+export type ListResource<R> = {
+  getAll: Extract<NonNullable<R["getAll" & keyof R]>, AsyncFn>;
 };
 
-export type ResourceQueryResult<TResource extends ResourceLike> = {
-  data: InferListData<TResource> | undefined;
-  error: Error | null;
-  isPending: boolean;
-  isLoading: boolean;
-  isFetching: boolean;
-  isError: boolean;
-  isSuccess: boolean;
-  status: UseQueryResult<InferListData<TResource>, Error>["status"];
-  query: UseQueryResult<InferListData<TResource>, Error>;
-  invalidate: (filters?: InvalidateQueryFilters) => Promise<void>;
-  refetch: () => Promise<UseQueryResult<InferListData<TResource>, Error>>;
-  keys: ResourceKeyFactory;
-  mutations: (TResource extends { create: NonNullable<ResourceLike["create"]> }
-    ? { create: UseMutationResult<InferEntity<TResource>, Error, InferCreateBody<TResource>> }
-    : {}) &
-    (TResource extends { update: NonNullable<ResourceLike["update"]> }
-      ? { update: UseMutationResult<InferEntity<TResource>, Error, UpdateVariables<TResource>> }
-      : {}) &
-    (TResource extends { delete: NonNullable<ResourceLike["delete"]> }
-      ? { delete: UseMutationResult<void, Error, InferDeleteId<TResource>> }
-      : {});
-  /** @advanced shared controller (keys / options factories). */
-  controller: ResourceController<TResource>;
-} & (TResource extends { getById: NonNullable<ResourceLike["getById"]> }
-  ? { getById: (id: InferGetByIdArg<TResource>) => Promise<InferEntity<TResource>> }
-  : {}) &
-  (TResource extends { create: NonNullable<ResourceLike["create"]> }
-    ? { create: (input: InferCreateBody<TResource>) => Promise<InferEntity<TResource>> }
-    : {}) &
-  (TResource extends { update: NonNullable<ResourceLike["update"]> }
-    ? {
-        update: (
-          id: InferUpdateId<TResource>,
-          body: InferUpdateBody<TResource>,
-        ) => Promise<InferEntity<TResource>>;
-      }
-    : {}) &
-  (TResource extends { delete: NonNullable<ResourceLike["delete"]> }
-    ? { delete: (id: InferDeleteId<TResource>) => Promise<void> }
-    : {});
+export type UseResourceQueryOptions<
+  R,
+  Selected = OperationReturn<ListResource<R>, "getAll">,
+> = DefaultResourceQueryOptions<ListResource<R>, Selected>;
 
 /**
- * Unified Apixa × TanStack Query resource hook.
- *
- * Mounts one list `useQuery` and three `useMutation` observers unconditionally.
- * List fields (`data`, `isPending`, …) never include mutation pending state.
+ * Options for a resource without a guaranteed `getAll`: no default query state in the type,
+ * inherited reads only. (A runtime-optional `getAll` that exists is still observed.)
  */
-export function useResourceQuery<TResource extends ResourceLike>(
-  resource: TResource,
-  options: UseResourceQueryOptions<TResource>,
-): ResourceQueryResult<TResource> {
-  const queryClient = useQueryClient();
+export type OperationOnlyQueryOptions = {
+  queryKey: QueryKey;
+  scope?: QueryKey;
+  operation?: undefined;
+};
 
-  const queryKeySerialized = JSON.stringify(options.queryKey);
-  const scopeSerialized = JSON.stringify(options.scope ?? null);
-  const listQuerySerialized = JSON.stringify(options.query ?? null);
+/** Names a native query result owns; inherited reads with these names live only in `operations`. */
+export type QueryResultKey =
+  | keyof QueryObserverBaseResult
+  | "promise"
+  | "query"
+  | "keys"
+  | "controller"
+  | "invalidate"
+  | "invalidateLists"
+  | "invalidateDetail"
+  | "operations";
 
+type ReadHelpers<R extends object> = {
+  keys: ResourceQueryController<R>["keys"];
+  controller: ResourceQueryController<R>;
+  invalidate: (filters?: InvalidateQueryFilters) => Promise<void>;
+  invalidateLists: (filters?: InvalidateQueryFilters) => Promise<void>;
+  invalidateDetail: (
+    id: R extends { getById: AsyncFn } ? InferGetByIdArg<R> : never,
+    filters?: InvalidateQueryFilters,
+  ) => Promise<void>;
+  /** Every inherited read as an imperative, QueryClient-cached call (guaranteed namespace). */
+  operations: InheritedReads<R>;
+} & Omit<InheritedReads<R>, QueryResultKey>;
+
+export type ResourceQueryResult<
+  R extends object,
+  N extends keyof R & string = Extract<"getAll", keyof R>,
+  Selected = OperationReturn<R, N>,
+  Defined extends boolean = false,
+> = (Defined extends true
+  ? DefinedUseQueryResult<Selected, Error>
+  : UseQueryResult<Selected, Error>) &
+  ReadHelpers<R> & {
+    /** The complete native TanStack result (same object TanStack returned, still tracked). */
+    query: Defined extends true
+      ? DefinedUseQueryResult<Selected, Error>
+      : UseQueryResult<Selected, Error>;
+  };
+
+/** Result for a resource without `getAll`: no default query state, only helpers and reads. */
+export type ResourceOperationsQueryResult<R extends object> = ReadHelpers<R>;
+
+type DefinedData<T> = { initialData: T | (() => T) };
+
+/**
+ * Native TanStack read observer with Apixa resource keys plus every inherited read operation.
+ * Observes `getAll` (or the selected `operation`); other reads run only when called.
+ */
+export function useResourceQuery<R extends object>(
+  resource: R,
+  options: "getAll" extends CallableOperationName<R> ? never : OperationOnlyQueryOptions,
+): ResourceOperationsQueryResult<R>;
+export function useResourceQuery<
+  R extends object,
+  const N extends QueryOperationName<R>,
+  Selected = OperationReturn<R, N>,
+>(
+  resource: R,
+  options: { operation: N } & ExplicitResourceQueryOptions<R, NoInfer<N>, Selected> &
+    DefinedData<OperationReturn<R, N>>,
+): ResourceQueryResult<R, N, Selected, true>;
+export function useResourceQuery<
+  R extends object,
+  const N extends QueryOperationName<R>,
+  Selected = OperationReturn<R, N>,
+>(
+  resource: R,
+  options: { operation: N } & ExplicitResourceQueryOptions<R, NoInfer<N>, Selected>,
+): ResourceQueryResult<R, N, Selected>;
+export function useResourceQuery<
+  R extends { getAll: AsyncFn },
+  Selected = OperationReturn<ListResource<R>, "getAll">,
+>(
+  resource: R,
+  options: UseResourceQueryOptions<R, Selected> &
+    DefinedData<OperationReturn<ListResource<R>, "getAll">>,
+): ResourceQueryResult<R, "getAll" & keyof R, Selected, true>;
+export function useResourceQuery<
+  R extends { getAll: AsyncFn },
+  Selected = OperationReturn<ListResource<R>, "getAll">,
+>(
+  resource: R,
+  options: UseResourceQueryOptions<R, Selected>,
+): ResourceQueryResult<R, "getAll" & keyof R, Selected>;
+export function useResourceQuery(resource: object, options: RuntimeOptions): unknown {
+  const state = useResourceQueryState(resource, options);
+  return state.observed
+    ? composeResult(state.native, { ...state.flat, ...state.helpers, query: state.native })
+    : composeResult(undefined, { ...state.flat, ...state.helpers });
+}
+
+export type RuntimeOptions = {
+  queryKey: QueryKey;
+  scope?: QueryKey;
+  query?: unknown;
+  operation?: string;
+  args?: readonly unknown[] | ((context: QueryFunctionContext) => readonly unknown[]);
+  keyParts?: QueryKey;
+  readOperations?: readonly string[];
+  [native: string]: unknown;
+};
+
+/** @internal Shared by `useResourceQuery` and `useResource`: one observer, helpers, reads. */
+export function useResourceQueryState(resource: object, options: RuntimeOptions) {
+  const client = useQueryClient();
+  const identityHash = hashKey([
+    ...(options.scope ?? []),
+    ...options.queryKey,
+    options.query ?? null,
+  ]);
   const controller = useMemo(
     () =>
-      createResourceController(resource, {
+      createResourceQueryController(resource, {
         queryKey: options.queryKey,
         scope: options.scope,
         query: options.query,
       }),
-    // Serialize key segments so inline `["users"]` does not thrash the controller.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- resource is a stable client
-    [resource, queryKeySerialized, scopeSerialized, listQuerySerialized],
+    // Hashing matches TanStack's default query-key behavior and keeps inline arrays stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [resource, identityHash],
   );
-
-  const listQuery = useQuery(
-    controller.listOptions({
-      enabled: options.enabled,
-      staleTime: options.staleTime,
-      gcTime: options.gcTime,
-      refetchOnWindowFocus: options.refetchOnWindowFocus,
-    }),
+  const observed =
+    options.operation !== undefined ||
+    typeof (resource as { getAll?: unknown }).getAll === "function";
+  // Always exactly one useQuery call. Without a default read it observes an inert, skipped key.
+  const native = useQuery(
+    observed
+      ? buildResourceQueryOptions(resource, options)
+      : { queryKey: [...controller.keys.all(), "$apixa", "inert"], queryFn: skipToken },
   );
-
-  const createMutation = useMutation(controller.createOptions(options.mutations?.create));
-  const updateMutation = useMutation(controller.updateOptions(options.mutations?.update));
-  const deleteMutation = useMutation(controller.deleteOptions(options.mutations?.delete));
-
-  const getById = useCallback(
-    (id: InferGetByIdArg<TResource>) => controller.fetchDetail(queryClient, id),
-    [controller, queryClient],
+  const { helpers, flat } = useMemo(
+    () => readSurface(resource, controller, client),
+    [resource, controller, client],
   );
-
-  const createAsync = createMutation.mutateAsync;
-  const updateAsync = updateMutation.mutateAsync;
-  const deleteAsync = deleteMutation.mutateAsync;
-
-  const create = useCallback(
-    (input: InferCreateBody<TResource>) => createAsync(input),
-    [createAsync],
-  );
-
-  const update = useCallback(
-    (id: InferUpdateId<TResource>, body: InferUpdateBody<TResource>) => updateAsync({ id, body }),
-    [updateAsync],
-  );
-
-  const remove = useCallback((id: InferDeleteId<TResource>) => deleteAsync(id), [deleteAsync]);
-
-  const invalidate = useCallback(
-    (filters?: InvalidateQueryFilters) => controller.invalidate(queryClient, filters),
-    [controller, queryClient],
-  );
-
-  const refetch = useCallback(() => listQuery.refetch(), [listQuery]);
-
-  return {
-    data: listQuery.data,
-    error: listQuery.error,
-    isPending: listQuery.isPending,
-    isLoading: listQuery.isLoading,
-    isFetching: listQuery.isFetching,
-    isError: listQuery.isError,
-    isSuccess: listQuery.isSuccess,
-    status: listQuery.status,
-    query: listQuery,
-    ...(resource.getById ? { getById } : {}),
-    ...(resource.create ? { create } : {}),
-    ...(resource.update ? { update } : {}),
-    ...(resource.delete ? { delete: remove } : {}),
-    invalidate,
-    refetch,
-    keys: controller.keys,
-    mutations: {
-      ...(resource.create ? { create: createMutation } : {}),
-      ...(resource.update ? { update: updateMutation } : {}),
-      ...(resource.delete ? { delete: deleteMutation } : {}),
-    },
-    controller,
-  } as ResourceQueryResult<TResource>;
+  return { native, helpers, flat, observed, controller, client };
 }
+
+const NATIVE_HELPER_KEYS = new Set<string>([
+  "query",
+  "keys",
+  "controller",
+  "invalidate",
+  "invalidateLists",
+  "invalidateDetail",
+  "operations",
+]);
+
+function readSurface(
+  resource: object,
+  controller: ResourceQueryController<object>,
+  client: QueryClient,
+) {
+  const operations: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
+  for (const [name, info] of describeOperations(resource)) {
+    if (info.kind !== "read") continue;
+    operations[name] = (...args: unknown[]) =>
+      (
+        controller.fetchOperation as (
+          client: QueryClient,
+          name: string,
+          ...args: unknown[]
+        ) => Promise<unknown>
+      )(client, name, ...args);
+  }
+  const helpers = {
+    keys: controller.keys,
+    controller,
+    invalidate: (filters?: InvalidateQueryFilters) => controller.invalidate(client, filters),
+    invalidateLists: (filters?: InvalidateQueryFilters) =>
+      controller.invalidateLists(client, filters),
+    invalidateDetail: (id: unknown, filters?: InvalidateQueryFilters) =>
+      (
+        controller.invalidateDetail as (
+          client: QueryClient,
+          id: unknown,
+          filters?: InvalidateQueryFilters,
+        ) => Promise<void>
+      )(client, id, filters),
+    operations: Object.freeze(operations),
+  };
+  const flat: Record<string, unknown> = {};
+  for (const [name, fn] of Object.entries(operations)) {
+    if (!NATIVE_HELPER_KEYS.has(name) && !NATIVE_RESULT_KEYS.has(name)) flat[name] = fn;
+  }
+  return { helpers, flat };
+}
+
+/** Field names of TanStack's query result (kept in sync with `QueryObserverBaseResult`). */
+const NATIVE_RESULT_KEY_LIST = [
+  "data",
+  "dataUpdatedAt",
+  "error",
+  "errorUpdatedAt",
+  "failureCount",
+  "failureReason",
+  "errorUpdateCount",
+  "isError",
+  "isFetched",
+  "isFetchedAfterMount",
+  "isFetching",
+  "isLoading",
+  "isPending",
+  "isLoadingError",
+  "isInitialLoading",
+  "isPaused",
+  "isPlaceholderData",
+  "isRefetchError",
+  "isRefetching",
+  "isStale",
+  "isSuccess",
+  "isEnabled",
+  "refetch",
+  "status",
+  "fetchStatus",
+  "promise",
+] as const satisfies ReadonlyArray<keyof QueryObserverBaseResult | "promise">;
+// Compile-time guard: a field added to TanStack's result must be added to the list above.
+const _allNativeKeysListed: Exclude<
+  keyof QueryObserverBaseResult,
+  (typeof NATIVE_RESULT_KEY_LIST)[number]
+> extends never
+  ? true
+  : false = true;
+void _allNativeKeysListed;
+export const NATIVE_RESULT_KEYS: ReadonlySet<string> = new Set(NATIVE_RESULT_KEY_LIST);
