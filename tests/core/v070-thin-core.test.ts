@@ -1,10 +1,4 @@
-import {
-  defineApi,
-  HttpError,
-  isHttpError,
-  isTimeoutError,
-  TimeoutError,
-} from "@apixa/core";
+import { defineApi, HttpError, isHttpError, isTimeoutError, TimeoutError } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 // expectTypeOf used for list/query + full response
 import { createFakeTransport } from "../helpers/fake-transport.js";

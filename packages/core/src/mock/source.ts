@@ -1,5 +1,10 @@
 import { ConfigError } from "../errors/index.js";
-import { isMockDatasetId, listMockDatasetIds, loadNamedDataset, MOCK_DATASETS } from "./datasets.js";
+import {
+  isMockDatasetId,
+  listMockDatasetIds,
+  loadNamedDataset,
+  MOCK_DATASETS,
+} from "./datasets.js";
 
 export type Row = Record<string, unknown>;
 
@@ -59,7 +64,9 @@ export function normalizeMockSource(resource: string, value: unknown): MockSourc
     const id = data;
     const datasetIdKey = MOCK_DATASETS[id];
     if (idKey !== undefined && idKey !== datasetIdKey) {
-      throw new ConfigError(`${label}.idKey "${idKey}" does not match dataset "${id}" (uses "${datasetIdKey}").`);
+      throw new ConfigError(
+        `${label}.idKey "${idKey}" does not match dataset "${id}" (uses "${datasetIdKey}").`,
+      );
     }
     return { label, idKey: datasetIdKey, load: () => loadNamedDataset(id), seed };
   }
@@ -100,14 +107,17 @@ export function normalizeMockSource(resource: string, value: unknown): MockSourc
 function normalizeSeed(label: string, value: unknown): NonNullable<MockSource["seed"]> {
   if (!isPlainObject(value)) throw new ConfigError(`${label}.seed must be { limit?, offset? }.`);
   for (const key of Object.keys(value)) {
-    if (!SEED_KEYS.has(key)) throw new ConfigError(`${label}.seed has unknown option "${key}". Supported: limit, offset.`);
+    if (!SEED_KEYS.has(key))
+      throw new ConfigError(`${label}.seed has unknown option "${key}". Supported: limit, offset.`);
   }
   const seed: NonNullable<MockSource["seed"]> = {};
   for (const key of ["limit", "offset"] as const) {
     const n = value[key];
     if (n === undefined) continue;
     if (typeof n !== "number" || !Number.isInteger(n) || n < 0) {
-      throw new ConfigError(`${label}.seed.${key} must be a non-negative integer (got ${String(n)}).`);
+      throw new ConfigError(
+        `${label}.seed.${key} must be a non-negative integer (got ${String(n)}).`,
+      );
     }
     seed[key] = n;
   }
@@ -116,7 +126,9 @@ function normalizeSeed(label: string, value: unknown): NonNullable<MockSource["s
 
 function assertArray(label: string, records: unknown): readonly unknown[] {
   if (!Array.isArray(records)) {
-    throw new ConfigError(`${label} provider must return an array of records (got ${describe(records)}).`);
+    throw new ConfigError(
+      `${label} provider must return an array of records (got ${describe(records)}).`,
+    );
   }
   return records;
 }
@@ -130,7 +142,9 @@ export function validateRecords(label: string, records: readonly unknown[], idKe
     }
     const id = record[idKey];
     if ((typeof id !== "string" && typeof id !== "number") || id === "") {
-      throw new ConfigError(`${label}[${i}] is missing identity field "${idKey}" (string or number).`);
+      throw new ConfigError(
+        `${label}[${i}] is missing identity field "${idKey}" (string or number).`,
+      );
     }
     const key = String(id);
     if (seen.has(key)) throw new ConfigError(`${label}: duplicate ${idKey} "${key}".`);

@@ -1,8 +1,13 @@
 import { ConfigError } from "../errors/index.js";
 import { isBuiltinName } from "../operation/conventions.js";
+import { resolveRetryConfig } from "../request/retry.js";
 import { isKeyCase, KEY_CASES } from "../transform/keys.js";
 import type { HttpMethod } from "../types/http.js";
-import type { MiddlewareHooks, RequestMiddleware, ResponseMiddleware } from "../types/middleware.js";
+import type {
+  MiddlewareHooks,
+  RequestMiddleware,
+  ResponseMiddleware,
+} from "../types/middleware.js";
 import type { TransformsConfig } from "../types/transform.js";
 import { assertResourceSlice } from "../utils/slice.js";
 
@@ -73,14 +78,22 @@ function typeName(value: unknown): string {
 }
 
 function unknownKey(where: string, key: string, allowed: Set<string>): never {
-  throw new ConfigError(`${where} has unknown option "${key}". Supported: ${[...allowed].join(", ")}.`);
+  throw new ConfigError(
+    `${where} has unknown option "${key}". Supported: ${[...allowed].join(", ")}.`,
+  );
 }
 
-export function assertKnownKeys(where: string, value: Record<string, unknown>, allowed: Set<string>): void {
+export function assertKnownKeys(
+  where: string,
+  value: Record<string, unknown>,
+  allowed: Set<string>,
+): void {
   for (const key of Object.keys(value)) if (!allowed.has(key)) unknownKey(where, key, allowed);
 }
 
-export function validateRoot(config: unknown): asserts config is Record<string, unknown> & { resources: Record<string, unknown> } {
+export function validateRoot(
+  config: unknown,
+): asserts config is Record<string, unknown> & { resources: Record<string, unknown> } {
   if (!isPlainObject(config)) {
     throw new ConfigError(`defineApi() expects a config object (got ${typeName(config)}).`);
   }
@@ -96,10 +109,14 @@ export function validateRoot(config: unknown): asserts config is Record<string, 
     unknownKey("defineApi config", key, ROOT_KEYS);
   }
   if (!("resources" in config)) {
-    throw new ConfigError(`defineApi config needs a "resources" object, e.g. resources: { users: { path: "/users" } }.`);
+    throw new ConfigError(
+      `defineApi config needs a "resources" object, e.g. resources: { users: { path: "/users" } }.`,
+    );
   }
   if (!isPlainObject(config.resources)) {
-    throw new ConfigError(`"resources" must be an object of resource definitions (got ${typeName(config.resources)}).`);
+    throw new ConfigError(
+      `"resources" must be an object of resource definitions (got ${typeName(config.resources)}).`,
+    );
   }
   if (config.transport !== undefined) {
     const transport = config.transport as { request?: unknown } | null;
@@ -107,8 +124,13 @@ export function validateRoot(config: unknown): asserts config is Record<string, 
       throw new ConfigError(`transport must be an object with a request(input) function.`);
     }
   }
-  if (config.queryArrayFormat !== undefined && !["repeat", "comma", "brackets"].includes(config.queryArrayFormat as string)) {
-    throw new ConfigError(`queryArrayFormat must be "repeat", "comma", or "brackets" (got ${String(config.queryArrayFormat)}).`);
+  if (
+    config.queryArrayFormat !== undefined &&
+    !["repeat", "comma", "brackets"].includes(config.queryArrayFormat as string)
+  ) {
+    throw new ConfigError(
+      `queryArrayFormat must be "repeat", "comma", or "brackets" (got ${String(config.queryArrayFormat)}).`,
+    );
   }
   if (config.querySerializer !== undefined && typeof config.querySerializer !== "function") {
     throw new ConfigError(`querySerializer must be a function.`);
@@ -118,17 +140,28 @@ export function validateRoot(config: unknown): asserts config is Record<string, 
 
 /** Options shared by root, resource, and operation levels. */
 export function validateLayer(where: string, layer: Record<string, unknown>): void {
-  const { headers, timeout, middleware, requestMiddleware, responseMiddleware, transforms } = layer;
+  const { headers, timeout, retry, middleware, requestMiddleware, responseMiddleware, transforms } =
+    layer;
+  resolveRetryConfig(retry as never, `${where}.retry`);
   if (headers !== undefined && typeof headers !== "function" && typeof headers !== "object") {
-    throw new ConfigError(`${where}.headers must be an object, Headers, entries array, or a (sync/async) function.`);
+    throw new ConfigError(
+      `${where}.headers must be an object, Headers, entries array, or a (sync/async) function.`,
+    );
   }
   if (headers === null) throw new ConfigError(`${where}.headers must not be null.`);
-  if (timeout !== undefined && (typeof timeout !== "number" || !Number.isFinite(timeout) || timeout < 0)) {
-    throw new ConfigError(`${where}.timeout must be a non-negative number of milliseconds (got ${String(timeout)}).`);
+  if (
+    timeout !== undefined &&
+    (typeof timeout !== "number" || !Number.isFinite(timeout) || timeout < 0)
+  ) {
+    throw new ConfigError(
+      `${where}.timeout must be a non-negative number of milliseconds (got ${String(timeout)}).`,
+    );
   }
   if (middleware !== undefined) validateHooks(`${where}.middleware`, middleware);
-  if (requestMiddleware !== undefined) validateFnArray(`${where}.requestMiddleware`, requestMiddleware);
-  if (responseMiddleware !== undefined) validateFnArray(`${where}.responseMiddleware`, responseMiddleware);
+  if (requestMiddleware !== undefined)
+    validateFnArray(`${where}.requestMiddleware`, requestMiddleware);
+  if (responseMiddleware !== undefined)
+    validateFnArray(`${where}.responseMiddleware`, responseMiddleware);
   if (transforms !== undefined) validateTransforms(`${where}.transforms`, transforms);
 }
 
@@ -139,36 +172,50 @@ function validateHooks(where: string, value: unknown): asserts value is Middlewa
         `Around-style middleware arrays were removed; use requestMiddleware / responseMiddleware arrays instead.`,
     );
   }
-  if (!isPlainObject(value)) throw new ConfigError(`${where} must be an object { onRequest?, onResponse?, onError? }.`);
+  if (!isPlainObject(value))
+    throw new ConfigError(`${where} must be an object { onRequest?, onResponse?, onError? }.`);
   for (const [key, hook] of Object.entries(value)) {
     if (!HOOK_KEYS.has(key)) unknownKey(where, key, HOOK_KEYS);
-    if (hook !== undefined && typeof hook !== "function") throw new ConfigError(`${where}.${key} must be a function.`);
+    if (hook !== undefined && typeof hook !== "function")
+      throw new ConfigError(`${where}.${key} must be a function.`);
   }
 }
 
-function validateFnArray(where: string, value: unknown): asserts value is Array<RequestMiddleware | ResponseMiddleware> {
+function validateFnArray(
+  where: string,
+  value: unknown,
+): asserts value is Array<RequestMiddleware | ResponseMiddleware> {
   if (!Array.isArray(value)) throw new ConfigError(`${where} must be an array of functions.`);
   value.forEach((fn, i) => {
-    if (typeof fn !== "function") throw new ConfigError(`${where}[${i}] must be a function (got ${typeName(fn)}).`);
+    if (typeof fn !== "function")
+      throw new ConfigError(`${where}[${i}] must be a function (got ${typeName(fn)}).`);
   });
 }
 
 function validateTransforms(where: string, value: unknown): asserts value is TransformsConfig {
-  if (!isPlainObject(value)) throw new ConfigError(`${where} must be { request?: { keys }, response?: { keys } }.`);
+  if (!isPlainObject(value))
+    throw new ConfigError(`${where} must be { request?: { keys }, response?: { keys } }.`);
   for (const [direction, rule] of Object.entries(value)) {
-    if (direction !== "request" && direction !== "response") unknownKey(where, direction, new Set(["request", "response"]));
+    if (direction !== "request" && direction !== "response")
+      unknownKey(where, direction, new Set(["request", "response"]));
     if (rule === undefined) continue;
     if (!isPlainObject(rule)) throw new ConfigError(`${where}.${direction} must be { keys }.`);
     assertKnownKeys(`${where}.${direction}`, rule, new Set(["keys"]));
     if (!isKeyCase(rule.keys)) {
-      throw new ConfigError(`${where}.${direction}.keys must be one of ${KEY_CASES.join(", ")} (got ${JSON.stringify(rule.keys)}).`);
+      throw new ConfigError(
+        `${where}.${direction}.keys must be one of ${KEY_CASES.join(", ")} (got ${JSON.stringify(rule.keys)}).`,
+      );
     }
   }
 }
 
-export function validateResource(name: string, value: unknown): asserts value is Record<string, unknown> & { path: string } {
+export function validateResource(
+  name: string,
+  value: unknown,
+): asserts value is Record<string, unknown> & { path: string } {
   const where = `resources.${name}`;
-  if (!isPlainObject(value)) throw new ConfigError(`${where} must be a resource object like { path: "/${name}" }.`);
+  if (!isPlainObject(value))
+    throw new ConfigError(`${where} must be a resource object like { path: "/${name}" }.`);
   assertKnownKeys(where, value, RESOURCE_KEYS);
   if (typeof value.path !== "string" || !value.path.startsWith("/")) {
     throw new ConfigError(`${where}.path must be a string starting with "/" (e.g. "/${name}").`);
@@ -182,7 +229,8 @@ export function validateResource(name: string, value: unknown): asserts value is
     throw new ConfigError(`${where} cannot set both readOnly and writeOnly to true.`);
   }
   if (value.operationGroups !== undefined) {
-    if (!isPlainObject(value.operationGroups)) throw new ConfigError(`${where}.operationGroups must be an object.`);
+    if (!isPlainObject(value.operationGroups))
+      throw new ConfigError(`${where}.operationGroups must be an object.`);
     for (const [group, choice] of Object.entries(value.operationGroups)) {
       if (!GROUPS.has(group)) unknownKey(`${where}.operationGroups`, group, GROUPS);
       if (choice !== undefined && typeof choice !== "boolean") {
@@ -190,10 +238,16 @@ export function validateResource(name: string, value: unknown): asserts value is
       }
     }
   }
-  if (value.pagination !== undefined && value.pagination !== "page" && value.pagination !== "cursor") {
+  if (
+    value.pagination !== undefined &&
+    value.pagination !== "page" &&
+    value.pagination !== "cursor"
+  ) {
     throw new ConfigError(
       `${where}.pagination must be "page" or "cursor" (got ${JSON.stringify(value.pagination)}).` +
-        (typeof value.pagination === "boolean" ? ` The mock pagination boolean was replaced by pagination: "page".` : ""),
+        (typeof value.pagination === "boolean"
+          ? ` The mock pagination boolean was replaced by pagination: "page".`
+          : ""),
     );
   }
   if (value.slice !== undefined) {
@@ -205,8 +259,10 @@ export function validateResource(name: string, value: unknown): asserts value is
   }
   validateLayer(where, value);
   if (value.operations !== undefined) {
-    if (!isPlainObject(value.operations)) throw new ConfigError(`${where}.operations must be an object.`);
-    for (const [op, definition] of Object.entries(value.operations)) validateOperation(`${where}.operations.${op}`, op, definition);
+    if (!isPlainObject(value.operations))
+      throw new ConfigError(`${where}.operations must be an object.`);
+    for (const [op, definition] of Object.entries(value.operations))
+      validateOperation(`${where}.operations.${op}`, op, definition);
   }
 }
 
@@ -215,21 +271,29 @@ function validateOperation(where: string, name: string, value: unknown): void {
   const builtin = isBuiltinName(name);
   if (value === true) {
     if (!builtin) {
-      throw new ConfigError(`${where}: true cannot create custom operation "${name}"; give it { method, path } or a function.`);
+      throw new ConfigError(
+        `${where}: true cannot create custom operation "${name}"; give it { method, path } or a function.`,
+      );
     }
     return;
   }
   if (!isPlainObject(value)) {
-    throw new ConfigError(`${where} must be true, false, a config object, or a function (got ${typeName(value)}).`);
+    throw new ConfigError(
+      `${where} must be true, false, a config object, or a function (got ${typeName(value)}).`,
+    );
   }
   assertKnownKeys(where, value, OPERATION_KEYS);
   if (value.method !== undefined && !METHODS.has(value.method as HttpMethod)) {
-    throw new ConfigError(`${where}.method must be one of ${[...METHODS].join(", ")} (got ${JSON.stringify(value.method)}).`);
+    throw new ConfigError(
+      `${where}.method must be one of ${[...METHODS].join(", ")} (got ${JSON.stringify(value.method)}).`,
+    );
   }
   if (!builtin && value.method === undefined) {
     throw new ConfigError(`${where}: custom operation "${name}" needs a method.`);
   }
-  if (value.path !== undefined && typeof value.path !== "string") throw new ConfigError(`${where}.path must be a string.`);
-  if (value.hasBody !== undefined && typeof value.hasBody !== "boolean") throw new ConfigError(`${where}.hasBody must be a boolean.`);
+  if (value.path !== undefined && typeof value.path !== "string")
+    throw new ConfigError(`${where}.path must be a string.`);
+  if (value.hasBody !== undefined && typeof value.hasBody !== "boolean")
+    throw new ConfigError(`${where}.hasBody must be a boolean.`);
   validateLayer(where, value);
 }

@@ -3,12 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { defineApi } from "@apixa/core";
-import {
-  defineMockApi,
-  MockApiError,
-  type MockApiErrorCode,
-  type Page,
-} from "@apixa/mocking";
+import { defineMockApi, MockApiError, type MockApiErrorCode, type Page } from "@apixa/mocking";
 import { users as usersPreset, type Comment, type Product, type User } from "@apixa/mocking/data";
 
 const datasetsRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)), "datasets");
@@ -612,8 +607,18 @@ describe("defineMockApi alongside Core mocked resources (one shared engine)", ()
       resources: { users: { path: "/users", mock: { data: "users-mock", seed: { limit: 2 } } } },
     });
 
-    await coreApi.users.create({ name: "Via Core", email: "core@example.com", username: "core", companyId: "1" });
-    await mockApi.users.create({ name: "Via MockApi", email: "mock@example.com", username: "mock", companyId: "1" });
+    await coreApi.users.create({
+      name: "Via Core",
+      email: "core@example.com",
+      username: "core",
+      companyId: "1",
+    });
+    await mockApi.users.create({
+      name: "Via MockApi",
+      email: "mock@example.com",
+      username: "mock",
+      companyId: "1",
+    });
 
     expect(await coreApi.users.getAll()).toHaveLength(3);
     expect(await mockApi.users.getAll()).toHaveLength(3);
@@ -635,11 +640,22 @@ describe("defineMockApi alongside Core mocked resources (one shared engine)", ()
     const mockApi = defineMockApi({ users: { type: "users-mock", slice: 2, pagination: true } });
     const coreApi = defineApi({
       baseURL: "https://api.example.com",
-      resources: { users: { path: "/users", mock: { data: "users-mock", seed: { limit: 2 } }, pagination: "page" } },
+      resources: {
+        users: {
+          path: "/users",
+          mock: { data: "users-mock", seed: { limit: 2 } },
+          pagination: "page",
+        },
+      },
     });
     const fromMock = await mockApi.users.getAll({ page: 1, pageSize: 1 });
     const fromCore = await coreApi.users.getAll({ query: { page: 1, pageSize: 1 } });
-    expectTypeOf(fromCore).toEqualTypeOf<{ data: User[]; total: number; page: number; pageSize: number }>();
+    expectTypeOf(fromCore).toEqualTypeOf<{
+      data: User[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
     expect(fromMock).toMatchObject({ total: 2, page: 1, pageSize: 1 });
     expect(fromCore).toEqual({ data: fromMock.data, total: 2, page: 1, pageSize: 1 });
   });

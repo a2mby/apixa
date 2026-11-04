@@ -17,7 +17,7 @@ Shared rules for building Apixa Core, writing docs, and shipping version milesto
 - Do **not** silently claim backend support. Generated operations are configurable; a server must implement the selected wire conventions.
 - Do **not** add React, Next.js, or TanStack Query as Core dependencies.
 - Do **not** build caching or state management into Core.
-- Do **not** couple mocking to production request execution.
+- Mocking is client-scoped: a resource's `mock` decides at construction that its operations run against an in-memory store — never a global switch, never a live fallback (ADR 003).
 - Do **not** expose server-only secrets to browser code.
 - Do **not** add abstractions only because they might be useful later.
 
@@ -98,33 +98,61 @@ the affected methods are optional in TypeScript because their runtime presence i
 ```ts
 const api = defineApi({
   baseURL: "https://api.example.com",
-  users: {
-    path: "/users",
-    readOnly: true,
-    operationGroups: { extended: false, many: true },
-    operations: { create: true, createMany: { path: "/batch" }, deleteMany: false },
+  resources: {
+    users: {
+      path: "/users",
+      readOnly: true,
+      operationGroups: { extended: false, many: true },
+      operations: { create: true, createMany: { path: "/batch" }, deleteMany: false },
+    },
   },
 });
 // Exposes getAll, getById, getMany, create, and createMany.
 ```
 
-`@apixa/mocking` mirrors the same always-on, add/remove/override surface on its own resources
-(both `mock: "<dataset-id>"` and `defineMockApi`), implemented as in-memory data operations rather
-than new HTTP routes. A Core mock resource gets the same `operations`-generated methods as a live
-one — `mock` only swaps the transport. As of v0.11.0, the mock bridge also simulates `getBySlug`,
-`count`, `search`, `createMany`, and `deleteMany` (`patch`/`upsert` already worked via `/:id`), and
-accepts the same `operations` override (`false`, or `{ method?, path? }`) for those names. A
-genuinely new custom **function** operation still 404s against the bridge — same honesty as an
-unimplemented real backend route.
+## Configuration shape
 
-## Pagination and read-only resources (v0.11.0)
+- Resources live only under `resources`. Root-level resource objects are rejected with a
+  migration hint, and unknown keys at any level are rejected both in TypeScript and at
+  construction (`ConfigError`).
+- `headers`, `timeout`, `retry`, `middleware`, `requestMiddleware`, `responseMiddleware`, and
+  `transforms` are accepted at the root, resource, and operation levels. The most specific
+  value wins. Headers also accept a per-call value and may be static, a sync provider, or an
+  async provider (evaluated on every logical call).
+- `retry: 2` is shorthand for `{ retries: 2 }`. By default only `GET`, `HEAD`, and `OPTIONS` are
+  retried. Writes need an explicit `methods` entry. A `Retry-After` longer than `maxDelayMs`
+  stops retrying. `timeout` is one budget for the whole call, including backoff.
+- `transforms: { request: { keys }, response: { keys } }` supports `camelCase`, `snake_case`,
+  `PascalCase`, and `kebab-case`. Conversion is recursive over plain objects and arrays, leaves
+  values and special objects untouched, and never mutates its input. Colliding keys throw
+  `TransformError`. TypeScript exposes the converted keys for root- and resource-level
+  transforms.
+- Clients are frozen. To use a different base URL, build another client, or use `defineApis()`.
 
-- `pagination?: "page" | "cursor"` on a resource — type-only, like `entity` / `list` / `query`.
-  Absent by default: zero behavior or type change. `"page"` types `getAll` as
-  `{ data, total, page, pageSize }` with a `page`/`pageSize` query; `"cursor"` types it as
-  `{ data, nextCursor }` with a `cursor`/`pageSize` query. Apixa does not parse or invent this
-  envelope — it only shapes types.
-- `readOnly?: boolean` removes write defaults before groups and individual overrides are applied.
+## Mocking (client-scoped, data-first)
+
+`mock` is a data source only. Operation behavior always lives in `operations`.
+
+| Form                          | Types from                | Loading                             |
+| ----------------------------- | ------------------------- | ----------------------------------- |
+| `mock: "users-mock"`          | `MockDatasetCatalog`      | that dataset only, first use        |
+| `mock: [{ id: 1, … }]`        | widened element type      | validated at construction           |
+| `mock: () => import(…)`       | resolved element type     | first use, once, retried on failure |
+| `mock: { data, idKey, seed }` | as above; `idKey` checked | `seed: { limit, offset }`           |
+
+- All 16 builtins run directly against the store; none calls another.
+  - `getMany` returns results in request order and omits missing IDs.
+  - `findFirst` and `count` match exactly; `search` matches case-insensitive substrings.
+  - `createMany` is atomic; `deleteMany` ignores missing IDs.
+- Overridden builtin paths keep their builtin semantics.
+- `ctx.request()` and declarative custom operations are routed by method and path relative to
+  the resource. Anything else throws `MockError` with code `MOCK_UNSUPPORTED`. No request is
+  ever sent.
+- Each client has its own stores. `resetMock(api.users)` or `resetMock(api)` restores the
+  seeded state.
+- `pagination: "page" | "cursor"` is one contract for live and mocked resources. The mock engine
+  produces `{ data, total, page, pageSize }` or `{ data, nextCursor }`; for a live resource it
+  only shapes types. `slice` is response slicing, not seeding.
 
 ## Types
 

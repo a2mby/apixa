@@ -2,6 +2,24 @@
 
 Project log. Newest entry first.
 
+## 2026-11-04 — Complete the defineApi architecture: resources, defineApis, client-scoped mocking (#58)
+
+Implemented Parts C–F of the defineApi architecture specification on top of #57.
+
+- **Configuration:** Resources now live under `resources`. `defineApis()` reuses the same
+  engine. Configuration is validated when the client is built, unknown keys are rejected at
+  compile time and at runtime, and clients are frozen.
+- **Mocking:** Removed global mock processors and the pathname-matched mock transport. Mocking
+  is now a data-first, client-scoped execution branch backed by one `MockStore` that
+  `defineMockApi` also uses. It supports dataset IDs, inline records, providers, and
+  `{ data, idKey, seed }`. All 15 advertised datasets now resolve, each loaded lazily on its
+  own. A mocked resource never falls back to the network.
+- **HTTP lifecycle:** Added header providers, origin checks after middleware, a single
+  timeout/retry/abort lifecycle, and hook-style middleware in three styles sharing one
+  pipeline.
+- **Transforms:** Added typed recursive key transforms that throw on collisions.
+- **Tests:** The suite grew from 247 to 439 tests.
+
 ## 2026-11-04 — Land defineApi operation and type refactor (#56)
 
 Aligned `defineApi`'s generated methods with literal runtime resource configuration while keeping

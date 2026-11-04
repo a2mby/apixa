@@ -1,5 +1,6 @@
 import { defineApi, type OperationFnContext } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
+import type { CreateBodyOf } from "../helpers/types.js";
 
 type User = { id: string; name: string };
 type AppApi = { users: { entity: User; list: User[] } };
@@ -20,7 +21,7 @@ const inferred = defineApi({
 describe("configuration-driven client inference", () => {
   it("keeps both call forms and uses metadata only for payloads", () => {
     expectTypeOf(explicit.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
-    expectTypeOf(explicit.users.create).parameter(0).toEqualTypeOf<Omit<User, "id"> & Partial<Pick<User, "id">>>();
+    expectTypeOf(explicit.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(inferred.users.getAll).returns.resolves.toEqualTypeOf<unknown[]>();
     expectTypeOf(inferred.users.create).parameter(0).toEqualTypeOf<unknown>();
     if (false) {
@@ -55,7 +56,7 @@ describe("configuration-driven client inference", () => {
       id: string;
       archived: true;
     }>();
-    expectTypeOf(api.users.createMany).parameter(0).toEqualTypeOf<(Omit<User, "id"> & Partial<Pick<User, "id">>)[]>();
+    expectTypeOf(api.users.createMany).parameter(0).toEqualTypeOf<CreateBodyOf<User>[]>();
     expectTypeOf(api.users.deleteMany).parameter(0).toEqualTypeOf<User["id"][]>();
     expectTypeOf(api.users.getMany).parameter(0).toEqualTypeOf<User["id"][]>();
   });
@@ -91,7 +92,7 @@ describe("configuration-driven client inference", () => {
         },
       },
     });
-    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id"> & Partial<Pick<User, "id">>>();
+    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(api.users.getMany).parameter(0).toEqualTypeOf<User["id"][]>();
     if (false) {
       // @ts-expect-error readOnly removes update

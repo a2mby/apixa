@@ -14,7 +14,8 @@ export function serializeBody(body: unknown, headers: Headers): BodyInit | null 
     body instanceof URLSearchParams ||
     body instanceof Blob ||
     body instanceof ArrayBuffer ||
-    ArrayBuffer.isView(body)
+    ArrayBuffer.isView(body) ||
+    (typeof ReadableStream !== "undefined" && body instanceof ReadableStream)
   ) {
     return body as BodyInit;
   }

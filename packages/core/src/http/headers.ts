@@ -29,7 +29,10 @@ export function mergeHeaders(...sources: Array<HeadersInitLike | undefined>): He
  * Providers run every call (fresh credentials); a fresh `Headers` is built per call so nothing
  * leaks between requests or clients. Provider failures become `ApiError` code `HEADERS`.
  */
-export async function resolveHeaders(sources: readonly HeadersSource[], request?: HeadersInitLike): Promise<Headers> {
+export async function resolveHeaders(
+  sources: readonly HeadersSource[],
+  request?: HeadersInitLike,
+): Promise<Headers> {
   const headers = new Headers();
   for (const source of sources) {
     if (typeof source === "function") {

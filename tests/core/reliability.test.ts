@@ -1,10 +1,4 @@
-import {
-  AbortError,
-  defineApi,
-  HttpError,
-  NetworkError,
-  TimeoutError,
-} from "@apixa/core";
+import { AbortError, defineApi, HttpError, NetworkError, TimeoutError } from "@apixa/core";
 import { describe, expect, it, vi } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 

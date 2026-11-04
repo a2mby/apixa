@@ -3,7 +3,12 @@ import { TransformError } from "../errors/index.js";
 /** Supported key conventions for `transforms.request.keys` / `transforms.response.keys`. */
 export type KeyCase = "camelCase" | "snake_case" | "PascalCase" | "kebab-case";
 
-export const KEY_CASES: readonly KeyCase[] = ["camelCase", "snake_case", "PascalCase", "kebab-case"];
+export const KEY_CASES: readonly KeyCase[] = [
+  "camelCase",
+  "snake_case",
+  "PascalCase",
+  "kebab-case",
+];
 
 export function isKeyCase(value: unknown): value is KeyCase {
   return typeof value === "string" && (KEY_CASES as readonly string[]).includes(value);
@@ -117,7 +122,12 @@ function walk(
     origin.set(next, key);
     const converted = walk(value[key], to, cache, `${path}.${key}`, depth + 1);
     if (next === "__proto__") {
-      Object.defineProperty(out, next, { value: converted, enumerable: true, writable: true, configurable: true });
+      Object.defineProperty(out, next, {
+        value: converted,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
     } else {
       out[next] = converted;
     }

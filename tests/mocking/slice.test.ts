@@ -30,7 +30,8 @@ describe("mock slice", () => {
   });
 
   it("rejects end before start with InvalidSliceError when the API is built", () => {
-    const build = () => defineMockApi({ bad: { type: "products-mock", slice: { start: 10, end: 3 } } });
+    const build = () =>
+      defineMockApi({ bad: { type: "products-mock", slice: { start: 10, end: 3 } } });
     expect(build).toThrow(InvalidSliceError);
     expect(build).toThrow(MockingErrors);
     expect(build).toThrow(/end \(3\).*before.*start \(10\)/);

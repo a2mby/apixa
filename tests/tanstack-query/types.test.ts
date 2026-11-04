@@ -1,5 +1,6 @@
 import { defineApi } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
+import type { CreateBodyOf } from "../helpers/types.js";
 import { createResourceController } from "../../packages/tanstack-query/src/controller.js";
 import { useResourceQuery } from "../../packages/tanstack-query/src/use-resource-query.js";
 import type {
@@ -29,7 +30,7 @@ describe("tanstack-query inference from Apixa ResourceClient", () => {
     type R = typeof api.users;
     expectTypeOf<InferListData<R>>().toEqualTypeOf<User[]>();
     expectTypeOf<InferEntity<R>>().toEqualTypeOf<User>();
-    expectTypeOf<InferCreateBody<R>>().toEqualTypeOf<Omit<User, "id"> & Partial<Pick<User, "id">>>();
+    expectTypeOf<InferCreateBody<R>>().toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf<InferUpdateBody<R>>().toEqualTypeOf<Partial<User>>();
 
     const controller = createResourceController(api.users, { queryKey: ["users"] });

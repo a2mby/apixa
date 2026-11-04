@@ -15,7 +15,9 @@ function filterEntries(query: Record<string, unknown> | undefined): [string, unk
 
 function matchesExact(row: Row, entries: [string, unknown][]): boolean {
   return entries.every(([key, value]) =>
-    Array.isArray(value) ? value.map(String).includes(String(row[key])) : String(row[key]) === String(value),
+    Array.isArray(value)
+      ? value.map(String).includes(String(row[key]))
+      : String(row[key]) === String(value),
   );
 }
 
@@ -64,10 +66,17 @@ export class MockStore {
       } catch (cause) {
         if (cause instanceof MockError) throw cause;
         const detail = cause instanceof Error ? cause.message : String(cause);
-        throw new MockError("MOCK_LOAD", `${this.source.label}: failed to load mock data — ${detail}`, { cause });
+        throw new MockError(
+          "MOCK_LOAD",
+          `${this.source.label}: failed to load mock data — ${detail}`,
+          { cause },
+        );
       }
       const { limit, offset = 0 } = this.source.seed ?? {};
-      const seeded = records.slice(offset, limit === undefined ? undefined : offset + limit) as Row[];
+      const seeded = records.slice(
+        offset,
+        limit === undefined ? undefined : offset + limit,
+      ) as Row[];
       // The source (imported module, inline array) is never mutated: keep a private copy.
       this.initial = seeded.map(clone);
       this.applyInitial();
@@ -82,7 +91,9 @@ export class MockStore {
     this.index = new Map(this.rows.map((row) => [String(row[this.idKey]), row]));
     this.numericIds = this.rows.every((row) => /^\d+$/.test(String(row[this.idKey])));
     this.numberTyped = this.rows.length === 0 || typeof this.rows[0]![this.idKey] === "number";
-    this.counter = this.numericIds ? Math.max(0, ...this.rows.map((row) => Number(row[this.idKey]))) : 0;
+    this.counter = this.numericIds
+      ? Math.max(0, ...this.rows.map((row) => Number(row[this.idKey])))
+      : 0;
   }
 
   /**
@@ -104,7 +115,10 @@ export class MockStore {
 
   private key(id: unknown): string {
     if ((typeof id !== "string" && typeof id !== "number") || id === "") {
-      throw this.fail("MOCK_INVALID_INPUT", `invalid ${this.idKey} ${JSON.stringify(id) ?? String(id)} (expected a non-empty string or number)`);
+      throw this.fail(
+        "MOCK_INVALID_INPUT",
+        `invalid ${this.idKey} ${JSON.stringify(id) ?? String(id)} (expected a non-empty string or number)`,
+      );
     }
     return String(id);
   }
@@ -123,13 +137,20 @@ export class MockStore {
     try {
       return clone(value as Row);
     } catch (cause) {
-      throw new MockError("MOCK_INVALID_INPUT", `${this.source.label}: ${what} must be structured-cloneable`, { cause });
+      throw new MockError(
+        "MOCK_INVALID_INPUT",
+        `${this.source.label}: ${what} must be structured-cloneable`,
+        { cause },
+      );
     }
   }
 
   private nextId(): Id {
     if (!this.numericIds) {
-      throw this.fail("MOCK_INVALID_INPUT", `create() needs "${this.idKey}": this data has non-numeric ids`);
+      throw this.fail(
+        "MOCK_INVALID_INPUT",
+        `create() needs "${this.idKey}": this data has non-numeric ids`,
+      );
     }
     do this.counter++;
     while (this.index.has(String(this.counter)));
@@ -137,15 +158,22 @@ export class MockStore {
   }
 
   private assertSameId(input: Row, current: Row): void {
-    if (input[this.idKey] !== undefined && String(input[this.idKey]) !== String(current[this.idKey])) {
-      throw this.fail("MOCK_INVALID_INPUT", `cannot change ${this.idKey} from "${String(current[this.idKey])}"`);
+    if (
+      input[this.idKey] !== undefined &&
+      String(input[this.idKey]) !== String(current[this.idKey])
+    ) {
+      throw this.fail(
+        "MOCK_INVALID_INPUT",
+        `cannot change ${this.idKey} from "${String(current[this.idKey])}"`,
+      );
     }
   }
 
   private insert(row: Row): Row {
     if (row[this.idKey] === undefined) row[this.idKey] = this.nextId();
     const key = this.key(row[this.idKey]);
-    if (this.index.has(key)) throw this.fail("MOCK_DUPLICATE_ID", `a record with ${this.idKey} "${key}" already exists`);
+    if (this.index.has(key))
+      throw this.fail("MOCK_DUPLICATE_ID", `a record with ${this.idKey} "${key}" already exists`);
     this.rows.push(row);
     this.index.set(key, row);
     return row;
@@ -178,7 +206,8 @@ export class MockStore {
 
   /** Requested order, missing ids omitted, duplicates collapsed. */
   getMany(ids: unknown): Row[] {
-    if (!Array.isArray(ids)) throw this.fail("MOCK_INVALID_INPUT", "getMany expects an array of ids");
+    if (!Array.isArray(ids))
+      throw this.fail("MOCK_INVALID_INPUT", "getMany expects an array of ids");
     const out: Row[] = [];
     const seen = new Set<string>();
     for (const id of ids) {
@@ -210,12 +239,16 @@ export class MockStore {
   /** Case-insensitive substring match on every given key. */
   search(query?: Record<string, unknown>): Row[] {
     const entries = filterEntries(query);
-    return (entries.length ? this.rows.filter((row) => matchesContains(row, entries)) : this.rows).map(clone);
+    return (
+      entries.length ? this.rows.filter((row) => matchesContains(row, entries)) : this.rows
+    ).map(clone);
   }
 
   count(query?: Record<string, unknown>): number {
     const entries = filterEntries(query);
-    return entries.length ? this.rows.filter((row) => matchesExact(row, entries)).length : this.rows.length;
+    return entries.length
+      ? this.rows.filter((row) => matchesExact(row, entries)).length
+      : this.rows.length;
   }
 
   // ---- writes ----
@@ -226,7 +259,8 @@ export class MockStore {
 
   /** Validates every item first, then inserts all (no partial writes on duplicate ids). */
   createMany(bodies: unknown): Row[] {
-    if (!Array.isArray(bodies)) throw this.fail("MOCK_INVALID_INPUT", "createMany expects an array");
+    if (!Array.isArray(bodies))
+      throw this.fail("MOCK_INVALID_INPUT", "createMany expects an array");
     const rows = bodies.map((body, i) => this.input(body, `createMany[${i}]`));
     const keys = new Set<string>();
     for (const row of rows) {
@@ -283,7 +317,8 @@ export class MockStore {
 
   /** Removes the listed ids that exist; missing ids are ignored (idempotent bulk delete). */
   deleteMany(ids: unknown): void {
-    if (!Array.isArray(ids)) throw this.fail("MOCK_INVALID_INPUT", "deleteMany expects an array of ids");
+    if (!Array.isArray(ids))
+      throw this.fail("MOCK_INVALID_INPUT", "deleteMany expects an array of ids");
     const keys = new Set(ids.map((id) => this.key(id)));
     this.rows = this.rows.filter((row) => !keys.has(String(row[this.idKey])));
     for (const key of keys) this.index.delete(key);

@@ -42,7 +42,8 @@ export type OperationValue = boolean | OperationDefinition | OperationFn;
 export type MockData =
   | MockDatasetId
   | readonly object[]
-  | (() => readonly object[] | Promise<readonly object[]>);
+  /** Providers may return `unknown[]` (typed `unknown`); records are validated when loaded. */
+  | (() => readonly unknown[] | Promise<readonly unknown[]>);
 
 /** `mock` value: data source only — operation behavior always lives in `operations`. */
 export type MockOption =

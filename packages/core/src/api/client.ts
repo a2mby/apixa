@@ -22,7 +22,8 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
   const runtime: ClientRuntime = {
     base,
     transport: (config.transport as Transport | undefined) ?? createFetchTransport(),
-    queryArrayFormat: (config.queryArrayFormat as ClientRuntime["queryArrayFormat"] | undefined) ?? "repeat",
+    queryArrayFormat:
+      (config.queryArrayFormat as ClientRuntime["queryArrayFormat"] | undefined) ?? "repeat",
     querySerializer: config.querySerializer as ClientRuntime["querySerializer"],
   };
   const root: LayerOptions = {
@@ -59,7 +60,9 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
 export function resetMockState(target: object): void {
   const found = stores.get(target);
   if (!found || (found.length === 0 && !Object.isFrozen(target))) {
-    throw new ConfigError("resetMock() expects a mocked resource (api.users) or a client created by defineApi().");
+    throw new ConfigError(
+      "resetMock() expects a mocked resource (api.users) or a client created by defineApi().",
+    );
   }
   for (const store of found) store.reset();
 }

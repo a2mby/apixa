@@ -26,7 +26,9 @@ type Id = string | number;
 export type ResourceInput<T, IdKey extends keyof T> = Omit<T, IdKey> & Partial<Pick<T, IdKey>>;
 
 /** `pagination: true` → page envelope; anything else → plain `T[]` (never a `Page | T[]` union). */
-type GetAll<T, Paginated> = [Paginated] extends [true] ? (params?: PageParams) => Promise<Page<T>> : () => Promise<T[]>;
+type GetAll<T, Paginated> = [Paginated] extends [true]
+  ? (params?: PageParams) => Promise<Page<T>>
+  : () => Promise<T[]>;
 
 /** Plain CRUD helpers custom operation functions may reuse through `ctx.defaults`. */
 export type MockResourceDefaults<T extends object> = {
@@ -79,7 +81,11 @@ export const MOCK_BUILTINS = [
  * In-memory CRUD for one resource. No network, no persistence. Every method returns a fresh
  * copy. Failures reject with `MockApiError` (check `code`).
  */
-export interface MockResource<T extends object, IdKey extends keyof T, Paginated extends boolean | undefined = undefined> {
+export interface MockResource<
+  T extends object,
+  IdKey extends keyof T,
+  Paginated extends boolean | undefined = undefined,
+> {
   getAll: GetAll<T, Paginated>;
   getById(id: Id): Promise<T>;
   /** Missing id → generated (numeric-id data only). Duplicate id → `DUPLICATE_ID`. */
@@ -126,14 +132,18 @@ function seedFromSlice(slice: MockSlice | undefined): MockSource["seed"] {
 /** One resource: Core's `MockStore` (shared engine) plus `defineMockApi`'s calling conventions. */
 export function createResource(name: string, type: DatasetId, options: ResourceOptions) {
   const label = `Mock resource "${name}"`;
-  const entry = catalog[type] as { idKey: string; load: () => Promise<{ default: readonly unknown[] }> };
+  const entry = catalog[type] as {
+    idKey: string;
+    load: () => Promise<{ default: readonly unknown[] }>;
+  };
   const store = new MockStore({
     label,
     idKey: entry.idKey,
     load: async () => (await entry.load()).default,
     seed: seedFromSlice(options.slice),
   });
-  const fail = (code: MockApiErrorCode, message: string) => new MockApiError(code, `${label}: ${message}`);
+  const fail = (code: MockApiErrorCode, message: string) =>
+    new MockApiError(code, `${label}: ${message}`);
 
   /** Run against the loaded store; engine errors surface as `MockApiError`. */
   const use =
@@ -153,7 +163,8 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
       throw fail("INVALID_PAGINATION", "getAll() options must be { page?, pageSize? }");
     }
     for (const key of Object.keys(params)) {
-      if (key !== "page" && key !== "pageSize") throw fail("INVALID_PAGINATION", `unknown option "${key}" (use page, pageSize)`);
+      if (key !== "page" && key !== "pageSize")
+        throw fail("INVALID_PAGINATION", `unknown option "${key}" (use page, pageSize)`);
     }
     const { page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE } = params as PageParams;
     for (const [field, value] of [
@@ -171,12 +182,14 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
     getAll: use((params?: PageParams) => {
       const rows = store.list();
       if (!options.pagination) {
-        if (params !== undefined) throw fail("INVALID_PAGINATION", "pagination is not enabled; set pagination: true");
+        if (params !== undefined)
+          throw fail("INVALID_PAGINATION", "pagination is not enabled; set pagination: true");
         return rows;
       }
       const { page, pageSize } = resolvePage(params);
       const lastPage = Math.max(1, Math.ceil(rows.length / pageSize));
-      if (page > lastPage) throw fail("INVALID_PAGINATION", `page ${page} is out of range (last page is ${lastPage})`);
+      if (page > lastPage)
+        throw fail("INVALID_PAGINATION", `page ${page} is out of range (last page is ${lastPage})`);
       const start = (page - 1) * pageSize;
       return {
         data: rows.slice(start, start + pageSize),
@@ -222,13 +235,15 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
     },
   };
 
-  const custom = (fn: MockOperationFn<Row>) => async (...args: unknown[]) => {
-    try {
-      return await fn(ctx, ...args);
-    } finally {
-      store.reindex();
-    }
-  };
+  const custom =
+    (fn: MockOperationFn<Row>) =>
+    async (...args: unknown[]) => {
+      try {
+        return await fn(ctx, ...args);
+      } finally {
+        store.reindex();
+      }
+    };
 
   const resource: Record<string, (...args: never[]) => Promise<unknown>> = {};
   for (const opName of MOCK_BUILTINS) {
@@ -237,7 +252,12 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
     resource[opName] = typeof override === "function" ? custom(override) : builtins[opName];
   }
   for (const [opName, override] of Object.entries(options.operations ?? {})) {
-    if ((MOCK_BUILTINS as readonly string[]).includes(opName) || override === false || override === undefined) continue;
+    if (
+      (MOCK_BUILTINS as readonly string[]).includes(opName) ||
+      override === false ||
+      override === undefined
+    )
+      continue;
     if (typeof override === "function") {
       resource[opName] = custom(override);
       continue;

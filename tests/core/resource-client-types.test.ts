@@ -1,5 +1,6 @@
 import { defineApi } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
+import type { CreateBodyOf } from "../helpers/types.js";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
@@ -81,7 +82,7 @@ describe("resource client TypeScript surface", () => {
       },
     });
 
-    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id"> & Partial<Pick<User, "id">>>();
+    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(api.users.getById).toBeFunction();
     expectTypeOf(api.users.search).toBeFunction();
     expectTypeOf(api.users.search)

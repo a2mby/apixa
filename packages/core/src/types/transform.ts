@@ -11,23 +11,36 @@ export interface TransformsConfig {
 }
 
 type Sep = "_" | "-";
-type IsUpper<C extends string> = C extends Lowercase<C> ? false : C extends Uppercase<C> ? true : false;
+type IsUpper<C extends string> =
+  C extends Lowercase<C> ? false : C extends Uppercase<C> ? true : false;
 type EndsWith<S extends string, X extends string> = S extends `${string}${X}` ? true : false;
 
 /** Same character-wise rules as the runtime `convertKey` (see `transform/keys.ts`). */
-type Delimited<S extends string, D extends Sep, Acc extends string = ""> = S extends `${infer C}${infer Rest}`
+type Delimited<
+  S extends string,
+  D extends Sep,
+  Acc extends string = "",
+> = S extends `${infer C}${infer Rest}`
   ? C extends Sep
     ? Delimited<Rest, D, Acc extends "" ? Acc : EndsWith<Acc, D> extends true ? Acc : `${Acc}${D}`>
     : IsUpper<C> extends true
       ? Delimited<
           Rest,
           D,
-          Acc extends "" ? Lowercase<C> : EndsWith<Acc, D> extends true ? `${Acc}${Lowercase<C>}` : `${Acc}${D}${Lowercase<C>}`
+          Acc extends ""
+            ? Lowercase<C>
+            : EndsWith<Acc, D> extends true
+              ? `${Acc}${Lowercase<C>}`
+              : `${Acc}${D}${Lowercase<C>}`
         >
       : Delimited<Rest, D, `${Acc}${C}`>
   : Acc;
 
-type Camel<S extends string, Acc extends string = "", Up extends boolean = false> = S extends `${infer C}${infer Rest}`
+type Camel<
+  S extends string,
+  Acc extends string = "",
+  Up extends boolean = false,
+> = S extends `${infer C}${infer Rest}`
   ? C extends Sep
     ? Camel<Rest, Acc, Acc extends "" ? false : true>
     : Acc extends ""

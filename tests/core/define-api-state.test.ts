@@ -1,5 +1,6 @@
 import { defineApi, type BuiltinHeaders } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
+import type { CreateBodyOf } from "../helpers/types.js";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
@@ -24,7 +25,7 @@ describe("defineApi<T> entity-only state typing", () => {
       },
     });
 
-    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id"> & Partial<Pick<User, "id">>>();
+    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<Partial<User>>();
 
     const users = await api.users.getAll();
@@ -116,7 +117,7 @@ describe("defineApi<T> entity-only state typing", () => {
     expectTypeOf(api.users.search)
       .parameter(0)
       .toMatchTypeOf<{ query?: { q: string } } | undefined>();
-    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id"> & Partial<Pick<User, "id">>>();
+    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(await api.users.search({ query: { q: "ada" } })).toEqualTypeOf<User[]>();
   });
 });

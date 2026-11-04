@@ -116,7 +116,12 @@ describe("package surface", () => {
   });
 
   it("has no global registration API (Core mocking is client-scoped) and keeps the Node loaders", () => {
-    for (const removed of ["enableResourceMocks", "disableResourceMocks", "registerDatasetPreset", "applyResourceMocksToConfig"]) {
+    for (const removed of [
+      "enableResourceMocks",
+      "disableResourceMocks",
+      "registerDatasetPreset",
+      "applyResourceMocksToConfig",
+    ]) {
       expect(removed in mocking).toBe(false);
     }
     expect(typeof mockingNode.loadDataset).toBe("function");
@@ -141,7 +146,8 @@ describe("package surface", () => {
 });
 
 describe("one mock engine", () => {
-  const legacy = /["']\.\/(?:register|processor|store|transport|response|bridge|presets\/registry)(?:\.js)?["']/;
+  const legacy =
+    /["']\.\/(?:register|processor|store|transport|response|bridge|presets\/registry)(?:\.js)?["']/;
 
   it.each(["mock-api.ts", "resource.ts", "catalog.ts", "datasets.ts", "data/index.ts"])(
     "%s has no legacy bridge imports and no network access",
@@ -159,7 +165,14 @@ describe("one mock engine", () => {
   });
 
   it("the legacy bridge files are gone", () => {
-    for (const file of ["bridge.ts", "transport.ts", "store.ts", "processor.ts", "register.ts", "register-entry.ts"]) {
+    for (const file of [
+      "bridge.ts",
+      "transport.ts",
+      "store.ts",
+      "processor.ts",
+      "register.ts",
+      "register-entry.ts",
+    ]) {
       expect(existsSync(resolve(pkgRoot, "src", file)), file).toBe(false);
     }
   });

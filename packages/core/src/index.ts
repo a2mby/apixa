@@ -21,8 +21,17 @@ export type { ApiErrorCode, MockErrorCode } from "./errors/index.js";
 
 export { createFetchTransport } from "./transport/index.js";
 
+/** Retry helpers (pure; exported for custom `shouldRetry` policies and tests). */
+export { computeBackoffMs, parseRetryAfter, isRetryableStatus } from "./request/index.js";
+
 /** Shared in-memory mock engine (used by Core mocked resources and `@apixa/mocking`). */
-export { MockStore, normalizeMockSource, MOCK_DATASETS, isMockDatasetId, listMockDatasetIds } from "./mock/index.js";
+export {
+  MockStore,
+  normalizeMockSource,
+  MOCK_DATASETS,
+  isMockDatasetId,
+  listMockDatasetIds,
+} from "./mock/index.js";
 export type { MockSource } from "./mock/index.js";
 
 export { convertKey, transformKeys, KEY_CASES } from "./transform/index.js";

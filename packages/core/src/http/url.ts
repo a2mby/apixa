@@ -22,7 +22,9 @@ export function isAbsoluteUrl(value: string): boolean {
  */
 export function parseBaseURL(value: unknown): BaseUrl {
   if (typeof value !== "string" || value.trim() === "") {
-    throw new ConfigError(`baseURL must be a non-empty string (got ${value === "" ? '""' : typeof value}).`);
+    throw new ConfigError(
+      `baseURL must be a non-empty string (got ${value === "" ? '""' : typeof value}).`,
+    );
   }
   if (isAbsoluteUrl(value)) {
     let url: URL;
@@ -62,7 +64,12 @@ export function requestOrigin(base: BaseUrl): string {
  * Build the outgoing URL from an interpolated full path (`/users/1`) or an absolute same-origin
  * operation URL. Never drops or duplicates the base path prefix.
  */
-export function buildUrl(base: BaseUrl, path: string, queryString: string, origin: string | null): string {
+export function buildUrl(
+  base: BaseUrl,
+  path: string,
+  queryString: string,
+  origin: string | null,
+): string {
   if (isAbsoluteUrl(path)) return `${path}${queryString}`;
   const normalized = path === "" || path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
   return `${origin ?? ""}${base.path}${normalized}${queryString}`;

@@ -35,5 +35,4 @@ export type HeadersInitLike = HeadersInit | BuiltinHeaders;
  * refreshed credentials are always used.
  */
 export type HeadersSource =
-  | HeadersInitLike
-  | (() => HeadersInitLike | undefined | Promise<HeadersInitLike | undefined>);
+  HeadersInitLike | (() => HeadersInitLike | undefined | Promise<HeadersInitLike | undefined>);

@@ -46,7 +46,9 @@ describe("operation selection", () => {
     expect(disabled.users).not.toHaveProperty(name);
     const restored = defineApi({
       ...base,
-      resources: { users: { path: "/users", defaultOperations: false, operations: { [name]: true } } },
+      resources: {
+        users: { path: "/users", defaultOperations: false, operations: { [name]: true } },
+      },
     } as never) as unknown as { users: Record<string, unknown> };
     expect(Object.keys(restored.users)).toEqual([name]);
   });
@@ -109,10 +111,16 @@ describe("operation selection", () => {
 
   it("rejects conflicting flags and custom true", () => {
     expect(() =>
-      defineApi({ ...base, resources: { users: { path: "/users", readOnly: true, writeOnly: true } } } as never),
+      defineApi({
+        ...base,
+        resources: { users: { path: "/users", readOnly: true, writeOnly: true } },
+      } as never),
     ).toThrow(/both readOnly and writeOnly/);
     expect(() =>
-      defineApi({ ...base, resources: { users: { path: "/users", operations: { archive: true } } } } as never),
+      defineApi({
+        ...base,
+        resources: { users: { path: "/users", operations: { archive: true } } },
+      } as never),
     ).toThrow(/true cannot create custom operation "archive"/);
   });
 

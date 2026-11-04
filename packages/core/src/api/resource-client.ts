@@ -1,7 +1,12 @@
 import { ConfigError } from "../errors/index.js";
 import { extractPathParamNames, joinPath } from "../http/path.js";
 import { MockStore, normalizeMockSource, type BuiltinIntent } from "../mock/index.js";
-import { BUILTIN_CONVENTIONS, expandOperations, isBuiltinName, parseOperationArgs } from "../operation/index.js";
+import {
+  BUILTIN_CONVENTIONS,
+  expandOperations,
+  isBuiltinName,
+  parseOperationArgs,
+} from "../operation/index.js";
 import type { BuiltinConventionName, OperationInput } from "../operation/index.js";
 import {
   resolveRetryConfig,
@@ -37,12 +42,22 @@ function prepareLayers(where: string, layers: Array<LayerOptions | undefined>) {
     headers: present.map((l) => l.headers).filter((h): h is HeadersSource => h !== undefined),
     timeout: pick(...present.map((l) => l.timeout)),
     retry: resolveRetryConfig(retry, `${where}.retry`),
-    onRequest: present.flatMap((l) => [...(l.middleware?.onRequest ? [l.middleware.onRequest] : []), ...(l.requestMiddleware ?? [])]),
-    onResponse: present.flatMap((l) => [...(l.middleware?.onResponse ? [l.middleware.onResponse] : []), ...(l.responseMiddleware ?? [])]),
+    onRequest: present.flatMap((l) => [
+      ...(l.middleware?.onRequest ? [l.middleware.onRequest] : []),
+      ...(l.requestMiddleware ?? []),
+    ]),
+    onResponse: present.flatMap((l) => [
+      ...(l.middleware?.onResponse ? [l.middleware.onResponse] : []),
+      ...(l.responseMiddleware ?? []),
+    ]),
     onError: present.flatMap((l) => (l.middleware?.onError ? [l.middleware.onError] : [])),
     requestKeys: pick(...present.map((l) => l.transforms?.request?.keys)),
     responseKeys: pick(...present.map((l) => l.transforms?.response?.keys)),
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function toArray(result: unknown): unknown[] {
@@ -86,18 +101,27 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   const resourceParamNames = extractPathParamNames(resourcePath);
   const hasResourceParams = resourceParamNames.length > 0;
 
-  const operations = expandOperations(def.operations as Record<string, OperationInput> | undefined, {
-    defaultOperations: def.defaultOperations as boolean | undefined,
-    readOnly: def.readOnly as boolean | undefined,
-    writeOnly: def.writeOnly as boolean | undefined,
-    operationGroups: def.operationGroups as Record<string, boolean> | undefined,
-  });
+  const operations = expandOperations(
+    def.operations as Record<string, OperationInput> | undefined,
+    {
+      defaultOperations: def.defaultOperations as boolean | undefined,
+      readOnly: def.readOnly as boolean | undefined,
+      writeOnly: def.writeOnly as boolean | undefined,
+      operationGroups: def.operationGroups as Record<string, boolean> | undefined,
+    },
+  );
 
   const out: Record<string, Fn> = {};
   for (const [opName, definition] of Object.entries(operations)) {
     const where = `resources.${name}.operations.${opName}`;
     if (typeof definition === "function") {
-      out[opName] = functionOperation(client, runtime, opName, definition, prepareLayers(where, [root, resourceLayer]));
+      out[opName] = functionOperation(
+        client,
+        runtime,
+        opName,
+        definition,
+        prepareLayers(where, [root, resourceLayer]),
+      );
       continue;
     }
     const convention = isBuiltinName(opName) ? BUILTIN_CONVENTIONS[opName] : undefined;
@@ -116,11 +140,17 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       ...prepareLayers(where, [root, resourceLayer, definition as OperationDefinition]),
     };
     if (convention && "strategy" in convention && hasBody) {
-      throw new ConfigError(`${where}: hasBody is unsupported on ${opName} (it has no body mapping).`);
+      throw new ConfigError(
+        `${where}: hasBody is unsupported on ${opName} (it has no body mapping).`,
+      );
     }
     const run = (call: CallInput) => runOperation(client, runtime, op, call);
     out[opName] = convention
-      ? builtinOperation(opName as BuiltinConventionName, op, run, { resourceParamNames, hasResourceParams, slice })
+      ? builtinOperation(opName as BuiltinConventionName, op, run, {
+          resourceParamNames,
+          hasResourceParams,
+          slice,
+        })
       : declarativeOperation(op, run);
   }
 
@@ -134,7 +164,10 @@ interface BuiltinContext {
 }
 
 /** A declarative custom operation: `(params?, body?, options?)` by its path and method. */
-function declarativeOperation(op: PreparedOperation, run: (call: CallInput) => Promise<unknown>): Fn {
+function declarativeOperation(
+  op: PreparedOperation,
+  run: (call: CallInput) => Promise<unknown>,
+): Fn {
   const paramNames = extractPathParamNames(op.path);
   return (...args) => {
     const parsed = parseOperationArgs(paramNames, op.hasBody, args);
@@ -162,7 +195,9 @@ function builtinOperation(
         const { params, options } = splitTrailing(rest, ctx.hasResourceParams, 0);
         return run({
           params: { ...params, ...(idParam ? { [idParam]: id as string | number } : {}) },
-          query: idParam ? options?.query : { ...(options?.query ?? {}), id: id as string | number },
+          query: idParam
+            ? options?.query
+            : { ...(options?.query ?? {}), id: id as string | number },
           options,
           allow404: true,
           fromHttp: (_data, status) => status !== 404,
@@ -198,9 +233,13 @@ function builtinOperation(
         const encoded = encodeURIComponent(String(value));
         let path: string;
         if (/:field\b|:value\b/.test(op.path)) {
-          path = op.path.replace(/:field\b/g, encodeURIComponent(field)).replace(/:value\b/g, encoded);
+          path = op.path
+            .replace(/:field\b/g, encodeURIComponent(field))
+            .replace(/:value\b/g, encoded);
         } else {
-          const dynamic = /:[A-Za-z0-9_]+/.test(field) ? field.replace(/:[A-Za-z0-9_]+/, encoded) : joinPath(field, encoded);
+          const dynamic = /:[A-Za-z0-9_]+/.test(field)
+            ? field.replace(/:[A-Za-z0-9_]+/, encoded)
+            : joinPath(field, encoded);
           path = joinPath(op.path, dynamic);
         }
         return run({
@@ -224,7 +263,8 @@ function builtinOperation(
         case "getAll":
         case "count":
         case "search":
-          return { op: name, query: wire.query };
+          // A body-carrying override (e.g. `search: { method: "POST" }`) sends its filter as the body.
+          return { op: name, query: wire.query ?? (isRecord(wire.body) ? wire.body : undefined) };
         case "getBySlug":
           return { op: name, slug: id };
         case "getById":

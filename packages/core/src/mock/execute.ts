@@ -21,16 +21,30 @@ export interface BuiltinIntent {
 
 const DEFAULT_PAGE_SIZE = 20;
 
-function positiveInt(store: string, name: string, raw: unknown, fallback: number, min: number): number {
+function positiveInt(
+  store: string,
+  name: string,
+  raw: unknown,
+  fallback: number,
+  min: number,
+): number {
   if (raw === undefined || raw === null || raw === "") return fallback;
   const n = typeof raw === "number" ? raw : Number(raw);
   if (!Number.isInteger(n) || n < min) {
-    throw new MockError("MOCK_INVALID_INPUT", `${store}: ${name} must be an integer >= ${min} (got ${String(raw)})`);
+    throw new MockError(
+      "MOCK_INVALID_INPUT",
+      `${store}: ${name} must be an integer >= ${min} (got ${String(raw)})`,
+    );
   }
   return n;
 }
 
-function paginate(label: string, rows: Row[], mode: PaginationMode | undefined, query: Record<string, unknown> = {}): unknown {
+function paginate(
+  label: string,
+  rows: Row[],
+  mode: PaginationMode | undefined,
+  query: Record<string, unknown> = {},
+): unknown {
   if (!mode) return rows;
   const pageSize = positiveInt(label, "pageSize", query.pageSize, DEFAULT_PAGE_SIZE, 1);
   if (mode === "page") {
@@ -95,9 +109,18 @@ export async function runBuiltin(
  * mocked resource. `relativePath` is already interpolated and relative to the resource path.
  * Anything outside the resource conventions is a `MOCK_UNSUPPORTED` error — never HTTP.
  */
-export function routeToIntent(method: string, relativePath: string, query: Record<string, unknown> | undefined, body: unknown, label: string): BuiltinIntent {
+export function routeToIntent(
+  method: string,
+  relativePath: string,
+  query: Record<string, unknown> | undefined,
+  body: unknown,
+  label: string,
+): BuiltinIntent {
   if (/^[a-z][a-z0-9+.-]*:/i.test(relativePath)) {
-    throw new MockError("MOCK_UNSUPPORTED", `${label}: cannot simulate absolute URL "${relativePath}" on a mocked resource`);
+    throw new MockError(
+      "MOCK_UNSUPPORTED",
+      `${label}: cannot simulate absolute URL "${relativePath}" on a mocked resource`,
+    );
   }
   const path = relativePath.split("?")[0]!.replace(/\/+$/, "");
   const segments = path.split("/").filter(Boolean).map(decodeURIComponent);

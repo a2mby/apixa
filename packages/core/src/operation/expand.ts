@@ -33,7 +33,11 @@ export function expandOperations(
     for (const group of GROUP_ORDER) {
       const choice = options.operationGroups?.[group];
       if (choice === undefined) continue;
-      if ((group === "extended" && convention.extended) || (group === "many" && convention.many) || group === convention.access) {
+      if (
+        (group === "extended" && convention.extended) ||
+        (group === "many" && convention.many) ||
+        group === convention.access
+      ) {
         on = choice;
       }
     }
@@ -44,10 +48,21 @@ export function expandOperations(
   for (const name of Object.keys(BUILTIN_CONVENTIONS)) {
     const override = operations?.[name];
     if (override === false || (override === undefined && !enabled.get(name))) continue;
-    expanded[name] = typeof override === "function" ? override : override === true || override === undefined ? {} : override;
+    expanded[name] =
+      typeof override === "function"
+        ? override
+        : override === true || override === undefined
+          ? {}
+          : override;
   }
   for (const [name, definition] of Object.entries(operations ?? {})) {
-    if (isBuiltinName(name) || definition === false || definition === undefined || definition === true) continue;
+    if (
+      isBuiltinName(name) ||
+      definition === false ||
+      definition === undefined ||
+      definition === true
+    )
+      continue;
     expanded[name] = definition;
   }
   return expanded;

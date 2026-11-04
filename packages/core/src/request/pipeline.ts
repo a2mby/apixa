@@ -1,4 +1,11 @@
-import { AbortError, ApiError, ConfigError, HttpError, NetworkError, TimeoutError } from "../errors/index.js";
+import {
+  AbortError,
+  ApiError,
+  ConfigError,
+  HttpError,
+  NetworkError,
+  TimeoutError,
+} from "../errors/index.js";
 import {
   assertSameOrigin,
   buildQueryString,
@@ -9,14 +16,31 @@ import {
   serializeBody,
   type BaseUrl,
 } from "../http/index.js";
-import { routeToIntent, runBuiltin, type BuiltinIntent, type MockSource, type MockStore, type PaginationMode } from "../mock/index.js";
+import {
+  routeToIntent,
+  runBuiltin,
+  type BuiltinIntent,
+  type MockSource,
+  type MockStore,
+  type PaginationMode,
+} from "../mock/index.js";
 import { transformKeys, type KeyCase } from "../transform/keys.js";
 import type { QueryArrayFormat } from "../types/definition.js";
 import type { HeadersSource, HttpMethod, PathParams, QueryParams } from "../types/http.js";
-import type { ErrorMiddleware, RequestMiddleware, ResponseMiddleware } from "../types/middleware.js";
+import type {
+  ErrorMiddleware,
+  RequestMiddleware,
+  ResponseMiddleware,
+} from "../types/middleware.js";
 import type { ResolvedRetryConfig } from "../types/retry.js";
 import type { ApiRequest, ApiResponse, RequestOptions, Transport } from "../types/transport.js";
-import { computeBackoffMs, decideRetry, delay, parseRetryAfter, resolveRetryConfig } from "./retry.js";
+import {
+  computeBackoffMs,
+  decideRetry,
+  delay,
+  parseRetryAfter,
+  resolveRetryConfig,
+} from "./retry.js";
 
 /** Client-wide state, fixed at construction. */
 export interface ClientRuntime {
@@ -85,7 +109,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return proto === Object.prototype || proto === null;
 }
 
-function transformQuery(query: QueryParams | undefined, to: KeyCase | undefined): QueryParams | undefined {
+function transformQuery(
+  query: QueryParams | undefined,
+  to: KeyCase | undefined,
+): QueryParams | undefined {
   if (!query || !to) return query;
   return transformKeys(query, to) as QueryParams;
 }
@@ -120,12 +147,21 @@ function createCallSignal(timeout: number | undefined, external: AbortSignal | u
  * Normalize anything thrown during a call. Cancellation is decided by our own signal state, so a
  * timeout is never reported as a user abort (or vice versa) and neither looks like an HTTP error.
  */
-function classify(error: unknown, signal: AbortSignal, timedOut: boolean, request?: ApiRequest): unknown {
+function classify(
+  error: unknown,
+  signal: AbortSignal,
+  timedOut: boolean,
+  request?: ApiRequest,
+): unknown {
   if (signal.aborted && !(error instanceof HttpError)) {
     if (timedOut) {
-      return error instanceof TimeoutError ? attach(error, request) : new TimeoutError(undefined, { request, cause: error });
+      return error instanceof TimeoutError
+        ? attach(error, request)
+        : new TimeoutError(undefined, { request, cause: error });
     }
-    return error instanceof AbortError ? attach(error, request) : new AbortError(undefined, { request, cause: signal.reason ?? error });
+    return error instanceof AbortError
+      ? attach(error, request)
+      : new AbortError(undefined, { request, cause: signal.reason ?? error });
   }
   if (error instanceof ApiError) return attach(error, request);
   return error;
@@ -141,22 +177,33 @@ function throwIfAborted(signal: AbortSignal): void {
 }
 
 function assertRequest(value: unknown, where: string): ApiRequest {
-  if (!value || typeof value !== "object") throw new ConfigError(`${where} must return a request object (or nothing).`);
+  if (!value || typeof value !== "object")
+    throw new ConfigError(`${where} must return a request object (or nothing).`);
   const req = value as ApiRequest;
   for (const key of REQUEST_KEYS) {
     if (!(key in req)) throw new ConfigError(`${where} returned a request without "${key}".`);
   }
-  if (!(req.headers instanceof Headers)) throw new ConfigError(`${where} returned a request whose headers is not a Headers instance.`);
-  if (typeof req.url !== "string") throw new ConfigError(`${where} returned a request with a non-string url.`);
+  if (!(req.headers instanceof Headers))
+    throw new ConfigError(`${where} returned a request whose headers is not a Headers instance.`);
+  if (typeof req.url !== "string")
+    throw new ConfigError(`${where} returned a request with a non-string url.`);
   return req;
 }
 
 function assertResponse(value: unknown, where: string): ApiResponse<unknown> {
-  if (!value || typeof value !== "object" || !("data" in value) || typeof (value as { status?: unknown }).status !== "number") {
-    throw new ConfigError(`${where} must return a response object { data, status, headers, request } (or nothing).`);
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("data" in value) ||
+    typeof (value as { status?: unknown }).status !== "number"
+  ) {
+    throw new ConfigError(
+      `${where} must return a response object { data, status, headers, request } (or nothing).`,
+    );
   }
   const res = value as ApiResponse<unknown>;
-  if (!(res.headers instanceof Headers)) throw new ConfigError(`${where} returned a response whose headers is not a Headers instance.`);
+  if (!(res.headers instanceof Headers))
+    throw new ConfigError(`${where} returned a response whose headers is not a Headers instance.`);
   return res;
 }
 
@@ -213,12 +260,14 @@ export async function runOperation(
 
     for (const hook of op.onRequest) {
       const next = await hook(request);
-      if (next !== undefined) request = assertRequest(next, `request middleware for ${resource.name}.${op.name}`);
+      if (next !== undefined)
+        request = assertRequest(next, `request middleware for ${resource.name}.${op.name}`);
       throwIfAborted(signal);
     }
 
     const hasBody = call.hasBody ?? op.hasBody;
-    const wireBody = hasBody && op.requestKeys ? transformKeys(request.body, op.requestKeys) : request.body;
+    const wireBody =
+      hasBody && op.requestKeys ? transformKeys(request.body, op.requestKeys) : request.body;
 
     let status: number;
     let responseHeaders: Headers;
@@ -229,9 +278,14 @@ export async function runOperation(
       // Mocked resources execute the resolved operation against the store. They never reach a
       // transport, whatever the URL looks like after middleware.
       const { store, source } = resource.mock;
-      const wire = { query: request.query as Record<string, unknown> | undefined, body: hasBody ? wireBody : undefined };
+      const wire = {
+        query: request.query as Record<string, unknown> | undefined,
+        body: hasBody ? wireBody : undefined,
+      };
       const relative = interpolatePath(call.relativePath ?? op.relativePath, call.params);
-      const intent = call.intent ? call.intent(wire) : routeToIntent(request.method, relative, wire.query, wire.body, source.label);
+      const intent = call.intent
+        ? call.intent(wire)
+        : routeToIntent(request.method, relative, wire.query, wire.body, source.label);
       const result = await runBuiltin(store, source, intent, resource.pagination);
       throwIfAborted(signal);
       status = result.status;
@@ -239,7 +293,15 @@ export async function runOperation(
       data = result.data;
     } else {
       assertSameOrigin(request.url, origin!);
-      const response = await sendWithRetry(client, op, request, hasBody ? wireBody : undefined, options, signal, call.allow404 === true);
+      const response = await sendWithRetry(
+        client,
+        op,
+        request,
+        hasBody ? wireBody : undefined,
+        options,
+        signal,
+        call.allow404 === true,
+      );
       status = response.status;
       responseHeaders = response.headers;
       raw = response.raw;
@@ -254,7 +316,8 @@ export async function runOperation(
     let response: ApiResponse<unknown> = { data, status, headers: responseHeaders, request, raw };
     for (const hook of op.onResponse) {
       const next = await hook(response);
-      if (next !== undefined) response = assertResponse(next, `response middleware for ${resource.name}.${op.name}`);
+      if (next !== undefined)
+        response = assertResponse(next, `response middleware for ${resource.name}.${op.name}`);
     }
     return options.full ? response : response.data;
   } catch (thrown) {
@@ -295,7 +358,8 @@ async function sendWithRetry(
   signal: AbortSignal,
   allow404: boolean,
 ) {
-  const retry = options.retry !== undefined ? resolveRetryConfig(options.retry, "options.retry") : op.retry;
+  const retry =
+    options.retry !== undefined ? resolveRetryConfig(options.retry, "options.retry") : op.retry;
   const headers = new Headers(request.headers);
   const body = serializeBody(wireBody, headers);
   const replayable = isReplayable(body);
@@ -313,7 +377,10 @@ async function sendWithRetry(
         signal,
         responseType: options.responseType,
       });
-      if ((response.status >= 200 && response.status < 300) || (allow404 && response.status === 404)) {
+      if (
+        (response.status >= 200 && response.status < 300) ||
+        (allow404 && response.status === 404)
+      ) {
         return response;
       }
       failedResponse = {
@@ -335,14 +402,24 @@ async function sendWithRetry(
       failure =
         error instanceof ApiError
           ? error
-          : new NetworkError(error instanceof Error ? error.message : "Network request failed", { cause: error });
+          : new NetworkError(error instanceof Error ? error.message : "Network request failed", {
+              cause: error,
+            });
       failure.request ??= request;
       failure.attempt = attempt;
     }
 
-    const ctx = { request, response: failedResponse, attempt, method: request.method, error: failure };
+    const ctx = {
+      request,
+      response: failedResponse,
+      attempt,
+      method: request.method,
+      error: failure,
+    };
     const retryAfter =
-      retry?.respectRetryAfter && failedResponse ? parseRetryAfter(failedResponse.headers.get("retry-after")) : undefined;
+      retry?.respectRetryAfter && failedResponse
+        ? parseRetryAfter(failedResponse.headers.get("retry-after"))
+        : undefined;
     const canRetry =
       retry !== undefined &&
       replayable &&

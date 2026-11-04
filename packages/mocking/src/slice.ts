@@ -39,7 +39,9 @@ export function assertSliceConfig(slice: unknown, label: string): asserts slice 
     );
   }
   if (end < start) {
-    throw new InvalidSliceError(`${label}: slice.end (${end}) must not be before slice.start (${start}).`);
+    throw new InvalidSliceError(
+      `${label}: slice.end (${end}) must not be before slice.start (${start}).`,
+    );
   }
 }
 

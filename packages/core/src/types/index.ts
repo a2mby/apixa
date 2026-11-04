@@ -1,4 +1,11 @@
-export type { HttpMethod, PathParams, QueryParams, HeadersInitLike, HeadersSource, BuiltinHeaders } from "./http.js";
+export type {
+  HttpMethod,
+  PathParams,
+  QueryParams,
+  HeadersInitLike,
+  HeadersSource,
+  BuiltinHeaders,
+} from "./http.js";
 
 export type {
   ApiRequest,

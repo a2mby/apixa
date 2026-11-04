@@ -199,7 +199,7 @@ The intended responsibilities are:
 - `transport-fetch`: Fetch transport implementation, if separation proves useful.
 - `client`: Browser-specific configuration and behavior.
 - `server`: Server-specific configuration and behavior.
-- `mocking`: **Implemented (v0.5.0; syntax flattened in v0.9.0)** — local JSON datasets, `defineMockApi()`, and resource-level `mock: "<dataset-id>"` with sibling `slice` / `pagination` (optional Core peer; lazy `@apixa/mocking/register` — Core does not embed a mock engine).
+- `mocking`: **Implemented (redesigned in #58)** — resource `mock` is a data source (`"<dataset-id>"`, inline records, a provider, or `{ data, idKey, seed }`) executed by Core's client-scoped engine; `@apixa/mocking` ships lazily loaded dataset records and `defineMockApi()` on the same engine. See ADR 003.
 - `tanstack-query`: Optional TanStack Query integration (planned).
 - `openapi`: OpenAPI interoperability (planned).
 
@@ -272,7 +272,7 @@ This roadmap describes possible future capabilities. Do not implement them all a
 - Do not duplicate types unnecessarily.
 - Do not silently invent endpoint behavior.
 - Do not require generated operations when a custom endpoint is more appropriate.
-- Do not couple mocking to production request execution.
+- Mocking is an explicit, client-scoped branch of the one execution pipeline (ADR 003) — never a global switch, and a mocked resource never falls back to the network.
 - Do not expose server secrets to browser code.
 - Do not build caching, state management, or framework integrations into Core.
 - Do not add abstractions merely because they may be useful someday.

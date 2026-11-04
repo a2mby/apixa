@@ -4,7 +4,10 @@ import type { ResponseType } from "./transport.js";
 import type { BuiltinConventionName } from "../operation/conventions.js";
 
 /** The original 5 CRUD builtins. */
-export type BuiltinOpName = Extract<BuiltinConventionName, "getAll" | "getById" | "create" | "update" | "delete">;
+export type BuiltinOpName = Extract<
+  BuiltinConventionName,
+  "getAll" | "getById" | "create" | "update" | "delete"
+>;
 
 /** The 11 builtins beyond the original 5 (the `extended` group). */
 export type ExtendedBuiltinOpName = Exclude<BuiltinConventionName, BuiltinOpName>;

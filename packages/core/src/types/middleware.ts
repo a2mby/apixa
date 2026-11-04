@@ -1,7 +1,9 @@
 import type { ApiRequest, ApiResponse } from "./transport.js";
 
 /** Runs once per logical request, before transport. Return a request (or nothing to keep it). */
-export type RequestMiddleware = (request: ApiRequest) => ApiRequest | void | Promise<ApiRequest | void>;
+export type RequestMiddleware = (
+  request: ApiRequest,
+) => ApiRequest | void | Promise<ApiRequest | void>;
 
 /** Runs after response key transforms. Return a response (or nothing to keep it). */
 export type ResponseMiddleware = (
