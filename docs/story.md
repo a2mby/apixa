@@ -2,6 +2,16 @@
 
 Project log. Newest entry first.
 
+## 2026-11-04 — Land v0.11.0 harden leftovers (#54)
+
+Closed the stacked post-v0.10 hardening that had to wait for a separate issue: `ParseError` on
+malformed declared-JSON bodies, a single `decideRetry` per failed attempt, and
+`useResourceMutation` for builtins/custom ops outside `useResourceQuery`. Froze
+`versions/v0.11.0/` and added `docs/study-guide.md`. Several acceptance items (mock store clone,
+extended mock routes, `readOnly` / pagination typing, path validation, composed-builtin delegation)
+had already shipped inside the v0.10.0 land via shared files — this issue documents that and lands
+the remaining dedicated pieces.
+
 ## 2026-11-04 — Land v0.10.0 fully customizable resource operations (#52)
 
 Shipped `operations` as config object, function, or `false` per key on both `defineApi` and

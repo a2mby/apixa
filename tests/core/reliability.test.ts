@@ -109,6 +109,61 @@ describe("request reliability", () => {
     expect(attempts).toBe(2);
   });
 
+  it("calls a custom shouldRetry exactly once per failed HTTP attempt (v0.11.0 fix)", async () => {
+    let attempts = 0;
+    let shouldRetryCalls = 0;
+
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      retry: {
+        retries: 2,
+        baseDelayMs: 1,
+        jitter: false,
+        shouldRetry: ({ attempt }) => {
+          shouldRetryCalls += 1;
+          return attempt < 2;
+        },
+      },
+      transport: createFakeTransport(() => {
+        attempts += 1;
+        return { status: 503, body: { detail: "unavailable" } };
+      }),
+      users: { path: "/users" },
+    });
+
+    await expect(api.users.getAll()).rejects.toBeInstanceOf(HttpError);
+    expect(attempts).toBe(3);
+    // One shouldRetry call per attempt (3), not two (which would double any side effect it has).
+    expect(shouldRetryCalls).toBe(3);
+  });
+
+  it("sets HttpError.retryable consistently with the actual retry decision (v0.11.0 fix)", async () => {
+    const seenRetryable: boolean[] = [];
+
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      retry: {
+        retries: 1,
+        baseDelayMs: 1,
+        jitter: false,
+        shouldRetry: ({ error }) => {
+          if (error instanceof HttpError) seenRetryable.push(error.retryable);
+          return false;
+        },
+      },
+      transport: createFakeTransport(() => ({ status: 503, body: {} })),
+      users: { path: "/users" },
+    });
+
+    const error = await api.users.getAll().catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(HttpError);
+    // shouldRetry returned false, so the thrown error's `.retryable` must also be false —
+    // previously these could disagree, since the metadata and the decision were two separate
+    // decideRetry calls with different `error` values.
+    expect((error as HttpError).retryable).toBe(false);
+    expect(seenRetryable).toEqual([false]);
+  });
+
   it("stops retry backoff when the caller aborts", async () => {
     vi.useFakeTimers();
     try {

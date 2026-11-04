@@ -64,9 +64,22 @@ Apixa doesn't pretend the route exists, it just doesn't require you to opt in by
 `@apixa/mocking` mirrors the same always-on, add/remove/override surface on its own resources
 (both `mock: "<dataset-id>"` and `defineMockApi`), implemented as in-memory data operations rather
 than new HTTP routes. A Core mock resource gets the same `operations`-generated methods as a live
-one — `mock` only swaps the transport. The mock store simulates the wire shapes it already
-understands (including `patch` / `upsert` on `/:id`); routes it does not know still 404 — the same
-honesty as an unimplemented real backend route.
+one — `mock` only swaps the transport. As of v0.11.0, the mock bridge also simulates `getBySlug`,
+`count`, `search`, `bulkCreate`, and `bulkDelete` (`patch`/`upsert` already worked via `/:id`), and
+accepts the same `operations` override (`false`, or `{ method?, path? }`) for those names. A
+genuinely new custom **function** operation still 404s against the bridge — same honesty as an
+unimplemented real backend route.
+
+## Pagination and read-only resources (v0.11.0)
+
+- `pagination?: "page" | "cursor"` on a resource — type-only, like `entity` / `list` / `query`.
+  Absent by default: zero behavior or type change. `"page"` types `getAll` as
+  `{ data, total, page, pageSize }` with a `page`/`pageSize` query; `"cursor"` types it as
+  `{ data, nextCursor }` with a `cursor`/`pageSize` query. Apixa does not parse or invent this
+  envelope — it only shapes types.
+- `readOnly?: boolean` on a resource — sugar for `operations: { create: false, update: false,
+patch: false, upsert: false, delete: false, bulkCreate: false, bulkDelete: false }`. An explicit
+  `operations` entry for any of those 7 names still overrides the shorthand.
 
 ## Types
 
