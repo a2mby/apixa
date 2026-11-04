@@ -46,6 +46,7 @@ flowchart TD
 4. **Native promises** — no custom Promise wrappers in Core.
 5. **Framework-agnostic** — Core must not depend on React, Next.js, or TanStack Query.
 6. **Transport-backed** — HTTP runs through a `Transport` interface; Fetch is the default implementation and stays **inside Core** until a package split is justified.
+7. **Operations are add / remove / override, by name** (v0.10.0) — `operations` accepts a config object, a function, or `false` per key. `false` removes a builtin; a function runs through the same pipeline via a bound `ctx.request()`. 11 builtins added in v0.10.0 (`getBySlug`, `patch`, `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`, `findFirst`, `getBy`) are always-on, the same default-first treatment as the original 5 (see [conventions.md](./conventions.md#operation-customization-v0100)).
 
 See also:
 
@@ -55,11 +56,11 @@ See also:
 ## Request flow
 
 1. Caller invokes a resource operation (for example `api.users.getById("123")`).
-2. Core builds path, query, headers, and body from the definition and call arguments.
+2. **Config-object operations:** Core builds path, query, headers, and body from the definition and call arguments. **Function operations:** Core calls the function with a bound `ctx.request()` helper; the function decides what to send.
 3. Optional `middleware` runs once around the logical call (including retries).
 4. Core calls `transport.request(...)` (with opt-in retry on safe failures).
 5. On success, Core returns typed data as `Promise<T>` (response body unwrapped).
-6. On failure, Core throws a standardized `ApiError` subclass (`HttpError`, `NetworkError`, `AbortError`, `TimeoutError`, etc.).
+6. On failure, Core throws a standardized `ApiError` subclass (`HttpError`, `NetworkError`, `AbortError`, `TimeoutError`, etc.) — the same for both operation styles.
 
 ## Source map (`packages/core`)
 

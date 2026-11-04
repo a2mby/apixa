@@ -1,4 +1,10 @@
 import type {
+  AllBuiltinOpName,
+  BuiltinOpName,
+  ExtendedBuiltinOpName,
+  OperationFnContext,
+} from "./builtins.js";
+import type {
   ApiRootConfig,
   OperationDefinition,
   ReservedApiConfigKey,
@@ -8,7 +14,7 @@ import type { OperationExtensions } from "./extensions.js";
 import type { PathParams, QueryParams } from "./http.js";
 import type { ApiResponse, RequestOptions } from "./transport.js";
 
-export type BuiltinOpName = "getAll" | "getById" | "create" | "update" | "delete";
+export type { BuiltinOpName, ExtendedBuiltinOpName, AllBuiltinOpName } from "./builtins.js";
 
 type EntityOf<R> = R extends { entity: infer E } ? E : unknown;
 
@@ -32,6 +38,24 @@ export type QueryOf<R> = R extends { query: infer Q }
     : Q
   : QueryParams;
 
+/**
+ * Opt-in `getAll` envelope (v0.11.0). A resource with no `pagination` field behaves exactly as
+ * before — `ListOf<R>` — zero type (or runtime) change unless declared. This only shapes types;
+ * Apixa does not parse or invent a pagination envelope the backend didn't actually return.
+ */
+export type PaginatedListOf<R> = R extends { pagination: "page" }
+  ? { data: ListOf<R>; total: number; page: number; pageSize: number }
+  : R extends { pagination: "cursor" }
+    ? { data: ListOf<R>; nextCursor: string | null }
+    : ListOf<R>;
+
+/** `getAll`'s query shape gains `page`/`pageSize` or `cursor`/`pageSize` when `pagination` is set. */
+export type PaginationQueryOf<R> = R extends { pagination: "page" }
+  ? QueryOf<R> & { page?: number; pageSize?: number }
+  : R extends { pagination: "cursor" }
+    ? QueryOf<R> & { cursor?: string; pageSize?: number }
+    : QueryOf<R>;
+
 /** Derived create body: `Omit<Entity, "id">` when `entity` is set. */
 type CreateOf<R> = R extends { entity: infer E } ? Omit<E, "id"> : unknown;
 
@@ -39,12 +63,41 @@ type CreateOf<R> = R extends { entity: infer E } ? Omit<E, "id"> : unknown;
 type UpdateOf<R> = R extends { entity: infer E } ? Partial<E> : unknown;
 
 type EntityBuiltinOps<R> = {
-  getAll: { path: ""; response: ListOf<R>; query: QueryOf<R> };
+  getAll: { path: ""; response: PaginatedListOf<R>; query: PaginationQueryOf<R> };
   getById: { path: "/:id"; response: EntityOf<R> };
   create: { path: ""; body: CreateOf<R>; response: EntityOf<R> };
   update: { path: "/:id"; body: UpdateOf<R>; response: EntityOf<R> };
   delete: { path: "/:id"; response: void };
 };
+
+/**
+ * Default shapes for the 10 builtins added in v0.10.0 — always-on for a resource with `path`,
+ * same as the original 5. `getBySlug` / `patch` / `upsert` / `count` / `search` / `bulkCreate` /
+ * `bulkDelete` are config-object conventions (same inference pipeline as the original 5).
+ * `exists` / `findFirst` / `getMany` / `getBy` are composed from `getById` / `getAll` and declared
+ * as plain function signatures — no new backend route is assumed for them.
+ */
+type ExtendedBuiltinOps<R> = {
+  getBySlug: { path: "/slug/:slug"; response: EntityOf<R> };
+  patch: { path: "/:id"; body: Partial<EntityOf<R>>; response: EntityOf<R> };
+  upsert: { path: "/:id"; body: Partial<EntityOf<R>>; response: EntityOf<R> };
+  count: { path: "/count"; response: number; query: QueryOf<R> };
+  search: { path: "/search"; response: ListOf<R>; query: QueryOf<R> };
+  bulkCreate: { path: "/bulk"; body: CreateOf<R>[]; response: EntityOf<R>[] };
+  bulkDelete: { path: "/bulk"; body: (string | number)[]; response: void };
+  getMany: (ids: (string | number)[]) => Promise<EntityOf<R>[]>;
+  exists: (id: string | number) => Promise<boolean>;
+  findFirst: (query?: QueryOf<R>) => Promise<EntityOf<R> | null>;
+  /** General escape hatch: GET by any field/path and a value — `":name"` interpolates, else appends. */
+  getBy: (fieldOrPath: string, value: string | number) => Promise<EntityOf<R>>;
+};
+
+type AllBuiltinOps<R> = EntityBuiltinOps<R> & ExtendedBuiltinOps<R>;
+
+/** Strip the leading `OperationFnContext` parameter a runtime custom-operation function takes. */
+type StripCtx<F> = F extends (ctx: OperationFnContext, ...args: infer A) => infer Ret
+  ? (...args: A) => Ret
+  : F;
 
 type DefaultPath<Name extends string> = Name extends "getById" | "update" | "delete" ? "/:id" : "";
 
@@ -177,49 +230,93 @@ type MergeOp<Base, Override> = [Override] extends [never]
   ? Base
   : [Override] extends [undefined]
     ? Base
-    : Omit<Base, keyof Override> & Override;
+    : Override extends (...args: never[]) => unknown
+      ? StripCtx<Override> // developer supplied a function override/implementation
+      : Base extends (...args: never[]) => unknown
+        ? Base // composed builtin (exists/findFirst/getMany) — object override doesn't change the signature
+        : Omit<Base, keyof Override> & Override;
 
-/** Declared `operations` on the resource state (may include type-only fields). */
+/** Declared `operations` on the resource state (may include type-only fields). `false` (removal) is excluded. */
 export type ResourceOpsOf<R> = R extends { operations?: infer Ops }
   ? [Ops] extends [undefined]
     ? {}
     : Ops extends Record<string, unknown>
       ? {
-          [K in keyof Ops as [Ops[K]] extends [undefined] ? never : K]-?: Exclude<
-            Ops[K],
-            undefined
-          >;
+          [
+            K in keyof Ops as [Ops[K]] extends [undefined]
+              ? never
+              : [Ops[K]] extends [false]
+                ? never
+                : K
+          ]-?: Exclude<Ops[K], undefined | false>;
         }
       : {}
   : {};
 
-type EffectiveOpDef<Name extends BuiltinOpName, R> = Name extends keyof ResourceOpsOf<R>
-  ? MergeOp<EntityBuiltinOps<R>[Name], ResourceOpsOf<R>[Name]>
-  : EntityBuiltinOps<R>[Name];
+/** Raw `operations` entries, including `false` — used only to detect removed builtins. */
+type RawOperations<R> = R extends { operations?: infer Ops }
+  ? [Ops] extends [undefined]
+    ? {}
+    : Ops
+  : {};
 
-/** Builtins from entity ∪ declared operations; overrides refine individual ops. */
+type RemovedOpName<R> = {
+  [K in keyof RawOperations<R>]: RawOperations<R>[K] extends false ? K : never;
+}[keyof RawOperations<R>];
+
+/** The 7 write-op names `readOnly: true` removes, same set `operation/expand.ts` uses at runtime. */
+type WriteOpName =
+  "create" | "update" | "patch" | "upsert" | "delete" | "bulkCreate" | "bulkDelete";
+
+/** `readOnly: true` removes the 7 write ops, unless `operations` has its own explicit entry for one. */
+type ReadOnlyRemovedOpName<R> = R extends { readOnly: true }
+  ? Exclude<WriteOpName, keyof RawOperations<R>>
+  : never;
+
+/** All 16 builtins (original 5 + the 10 added in v0.10.0) are always-on, minus any set to `false`
+ *  or implicitly removed by `readOnly: true`. */
+type KnownOpName<R> = Exclude<AllBuiltinOpName, RemovedOpName<R> | ReadOnlyRemovedOpName<R>>;
+
+type EffectiveOpDef<Name extends AllBuiltinOpName, R> = Name extends keyof ResourceOpsOf<R>
+  ? MergeOp<AllBuiltinOps<R>[Name], ResourceOpsOf<R>[Name]>
+  : AllBuiltinOps<R>[Name];
+
+/** The client method type for a known (always-on or referenced opt-in) builtin. */
+type ClientFnFor<Name extends AllBuiltinOpName, R> =
+  EffectiveOpDef<Name, R> extends (...args: never[]) => unknown
+    ? EffectiveOpDef<Name, R>
+    : OperationFn<R, Name, EffectiveOpDef<Name, R>>;
+
+/** Fully custom operation names — not one of the 16 known builtins. */
+type CustomOpName<R> = Exclude<keyof ResourceOpsOf<R>, BuiltinOpName | ExtendedBuiltinOpName>;
+
+type CustomClientFn<R, K> = K extends keyof ResourceOpsOf<R>
+  ? ResourceOpsOf<R>[K] extends (...args: never[]) => unknown
+    ? StripCtx<ResourceOpsOf<R>[K]>
+    : OperationFn<
+        R,
+        Extract<K, string>,
+        ResourceOpsOf<R>[K] & OperationDefinition & OperationExtensions
+      >
+  : never;
+
+/** All 16 always-on builtins (minus any set to `false`) ∪ fully custom declared operations. */
 export type EffectiveOps<R> = {
-  [K in BuiltinOpName]: EffectiveOpDef<K, R>;
+  [K in KnownOpName<R>]: EffectiveOpDef<K, R>;
 } & {
-  [K in Exclude<keyof ResourceOpsOf<R>, BuiltinOpName>]: ResourceOpsOf<R>[K];
+  [K in CustomOpName<R>]: ResourceOpsOf<R>[K];
 };
 
 /**
- * Resource client with **required** builtin method keys so IDEs complete
- * `api.users.getAll` / `getById` / … without ReturnType hacks.
+ * Resource client with **required** builtin method keys for all 16 always-on operations (original
+ * 5 + the 10 added in v0.10.0, minus any set to `false`) so IDEs complete `api.users.getAll` /
+ * `getById` / `count` / `exists` / … without ReturnType hacks, plus any fully custom operation the
+ * resource declares.
  */
 export type ResourceClient<R extends { path: string } = { path: string }> = {
-  getAll: OperationFn<R, "getAll", EffectiveOpDef<"getAll", R>>;
-  getById: OperationFn<R, "getById", EffectiveOpDef<"getById", R>>;
-  create: OperationFn<R, "create", EffectiveOpDef<"create", R>>;
-  update: OperationFn<R, "update", EffectiveOpDef<"update", R>>;
-  delete: OperationFn<R, "delete", EffectiveOpDef<"delete", R>>;
+  [K in KnownOpName<R>]: ClientFnFor<K, R>;
 } & {
-  [K in Exclude<keyof ResourceOpsOf<R>, BuiltinOpName>]: OperationFn<
-    R,
-    Extract<K, string>,
-    ResourceOpsOf<R>[K] & OperationDefinition & OperationExtensions
-  >;
+  [K in CustomOpName<R>]: CustomClientFn<R, K>;
 };
 
 /** Drop reserved / non-resource keys via key remapping (not `never` values). */

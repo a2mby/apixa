@@ -42,7 +42,24 @@ describe("defineMockApi: configuration", () => {
     expect(Object.keys(api)).toEqual(["users", "products", "countries"]);
     for (const resource of Object.values(api)) {
       expect(Object.keys(resource).sort()).toEqual(
-        ["create", "delete", "getAll", "getById", "patch", "update"].sort(),
+        [
+          "bulkCreate",
+          "bulkDelete",
+          "count",
+          "create",
+          "delete",
+          "exists",
+          "findFirst",
+          "getAll",
+          "getBy",
+          "getById",
+          "getBySlug",
+          "getMany",
+          "patch",
+          "search",
+          "update",
+          "upsert",
+        ].sort(),
       );
     }
   });
@@ -71,11 +88,11 @@ describe("defineMockApi: configuration", () => {
   });
 
   it("rejects unsupported options such as handlers, path, mock, and mockConfig", async () => {
-    for (const option of ["handlers", "path", "baseURL", "mock", "mockConfig", "operations"]) {
+    for (const option of ["handlers", "path", "baseURL", "mock", "mockConfig"]) {
       await expectCode(
         () => defineMockApi({ a: { type: "users-mock", [option]: true } as never }),
         "INVALID_CONFIG",
-        new RegExp(`unsupported option "${option}".*type, slice, pagination`),
+        new RegExp(`unsupported option "${option}".*type, slice, pagination, operations`),
       );
     }
     // The compiler rejects them too.

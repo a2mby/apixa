@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### Added (v0.10.0)
+
+- `@apixa/core` — a resource's `operations` accepts a config object, a function, or `false` per
+  key:
+  - **Function** — `(ctx, ...args) => Promise<T>`, called exactly like a generated operation
+    (`api.resource.<name>(...)`). `ctx.request(init)` runs through Core's normal pipeline
+    (headers, retry, middleware, error classification).
+  - **`false`** — removes a builtin from the generated client. Removing an inactive name is a
+    no-op.
+  - `operations` suggests the 16 known operation names for autocomplete while still accepting
+    arbitrary custom keys.
+- 11 new builtins, **always-on** for any resource with a `path` — same default-first treatment
+  as the original 5 since v0.2.0, no `operations` entry needed: `getBySlug`, `patch`, `upsert`,
+  `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`, `findFirst`, `getBy`.
+  `exists` / `findFirst` / `getMany` / `getBy` are composed over `getById` / `getAll` — no new
+  backend route assumed. `getBy(fieldOrPath, value)` is a general lookup escape hatch: a
+  `:placeholder` interpolates, otherwise the value is appended as a path segment.
+- `@apixa/mocking` — the same always-on add / remove / override surface on mock resources (`mock:
+"<dataset-id>"` and `defineMockApi`), implemented as in-memory data operations.
+  `MockOperationContext` (`ctx.rows()`, `ctx.defaults`) lets a custom mock operation read/write
+  the resource's rows or reuse the default CRUD.
+
 ### Breaking (v0.9.0)
 
 - `@apixa/core` / `@apixa/mocking` — resource mocking is now `mock: "<dataset-id>"` (string). Removed `mock: true` / `false` and `mockConfig`. Put `pagination` next to `path` / `slice` / `mock`.

@@ -21,8 +21,10 @@ export type {
   ReservedApiConfigKey,
   ApiRootConfig,
   ApiState,
+  ApiStateOf,
   ResourceState,
   OperationState,
+  OperationsBag,
   ResourceTypeOnlyKey,
   OperationTypeOnlyKey,
   ResourceRuntimeInput,
@@ -42,6 +44,14 @@ export type { ApiErrorCode } from "./errors.js";
 
 export type {
   BuiltinOpName,
+  ExtendedBuiltinOpName,
+  AllBuiltinOpName,
+  OperationFn,
+  OperationFnContext,
+  OperationFnRequestInit,
+} from "./builtins.js";
+
+export type {
   EffectivePath,
   EffectiveOps,
   ResourceOpsOf,

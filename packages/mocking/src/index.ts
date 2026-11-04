@@ -19,7 +19,16 @@ export type {
   MockApiResourceInput,
   MockResourceConfig,
 } from "./mock-api.js";
-export type { MockResource, Page, PageParams, ResourceInput } from "./resource.js";
+export type {
+  MockResource,
+  MockResourceDefaults,
+  MockOperationContext,
+  MockOperationFn,
+  MockOperationValue,
+  Page,
+  PageParams,
+  ResourceInput,
+} from "./resource.js";
 export { MockingErrors, InvalidSliceError, MockApiError, type MockApiErrorCode } from "./errors.js";
 export type { MockSlice } from "./slice.js";
 export type { DatasetId } from "./catalog.js";

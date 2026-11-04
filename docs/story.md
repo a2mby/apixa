@@ -2,6 +2,59 @@
 
 Project log. Newest entry first.
 
+## 2026-11-04 — Land v0.10.0 fully customizable resource operations (#52)
+
+Shipped `operations` as config object, function, or `false` per key on both `defineApi` and
+`@apixa/mocking`, with 11 always-on builtins (`getBySlug`, `patch`, `upsert`, `count`, `search`,
+`bulkCreate`, `bulkDelete`, `getMany`, `exists`, `findFirst`, `getBy`) next to the original CRUD
+five. Custom ops call as `api.resource.<name>()`; suggested-keys typing covers all 16 names.
+Acceptance criteria for `versions/v0.10.0/` checked. Follow-up hardening (parse failures, mock
+bridge gaps, TanStack coverage) stays for a separate v0.11.0 issue — some shared-file prep already
+rode along in this tree and will be scoped there.
+
+## 2026-11-02 — Revise v0.10.0 builtins to always-on; add `getBy` (#52)
+
+Direction change, by direct user request: the 11 builtins added in v0.10.0 (10 originally scoped
+
+- a new `getBy` general lookup) flip from opt-in-only to **always-on** for any resource with a
+  `path` — the same default-first treatment the original 5 have had since v0.2.0. No `operations`
+  entry is needed to call `api.users.count()`, `api.users.exists(id)`, etc.; `false` still removes
+  one by name. Added `getBy(fieldOrPath, value)`: a `:placeholder` in the first argument
+  interpolates, otherwise the value is appended as a path segment — a general escape hatch for a
+  one-off custom field/key lookup without a preset convention. Mirrored on `@apixa/mocking`
+  (`getBy` finds by any given field name against the in-memory store). Simplified Core's
+  `inference.ts` (the old "referenced opt-in" branch collapses into the same always-on branch as the
+  original 5). Updated `tests/core/default-operations.test.ts`, `tests/core/define-api.test.ts`,
+  `tests/mocking/mock-api.test.ts` (now expect all 16 names), `examples/next/lib/api.ts`
+  (simplified — builtins no longer need declaring), and all v0.10.0 planning docs + `docs/conventions.md`
+  / `docs/context.md` / `docs/architecture.md` / `CHANGELOG.md` to match. `pnpm typecheck` and
+  `pnpm test` (188 tests, 27 files) pass. Still uncommitted on `task/52-customizable-resource-operations`.
+
+## 2026-11-02 — Implement v0.10.0 Fully customizable resource operations (#52)
+
+Shipped `operations` accepting a config object, a function, or `false` per key on both
+`defineApi` and `@apixa/mocking` resources. `false` removes a builtin (no-op if inactive); a
+function runs through a bound `ctx.request()` / `ctx.rows()` + `ctx.defaults` helper instead of
+reimplementing the pipeline, and is called exactly like a generated operation. `operations` now
+suggests the 15 known names via `OperationsBag<V>` while still accepting arbitrary custom keys.
+Added 10 opt-in builtins (`getBySlug`, `patch`, `upsert`, `count`, `search`, `bulkCreate`,
+`bulkDelete`, `getMany`, `exists`, `findFirst`) — never auto-expanded; `exists` / `findFirst` /
+`getMany` are composed over `getById` / `getAll`, not new backend routes. Mirrored the same
+surface on `@apixa/mocking` (`mock: "<dataset-id>"` and `defineMockApi`); documented that the
+generic mock REST store only simulates the wire shapes it already understood (plus `patch` /
+`upsert` for free), the same honesty as an unimplemented real backend route. 33 new tests across
+Core and mocking; `pnpm typecheck` and `pnpm test` (184 tests) pass. Implementation only — not yet
+merged to `main`.
+
+## 2026-11-02 — Start v0.10.0 Fully customizable resource operations
+
+Opened [`versions/v0.10.0/`](../versions/v0.10.0/) to let `operations` accept a config object, a
+function, or `false` per key — on both `defineApi` and `@apixa/mocking` resources — with custom and
+built-in operations surfacing identically as `api.resource.<name>()`. Locks 10 new opt-in builtins
+(`getBySlug`, `patch`, `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`,
+`findFirst`) and suggested-keys typing for `operations` autocomplete. Contract and pointers only — no
+implementation in this kickoff.
+
 ## 2026-11-01 — Land v0.9.0 Flatten Core mock syntax
 
 Shipped `mock: "<dataset-id>"` on `defineApi` resources (removed `mock: true` / `mockConfig`). Resource-level `pagination` sits next to `path` / `slice` / `mock`. Core `MockDatasetIds` lists known catalog ids for autocomplete without importing `@apixa/mocking`. `defineMockApi` accepts string shorthand. Next playground + docs/tests updated.

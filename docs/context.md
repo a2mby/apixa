@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** none open — last shipped [v0.9.0](../versions/v0.9.0/) (Flatten Core mock syntax).
-> Previous: [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`); [v0.7.0](../versions/v0.7.0/); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
+> **Current milestone:** none open — last shipped [v0.10.0](../versions/v0.10.0/) (Fully customizable resource operations, 11 always-on builtins).
+> Previous: [v0.9.0](../versions/v0.9.0/) (Flatten Core mock syntax); [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`); [v0.7.0](../versions/v0.7.0/); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity
@@ -93,7 +93,32 @@ const user = await api.users.getById("123");
 
 Built-in operations: `getAll`, `getById`, `create`, `update`, `delete` (positional args). `create` / `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). Root builtins (`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core — not listed on `AppApi`. Optional runtime `operations` merges overrides and custom endpoints. Call options support `signal` / `timeout`; opt-in `retry` and thin `middleware` ship in v0.6.0.
 
-**Planned later:** `crud<>()` preset, path-param template inference, `idKey`, `getBySlug` / `getByUUID` / `getBy`, runtime schema validation hooks, live pagination conventions.
+**Implemented (v0.10.0):** `operations` accepts a config object, a function, or `false` per key —
+add, remove, or override any operation, on both `defineApi` and `@apixa/mocking` resources. 11 new
+builtins (`getBySlug`, `patch`, `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`,
+`exists`, `findFirst`, `getBy`) are **always-on**, the same default-first treatment as the original
+5 — no `operations` entry needed to use them:
+
+```ts
+const api = defineApi<AppApi>()({
+  baseURL: "https://api.example.com",
+  users: {
+    path: "/users",
+    operations: {
+      delete: false, // remove a builtin
+      archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+    },
+  },
+});
+
+await api.users.exists("123"); // built in, no operations entry needed
+await api.users.getBy("username", "ada"); // general lookup by any field
+await api.users.archive("123"); // fully custom operation
+```
+
+See the full table in [`docs/conventions.md`](./conventions.md#operation-customization-v0100).
+
+**Planned later:** `crud<>()` preset, path-param template inference, `idKey`, runtime schema validation hooks, live pagination conventions for real backends.
 
 Prefer clear semantics. For example, `update()` is a clearer default than an ambiguous operation such as `appendUser()`.
 

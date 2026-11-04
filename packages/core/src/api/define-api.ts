@@ -1,7 +1,7 @@
 import { createFetchTransport } from "../transport/fetch.js";
 import type {
   ApiRootConfig,
-  ApiState,
+  ApiStateOf,
   ResolvedApiConfig,
   ResourceRuntimeInput,
 } from "../types/definition.js";
@@ -21,9 +21,16 @@ const RESERVED_KEYS = new Set([
   "querySerializer",
 ]);
 
-function toHttpResource(value: Record<string, unknown>): ResourceRuntimeInput {
+function toHttpResource(key: string, value: Record<string, unknown>): ResourceRuntimeInput {
+  if (typeof value.path !== "string" || value.path === "") {
+    throw new Error(
+      `defineApi: resource "${key}" is missing a string "path". Every top-level resource needs ` +
+        `a path (e.g. "/${key}") so Apixa can generate its operations.`,
+    );
+  }
+
   const resource: ResourceRuntimeInput = {
-    path: value.path as string,
+    path: value.path,
   };
   if (value.operations !== undefined) {
     resource.operations = value.operations as ResourceRuntimeInput["operations"];
@@ -39,6 +46,9 @@ function toHttpResource(value: Record<string, unknown>): ResourceRuntimeInput {
   }
   if (value.slice !== undefined) {
     resource.slice = value.slice as ResourceRuntimeInput["slice"];
+  }
+  if (value.readOnly !== undefined) {
+    resource.readOnly = value.readOnly as boolean;
   }
   return resource;
 }
@@ -76,7 +86,7 @@ function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient
 
     (client as Record<string, unknown>)[key] = createResourceClient(
       resolved,
-      toHttpResource(value as Record<string, unknown>),
+      toHttpResource(key, value as Record<string, unknown>),
     );
   }
 
@@ -87,7 +97,7 @@ function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient
  * Zustand-style explicit state: `defineApi<AppApi>()({ … })`.
  * Types live on `AppApi`; the runtime object is `ApiInput<AppApi>`.
  */
-export function defineApi<T extends ApiState>(): (config: ApiInput<T>) => ApiClient<T>;
+export function defineApi<T extends ApiStateOf<T>>(): (config: ApiInput<T>) => ApiClient<T>;
 
 /**
  * Infer the client from the runtime config alone (payload types stay `unknown`

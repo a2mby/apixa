@@ -6,7 +6,7 @@ import {
   type IdKeyOf,
 } from "./catalog.js";
 import { MockApiError } from "./errors.js";
-import { createResource, type MockResource } from "./resource.js";
+import { createResource, type MockOperationValue, type MockResource } from "./resource.js";
 import { assertSliceConfig, type MockSlice } from "./slice.js";
 
 export type MockResourceConfig = {
@@ -19,6 +19,11 @@ export type MockResourceConfig = {
   slice?: MockSlice;
   /** `getAll()` returns `{ data, total, page, pageSize }` and accepts `{ page, pageSize }`. */
   pagination?: boolean;
+  /**
+   * Add, remove, or override operations (v0.10.0): `true` enables an opt-in builtin with its
+   * default implementation, `false` removes a builtin, a function fully replaces it.
+   */
+  operations?: Record<string, MockOperationValue>;
 };
 
 /** Per-resource input: dataset id string, or full config object. */
@@ -58,7 +63,7 @@ type ExactInput<C extends MockApiConfigInput> = {
       : never;
 };
 
-const OPTIONS = ["type", "slice", "pagination"];
+const OPTIONS = ["type", "slice", "pagination", "operations"];
 
 function normalizeConfig(config: Record<string, unknown>): MockApiConfig {
   const out: MockApiConfig = {};
@@ -101,7 +106,7 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
       }
     }
 
-    const { type, slice, pagination } = resource as Record<string, unknown>;
+    const { type, slice, pagination, operations } = resource as Record<string, unknown>;
     if (!isDatasetId(type)) {
       throw new MockApiError(
         "UNKNOWN_DATASET",
@@ -116,6 +121,15 @@ function assertConfig(config: unknown): asserts config is MockApiConfig {
       throw new MockApiError(
         "INVALID_CONFIG",
         `${label}: pagination must be a boolean (got ${String(pagination)}).`,
+      );
+    }
+    if (
+      operations !== undefined &&
+      (operations === null || typeof operations !== "object" || Array.isArray(operations))
+    ) {
+      throw new MockApiError(
+        "INVALID_CONFIG",
+        `${label}: operations must be an object of { name: true | false | function }.`,
       );
     }
   }
