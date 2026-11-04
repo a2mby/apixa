@@ -95,29 +95,15 @@ export async function executeRequest<TData>(
           request,
           response,
           attempt,
-          retryable: Boolean(
-            retry &&
-            decideRetry(
-              retry,
-              {
-                request,
-                response,
-                attempt,
-                method: operation.method,
-              },
-              undefined,
-            ),
-          ),
         });
 
-        if (
-          !retry ||
-          !decideRetry(
-            retry,
-            { request, response, attempt, method: operation.method, error: httpError },
-            httpError,
-          )
-        ) {
+        const shouldRetryThis = Boolean(
+          retry &&
+          decideRetry(retry, { request, response, attempt, method: operation.method }, httpError),
+        );
+        httpError.retryable = shouldRetryThis;
+
+        if (!retry || !shouldRetryThis) {
           throw httpError;
         }
 

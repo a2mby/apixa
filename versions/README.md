@@ -20,23 +20,25 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-None — open the next milestone with `/start-version` when ready.
+None — open the next milestone with `/start-version` when ready. **v1.0.0** (first “usable”
+release) is next once you choose to start it.
 
 ## Completed
 
-| Version | Status                                                                       | Path                   |
-| ------- | ---------------------------------------------------------------------------- | ---------------------- |
-| v0.10.0 | Shipped — Fully customizable resource operations, plus 11 always-on builtins | [v0.10.0/](./v0.10.0/) |
-| v0.9.0  | Shipped — Flatten Core mock syntax (`mock: "<dataset-id>"`)                  | [v0.9.0/](./v0.9.0/)   |
-| v0.8.0  | Shipped — Unified TanStack Query resource integration (`useResourceQuery`)   | [v0.8.0/](./v0.8.0/)   |
-| v0.7.0  | Shipped — Thin Core + plugin seams (types, middleware, errors)               | [v0.7.0/](./v0.7.0/)   |
-| v0.6.0  | Shipped — Core request reliability (abort, retries, thin middleware)         | [v0.6.0/](./v0.6.0/)   |
-| v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend                   | [v0.5.0/](./v0.5.0/)   |
-| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing                          | [v0.4.0/](./v0.4.0/)   |
-| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)                            | [v0.3.0/](./v0.3.0/)   |
-| v0.2.0  | Shipped — default-first resource CRUD                                        | [v0.2.0/](./v0.2.0/)   |
-| v0.1.0  | Shipped — opt-in operations foundation                                       | [v0.1.0/](./v0.1.0/)   |
+| Version | Status                                                                                | Path                   |
+| ------- | ------------------------------------------------------------------------------------- | ---------------------- |
+| v0.11.0 | Shipped — Harden v0.10.0 (`ParseError`, single retry decision, `useResourceMutation`) | [v0.11.0/](./v0.11.0/) |
+| v0.10.0 | Shipped — Fully customizable resource operations, plus 11 always-on builtins          | [v0.10.0/](./v0.10.0/) |
+| v0.9.0  | Shipped — Flatten Core mock syntax (`mock: "<dataset-id>"`)                           | [v0.9.0/](./v0.9.0/)   |
+| v0.8.0  | Shipped — Unified TanStack Query resource integration (`useResourceQuery`)            | [v0.8.0/](./v0.8.0/)   |
+| v0.7.0  | Shipped — Thin Core + plugin seams (types, middleware, errors)                        | [v0.7.0/](./v0.7.0/)   |
+| v0.6.0  | Shipped — Core request reliability (abort, retries, thin middleware)                  | [v0.6.0/](./v0.6.0/)   |
+| v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend                            | [v0.5.0/](./v0.5.0/)   |
+| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing                                   | [v0.4.0/](./v0.4.0/)   |
+| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)                                     | [v0.3.0/](./v0.3.0/)   |
+| v0.2.0  | Shipped — default-first resource CRUD                                                 | [v0.2.0/](./v0.2.0/)   |
+| v0.1.0  | Shipped — opt-in operations foundation                                                | [v0.1.0/](./v0.1.0/)   |
 
 ## Later (roadmap only)
 
-Schema hooks, pagination conventions, env packages, and remaining integrations stay in [`docs/roadmap.md`](../docs/roadmap.md) until each milestone starts.
+Schema hooks, env packages, and remaining integrations stay in [`docs/roadmap.md`](../docs/roadmap.md) until each milestone starts.

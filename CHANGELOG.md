@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Fixed (v0.11.0)
+
+- `@apixa/core` — a malformed/truncated body declared `application/json` now throws `ParseError`
+  instead of silently resolving as `status: 200, body: null`.
+- `@apixa/core` — a failed-attempt retry decision (`shouldRetry`) is computed once per attempt, not
+  twice; `HttpError.retryable` matches the actual retry decision.
+- (Also present since v0.10.0 land where shared files already included them:) composed builtins
+  honor resolved `getById`/`getAll`; mock bridge clones on read and simulates extended routes;
+  `defineApi` rejects a missing resource `path`.
+
+### Added (v0.11.0)
+
+- `@apixa/tanstack-query` — `useResourceMutation(resource, opName, options)` for builtins/custom
+  ops that `useResourceQuery` does not wire individually (invalidate-on-success default).
+- Documented: opt-in `pagination?: "page" | "cursor"` and `readOnly?: boolean` (behavior already in
+  Core from the v0.10.0 land via shared files).
+- `docs/study-guide.md` — internal analysis notes for the post-v0.10 hardening pass.
+
 ### Added (v0.10.0)
 
 - `@apixa/core` — a resource's `operations` accepts a config object, a function, or `false` per

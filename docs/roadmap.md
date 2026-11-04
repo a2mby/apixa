@@ -92,10 +92,17 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
   `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`, `findFirst`, `getBy`
 - Mirrored surface on `@apixa/mocking` (both `mock: "<id>"` and `defineMockApi`)
 
+## Completed: v0.11.0 — Harden v0.10.0 + close analyzed gaps
+
+**Spec:** [versions/v0.11.0/](../versions/v0.11.0/)
+
+- `ParseError` on malformed declared-JSON bodies; single `decideRetry` per attempt
+- `useResourceMutation` for builtins/custom ops outside `useResourceQuery`
+- Documents `pagination` / `readOnly` and mock-bridge extended routes (much of that surface already
+  landed with v0.10.0 via shared files)
+
 ## Later: Developer experience follow-ups
 
-- Harden the v0.10.0 surface (parse failures, mock-bridge gaps, composed-builtin overrides, TanStack
-  coverage of all builtins) — candidate for a v0.11.0 milestone
 - Optional schema validation hooks (without baking in a schema library)
 - Operation `deprecated` / versioning metadata (ties to the v1.0.0 API-versioning item below;
   premature before then)
