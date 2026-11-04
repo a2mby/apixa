@@ -1,6 +1,6 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** none open — last shipped [v0.11.0](../versions/v0.11.0/) (Harden v0.10.0: `ParseError`, single retry decision, `useResourceMutation`).
+> **Current milestone:** [v1.0.0](../versions/v1.0.0/) in progress — Query integration workstream. Last shipped: [v0.11.0](../versions/v0.11.0/).
 > Previous: [v0.10.0](../versions/v0.10.0/) (Fully customizable resource operations, 11 always-on builtins); [v0.9.0](../versions/v0.9.0/) (Flatten Core mock syntax); [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`); [v0.7.0](../versions/v0.7.0/); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
@@ -151,19 +151,27 @@ useMutation({
 });
 ```
 
-**Implemented ([v0.8.0](../versions/v0.8.0/)):** optional `@apixa/tanstack-query` with unified primary API:
+**Implemented (v1.0.0 workstream, unreleased):** optional `@apixa/tanstack-query` with three
+hooks — `useResourceQuery` (reads), `useResourceMutation` (every operation as a mutation), and the
+`useResource` facade:
 
 ```tsx
-import { useResourceQuery } from "@apixa/tanstack-query";
+import { useResource } from "@apixa/tanstack-query";
 
-const users = useResourceQuery(api.users, { queryKey: ["users"] });
-users.data;
-users.isLoading;
-await users.create(input);
-users.mutations.create.isPending;
+const users = useResource(api.users, { queryKey: ["users"] });
+users.data; // list query (native TanStack state)
+await users.getById("42"); // read → QueryClient cache
+await users.create(input); // write → TanStack mutation
+users.states.create.isPending;
 ```
 
-Internals use TanStack Query (`useQuery`, `useMutation`, `queryOptions`, cache APIs). Correctness-first list invalidation is the default. Pagination/infinite helpers and optimistic/`patch-list` strategies stay later. Escape hatch: `@apixa/tanstack-query/advanced`.
+All three share one QueryClient and one key structure; reads and writes are routed by Core's
+`kind` classification, never by name. Internals use TanStack Query (`useQuery`, `useMutation`, `queryOptions`,
+cache APIs). The Query hook forwards native options and results, reads any guaranteed built-in
+operation or explicitly declared custom read, and exposes resource cache helpers. A hook-free
+query-options factory supports native Suspense, parallel queries, prefetching, and hydration.
+Correctness-first mutation invalidation remains the default; optimistic updates use native
+`onMutate`. A dedicated infinite-query helper and `patch-list` strategies stay later. Escape hatch: `@apixa/tanstack-query/advanced`.
 
 Core must not implement its own caching or state-management system just to support TanStack Query.
 

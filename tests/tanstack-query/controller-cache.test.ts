@@ -1,6 +1,13 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
+import { readFile } from "node:fs/promises";
 import { createResourceController } from "../../packages/tanstack-query/src/controller.js";
+import { createResourceKeys } from "../../packages/tanstack-query/src/keys.js";
+import {
+  createResourceMutationController,
+  operationMutationOptions,
+} from "../../packages/tanstack-query/src/mutation-controller.js";
+import { createResourceQueryController } from "../../packages/tanstack-query/src/query-controller.js";
 
 type User = { id: string; name: string };
 
@@ -144,5 +151,91 @@ describe("createResourceController cache policy", () => {
     const user = await controller.fetchDetail(client, "1");
     expect(user).toEqual({ id: "1", name: "Ada" });
     expect(client.getQueryData(controller.keys.detail("1"))).toEqual(user);
+  });
+});
+
+describe("query / mutation controller separation", () => {
+  it("the query controller is read-only; the mutation controller is write-only", () => {
+    const resource = createFakeUsers();
+    const query = createResourceQueryController(resource, { queryKey: ["users"] });
+    const mutation = createResourceMutationController(resource, { queryKey: ["users"] });
+    expect(Object.keys(query).sort()).toEqual(
+      [
+        "cancel",
+        "detailOptions",
+        "ensure",
+        "fetch",
+        "fetchDetail",
+        "fetchOperation",
+        "getCached",
+        "invalidate",
+        "invalidateDetail",
+        "invalidateLists",
+        "keys",
+        "listOptions",
+        "listQueryParams",
+        "operationOptions",
+        "prefetch",
+        "refetch",
+        "remove",
+        "reset",
+        "setCached",
+      ].sort(),
+    );
+    expect(Object.keys(mutation).sort()).toEqual(
+      ["createOptions", "deleteOptions", "keys", "updateOptions"].sort(),
+    );
+  });
+
+  it("createResourceController composes both over one shared key factory", () => {
+    const resource = createFakeUsers();
+    const controller = createResourceController(resource, { queryKey: ["users"], scope: ["t"] });
+    expect(controller.listOptions().queryKey).toEqual(["t", "users", "list"]);
+    expect(controller.createOptions()).toHaveProperty("mutationKey", [
+      "t",
+      "users",
+      "mutation",
+      "create",
+    ]);
+    expect(typeof controller.fetchDetail).toBe("function");
+  });
+
+  it("operationMutationOptions runs any named op with tuple args and invalidates the root on success", async () => {
+    const resource = createFakeUsers();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const keys = createResourceKeys({ queryKey: ["users"] });
+    const query = createResourceQueryController(resource, { queryKey: ["users"] }, keys);
+    await client.prefetchQuery(query.listOptions());
+    client.setQueryData(keys.detail("1"), { id: "1", name: "Ada" });
+
+    const options = operationMutationOptions({ update: resource.update }, "update", keys);
+    expect(options.mutationKey).toEqual(["users", "mutation", "update"]);
+    const ctx = { client, meta: undefined, mutationKey: options.mutationKey };
+    const data = await options.mutationFn!(["1", { name: "Grace" }], ctx);
+    expect(data).toEqual({ id: "1", name: "Grace" });
+    await options.onSuccess?.(data, ["1", { name: "Grace" }], undefined, ctx);
+    expect(client.getQueryState(keys.list())?.isInvalidated).toBe(true);
+    expect(client.getQueryState(keys.detail("1"))?.isInvalidated).toBe(true);
+  });
+
+  it("operationMutationOptions throws a clear error for an operation the resource lacks", () => {
+    const keys = createResourceKeys({ queryKey: ["users"] });
+    const options = operationMutationOptions(
+      { getAll: async () => [] } as Record<string, () => Promise<unknown>>,
+      "archive",
+      keys,
+    );
+    const ctx = { client: new QueryClient(), meta: undefined, mutationKey: options.mutationKey };
+    expect(() => options.mutationFn!([] as never, ctx)).toThrow(
+      "Resource has no archive operation.",
+    );
+  });
+
+  it("the query modules never import mutation APIs", async () => {
+    const root = new URL("../../packages/tanstack-query/src/", import.meta.url);
+    for (const file of ["query-controller.ts", "use-resource-query.ts"]) {
+      const source = await readFile(new URL(file, root), "utf8");
+      expect(source, file).not.toMatch(/useMutation|mutationOptions|mutation-controller/);
+    }
   });
 });

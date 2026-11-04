@@ -1,4 +1,6 @@
 export { defineApi, defineApis, resetMock } from "./api/index.js";
+export { OPERATION_METADATA, getOperationMetadata } from "./api/metadata.js";
+export type { OperationMetadata } from "./api/metadata.js";
 
 export {
   ApiError,

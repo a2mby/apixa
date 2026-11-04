@@ -21,6 +21,8 @@ export type {
 export type {
   OperationDefinition,
   OperationValue,
+  OperationKind,
+  OperationRunDefinition,
   OperationGroupName,
   LayerOptions,
   MockData,
@@ -72,6 +74,9 @@ export type {
   ValidateConfig,
   ValidateApisConfig,
   ResourceClient,
+  OperationKindOf,
+  OperationKindsOf,
+  OperationMetadataBrand,
   MockedResource,
   ApixaClient,
   MergeRecords,

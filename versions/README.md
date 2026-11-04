@@ -20,8 +20,8 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-None — open the next milestone with `/start-version` when ready. **v1.0.0** (first “usable”
-release) is next once you choose to start it.
+**[v1.0.0](./v1.0.0/)** — in progress. The Query integration workstream is being implemented;
+the package has not been released as v1.0.0.
 
 ## Completed
 

@@ -1,5 +1,5 @@
 import { ConfigError } from "../errors/index.js";
-import { isBuiltinName } from "../operation/conventions.js";
+import { BUILTIN_CONVENTIONS, isBuiltinName } from "../operation/conventions.js";
 import { resolveRetryConfig } from "../request/retry.js";
 import { isKeyCase, KEY_CASES } from "../transform/keys.js";
 import type { HttpMethod } from "../types/http.js";
@@ -51,6 +51,7 @@ export const RESOURCE_KEYS = new Set([
 ]);
 
 export const OPERATION_KEYS = new Set([
+  "kind",
   "method",
   "path",
   "hasBody",
@@ -62,6 +63,8 @@ export const OPERATION_KEYS = new Set([
   "responseMiddleware",
   "transforms",
 ]);
+
+const RUN_KEYS = new Set(["kind", "run"]);
 
 const METHODS = new Set<HttpMethod>(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]);
 const GROUPS = new Set(["read", "write", "many", "extended"]);
@@ -281,6 +284,23 @@ function validateOperation(where: string, name: string, value: unknown): void {
     throw new ConfigError(
       `${where} must be true, false, a config object, or a function (got ${typeName(value)}).`,
     );
+  }
+  if (value.kind !== undefined) {
+    if (builtin) {
+      throw new ConfigError(
+        `${where}.kind: builtin "${name}" is always "${BUILTIN_CONVENTIONS[name].access}"; kind is for custom operations.`,
+      );
+    }
+    if (value.kind !== "read" && value.kind !== "write")
+      throw new ConfigError(
+        `${where}.kind must be "read" or "write" (got ${JSON.stringify(value.kind)}).`,
+      );
+  }
+  if ("run" in value) {
+    assertKnownKeys(where, value, RUN_KEYS);
+    if (typeof value.run !== "function")
+      throw new ConfigError(`${where}.run must be a function (got ${typeName(value.run)}).`);
+    return;
   }
   assertKnownKeys(where, value, OPERATION_KEYS);
   if (value.method !== undefined && !METHODS.has(value.method as HttpMethod)) {

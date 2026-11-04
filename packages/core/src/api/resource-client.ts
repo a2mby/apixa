@@ -18,7 +18,12 @@ import {
 } from "../request/index.js";
 import { convertKey } from "../transform/keys.js";
 import type { OperationFn, OperationFnContext, OperationFnRequestInit } from "../types/builtins.js";
-import type { LayerOptions, OperationDefinition } from "../types/definition.js";
+import type {
+  LayerOptions,
+  OperationDefinition,
+  OperationRunDefinition,
+} from "../types/definition.js";
+import { OPERATION_METADATA, type OperationMetadata } from "./metadata.js";
 import type { HeadersSource, PathParams, QueryParams } from "../types/http.js";
 import type { RetryOption } from "../types/retry.js";
 import type { RequestOptions } from "../types/transport.js";
@@ -112,23 +117,40 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   );
 
   const out: Record<string, Fn> = {};
+  const metadata: Record<string, OperationMetadata> = {};
   for (const [opName, definition] of Object.entries(operations)) {
     const where = `resources.${name}.operations.${opName}`;
-    if (typeof definition === "function") {
+    const convention = isBuiltinName(opName) ? BUILTIN_CONVENTIONS[opName] : undefined;
+    const fn =
+      typeof definition === "function"
+        ? definition
+        : isRunDefinition(definition)
+          ? definition.run
+          : undefined;
+    if (fn) {
       out[opName] = functionOperation(
         client,
         runtime,
         opName,
-        definition,
+        fn,
         prepareLayers(where, [root, resourceLayer]),
       );
+      metadata[opName] = Object.freeze({
+        kind:
+          convention?.access ??
+          (isRunDefinition(definition) ? definition.kind : undefined) ??
+          "write",
+        builtin: convention !== undefined,
+        implementation: "function",
+        optionsIndex: null,
+      });
       continue;
     }
-    const convention = isBuiltinName(opName) ? BUILTIN_CONVENTIONS[opName] : undefined;
-    const method = definition.method ?? convention!.method;
-    const relativePath = definition.path ?? convention?.path ?? "";
+    const declared = definition as OperationDefinition;
+    const method = declared.method ?? convention!.method;
+    const relativePath = declared.path ?? convention?.path ?? "";
     const hasBody =
-      definition.hasBody ??
+      declared.hasBody ??
       (convention && "hasBody" in convention ? convention.hasBody : undefined) ??
       (convention && "strategy" in convention ? false : BODY_METHODS.has(method));
     const op: PreparedOperation = {
@@ -137,13 +159,19 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       path: joinPath(resourcePath, relativePath),
       relativePath,
       hasBody,
-      ...prepareLayers(where, [root, resourceLayer, definition as OperationDefinition]),
+      ...prepareLayers(where, [root, resourceLayer, declared]),
     };
     if (convention && "strategy" in convention && hasBody) {
       throw new ConfigError(
         `${where}: hasBody is unsupported on ${opName} (it has no body mapping).`,
       );
     }
+    metadata[opName] = Object.freeze({
+      kind: convention?.access ?? declared.kind ?? "write",
+      builtin: convention !== undefined,
+      implementation: "request",
+      optionsIndex: optionsIndexOf(opName, op, hasResourceParams),
+    });
     const run = (call: CallInput) => runOperation(client, runtime, op, call);
     out[opName] = convention
       ? builtinOperation(opName as BuiltinConventionName, op, run, {
@@ -154,7 +182,20 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       : declarativeOperation(op, run);
   }
 
+  Object.defineProperty(out, OPERATION_METADATA, { value: Object.freeze(metadata) });
   return { client: out, store: runtime.mock?.store };
+}
+
+function isRunDefinition(value: unknown): value is OperationRunDefinition {
+  return isRecord(value) && typeof value.run === "function";
+}
+
+/** Mirrors the argument layouts below: special builtins take resource params after their own. */
+function optionsIndexOf(name: string, op: PreparedOperation, hasResourceParams: boolean): number {
+  const params = hasResourceParams ? 1 : 0;
+  if (name === "exists" || name === "getMany" || name === "findFirst") return 1 + params;
+  if (name === "getBy") return 2 + params;
+  return (extractPathParamNames(op.path).length > 0 ? 1 : 0) + (op.hasBody ? 1 : 0);
 }
 
 interface BuiltinContext {

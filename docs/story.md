@@ -2,6 +2,15 @@
 
 Project log. Newest entry first.
 
+## 2026-11-04 — Land v1.0.0 TanStack Query workstream (#63)
+
+Shipped the Query workstream under `versions/v1.0.0/`: Core operation `kind` / metadata so
+integrations can classify reads vs writes without verb heuristics; query-only
+`useResourceQuery` (inherited reads, tracked re-render parity, signal-by-position); resource-wide
+`useResourceMutation` plus the existing single-op form; `useResource` facade; advanced
+`createResourceQueryOptions`; SSR Next example; and hardening tests. Full product v1 publish
+remains open per acceptance criteria.
+
 ## 2026-11-04 — Add proposed backlog version catalog under docs/ (#60)
 
 Checked in the planning-only tree at `docs/apixa-backlog-versions/` — eighteen proposed

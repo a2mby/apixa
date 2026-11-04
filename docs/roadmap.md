@@ -101,6 +101,17 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Documents `pagination` / `readOnly` and mock-bridge extended routes (much of that surface already
   landed with v0.10.0 via shared files)
 
+## Current: v1.0.0 TanStack integration overhaul (in progress)
+
+**Spec:** [versions/v1.0.0/](../versions/v1.0.0/)
+
+- Step 1 (#62): `useResourceQuery` is query-only; `useResourceMutation` runs every write (create /
+  update / delete / builtins / custom); controller split into query + mutation controllers
+- Query workstream: native v5 options/results, typed built-in and declared custom reads,
+  query-options factory, cache controller, cancellation, App Router hydration, and consumer builds
+- Query, resource-wide `useResourceMutation`, the `useResource` facade, and Core `kind`
+  classification are implemented on the task branch; release is still pending
+
 ## Later: Proposed backlog catalog (planning only)
 
 Eighteen separately scoped proposals (`v0.12.0`–`v0.29.0`) live under
