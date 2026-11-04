@@ -88,6 +88,8 @@ export interface CallInput {
   relativePath?: string;
   method?: HttpMethod;
   hasBody?: boolean;
+  /** Set on the single replay started from error middleware (prevents replay loops). */
+  replayed?: boolean;
   /** Builtin semantics for a mocked resource; absent → route by method + relative path. */
   intent?: (wire: { query?: Record<string, unknown>; body?: unknown }) => BuiltinIntent;
   /** Treat an HTTP 404 as a successful response for `fromHttp` to interpret (used by `exists`). */
@@ -322,9 +324,12 @@ export async function runOperation(
     return options.full ? response : response.data;
   } catch (thrown) {
     let error = classify(thrown, signal, timedOut(), request);
+    const replay = call.replayed
+      ? undefined
+      : () => runOperation(client, resource, op, { ...call, replayed: true });
     for (const hook of op.onError) {
       try {
-        const recovered = await hook(error, { request });
+        const recovered = await hook(error, { request, replay });
         if (recovered !== undefined) return recovered;
       } catch (next) {
         error = next;

@@ -15,10 +15,14 @@ export type ResponseMiddleware = (
  * - throw → that error continues to the next handler (and is finally thrown to the caller);
  * - return a value other than `undefined` → the call recovers and resolves to that value;
  * - return `undefined` → not handled, the same error continues.
+ *
+ * `context.replay()` re-runs the whole call once (fresh headers, middleware, retries, a new
+ * timeout budget) — e.g. refresh a token on 401, then `return context.replay()`. It is
+ * `undefined` inside a replay, so a replay can never loop.
  */
 export type ErrorMiddleware = (
   error: unknown,
-  context: { request?: ApiRequest },
+  context: { request?: ApiRequest; replay?: () => Promise<unknown> },
 ) => unknown | Promise<unknown>;
 
 /** General middleware: any of the three stages in one object. */

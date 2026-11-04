@@ -329,7 +329,36 @@ export type CallResult<Data, O> = [O] extends [undefined]
     ? ApiResponse<Data>
     : Data;
 
-type BuildOperationFn<Arity extends 0 | 1 | 2, Id, Params, Body, Result, Query> = [Body] extends [
+type BuildOperationFn<
+  Arity extends 0 | 1 | 2,
+  Id,
+  Params,
+  Body,
+  Result,
+  Query,
+> = unknown extends Body
+  ? OptionalBodyFn<Arity, Id, Params, Result, Query>
+  : RequiredBodyFn<Arity, Id, Params, Body, Result, Query>;
+
+/** No declared body type (e.g. a custom POST): the body may be omitted. */
+type OptionalBodyFn<Arity extends 0 | 1 | 2, Id, Params, Result, Query> = Arity extends 0
+  ? <O extends RequestOptions<Query> | undefined = undefined>(
+      body?: unknown,
+      options?: O,
+    ) => Promise<CallResult<Result, O>>
+  : Arity extends 1
+    ? <O extends RequestOptions<Query> | undefined = undefined>(
+        id: Id,
+        body?: unknown,
+        options?: O,
+      ) => Promise<CallResult<Result, O>>
+    : <O extends RequestOptions<Query> | undefined = undefined>(
+        params: Params,
+        body?: unknown,
+        options?: O,
+      ) => Promise<CallResult<Result, O>>;
+
+type RequiredBodyFn<Arity extends 0 | 1 | 2, Id, Params, Body, Result, Query> = [Body] extends [
   undefined,
 ]
   ? Arity extends 0
@@ -528,12 +557,20 @@ type ClientFnFor<Name extends AllBuiltinOpName, R, Meta, Root extends RootTypes>
   : BuiltinFn<Name, R, Meta, Root>;
 type BuiltinFn<
   Name extends AllBuiltinOpName,
-  R,
+  R0,
   Meta,
   Root extends RootTypes,
+  R = WithOpTransforms<R0, RuntimeOperation<R0, Name>>,
 > = Name extends SpecialName
   ? SpecialClientFn<Name, R, Meta, Root>
   : SignatureOf<R, Name, EffectiveOpDef<Name, R, Meta, Root>, IdOf<R, Meta, Root>>;
+
+/** An operation-level `transforms.response` overrides resource and root for that operation's types. */
+type WithOpTransforms<R, Op> = [Op] extends [never]
+  ? R
+  : Op extends { transforms: { response: { keys: infer K extends KeyCase } } }
+    ? Omit<R, "transforms"> & { transforms: { response: { keys: K } } }
+    : R;
 type CustomOpName<R> = Exclude<keyof ResourceOpsOf<R>, AllBuiltinOpName>;
 type CustomClientFn<
   R,
@@ -543,9 +580,15 @@ type CustomClientFn<
 > = ResourceOpsOf<R>[Name] extends (...args: never[]) => unknown
   ? StripCtx<ResourceOpsOf<R>[Name]>
   : SignatureOf<
-      R,
+      WithOpTransforms<R, ResourceOpsOf<R>[Name]>,
       Extract<Name, string>,
-      ApplyPayload<ResourceOpsOf<R>[Name], Meta, Extract<Name, string>, R, Root>,
+      ApplyPayload<
+        ResourceOpsOf<R>[Name],
+        Meta,
+        Extract<Name, string>,
+        WithOpTransforms<R, ResourceOpsOf<R>[Name]>,
+        Root
+      >,
       IdOf<R, Meta, Root>
     >;
 

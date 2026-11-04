@@ -125,8 +125,10 @@ const api = defineApi({
 - `transforms: { request: { keys }, response: { keys } }` supports `camelCase`, `snake_case`,
   `PascalCase`, and `kebab-case`. Conversion is recursive over plain objects and arrays, leaves
   values and special objects untouched, and never mutates its input. Colliding keys throw
-  `TransformError`. TypeScript exposes the converted keys for root- and resource-level
-  transforms.
+  `TransformError`. TypeScript exposes the converted keys at every level (root, resource, operation).
+- Error middleware receives `{ request, replay }`. `replay()` re-runs the call once (fresh headers),
+  e.g. refresh a token on 401 and `return replay()`; it is `undefined` inside a replay.
+- An operation whose body type is unknown (e.g. a custom POST) may be called without a body.
 - Clients are frozen. To use a different base URL, build another client, or use `defineApis()`.
 
 ## Mocking (client-scoped, data-first)
