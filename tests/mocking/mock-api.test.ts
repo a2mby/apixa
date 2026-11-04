@@ -43,8 +43,8 @@ describe("defineMockApi: configuration", () => {
     for (const resource of Object.values(api)) {
       expect(Object.keys(resource).sort()).toEqual(
         [
-          "bulkCreate",
-          "bulkDelete",
+          "createMany",
+          "deleteMany",
           "count",
           "create",
           "delete",

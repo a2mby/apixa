@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-04 — Land defineApi operation and type refactor (#56)
+
+Aligned `defineApi`'s generated methods with literal runtime resource configuration while keeping
+the explicit metadata and inferred call forms. Consolidated builtin defaults and group membership,
+renamed the public bulk methods to `createMany` / `deleteMany`, and made the four specialized
+builtins execute independent requests. Added default/group/individual selection, cross-origin
+operation-path protection, mock ID filtering, and TanStack support for partially disabled resources.
+
 ## 2026-11-04 — Land v0.11.0 harden leftovers (#54)
 
 Closed the stacked post-v0.10 hardening that had to wait for a separate issue: `ParseError` on

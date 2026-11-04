@@ -86,14 +86,15 @@ export type OperationState =
     })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((...args: any[]) => Promise<any>)
-  | false;
+  | boolean;
 
 /**
- * Resource state: developer declares `path` + `entity` (and optional `list` / `query`).
+ * Resource state: developer declares payload metadata; runtime config owns paths and selection.
  * `create` / `update` bodies are derived as `Omit<Entity,"id">` / `Partial<Entity>`.
  */
 export type ResourceState = {
-  path: string;
+  /** Legacy metadata path, ignored in favor of the runtime path. */
+  path?: string;
   headers?: HeadersInitLike;
   timeout?: number;
   retry?: RetryConfig | false;
@@ -113,10 +114,12 @@ export type ResourceState = {
   pagination?: "page" | "cursor";
   /**
    * Sugar for `operations: { create: false, update: false, patch: false, upsert: false,
-   * delete: false, bulkCreate: false, bulkDelete: false }`. An explicit `operations` entry for
+   * delete: false, createMany: false, deleteMany: false }`. An explicit `operations` entry for
    * any of those names still overrides this shorthand.
    */
   readOnly?: boolean;
+  writeOnly?: boolean;
+  defaultOperations?: boolean;
   /** Config object, function, or `false` (removes a builtin) — per key, suggested + custom names. */
   operations?: OperationsBag<OperationState>;
 };
@@ -129,7 +132,10 @@ export type ResourceRuntimeInput = {
   retry?: RetryConfig | false;
   /** Sugar for removing the 7 write ops via `operations`; an explicit override still wins. */
   readOnly?: boolean;
-  operations?: OperationsBag<(OperationDefinition & OperationExtensions) | OperationFn | false>;
+  writeOnly?: boolean;
+  defaultOperations?: boolean;
+  operationGroups?: Partial<Record<"read" | "write" | "many" | "extended", boolean>>;
+  operations?: OperationsBag<(OperationDefinition & OperationExtensions) | OperationFn | boolean>;
 } & ResourceExtensions;
 
 export interface ResolvedApiConfig {

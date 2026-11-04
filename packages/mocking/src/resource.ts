@@ -82,8 +82,8 @@ export const EXTENDED_MOCK_OPS = [
   "upsert",
   "count",
   "search",
-  "bulkCreate",
-  "bulkDelete",
+  "createMany",
+  "deleteMany",
   "getMany",
   "exists",
   "findFirst",
@@ -371,7 +371,7 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
         .map((r) => structuredClone(r));
     },
 
-    async bulkCreate(opCtx, inputs: unknown[]) {
+    async createMany(opCtx, inputs: unknown[]) {
       const created: Row[] = [];
       for (const input of inputs) {
         created.push((await opCtx.defaults.create(input)) as Row);
@@ -379,7 +379,7 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
       return created;
     },
 
-    async bulkDelete(opCtx, ids: Id[]) {
+    async deleteMany(opCtx, ids: Id[]) {
       for (const id of ids) {
         await opCtx.defaults.delete(id);
       }

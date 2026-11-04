@@ -20,11 +20,11 @@ describe("builtins added in v0.10.0", () => {
     });
 
     expect(Object.keys(api.users).sort()).toEqual([
-      "bulkCreate",
-      "bulkDelete",
       "count",
       "create",
+      "createMany",
       "delete",
+      "deleteMany",
       "exists",
       "findFirst",
       "getAll",
@@ -97,14 +97,14 @@ describe("builtins added in v0.10.0", () => {
       expectedUrl: "https://api.example.com/users/search?q=ada",
     },
     {
-      name: "bulkCreate",
-      call: (api) => api.users.bulkCreate([{ name: "Ada", email: "a@example.com" }]),
+      name: "createMany",
+      call: (api) => api.users.createMany([{ name: "Ada", email: "a@example.com" }]),
       expectedMethod: "POST",
       expectedUrl: "https://api.example.com/users/bulk",
     },
     {
-      name: "bulkDelete",
-      call: (api) => api.users.bulkDelete(["1", "2"]),
+      name: "deleteMany",
+      call: (api) => api.users.deleteMany(["1", "2"]),
       expectedMethod: "DELETE",
       expectedUrl: "https://api.example.com/users/bulk",
     },
@@ -254,7 +254,7 @@ describe("builtins added in v0.10.0", () => {
     ]);
   });
 
-  it("exists follows an override of getById's path (v0.11.0 fix)", async () => {
+  it("exists uses its own path when getById is overridden", async () => {
     const urls: string[] = [];
 
     const api = defineApi({
@@ -272,11 +272,11 @@ describe("builtins added in v0.10.0", () => {
       },
     });
 
-    expect(await api.users.exists("1")).toBe(true);
-    expect(urls).toEqual(["https://api.example.com/users/u/1"]);
+    expect(await api.users.exists("1")).toBe(false);
+    expect(urls).toEqual(["https://api.example.com/users/1"]);
   });
 
-  it("findFirst / getMany follow an override of getAll's path (v0.11.0 fix)", async () => {
+  it("findFirst / getMany use their own paths when getAll is overridden", async () => {
     const urls: string[] = [];
 
     const api = defineApi({
@@ -293,10 +293,11 @@ describe("builtins added in v0.10.0", () => {
 
     expect(await api.users.findFirst()).toEqual({ id: "1", name: "Ada" });
     expect(await api.users.getMany(["1"])).toEqual([{ id: "1", name: "Ada" }]);
-    expect(urls.every((url) => url.startsWith("https://api.example.com/users/all"))).toBe(true);
+    expect(urls.every((url) => url.startsWith("https://api.example.com/users"))).toBe(true);
+    expect(urls.every((url) => !url.includes("/all"))).toBe(true);
   });
 
-  it("exists / getMany fall back to the convention path when getById / getAll is removed", async () => {
+  it("exists / getMany keep their convention paths when getById / getAll is removed", async () => {
     const urls: string[] = [];
 
     const api = defineApi({
@@ -358,8 +359,8 @@ describe("readOnly shorthand (v0.11.0)", () => {
       "patch",
       "upsert",
       "delete",
-      "bulkCreate",
-      "bulkDelete",
+      "createMany",
+      "deleteMany",
     ]) {
       expect(Object.keys(api.users)).not.toContain(name);
     }

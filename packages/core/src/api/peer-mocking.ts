@@ -22,6 +22,7 @@ export type PeerResourceMockSpec = {
   type: string;
   slice?: PeerMockSlice;
   pagination?: boolean;
+  operations?: Record<string, unknown>;
 };
 
 type ResourceBag = {
@@ -110,6 +111,7 @@ export function extractAndStripMockSpecs(config: DefineApiConfigBag): {
         type: mock,
         slice: pickSlice(rest.slice),
         pagination: pagination === true,
+        operations: rest.operations as Record<string, unknown> | undefined,
       });
       // Seed uses `slice`; do not also cap getAll (creates may grow past the seed).
       const { slice: _seedSlice, ...withoutSlice } = rest;

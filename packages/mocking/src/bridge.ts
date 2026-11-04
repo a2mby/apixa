@@ -16,6 +16,7 @@ export type ResourceMockSpec = {
   pagination?: boolean;
   /** Per-operation `false` / `{ method?, path? }` override for the 5 extended static routes. */
   extendedRoutes?: ExtendedRouteOverrides;
+  operations?: Record<string, unknown>;
 };
 
 type ResourceBag = {
@@ -30,7 +31,7 @@ type ResourceBag = {
   [key: string]: unknown;
 };
 
-const EXTENDED_ROUTE_NAMES = ["getBySlug", "count", "search", "bulkCreate", "bulkDelete"] as const;
+const EXTENDED_ROUTE_NAMES = ["getBySlug", "count", "search", "createMany", "deleteMany"] as const;
 
 /** Pull the `{ method?, path? }` / `false` override for each extended static route, if any. */
 function extendedRouteOverridesFrom(
@@ -77,7 +78,7 @@ function storeFromSpec(spec: ResourceMockSpec): MockStore {
     path: spec.path || dataset.meta.resource.path,
     slice: spec.slice,
     pagination: spec.pagination === true,
-    extendedRoutes: spec.extendedRoutes,
+    extendedRoutes: spec.extendedRoutes ?? extendedRouteOverridesFrom(spec.operations),
   });
 }
 

@@ -78,7 +78,7 @@ import { defineApi } from "@apixa/core";
 type User = { id: string; name: string; email: string };
 
 type AppApi = {
-  users: { path: "/users"; entity: User };
+  users: { entity: User };
 };
 
 const api = defineApi<AppApi>()({
@@ -91,11 +91,16 @@ const users = await api.users.getAll();
 const user = await api.users.getById("123");
 ```
 
-Built-in operations: `getAll`, `getById`, `create`, `update`, `delete` (positional args). `create` / `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). Root builtins (`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core — not listed on `AppApi`. Optional runtime `operations` merges overrides and custom endpoints. Call options support `signal` / `timeout`; opt-in `retry` and thin `middleware` ship in v0.6.0.
+The original CRUD five use positional args. `create` / `update` bodies are derived from `entity`
+(`Omit` / `Partial` on `"id"`). The runtime configuration supplies resource names, paths, and
+operation selection; `AppApi` supplies payload types without repeating paths. Both curried generic
+and direct inferred forms remain supported. Root builtins (`baseURL`, `headers` /
+`BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core. Call options
+support `signal` / `timeout`; opt-in `retry` and thin `middleware` shipped in v0.6.0.
 
 **Implemented (v0.10.0):** `operations` accepts a config object, a function, or `false` per key —
 add, remove, or override any operation, on both `defineApi` and `@apixa/mocking` resources. 11 new
-builtins (`getBySlug`, `patch`, `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`,
+builtins (`getBySlug`, `patch`, `upsert`, `count`, `search`, `createMany`, `deleteMany`, `getMany`,
 `exists`, `findFirst`, `getBy`) are **always-on**, the same default-first treatment as the original
 5 — no `operations` entry needed to use them:
 
@@ -116,7 +121,14 @@ await api.users.getBy("username", "ada"); // general lookup by any field
 await api.users.archive("123"); // fully custom operation
 ```
 
-See the full table in [`docs/conventions.md`](./conventions.md#operation-customization-v0100).
+See the full table in [`docs/conventions.md`](./conventions.md#operation-customization).
+
+**Current change (#56):** all 16 defaults remain enabled. `defaultOperations`, `readOnly`,
+`writeOnly`, `operationGroups`, and per-operation entries select methods in a fixed order;
+TypeScript reflects the literal runtime settings. `createMany` / `deleteMany` replace the old
+bulk names without changing `/bulk` wire paths. `exists`, `findFirst`, `getMany`, and `getBy`
+execute independent requests. The Core mock store filters `getMany` IDs, and TanStack's list hook
+supports resources with disabled detail and mutation methods.
 
 **Planned later:** `crud<>()` preset, path-param template inference, `idKey`, runtime schema validation hooks, live pagination conventions for real backends.
 

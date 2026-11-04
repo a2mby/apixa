@@ -56,6 +56,9 @@ function UsersPage() {
 | Mutations  | `mutations.create` / `update` / `delete`                                              |
 
 List loading fields never include mutation pending. Use `users.mutations.create.isPending` for create UI.
+`useResourceQuery` requires `getAll`; other detail and CRUD methods are exposed only when the
+resource client has them. A `readOnly` resource therefore returns list and detail helpers without
+write methods or mutation entries. Use `useResourceMutation` for a write-only operation.
 
 ### Cache policy (v0.8.0)
 

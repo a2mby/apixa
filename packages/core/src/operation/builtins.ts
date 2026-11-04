@@ -1,35 +1,19 @@
 import { isHttpError } from "../errors/index.js";
-import { joinPath } from "../http/path.js";
-import type { OperationFn, OperationFnContext } from "../types/builtins.js";
+import { extractPathParamNames, joinPath } from "../http/path.js";
+import { executeRequest } from "../request/execute.js";
+import type {
+  ResolvedApiConfig,
+  ResolvedOperation,
+  ResolvedResourceConfig,
+} from "../types/definition.js";
 import type { QueryParams } from "../types/http.js";
+import { BUILTIN_CONVENTIONS, isBuiltinName } from "./conventions.js";
 
-/**
- * Composed builtins: implemented as ordinary operation functions (the same mechanism a
- * developer's own custom operation uses), not a private shortcut. `exists` / `findFirst` /
- * `getMany` delegate to the resource's already-resolved `getById` / `getAll` client functions
- * (wired in `api/resource-client.ts`) so an override of either is honored automatically; the
- * versions here are only the fallback used when `getById` / `getAll` has been removed via
- * `false`, in which case they fall back to the bare convention wire shape. `getBy` is a general
- * escape hatch for a custom field/path; it does assume whatever path you give it exists, and has
- * nothing to delegate to.
- */
+type Conventions = typeof BUILTIN_CONVENTIONS;
+type StrategyName = {
+  [K in keyof Conventions]: Conventions[K] extends { strategy: string } ? K : never;
+}[keyof Conventions];
 
-const PARAM_PATTERN = /:[A-Za-z0-9_]+/;
-
-const getBy: OperationFn = async (
-  ctx: OperationFnContext,
-  fieldOrPath: string,
-  value: string | number,
-) => {
-  const encoded = encodeURIComponent(String(value));
-  // `"/code/:code"` → interpolate the placeholder. `"slug"` / `"/by-slug"` → append the value.
-  const relativePath = PARAM_PATTERN.test(fieldOrPath)
-    ? fieldOrPath.replace(PARAM_PATTERN, encoded)
-    : joinPath(fieldOrPath, encoded);
-  return ctx.request({ method: "GET", path: relativePath });
-};
-
-/** A bare array, or a paginated envelope (`{ data, total, page, ... }`) — normalize to an array. */
 function toArray(result: unknown): unknown[] {
   if (Array.isArray(result)) return result;
   if (result && typeof result === "object" && Array.isArray((result as { data?: unknown }).data)) {
@@ -38,81 +22,86 @@ function toArray(result: unknown): unknown[] {
   return [];
 }
 
-const existsFallback: OperationFn = async (ctx: OperationFnContext, id: string | number) => {
-  try {
-    await ctx.request({ method: "GET", path: "/:id", params: { id } });
-    return true;
-  } catch (error) {
-    if (isHttpError(error) && error.status === 404) return false;
-    throw error;
+/** Each strategy executes its own resolved operation through Core's request pipeline. */
+export function createBuiltinStrategy(
+  name: StrategyName,
+  api: ResolvedApiConfig,
+  resource: ResolvedResourceConfig,
+  operation: ResolvedOperation,
+  resourcePath: string,
+): (...args: unknown[]) => Promise<unknown> {
+  if (operation.hasBody) {
+    throw new Error(`Builtin "${name}" has no body mapping; hasBody: true is unsupported.`);
   }
-};
-
-const findFirstFallback: OperationFn = async (ctx: OperationFnContext, query?: QueryParams) => {
-  const list = await ctx.request<unknown>({ method: "GET", path: "", query });
-  return toArray(list)[0] ?? null;
-};
-
-const getManyFallback: OperationFn = async (
-  ctx: OperationFnContext,
-  ids: Array<string | number>,
-) => {
-  const list = await ctx.request<unknown>({ method: "GET", path: "", query: { id: ids } });
-  return toArray(list);
-};
-
-/**
- * Default, convention-only implementations — used by `expandOperations` to list the always-on
- * composed builtin names, and as the fallback when `api/resource-client.ts` finds `getById` /
- * `getAll` has been removed from the same resource. Prefer `createComposedBuiltins` below for the
- * real runtime wiring, which delegates to the resource's resolved operations instead.
- */
-export const COMPOSED_BUILTINS: Record<string, OperationFn> = {
-  exists: existsFallback,
-  findFirst: findFirstFallback,
-  getMany: getManyFallback,
-  getBy,
-};
-
-export interface ComposedBuiltinDeps {
-  /** The resource's already-resolved, override-aware `getById` client function, if present. */
-  getById?: (...args: unknown[]) => Promise<unknown>;
-  /** The resource's already-resolved, override-aware `getAll` client function, if present. */
-  getAll?: (...args: unknown[]) => Promise<unknown>;
+  const resourceParamNames = extractPathParamNames(resourcePath);
+  if (name === "exists") {
+    const idParam = extractPathParamNames(operation.path).find(
+      (param) => !resourceParamNames.includes(param),
+    );
+    return async (id: unknown, resourceParams?: unknown) => {
+      try {
+        await executeRequest(api, resource, operation, {
+          params: {
+            ...(resourceParams as Record<string, string | number> | undefined),
+            ...(idParam ? { [idParam]: id as string | number } : {}),
+          },
+          query: idParam ? undefined : { id: id as string | number },
+        });
+        return true;
+      } catch (error) {
+        if (isHttpError(error) && error.status === 404) return false;
+        throw error;
+      }
+    };
+  }
+  if (name === "findFirst") {
+    return async (query?: unknown, params?: unknown) =>
+      toArray(
+        await executeRequest(api, resource, operation, {
+          query: query as QueryParams | undefined,
+          params: params as Record<string, string | number> | undefined,
+        }),
+      )[0] ?? null;
+  }
+  if (name === "getMany") {
+    return async (ids: unknown, params?: unknown) =>
+      toArray(
+        await executeRequest(api, resource, operation, {
+          query: { id: ids as Array<string | number> },
+          params: params as Record<string, string | number> | undefined,
+        }),
+      );
+  }
+  return async (fieldOrPath: unknown, value: unknown, params?: unknown) => {
+    const field = String(fieldOrPath);
+    const encoded = encodeURIComponent(String(value));
+    if (/:field\b|:value\b/.test(operation.path)) {
+      const path = operation.path
+        .replace(/:field\b/g, encodeURIComponent(field))
+        .replace(/:value\b/g, encoded);
+      return executeRequest(
+        api,
+        resource,
+        { ...operation, path },
+        {
+          params: params as Record<string, string | number> | undefined,
+        },
+      );
+    }
+    const dynamic = /:[A-Za-z0-9_]+/.test(field)
+      ? field.replace(/:[A-Za-z0-9_]+/, encoded)
+      : joinPath(field, encoded);
+    return executeRequest(
+      api,
+      resource,
+      { ...operation, path: joinPath(operation.path, dynamic) },
+      {
+        params: params as Record<string, string | number> | undefined,
+      },
+    );
+  };
 }
 
-/**
- * Build `exists` / `findFirst` / `getMany` against the resource's actual resolved `getById` /
- * `getAll` functions, so an override of either (custom path, custom config, or a custom function)
- * is honored by anything composed on top of it. Falls back to the bare convention wire shape via
- * `ctx.request` only when the corresponding builtin isn't available (removed with `false`).
- */
-export function createComposedBuiltins(deps: ComposedBuiltinDeps): Record<string, OperationFn> {
-  const exists: OperationFn = deps.getById
-    ? async (_ctx: OperationFnContext, id: string | number) => {
-        try {
-          await deps.getById!(id);
-          return true;
-        } catch (error) {
-          if (isHttpError(error) && error.status === 404) return false;
-          throw error;
-        }
-      }
-    : existsFallback;
-
-  const findFirst: OperationFn = deps.getAll
-    ? async (_ctx: OperationFnContext, query?: QueryParams) => {
-        const result = await deps.getAll!(query !== undefined ? { query } : undefined);
-        return toArray(result)[0] ?? null;
-      }
-    : findFirstFallback;
-
-  const getMany: OperationFn = deps.getAll
-    ? async (_ctx: OperationFnContext, ids: Array<string | number>) => {
-        const result = await deps.getAll!({ query: { id: ids } });
-        return toArray(result);
-      }
-    : getManyFallback;
-
-  return { exists, findFirst, getMany, getBy };
+export function isStrategyBuiltin(name: string): name is StrategyName {
+  return isBuiltinName(name) && "strategy" in BUILTIN_CONVENTIONS[name];
 }

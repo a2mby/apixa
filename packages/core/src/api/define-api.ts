@@ -5,7 +5,7 @@ import type {
   ResolvedApiConfig,
   ResourceRuntimeInput,
 } from "../types/definition.js";
-import type { ApiClient, ApiInput } from "../types/inference.js";
+import type { ApiClient, ApiInput, ValidationArgs } from "../types/inference.js";
 import { applyPeerMockBridge, hasUnhandledMockKeys } from "./peer-mocking.js";
 import { applyDefineApiProcessors } from "./processors.js";
 import { createResourceClient } from "./resource-client.js";
@@ -50,6 +50,11 @@ function toHttpResource(key: string, value: Record<string, unknown>): ResourceRu
   if (value.readOnly !== undefined) {
     resource.readOnly = value.readOnly as boolean;
   }
+  if (value.writeOnly !== undefined) resource.writeOnly = value.writeOnly as boolean;
+  if (value.defaultOperations !== undefined)
+    resource.defaultOperations = value.defaultOperations as boolean;
+  if (value.operationGroups !== undefined)
+    resource.operationGroups = value.operationGroups as ResourceRuntimeInput["operationGroups"];
   return resource;
 }
 
@@ -97,15 +102,24 @@ function buildClient<T>(raw: ApiRootConfig & Record<string, unknown>): ApiClient
  * Zustand-style explicit state: `defineApi<AppApi>()({ … })`.
  * Types live on `AppApi`; the runtime object is `ApiInput<AppApi>`.
  */
-export function defineApi<T extends ApiStateOf<T>>(): (config: ApiInput<T>) => ApiClient<T>;
+export function defineApi<T extends ApiStateOf<T>>(): <const Config extends ApiInput<T>>(
+  config: Config,
+  ...validation: ValidationArgs<T, NoInfer<Config>>
+) => ApiClient<T, Config>;
 
 /**
  * Infer the client from the runtime config alone (payload types stay `unknown`
  * unless you use the explicit-state overload above).
  */
-export function defineApi<const T extends ApiRootConfig>(config: T): ApiClient<T>;
+export function defineApi<const Config extends ApiRootConfig>(
+  config: Config,
+  ...validation: ValidationArgs<NoInfer<Config>, NoInfer<Config>>
+): ApiClient<Config, Config>;
 
-export function defineApi(configOrNothing?: ApiRootConfig & Record<string, unknown>): unknown {
+export function defineApi(
+  configOrNothing?: ApiRootConfig & Record<string, unknown>,
+  ..._validation: unknown[]
+): unknown {
   if (configOrNothing === undefined) {
     return (config: ApiRootConfig & Record<string, unknown>) => buildClient(config);
   }

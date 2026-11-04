@@ -42,6 +42,7 @@ export function joinPath(base: string, relative?: string): string {
 }
 
 export function extractPathParamNames(path: string): string[] {
+  if (/^https?:\/\//i.test(path)) path = new URL(path).pathname;
   const names: string[] = [];
   const re = /:([A-Za-z0-9_]+)/g;
   let match: RegExpExecArray | null;

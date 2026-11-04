@@ -134,7 +134,10 @@ export function createResourceController<TResource extends ResourceLike>(
     const { enabled, ...rest } = overrides;
     return queryOptions({
       queryKey: keys.detail(id),
-      queryFn: ({ signal }) => resource.getById(id, { signal }) as Promise<InferEntity<TResource>>,
+      queryFn: ({ signal }) => {
+        if (!resource.getById) throw new Error("Resource has no getById operation.");
+        return resource.getById(id, { signal }) as Promise<InferEntity<TResource>>;
+      },
       enabled: enabled ?? (id !== undefined && id !== null && id !== ""),
       ...rest,
     });
@@ -143,8 +146,10 @@ export function createResourceController<TResource extends ResourceLike>(
   const createOptions: ResourceController<TResource>["createOptions"] = (handlers) =>
     mutationOptions({
       mutationKey: keys.mutation("create"),
-      mutationFn: (body: InferCreateBody<TResource>) =>
-        resource.create(body) as Promise<InferEntity<TResource>>,
+      mutationFn: (body: InferCreateBody<TResource>) => {
+        if (!resource.create) throw new Error("Resource has no create operation.");
+        return resource.create(body) as Promise<InferEntity<TResource>>;
+      },
       onMutate: handlers?.onMutate,
       onSuccess: async (data, variables, onMutateResult, context) => {
         // D1 — Apixa cache sync first, then consumer
@@ -158,8 +163,10 @@ export function createResourceController<TResource extends ResourceLike>(
   const updateOptions: ResourceController<TResource>["updateOptions"] = (handlers) =>
     mutationOptions({
       mutationKey: keys.mutation("update"),
-      mutationFn: ({ id, body }: UpdateVariables<TResource>) =>
-        resource.update(id, body) as Promise<InferEntity<TResource>>,
+      mutationFn: ({ id, body }: UpdateVariables<TResource>) => {
+        if (!resource.update) throw new Error("Resource has no update operation.");
+        return resource.update(id, body) as Promise<InferEntity<TResource>>;
+      },
       onMutate: handlers?.onMutate,
       onSuccess: async (data, variables, onMutateResult, context) => {
         await syncCacheAfterUpdate(context.client, keys, data, variables);
@@ -172,7 +179,10 @@ export function createResourceController<TResource extends ResourceLike>(
   const deleteOptions: ResourceController<TResource>["deleteOptions"] = (handlers) =>
     mutationOptions({
       mutationKey: keys.mutation("delete"),
-      mutationFn: (id: InferDeleteId<TResource>) => resource.delete(id) as Promise<void>,
+      mutationFn: (id: InferDeleteId<TResource>) => {
+        if (!resource.delete) throw new Error("Resource has no delete operation.");
+        return resource.delete(id) as Promise<void>;
+      },
       onMutate: handlers?.onMutate,
       onSuccess: async (_data, id, onMutateResult, context) => {
         await syncCacheAfterDelete(context.client, keys, id);

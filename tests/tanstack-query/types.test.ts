@@ -1,6 +1,7 @@
 import { defineApi } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
 import { createResourceController } from "../../packages/tanstack-query/src/controller.js";
+import { useResourceQuery } from "../../packages/tanstack-query/src/use-resource-query.js";
 import type {
   InferCreateBody,
   InferEntity,
@@ -31,5 +32,28 @@ describe("tanstack-query inference from Apixa ResourceClient", () => {
 
     const controller = createResourceController(api.users, { queryKey: ["users"] });
     expectTypeOf(controller.listOptions().queryFn).returns.resolves.toEqualTypeOf<User[]>();
+  });
+
+  it("accepts read-only and partially disabled Core resources without exposing absent methods", () => {
+    const readOnly = defineApi<AppApi>()({
+      baseURL: "https://api.example.com",
+      users: { path: "/users", readOnly: true },
+    });
+    const noDetail = defineApi<AppApi>()({
+      baseURL: "https://api.example.com",
+      users: { path: "/users", operations: { getById: false } },
+    });
+    if (false) {
+      const read = useResourceQuery(readOnly.users, { queryKey: ["users"] });
+      expectTypeOf(read.data).toEqualTypeOf<User[] | undefined>();
+      expectTypeOf(read.getById).parameter(0).toEqualTypeOf<string | number>();
+      // @ts-expect-error read-only resource has no create mutation
+      read.create({ name: "Ada" });
+      // @ts-expect-error read-only resource has no create mutation entry
+      read.mutations.create;
+      const partial = useResourceQuery(noDetail.users, { queryKey: ["users"] });
+      // @ts-expect-error disabled getById is absent
+      partial.getById("1");
+    }
   });
 });
