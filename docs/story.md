@@ -17,8 +17,9 @@ Implemented Parts C–F of the defineApi architecture specification on top of #5
 - **HTTP lifecycle:** Added header providers, origin checks after middleware, a single
   timeout/retry/abort lifecycle, and hook-style middleware in three styles sharing one
   pipeline.
-- **Transforms:** Added typed recursive key transforms that throw on collisions.
-- **Tests:** The suite grew from 247 to 439 tests.
+- **Transforms:** Added typed recursive key transforms (root, resource, and operation level) that throw on collisions.
+- **Middleware:** Error middleware gets `replay()` for token-refresh flows, and operations with an unknown body type accept an omitted body.
+- **Tests:** The suite grew from 247 to 443 tests.
 
 ## 2026-11-04 — Land defineApi operation and type refactor (#56)
 
