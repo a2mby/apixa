@@ -1,30 +1,32 @@
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
-import type { RetryConfig } from "./retry.js";
+import type { RetryOption } from "./retry.js";
 import type { ResponseType } from "./transport.js";
 import type { BuiltinConventionName } from "../operation/conventions.js";
 
-/** The 5 conventions every path-only resource gets by default (unchanged since v0.2.0). */
-export type BuiltinOpName = Extract<
-  BuiltinConventionName,
-  "getAll" | "getById" | "create" | "update" | "delete"
->;
+/** The original 5 CRUD builtins. */
+export type BuiltinOpName = Extract<BuiltinConventionName, "getAll" | "getById" | "create" | "update" | "delete">;
 
-/** Added in v0.10.0 — always-on for a resource with `path`, same as the original 5 (default-first). */
+/** The 11 builtins beyond the original 5 (the `extended` group). */
 export type ExtendedBuiltinOpName = Exclude<BuiltinConventionName, BuiltinOpName>;
 
+/** All 16 builtins. */
 export type AllBuiltinOpName = BuiltinOpName | ExtendedBuiltinOpName;
 
-/** Request a custom operation function may issue through Core's normal pipeline. */
+/** A request issued by a custom operation through `ctx.request()`. */
 export interface OperationFnRequestInit {
   method?: HttpMethod;
-  /** Path relative to the resource `path`. `:name` segments are filled from `params`. */
+  /**
+   * Path relative to the resource `path` (`"/:id/archive"`), `:name` filled from `params`. On a
+   * mocked resource the request is simulated against its records or fails with
+   * `MOCK_UNSUPPORTED` — it never reaches the network.
+   */
   path?: string;
   params?: PathParams;
   query?: QueryParams;
   body?: unknown;
   headers?: HeadersInitLike;
   timeout?: number;
-  retry?: RetryConfig | false;
+  retry?: RetryOption;
   responseType?: ResponseType;
   meta?: Record<string, unknown>;
   /** When true, resolve to `ApiResponse<T>` instead of unwrapped `T`. */
@@ -33,21 +35,22 @@ export interface OperationFnRequestInit {
 }
 
 /**
- * What a custom operation function receives as its first argument — a way to run a request
- * through the same headers/retry/middleware/error pipeline as every generated operation, without
- * reimplementing it.
+ * First argument of a custom operation function. `ctx.request()` runs through the same
+ * lifecycle as generated operations (headers, middleware, transforms, retry, errors, mocking).
  */
 export interface OperationFnContext {
   request<T = unknown>(init: OperationFnRequestInit): Promise<T>;
+  /** `resources` key and operation name. */
+  readonly resource: string;
+  readonly operation: string;
 }
 
 /**
  * A fully custom operation: called exactly like a generated one — `api.resource.<name>(...)`.
  * The first parameter (`ctx`) is bound by Core; callers never pass it.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OperationFn = (ctx: OperationFnContext, ...args: any[]) => Promise<unknown>;
-
-export function isOperationFn(value: unknown): value is OperationFn {
-  return typeof value === "function";
-}
+export type OperationFn = {
+  // Method syntax keeps parameters bivariant: unannotated args are `unknown` (never `any`),
+  // while annotated ones like `(ctx, id: number) => …` remain assignable.
+  bivariant(ctx: OperationFnContext, ...args: unknown[]): Promise<unknown>;
+}["bivariant"];

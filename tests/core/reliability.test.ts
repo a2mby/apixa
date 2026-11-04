@@ -4,7 +4,6 @@ import {
   HttpError,
   NetworkError,
   TimeoutError,
-  type Middleware,
 } from "@apixa/core";
 import { describe, expect, it, vi } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
@@ -20,7 +19,9 @@ describe("request reliability", () => {
         await new Promise(() => undefined);
         return { body: [] };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await expect(api.users.getAll({ signal: controller.signal })).rejects.toBeInstanceOf(
@@ -37,7 +38,9 @@ describe("request reliability", () => {
           await new Promise(() => undefined);
           return { body: [] };
         }),
-        users: { path: "/users" },
+        resources: {
+          users: { path: "/users" },
+        },
       });
 
       const pending = api.users.getAll({ timeout: 50 });
@@ -62,7 +65,9 @@ describe("request reliability", () => {
         }
         return { body: [{ id: "1" }] };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await expect(api.users.getAll()).resolves.toEqual([{ id: "1" }]);
@@ -79,7 +84,9 @@ describe("request reliability", () => {
         attempts += 1;
         throw new NetworkError("temporary");
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await expect(api.users.create({ name: "Ada" })).rejects.toBeInstanceOf(NetworkError);
@@ -96,7 +103,9 @@ describe("request reliability", () => {
         attempts += 1;
         return { status: 503, body: { detail: "unavailable" } };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await expect(api.users.getAll()).rejects.toSatisfy((error: unknown) => {
@@ -128,13 +137,16 @@ describe("request reliability", () => {
         attempts += 1;
         return { status: 503, body: { detail: "unavailable" } };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await expect(api.users.getAll()).rejects.toBeInstanceOf(HttpError);
     expect(attempts).toBe(3);
-    // One shouldRetry call per attempt (3), not two (which would double any side effect it has).
-    expect(shouldRetryCalls).toBe(3);
+    // One call per failed attempt that still has retry budget; never consulted twice per attempt,
+    // and not consulted once the budget is spent (it cannot extend it).
+    expect(shouldRetryCalls).toBe(2);
   });
 
   it("sets HttpError.retryable consistently with the actual retry decision (v0.11.0 fix)", async () => {
@@ -152,7 +164,9 @@ describe("request reliability", () => {
         },
       },
       transport: createFakeTransport(() => ({ status: 503, body: {} })),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     const error = await api.users.getAll().catch((e: unknown) => e);
@@ -177,7 +191,9 @@ describe("request reliability", () => {
           attempts += 1;
           throw new NetworkError("temporary");
         }),
-        users: { path: "/users" },
+        resources: {
+          users: { path: "/users" },
+        },
       });
 
       const pending = api.users.getAll({ signal: controller.signal });
@@ -193,80 +209,49 @@ describe("request reliability", () => {
     }
   });
 
-  it("runs middleware per attempt and mutates request headers before transport", async () => {
+  it("runs request middleware once per logical call (not per retry attempt), before transport", async () => {
     const seen: string[] = [];
     let middlewareCalls = 0;
-
-    const trace: Middleware = async (ctx, next) => {
-      middlewareCalls += 1;
-      ctx.request.headers.set("X-Trace", "1");
-      return next();
-    };
 
     const api = defineApi({
       baseURL: "https://api.example.com",
       retry: { retries: 1, baseDelayMs: 1, jitter: false },
-      middleware: [trace],
+      requestMiddleware: [
+        (request) => {
+          middlewareCalls += 1;
+          request.headers.set("X-Trace", "1");
+          return request;
+        },
+      ],
       transport: createFakeTransport((request) => {
         seen.push(request.headers.get("x-trace") ?? "");
-        if (seen.length === 1) {
-          throw new NetworkError("temporary");
-        }
+        if (seen.length === 1) throw new NetworkError("temporary");
         return { body: [] };
       }),
-      users: { path: "/users" },
+      resources: { users: { path: "/users" } },
     });
 
     await api.users.getAll();
-    expect(middlewareCalls).toBe(2);
+    expect(middlewareCalls).toBe(1);
     expect(seen).toEqual(["1", "1"]);
   });
 
-  it("allows middleware to call next() more than once", async () => {
-    let transportCalls = 0;
-
-    const refresh: Middleware = async (_ctx, next) => {
-      let res = await next();
-      if (res.status === 401) {
-        res = await next();
-      }
-      return res;
-    };
-
+  it("passes classified ApiError types to error middleware that rethrows", async () => {
+    const seen: unknown[] = [];
     const api = defineApi({
       baseURL: "https://api.example.com",
-      middleware: [refresh],
-      transport: createFakeTransport(() => {
-        transportCalls += 1;
-        if (transportCalls === 1) {
-          return { status: 401, body: { detail: "unauthorized" } };
-        }
-        return { body: [{ id: "1" }] };
-      }),
-      users: { path: "/users" },
-    });
-
-    await expect(api.users.getAll()).resolves.toEqual([{ id: "1" }]);
-    expect(transportCalls).toBe(2);
-  });
-
-  it("preserves middleware error path as documented ApiError types", async () => {
-    const api = defineApi({
-      baseURL: "https://api.example.com",
-      middleware: [
-        async (_ctx, next) => {
-          try {
-            return await next();
-          } catch (error) {
-            throw error;
-          }
+      middleware: {
+        onError: (error) => {
+          seen.push(error);
+          throw error;
         },
-      ],
+      },
       transport: createFakeTransport(() => ({ status: 500, body: { detail: "boom" } })),
-      users: { path: "/users" },
+      resources: { users: { path: "/users" } },
     });
 
     await expect(api.users.getAll()).rejects.toBeInstanceOf(HttpError);
+    expect(seen[0]).toBeInstanceOf(HttpError);
   });
 
   it("honors operation-level retry: false over api retry", async () => {
@@ -279,10 +264,12 @@ describe("request reliability", () => {
         attempts += 1;
         throw new NetworkError("temporary");
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getAll: { retry: false },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: { retry: false },
+          },
         },
       },
     });

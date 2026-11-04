@@ -115,9 +115,10 @@ describe("package surface", () => {
     }
   });
 
-  it("still exposes the Core inline-mocking bridge and Node loaders", () => {
-    expect(typeof mocking.enableResourceMocks).toBe("function");
-    expect(typeof mocking.registerDatasetPreset).toBe("function");
+  it("has no global registration API (Core mocking is client-scoped) and keeps the Node loaders", () => {
+    for (const removed of ["enableResourceMocks", "disableResourceMocks", "registerDatasetPreset", "applyResourceMocksToConfig"]) {
+      expect(removed in mocking).toBe(false);
+    }
     expect(typeof mockingNode.loadDataset).toBe("function");
     expect(typeof mockingNode.listDatasets).toBe("function");
   });
@@ -128,7 +129,7 @@ describe("package surface", () => {
       scripts: { build: string };
     };
     expect(Object.keys(pkg.exports)).toEqual(
-      expect.arrayContaining([".", "./register", "./node", "./data", "./data/users-mock"]),
+      expect.arrayContaining([".", "./datasets", "./node", "./data", "./data/users-mock"]),
     );
     for (const [subpath, target] of Object.entries(pkg.exports)) {
       const source = target.import.replace("./dist/", "src/").replace(/\.js$/, ".ts");
@@ -139,26 +140,27 @@ describe("package surface", () => {
   });
 });
 
-describe("standalone independence from Core", () => {
-  const standalone = [
-    "mock-api.ts",
-    "resource.ts",
-    "catalog.ts",
-    "errors.ts",
-    "data/index.ts",
-    "data/entities.ts",
-  ];
-  const bridge =
-    /["']\.\/(?:register|processor|store|transport|response|presets\/registry)(?:\.js)?["']/;
+describe("one mock engine", () => {
+  const legacy = /["']\.\/(?:register|processor|store|transport|response|bridge|presets\/registry)(?:\.js)?["']/;
 
-  it.each(standalone)("%s imports neither @apixa/core nor the legacy bridge", async (file) => {
-    const source = await readFile(resolve(pkgRoot, "src", file), "utf8");
-    const imports = source.split("\n").filter((line) => /^\s*(import|export)\b.*from\b/.test(line));
-    for (const line of imports) {
-      expect(line).not.toContain("@apixa/core");
-      expect(line).not.toMatch(bridge);
+  it.each(["mock-api.ts", "resource.ts", "catalog.ts", "datasets.ts", "data/index.ts"])(
+    "%s has no legacy bridge imports and no network access",
+    async (file) => {
+      const source = await readFile(resolve(pkgRoot, "src", file), "utf8");
+      const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+      expect(code).not.toMatch(legacy);
+      expect(code).not.toMatch(/defineApi\(|fetch\(|XMLHttpRequest/);
+    },
+  );
+
+  it("defineMockApi runs on Core's shared MockStore", async () => {
+    const source = await readFile(resolve(pkgRoot, "src", "resource.ts"), "utf8");
+    expect(source).toMatch(/import \{[^}]*MockStore[^}]*\} from "@apixa\/core"/);
+  });
+
+  it("the legacy bridge files are gone", () => {
+    for (const file of ["bridge.ts", "transport.ts", "store.ts", "processor.ts", "register.ts", "register-entry.ts"]) {
+      expect(existsSync(resolve(pkgRoot, "src", file)), file).toBe(false);
     }
-    const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ""); // docs may mention defineApi
-    expect(code).not.toMatch(/defineApi|fetch\(|XMLHttpRequest/);
   });
 });

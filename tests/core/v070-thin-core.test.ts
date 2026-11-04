@@ -4,7 +4,6 @@ import {
   isHttpError,
   isTimeoutError,
   TimeoutError,
-  type Middleware,
 } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 // expectTypeOf used for list/query + full response
@@ -26,7 +25,9 @@ describe("v0.7.0 thin core", () => {
         seen.push(request.url);
         return { body: { id: "1", name: "Ada" } };
       }),
-      users: { path: "/orgs/:orgId/users" },
+      resources: {
+        users: { path: "/orgs/:orgId/users" },
+      },
     });
 
     await api.users.getById({ orgId: "acme", id: "1" });
@@ -42,7 +43,9 @@ describe("v0.7.0 thin core", () => {
         seen.push(request.url);
         return { body: [] };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await api.users.getAll({ query: { tag: ["a", "b"] } });
@@ -61,7 +64,9 @@ describe("v0.7.0 thin core", () => {
         seenBody = request.body;
         return { status: 201, body: { id: "1" } };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await api.users.create(form as never);
@@ -72,7 +77,9 @@ describe("v0.7.0 thin core", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: [{ id: "1" }] })),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     const res = await api.users.getAll({ full: true as const });
@@ -100,7 +107,9 @@ describe("v0.7.0 thin core", () => {
         attempts += 1;
         return { status: 503, body: { detail: "down" } };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await expect(api.users.getAll()).rejects.toBeInstanceOf(HttpError);
@@ -129,7 +138,9 @@ describe("v0.7.0 thin core", () => {
     const api = defineApi<Api>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: { data: [], total: 0 } })),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     expectTypeOf(api.users.getAll()).resolves.toEqualTypeOf<Page>();

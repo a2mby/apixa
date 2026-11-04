@@ -16,10 +16,12 @@ describe("operations customization", () => {
     const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
-        operations: {
-          delete: false,
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            delete: false,
+          },
         },
       },
     });
@@ -48,11 +50,13 @@ describe("operations customization", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
-        operations: {
-          delete: false,
-          count: {},
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            delete: false,
+            count: {},
+          },
         },
       },
     });
@@ -66,10 +70,12 @@ describe("operations customization", () => {
     const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
-        operations: {
-          neverExisted: false,
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            neverExisted: false,
+          },
         },
       },
     });
@@ -113,10 +119,12 @@ describe("operations customization", () => {
         calls.push({ method: request.method, url: request.url });
         return { status: 200, body: { archived: true } };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+          },
         },
       },
     });
@@ -142,10 +150,12 @@ describe("operations customization", () => {
     const api = defineApi<ArchiveApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ status: 404, body: { message: "not found" } })),
-      users: {
-        path: "/users",
-        operations: {
-          archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+          },
         },
       },
     });
@@ -164,10 +174,12 @@ describe("operations customization", () => {
         urls.push(request.url);
         return { body: { id: "1", name: "Ada", email: "ada@example.com" } };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getById: { method: "GET", path: "/by-id/:id" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getById: { method: "GET", path: "/by-id/:id" },
+          },
         },
       },
     });
@@ -192,13 +204,15 @@ describe("operations customization", () => {
     const api = defineApi<AppApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
-        operations: {
-          getBySlug: {},
-          patch: {},
-          archive: async (ctx, id: string) => {
-            await ctx.request({ method: "POST", path: `/${id}/archive` });
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getBySlug: {},
+            patch: {},
+            archive: async (ctx, id: string) => {
+              await ctx.request({ method: "POST", path: `/${id}/archive` });
+            },
           },
         },
       },

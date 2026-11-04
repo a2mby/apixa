@@ -1,15 +1,13 @@
 /**
  * Browser-safe public surface.
  *
- * - `defineMockApi()` — standalone, in-memory mock API (no `defineApi()`, no network).
- * - Resource-level `mock: "<dataset-id>"` on Core `defineApi`: Core lazy-loads
- *   `@apixa/mocking/register` when that key is present (no side-effect import required).
- *   You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly.
+ * - `defineMockApi()` — standalone in-memory mock API (no `defineApi()`, no network), built on
+ *   Core's shared mock engine so its operations behave exactly like Core mocked resources.
+ * - Core `defineApi` resources accept `mock: "<dataset-id>" | records | provider` directly; Core
+ *   lazy-loads the selected dataset from `@apixa/mocking/datasets`. No setup call is needed.
  *
- * Node filesystem loaders live at `@apixa/mocking/node`; typed data at `@apixa/mocking/data`.
+ * Node filesystem loaders live at `@apixa/mocking/node`; typed records at `@apixa/mocking/data`.
  */
-
-import "./core-augmentation.js";
 
 export { defineMockApi } from "./mock-api.js";
 export type {
@@ -32,6 +30,7 @@ export type {
 export { MockingErrors, InvalidSliceError, MockApiError, type MockApiErrorCode } from "./errors.js";
 export type { MockSlice } from "./slice.js";
 export type { DatasetId } from "./catalog.js";
+export { listDatasetIds } from "./catalog.js";
 
 export type {
   Dataset,
@@ -41,17 +40,3 @@ export type {
   DatasetResourceHint,
   DatasetSchema,
 } from "./types.js";
-
-export {
-  registerDatasetPreset,
-  getDatasetPreset,
-  listDatasetPresetIds,
-  clearDatasetPresets,
-} from "./presets/registry.js";
-
-export { enableResourceMocks, disableResourceMocks } from "./register.js";
-export {
-  applyResourceMocksToConfig,
-  createSelectiveMockTransportFromSpecs,
-  type ResourceMockSpec,
-} from "./bridge.js";

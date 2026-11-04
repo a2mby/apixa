@@ -27,7 +27,12 @@ const base = {
 
 describe("operation selection", () => {
   it("exposes all 16 builtins by default, with no old bulk names", () => {
-    const api = defineApi({ ...base, users: { path: "/users" } });
+    const api = defineApi({
+      ...base,
+      resources: {
+        users: { path: "/users" },
+      },
+    });
     expect(Object.keys(api.users).sort()).toEqual([...names].sort());
     expect(Object.keys(api.users)).not.toContain("bulkCreate");
     expect(Object.keys(api.users)).not.toContain("bulkDelete");
@@ -36,24 +41,26 @@ describe("operation selection", () => {
   it.each(names)("disables and restores %s individually", (name) => {
     const disabled = defineApi({
       ...base,
-      users: { path: "/users", operations: { [name]: false } },
-    } as never) as { users: Record<string, unknown> };
+      resources: { users: { path: "/users", operations: { [name]: false } } },
+    } as never) as unknown as { users: Record<string, unknown> };
     expect(disabled.users).not.toHaveProperty(name);
     const restored = defineApi({
       ...base,
-      users: { path: "/users", defaultOperations: false, operations: { [name]: true } },
-    } as never) as { users: Record<string, unknown> };
+      resources: { users: { path: "/users", defaultOperations: false, operations: { [name]: true } } },
+    } as never) as unknown as { users: Record<string, unknown> };
     expect(Object.keys(restored.users)).toEqual([name]);
   });
 
   it("resolves defaults, flags, groups, then individual entries", () => {
     const api = defineApi({
       ...base,
-      users: {
-        path: "/users",
-        readOnly: true,
-        operationGroups: { extended: false, many: true },
-        operations: { create: true, createMany: { path: "/batch" }, deleteMany: false },
+      resources: {
+        users: {
+          path: "/users",
+          readOnly: true,
+          operationGroups: { extended: false, many: true },
+          operations: { create: true, createMany: { path: "/batch" }, deleteMany: false },
+        },
       },
     });
     expect(Object.keys(api.users).sort()).toEqual(
@@ -64,11 +71,15 @@ describe("operation selection", () => {
   it("gives many precedence over broad, overlapping groups independent of property order", () => {
     const left = defineApi({
       ...base,
-      users: { path: "/users", operationGroups: { many: true, read: false, extended: false } },
+      resources: {
+        users: { path: "/users", operationGroups: { many: true, read: false, extended: false } },
+      },
     });
     const right = defineApi({
       ...base,
-      users: { path: "/users", operationGroups: { extended: false, read: false, many: true } },
+      resources: {
+        users: { path: "/users", operationGroups: { extended: false, read: false, many: true } },
+      },
     });
     expect(Object.keys(left.users).sort()).toEqual(Object.keys(right.users).sort());
     expect(left.users).toHaveProperty("getMany");
@@ -78,24 +89,31 @@ describe("operation selection", () => {
   });
 
   it("supports writeOnly and defaultOperations false", () => {
-    const write = defineApi({ ...base, users: { path: "/users", writeOnly: true } });
+    const write = defineApi({
+      ...base,
+      resources: {
+        users: { path: "/users", writeOnly: true },
+      },
+    });
     expect(write.users).toHaveProperty("create");
     expect(write.users).not.toHaveProperty("getAll");
     expect(write.users).not.toHaveProperty("exists");
     const minimal = defineApi({
       ...base,
-      users: { path: "/users", defaultOperations: false, operations: { getAll: true } },
+      resources: {
+        users: { path: "/users", defaultOperations: false, operations: { getAll: true } },
+      },
     });
     expect(Object.keys(minimal.users)).toEqual(["getAll"]);
   });
 
   it("rejects conflicting flags and custom true", () => {
     expect(() =>
-      defineApi({ ...base, users: { path: "/users", readOnly: true, writeOnly: true } } as never),
+      defineApi({ ...base, resources: { users: { path: "/users", readOnly: true, writeOnly: true } } } as never),
     ).toThrow(/both readOnly and writeOnly/);
     expect(() =>
-      defineApi({ ...base, users: { path: "/users", operations: { archive: true } } } as never),
-    ).toThrow(/Custom operation "archive"/);
+      defineApi({ ...base, resources: { users: { path: "/users", operations: { archive: true } } } } as never),
+    ).toThrow(/true cannot create custom operation "archive"/);
   });
 
   it("uses independent paths, methods, and query mapping for special builtins", async () => {
@@ -106,14 +124,16 @@ describe("operation selection", () => {
         seen.push({ method: request.method, url: request.url, body: request.body });
         return { body: [{ id: "1" }] };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getAll: { path: "/all" },
-          getById: { path: "/lookup/:id" },
-          exists: { path: "/exists/:id" },
-          findFirst: { path: "/first" },
-          getMany: { path: "/batch", method: "POST" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: { path: "/all" },
+            getById: { path: "/lookup/:id" },
+            exists: { path: "/exists/:id" },
+            findFirst: { path: "/first" },
+            getMany: { path: "/batch", method: "POST" },
+          },
         },
       },
     });
@@ -135,7 +155,9 @@ describe("operation selection", () => {
         urls.push(request.url);
         return { body: {} };
       }),
-      users: { path: "/users", operations: { getBy: { path: "/lookup/:field/:value" } } },
+      resources: {
+        users: { path: "/users", operations: { getBy: { path: "/lookup/:field/:value" } } },
+      },
     });
     await api.users.getBy("email", "a@example.com");
     expect(urls).toEqual(["https://api.example.com/users/lookup/email/a%40example.com"]);
@@ -149,7 +171,9 @@ describe("operation selection", () => {
         urls.push(request.url);
         return { body: [{ id: "1" }] };
       }),
-      users: { path: "/orgs/:orgId/users" },
+      resources: {
+        users: { path: "/orgs/:orgId/users" },
+      },
     });
     await api.users.exists("1", { orgId: "acme" });
     await api.users.findFirst(undefined, { orgId: "acme" });
@@ -171,7 +195,9 @@ describe("operation selection", () => {
         seen.push({ method: request.method, url: request.url, body: request.body });
         return { body: [] };
       }),
-      users: { path: "/users", operations: { count: { method: "POST", hasBody: false } } },
+      resources: {
+        users: { path: "/users", operations: { count: { method: "POST", hasBody: false } } },
+      },
     });
     await api.users.createMany([{ name: "Ada" }]);
     await api.users.deleteMany(["1", "2"]);

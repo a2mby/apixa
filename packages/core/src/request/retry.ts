@@ -1,149 +1,106 @@
-import { AbortError, HttpError, NetworkError, TimeoutError } from "../errors/index.js";
+import { ConfigError, HttpError, NetworkError } from "../errors/index.js";
 import type { HttpMethod } from "../types/http.js";
-import type { ResolvedRetryConfig, RetryConfig, RetryHookContext } from "../types/retry.js";
-import type { ApiResponse } from "../types/transport.js";
+import type { ResolvedRetryConfig, RetryHookContext, RetryOption } from "../types/retry.js";
 
-const DEFAULT_METHODS: HttpMethod[] = ["GET", "HEAD"];
-const DEFAULT_BASE_DELAY_MS = 200;
-const DEFAULT_MAX_DELAY_MS = 2000;
+const DEFAULT_METHODS: HttpMethod[] = ["GET", "HEAD", "OPTIONS"];
+const RETRY_KEYS = new Set([
+  "retries",
+  "methods",
+  "statusCodes",
+  "baseDelayMs",
+  "maxDelayMs",
+  "jitter",
+  "respectRetryAfter",
+  "shouldRetry",
+  "onRetry",
+]);
 
-export function resolveRetryConfig(
-  value: RetryConfig | false | undefined,
-): ResolvedRetryConfig | undefined {
-  if (value === undefined || value === false) {
-    return undefined;
+/** Validate + resolve once at client construction (or per call for a call-level override). */
+export function resolveRetryConfig(value: RetryOption | undefined, label = "retry"): ResolvedRetryConfig | undefined {
+  if (value === undefined || value === false) return undefined;
+  const config = typeof value === "number" ? { retries: value } : value;
+  if (config === null || typeof config !== "object" || Array.isArray(config)) {
+    throw new ConfigError(`${label} must be a number, a retry config object, or false.`);
   }
-
-  if (value.retries < 0 || !Number.isFinite(value.retries)) {
-    throw new Error(`retry.retries must be a non-negative number (got ${String(value.retries)})`);
+  for (const key of Object.keys(config)) {
+    if (!RETRY_KEYS.has(key)) throw new ConfigError(`${label} has unknown option "${key}".`);
   }
-
+  if (typeof config.retries !== "number" || !Number.isInteger(config.retries) || config.retries < 0) {
+    throw new ConfigError(`${label}.retries must be a non-negative integer (got ${String(config.retries)}).`);
+  }
+  for (const key of ["baseDelayMs", "maxDelayMs"] as const) {
+    const n = config[key];
+    if (n !== undefined && (typeof n !== "number" || !Number.isFinite(n) || n < 0)) {
+      throw new ConfigError(`${label}.${key} must be a non-negative number.`);
+    }
+  }
   return {
-    retries: Math.floor(value.retries),
-    methods: value.methods ?? DEFAULT_METHODS,
-    statusCodes: value.statusCodes,
-    baseDelayMs: value.baseDelayMs ?? DEFAULT_BASE_DELAY_MS,
-    maxDelayMs: value.maxDelayMs ?? DEFAULT_MAX_DELAY_MS,
-    jitter: value.jitter ?? true,
-    respectRetryAfter: value.respectRetryAfter ?? true,
-    shouldRetry: value.shouldRetry,
-    onRetry: value.onRetry,
+    retries: config.retries,
+    methods: config.methods ?? DEFAULT_METHODS,
+    statusCodes: config.statusCodes,
+    baseDelayMs: config.baseDelayMs ?? 200,
+    maxDelayMs: config.maxDelayMs ?? 2000,
+    jitter: config.jitter ?? true,
+    respectRetryAfter: config.respectRetryAfter ?? true,
+    shouldRetry: config.shouldRetry,
+    onRetry: config.onRetry,
   };
 }
 
 export function isRetryableStatus(status: number, statusCodes?: number[]): boolean {
-  if (statusCodes) {
-    return statusCodes.includes(status);
-  }
-  if (status === 408 || status === 429) {
-    return true;
-  }
-  return status >= 500 && status <= 599;
+  if (statusCodes) return statusCodes.includes(status);
+  return status === 408 || status === 429 || (status >= 500 && status <= 599);
 }
 
-export function defaultShouldRetry(
-  error: unknown,
-  method: HttpMethod,
-  retry: ResolvedRetryConfig,
-  attempt: number,
-): boolean {
-  if (attempt >= retry.retries) {
-    return false;
-  }
-
-  if (error instanceof AbortError) {
-    return false;
-  }
-
-  if (!retry.methods.includes(method)) {
-    return false;
-  }
-
-  if (error instanceof NetworkError || error instanceof TimeoutError) {
-    return true;
-  }
-
-  if (error instanceof HttpError && error.status !== undefined) {
-    return isRetryableStatus(error.status, retry.statusCodes);
-  }
-
+/**
+ * Default decision for transient failures. Timeout / abort never reach here (the pipeline
+ * stops first); non-transient errors (4xx, parse, validation, mock, config) are never retried.
+ */
+export function defaultShouldRetry(error: unknown, method: HttpMethod, retry: ResolvedRetryConfig, attempt: number): boolean {
+  if (attempt >= retry.retries || !retry.methods.includes(method)) return false;
+  if (error instanceof NetworkError) return true;
+  if (error instanceof HttpError) return isRetryableStatus(error.status ?? 0, retry.statusCodes);
   return false;
 }
 
-export function decideRetry(
-  retry: ResolvedRetryConfig,
-  ctx: RetryHookContext,
-  error: unknown,
-): boolean {
-  if (retry.shouldRetry) {
-    return retry.shouldRetry({ ...ctx, error });
-  }
+export function decideRetry(retry: ResolvedRetryConfig, ctx: RetryHookContext, error: unknown): boolean {
+  if (ctx.attempt >= retry.retries) return false;
+  if (retry.shouldRetry) return retry.shouldRetry({ ...ctx, error });
   return defaultShouldRetry(error, ctx.method, retry, ctx.attempt);
 }
 
-export function computeRetryDelayMs(
-  attempt: number,
-  retry: ResolvedRetryConfig,
-  response?: ApiResponse<unknown>,
-): number {
-  if (retry.respectRetryAfter && response) {
-    const header = response.headers.get("retry-after");
-    if (header) {
-      const seconds = Number(header);
-      if (Number.isFinite(seconds) && seconds >= 0) {
-        return Math.min(seconds * 1000, retry.maxDelayMs);
-      }
-      const dateMs = Date.parse(header);
-      if (!Number.isNaN(dateMs)) {
-        return Math.min(Math.max(0, dateMs - Date.now()), retry.maxDelayMs);
-      }
-    }
-  }
-
-  const exp = retry.baseDelayMs * 2 ** attempt;
-  const capped = Math.min(exp, retry.maxDelayMs);
-  if (!retry.jitter) {
-    return capped;
-  }
-  return Math.floor(Math.random() * (capped + 1));
+/** Parse `Retry-After` (delta-seconds or HTTP date). Invalid values → `undefined`. */
+export function parseRetryAfter(header: string | null, now = Date.now()): number | undefined {
+  if (header === null) return undefined;
+  const trimmed = header.trim();
+  if (/^\d+$/.test(trimmed)) return Number(trimmed) * 1000;
+  const date = Date.parse(trimmed);
+  if (Number.isNaN(date)) return undefined;
+  return Math.max(0, date - now);
 }
 
-export function delay(ms: number, signal?: AbortSignal): Promise<void> {
+/** Exponential backoff with equal jitter: `cap/2 + random * cap/2`. */
+export function computeBackoffMs(attempt: number, retry: ResolvedRetryConfig, random: () => number = Math.random): number {
+  const capped = Math.min(retry.baseDelayMs * 2 ** attempt, retry.maxDelayMs);
+  if (!retry.jitter) return capped;
+  return Math.floor(capped / 2 + random() * (capped / 2));
+}
+
+/** Resolves after `ms`, or rejects with the signal's reason as soon as it aborts (no leaked timers). */
+export function delay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(createAbortRejection(signal));
+    if (signal.aborted) {
+      reject(signal.reason);
       return;
     }
-
-    const timer = setTimeout(() => {
-      signal?.removeEventListener("abort", onAbort);
-      resolve();
-    }, ms);
-
     const onAbort = () => {
       clearTimeout(timer);
-      reject(createAbortRejection(signal!));
+      reject(signal.reason);
     };
-
-    signal?.addEventListener("abort", onAbort, { once: true });
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    signal.addEventListener("abort", onAbort, { once: true });
   });
 }
-
-function createAbortRejection(signal: AbortSignal): Error {
-  const reason = signal.reason;
-  if (reason instanceof DOMException && reason.name === "TimeoutError") {
-    return reason;
-  }
-  if (reason instanceof TimeoutError) {
-    return reason;
-  }
-  if (reason instanceof Error && reason.name === "AbortError") {
-    return reason;
-  }
-  const error = new Error("The operation was aborted.");
-  error.name = "AbortError";
-  return error;
-}
-
-/** @deprecated Use `defaultShouldRetry` / `decideRetry`. Kept for test imports. */
-export const shouldRetry = defaultShouldRetry;

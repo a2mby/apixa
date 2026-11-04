@@ -26,7 +26,9 @@ describe("createFetchTransport — response parsing", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFetchTransport(fetchImplReturning("{not valid json")),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     const error = await api.users.getAll().catch((e: unknown) => e);

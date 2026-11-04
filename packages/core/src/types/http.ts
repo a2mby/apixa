@@ -29,3 +29,11 @@ export interface BuiltinHeaders {
 
 /** Accepts Fetch `HeadersInit` or the typed `BuiltinHeaders` bag. */
 export type HeadersInitLike = HeadersInit | BuiltinHeaders;
+
+/**
+ * Static headers, or a provider evaluated for every logical request (sync or async) so
+ * refreshed credentials are always used.
+ */
+export type HeadersSource =
+  | HeadersInitLike
+  | (() => HeadersInitLike | undefined | Promise<HeadersInitLike | undefined>);

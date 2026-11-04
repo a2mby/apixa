@@ -6,10 +6,9 @@
  * lazily with `defineMockApi({ countries: { type: "countries-csc" } })`.
  * Exports are read-only: `defineMockApi()` copies before it stores anything.
  *
- * Synthetic datasets below also self-register as Core resource-mock presets for
- * `mock: "<dataset-id>"`. Known ids for autocomplete live on Core’s `MockDatasetIds`.
+ * Importing this module never changes `defineApi` behavior: `mock: "<dataset-id>"` loads
+ * datasets lazily through `@apixa/mocking/datasets`, and inline `mock: users` works too.
  */
-import "../core-augmentation.js";
 import usersMock from "../../../../datasets/users/users-mock/data.json";
 import productsMock from "../../../../datasets/products/products-mock/data.json";
 import productsMockMeta from "../../../../datasets/products/products-mock/meta.json";
@@ -22,7 +21,6 @@ import postsMockMeta from "../../../../datasets/social/posts-mock/meta.json";
 import commentsMock from "../../../../datasets/comments/comments-mock/data.json";
 import commentsMockMeta from "../../../../datasets/comments/comments-mock/meta.json";
 import type { Comment, Company, Order, Post, Product, User } from "./entities.js";
-import { registerDatasetPreset } from "../presets/registry.js";
 import type { Dataset, DatasetMeta } from "../types.js";
 
 export type * from "./entities.js";
@@ -40,7 +38,7 @@ export const posts: readonly Post[] = postsMock;
 /** `comments-mock` */
 export const comments: readonly Comment[] = commentsMock;
 
-/** `Dataset` wrappers for Core resource-mock presets — exported so `presets/builtins.ts` can reuse them. */
+/** `Dataset` wrappers (meta + records) for the synthetic sets. */
 export const productsDataset: Dataset = {
   meta: productsMockMeta as DatasetMeta,
   records: productsMock as unknown as Record<string, unknown>[],
@@ -61,9 +59,3 @@ export const commentsDataset: Dataset = {
   meta: commentsMockMeta as DatasetMeta,
   records: commentsMock as unknown as Record<string, unknown>[],
 };
-
-registerDatasetPreset("products-mock", productsDataset);
-registerDatasetPreset("companies-mock", companiesDataset);
-registerDatasetPreset("orders-mock", ordersDataset);
-registerDatasetPreset("posts-mock", postsDataset);
-registerDatasetPreset("comments-mock", commentsDataset);

@@ -1,15 +1,10 @@
 import type { Dataset, DatasetMeta } from "../types.js";
-import { registerDatasetPreset } from "../presets/registry.js";
 import usersMockJson from "../../../../datasets/users/users-mock/data.json";
 
-/** Entity type for the `users-mock` synthetic preset. */
-export type MockUser = {
-  id: string;
-  name: string;
-  email: string;
-  username: string;
-  companyId: string;
-};
+import type { MockUser } from "@apixa/core";
+
+/** Entity type for the `users-mock` dataset (owned by Core's `MockDatasetCatalog`). */
+export type { MockUser };
 
 /** Alias used by some WIP / entity re-exports. */
 export type User = MockUser;
@@ -40,7 +35,5 @@ export const dataset: Dataset = {
   meta: { ...meta, records: data.length },
   records: data as unknown as Record<string, unknown>[],
 };
-
-registerDatasetPreset("users-mock", dataset);
 
 export default data;

@@ -18,12 +18,14 @@ describe("defineApi", () => {
       transport: createFakeTransport(() => ({
         body: [{ id: "1", name: "Ada", email: "ada@example.com" }] satisfies User[],
       })),
-      users: {
-        path: "/users",
-        operations: {
-          getAll: {},
-          getById: {},
-          create: {},
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: {},
+            getById: {},
+            create: {},
+          },
         },
       },
     });
@@ -64,10 +66,12 @@ describe("defineApi", () => {
         urls.push(`${request.method} ${request.url}`);
         return { body: { id: "1", name: "Ada", email: "ada@example.com" } satisfies User };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getById: {},
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getById: {},
+          },
         },
       },
     });
@@ -85,10 +89,12 @@ describe("defineApi", () => {
         urls.push(request.url);
         return { body: { id: "abc", name: "Ada", email: "ada@example.com" } satisfies User };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          getById: { method: "GET", path: "/by-uuid/:id" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getById: { method: "GET", path: "/by-uuid/:id" },
+          },
         },
       },
     });
@@ -109,14 +115,16 @@ describe("defineApi", () => {
         }
         return { body: [] };
       }),
-      users: {
-        path: "/users",
+      resources: {
+        users: {
+          path: "/users",
+        },
       },
     });
 
-    expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<string | number>();
-    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id">>();
-    expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<string | number>();
+    expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<User["id"]>();
+    expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<Omit<User, "id"> & Partial<Pick<User, "id">>>();
+    expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<User["id"]>();
     expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<Partial<User>>();
 
     const created = await api.users.create({ name: "Ada", email: "ada@example.com" });
@@ -132,17 +140,17 @@ describe("defineApi", () => {
     expect(() =>
       defineApi({
         baseURL: "https://api.example.com",
-        users: { entity: {} } as never,
-      }),
-    ).toThrow(/resource "users" is missing a string "path"/);
+        resources: { users: { operations: {} } },
+      } as never),
+    ).toThrow(/resources\.users\.path must be a string starting with "\/"/);
   });
 
   it("throws the same clear error on the explicit-state overload", () => {
     expect(() =>
       defineApi<UsersApi>()({
         baseURL: "https://api.example.com",
-        users: {} as never,
-      }),
-    ).toThrow(/resource "users" is missing a string "path"/);
+        resources: { users: {} },
+      } as never),
+    ).toThrow(/resources\.users\.path must be a string/);
   });
 });

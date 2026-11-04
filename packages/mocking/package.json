@@ -1,7 +1,7 @@
 {
   "name": "@apixa/mocking",
   "version": "0.5.0",
-  "description": "Standalone in-memory mock APIs and local JSON datasets for Apixa — no network, no backend.",
+  "description": "Standalone in-memory mock APIs and local JSON datasets for Apixa \u2014 no network, no backend.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,9 +12,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./register": {
-      "types": "./dist/register-entry.d.ts",
-      "import": "./dist/register-entry.js"
+    "./datasets": {
+      "types": "./dist/datasets.d.ts",
+      "import": "./dist/datasets.js"
     },
     "./node": {
       "types": "./dist/node.d.ts",
@@ -32,14 +32,10 @@
   "files": [
     "dist"
   ],
-  "sideEffects": [
-    "./dist/register-entry.js",
-    "./dist/core-augmentation.js",
-    "./dist/data/users-mock.js"
-  ],
+  "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts src/register-entry.ts src/node.ts src/data/index.ts src/data/users-mock.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts src/register-entry.ts src/node.ts src/data/index.ts src/data/users-mock.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts src/datasets.ts src/node.ts src/data/index.ts src/data/users-mock.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/datasets.ts src/node.ts src/data/index.ts src/data/users-mock.ts --format esm --dts --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

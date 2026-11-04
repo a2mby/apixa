@@ -16,7 +16,9 @@ describe("builtins added in v0.10.0", () => {
     const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     expect(Object.keys(api.users).sort()).toEqual([
@@ -48,7 +50,9 @@ describe("builtins added in v0.10.0", () => {
         calls.push({ method: request.method, url: request.url });
         return { status: 200, body: { id: "1", name: "Ada", email: "a@example.com" } };
       }),
-      users: { path: "/users" }, // no `operations` at all
+      resources: {
+        users: { path: "/users" },
+      }, // no `operations` at all
     });
 
     await api.users.patch("1", { name: "Ada" });
@@ -120,7 +124,9 @@ describe("builtins added in v0.10.0", () => {
           calls.push({ method: request.method, url: request.url });
           return { status: 200, body: {} };
         }),
-        users: { path: "/users" },
+        resources: {
+          users: { path: "/users" },
+        },
       });
 
       await testCase.call(api);
@@ -138,10 +144,12 @@ describe("builtins added in v0.10.0", () => {
         urls.push(request.url);
         return { status: 200, body: 3 };
       }),
-      users: {
-        path: "/users",
-        operations: {
-          count: { path: "/total" },
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            count: { path: "/total" },
+          },
         },
       },
     });
@@ -154,9 +162,11 @@ describe("builtins added in v0.10.0", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: {
-        path: "/users",
-        operations: { count: false, search: false },
+      resources: {
+        users: {
+          path: "/users",
+          operations: { count: false, search: false },
+        },
       },
     });
 
@@ -174,7 +184,9 @@ describe("builtins added in v0.10.0", () => {
         }
         return { status: 404, body: { message: "not found" } };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     expect(await api.users.exists("1")).toBe(true);
@@ -185,7 +197,9 @@ describe("builtins added in v0.10.0", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ status: 500, body: { message: "boom" } })),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await expect(api.users.exists("1")).rejects.toSatisfy(
@@ -203,7 +217,9 @@ describe("builtins added in v0.10.0", () => {
           body: [{ id: "1", name: "Ada", email: "a@example.com" }],
         };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     expect(await api.users.findFirst()).toEqual({ id: "1", name: "Ada", email: "a@example.com" });
@@ -225,7 +241,9 @@ describe("builtins added in v0.10.0", () => {
           ],
         };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     const result = await api.users.getMany(["1", "2"]);
@@ -242,7 +260,9 @@ describe("builtins added in v0.10.0", () => {
         urls.push(request.url);
         return { status: 200, body: { id: "1", name: "Ada", email: "a@example.com" } };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     await api.users.getBy("code", "ABC123");
@@ -266,9 +286,11 @@ describe("builtins added in v0.10.0", () => {
         }
         return { status: 404, body: { message: "not found" } };
       }),
-      users: {
-        path: "/users",
-        operations: { getById: { path: "/u/:id" } },
+      resources: {
+        users: {
+          path: "/users",
+          operations: { getById: { path: "/u/:id" } },
+        },
       },
     });
 
@@ -285,9 +307,11 @@ describe("builtins added in v0.10.0", () => {
         urls.push(request.url);
         return { status: 200, body: [{ id: "1", name: "Ada" }] };
       }),
-      users: {
-        path: "/users",
-        operations: { getAll: { path: "/all" } },
+      resources: {
+        users: {
+          path: "/users",
+          operations: { getAll: { path: "/all" } },
+        },
       },
     });
 
@@ -307,9 +331,11 @@ describe("builtins added in v0.10.0", () => {
         if (request.url.endsWith("/users/1")) return { status: 200, body: { id: "1" } };
         return { status: 200, body: [{ id: "1" }] };
       }),
-      users: {
-        path: "/users",
-        operations: { getById: false, getAll: false },
+      resources: {
+        users: {
+          path: "/users",
+          operations: { getById: false, getAll: false },
+        },
       },
     });
 
@@ -324,7 +350,9 @@ describe("builtins added in v0.10.0", () => {
         status: 200,
         body: { data: [{ id: "1" }, { id: "2" }], total: 2, page: 1, pageSize: 20 },
       })),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     expect(await api.users.findFirst()).toEqual({ id: "1" });
@@ -335,7 +363,9 @@ describe("builtins added in v0.10.0", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     expectTypeOf(api.users.exists).parameter(0).toEqualTypeOf<string | number>();
@@ -350,7 +380,9 @@ describe("readOnly shorthand (v0.11.0)", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
-      users: { path: "/users", readOnly: true },
+      resources: {
+        users: { path: "/users", readOnly: true },
+      },
     });
 
     for (const name of [
@@ -377,10 +409,12 @@ describe("readOnly shorthand (v0.11.0)", () => {
         urls.push(request.url);
         return { status: 200, body: { id: "1" } };
       }),
-      users: {
-        path: "/users",
-        readOnly: true,
-        operations: { patch: {} },
+      resources: {
+        users: {
+          path: "/users",
+          readOnly: true,
+          operations: { patch: {} },
+        },
       },
     });
 
@@ -400,7 +434,9 @@ describe("pagination convention (v0.11.0, type-only)", () => {
         calls.push(request.url);
         return { status: 200, body: [{ id: "1" }] };
       }),
-      users: { path: "/users" },
+      resources: {
+        users: { path: "/users" },
+      },
     });
 
     const all = await api.users.getAll();
@@ -416,7 +452,9 @@ describe("pagination convention (v0.11.0, type-only)", () => {
         calls.push(request.url);
         return { status: 200, body: { data: [{ id: "1" }], total: 1, page: 1, pageSize: 20 } };
       }),
-      users: { path: "/users", pagination: "page" },
+      resources: {
+        users: { path: "/users", pagination: "page" },
+      },
     });
 
     const page = (await api.users.getAll({ query: { page: 1, pageSize: 20 } })) as {

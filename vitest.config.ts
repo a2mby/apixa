@@ -13,7 +13,7 @@ export default defineConfig({
       "@apixa/mocking/data/users-mock": resolve(root, "packages/mocking/src/data/users-mock.ts"),
       "@apixa/mocking/data": resolve(root, "packages/mocking/src/data/index.ts"),
       "@apixa/mocking/node": resolve(root, "packages/mocking/src/node.ts"),
-      "@apixa/mocking/register": resolve(root, "packages/mocking/src/register-entry.ts"),
+      "@apixa/mocking/datasets": resolve(root, "packages/mocking/src/datasets.ts"),
       "@apixa/mocking": resolve(root, "packages/mocking/src/index.ts"),
       "@apixa/tanstack-query": resolve(root, "packages/tanstack-query/src/index.ts"),
       "@apixa/tanstack-query/advanced": resolve(root, "packages/tanstack-query/src/advanced.ts"),

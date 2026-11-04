@@ -1,29 +1,23 @@
+import { ValidationError } from "../errors/index.js";
 import type { PathParams } from "../types/http.js";
 
+const PARAM = /:([A-Za-z0-9_]+)/g;
+
+/** Fill `:name` segments (URL-encoded). The scheme/port part of an absolute URL is left alone. */
 export function interpolatePath(path: string, params?: PathParams): string {
-  if (!params) return path;
-
-  return path.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => {
-    const value = params[key];
-    if (value === undefined) {
-      throw new Error(`Missing path parameter: ${key}`);
-    }
-    return encodeURIComponent(String(value));
-  });
-}
-
-export function joinURL(baseURL: string, path: string): string {
-  if (/^https?:\/\//i.test(path)) {
-    return path;
-  }
-
-  const base = baseURL.replace(/\/+$/, "");
-  if (!path || path === "/") {
-    return base;
-  }
-
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${normalizedPath}`;
+  const absolute = /^(https?:\/\/[^/]+)(.*)$/i.exec(path);
+  const head = absolute ? absolute[1]! : "";
+  const tail = absolute ? absolute[2]! : path;
+  return (
+    head +
+    tail.replace(PARAM, (_, key: string) => {
+      const value = params?.[key];
+      if (value === undefined || value === null || value === "") {
+        throw new ValidationError(`Missing path parameter "${key}" for ${path}`);
+      }
+      return encodeURIComponent(String(value));
+    })
+  );
 }
 
 /** Join a resource path with an operation path that may be relative. */
