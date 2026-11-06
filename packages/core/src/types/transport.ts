@@ -79,4 +79,9 @@ export type RequestOptions<TQuery = QueryParams> = {
   meta?: Record<string, unknown>;
   /** When true, resolve to `ApiResponse<T>` instead of unwrapped `T`. */
   full?: boolean;
+  /**
+   * Explicit idempotency key for an operation configured with `idempotency`. Reuse the same key
+   * when you retry the same logical write yourself.
+   */
+  idempotencyKey?: string;
 };

@@ -2,6 +2,13 @@
 
 Project log. Newest entry first.
 
+## 2026-11-06 — Opt-in idempotency keys on Core writes
+
+Write operations can declare `idempotency: true` or `{ header, generate }`, and Core then sends one
+`Idempotency-Key` per call, reused across Core retries and an error-middleware replay. Reads reject
+it at type and runtime level; `createIdempotencyKey` lets integrations reuse a key across their own
+retries. This is an opt-in Core addition alongside the v1.0.0 Query workstream, not a scope item.
+
 ## 2026-11-06 — Expose Cursor commands to Claude and Codex, add `/ship-changes`
 
 `.claude/commands`, `.claude/skills` and `.agents/skills` now symlink to `.cursor/`, so Claude Code and

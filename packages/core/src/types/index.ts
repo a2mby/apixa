@@ -20,6 +20,7 @@ export type {
 
 export type {
   OperationDefinition,
+  IdempotencyOption,
   OperationValue,
   OperationKind,
   OperationRunDefinition,

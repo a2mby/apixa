@@ -75,6 +75,8 @@ export interface PreparedOperation {
   onError: readonly ErrorMiddleware[];
   requestKeys?: KeyCase;
   responseKeys?: KeyCase;
+  /** Opt-in idempotency header for writes (resolved at construction). */
+  idempotency?: { header: string; generate: () => string };
 }
 
 /** Arguments of one call. */
@@ -90,6 +92,8 @@ export interface CallInput {
   hasBody?: boolean;
   /** Set on the single replay started from error middleware (prevents replay loops). */
   replayed?: boolean;
+  /** The key chosen for this logical call; a replay reuses it. */
+  idempotencyKey?: string;
   /** Builtin semantics for a mocked resource; absent → route by method + relative path. */
   intent?: (wire: { query?: Record<string, unknown>; body?: unknown }) => BuiltinIntent;
   /** Treat an HTTP 404 as a successful response for `fromHttp` to interpret (used by `exists`). */
@@ -229,6 +233,7 @@ export async function runOperation(
   const { signal, timedOut, cleanup } = createCallSignal(timeout, options.signal);
   const mocked = resource.mock !== undefined;
   let request: ApiRequest | undefined;
+  let idempotencyKey = call.idempotencyKey;
 
   try {
     throwIfAborted(signal);
@@ -241,6 +246,7 @@ export async function runOperation(
       : buildQueryString(query, client.queryArrayFormat);
     const origin = mocked ? client.base.origin : requestOrigin(client.base);
     const headers = await resolveHeaders(op.headers, options.headers);
+    idempotencyKey = applyIdempotency(op, options, headers, idempotencyKey, resource.name);
     throwIfAborted(signal);
 
     request = {
@@ -326,7 +332,7 @@ export async function runOperation(
     let error = classify(thrown, signal, timedOut(), request);
     const replay = call.replayed
       ? undefined
-      : () => runOperation(client, resource, op, { ...call, replayed: true });
+      : () => runOperation(client, resource, op, { ...call, replayed: true, idempotencyKey });
     for (const hook of op.onError) {
       try {
         const recovered = await hook(error, { request, replay });
@@ -339,6 +345,50 @@ export async function runOperation(
   } finally {
     cleanup();
   }
+}
+
+/**
+ * One key per logical call: an explicit `options.idempotencyKey`, else the key of the call being
+ * replayed, else a header the caller already set, else a fresh one. Transport retries reuse the
+ * request headers, so they reuse the key too.
+ */
+function applyIdempotency(
+  op: PreparedOperation,
+  options: RequestOptions,
+  headers: Headers,
+  current: string | undefined,
+  resourceName: string,
+): string | undefined {
+  if (!op.idempotency) {
+    if (options.idempotencyKey !== undefined) {
+      throw new ConfigError(
+        `resources.${resourceName}.operations.${op.name}: idempotencyKey was passed, but the operation has no idempotency option.`,
+      );
+    }
+    return undefined;
+  }
+  const { header, generate } = op.idempotency;
+  if (options.idempotencyKey !== undefined) {
+    if (typeof options.idempotencyKey !== "string" || options.idempotencyKey === "") {
+      throw new ConfigError("options.idempotencyKey must be a non-empty string.");
+    }
+    headers.set(header, options.idempotencyKey);
+    return options.idempotencyKey;
+  }
+  if (current !== undefined) {
+    headers.set(header, current);
+    return current;
+  }
+  const existing = headers.get(header);
+  if (existing !== null) return existing;
+  const key = generate();
+  if (typeof key !== "string" || key === "") {
+    throw new ConfigError(
+      `resources.${resourceName}.operations.${op.name}.idempotency.generate must return a non-empty string.`,
+    );
+  }
+  headers.set(header, key);
+  return key;
 }
 
 function normalizeQs(value: string): string {

@@ -52,6 +52,7 @@ export const RESOURCE_KEYS = new Set([
 
 export const OPERATION_KEYS = new Set([
   "kind",
+  "idempotency",
   "method",
   "path",
   "hasBody",
@@ -350,5 +351,37 @@ function validateOperation(where: string, name: string, value: unknown): void {
     throw new ConfigError(`${where}.path must be a string.`);
   if (value.hasBody !== undefined && typeof value.hasBody !== "boolean")
     throw new ConfigError(`${where}.hasBody must be a boolean.`);
+  validateIdempotency(
+    where,
+    value.idempotency,
+    builtin ? BUILTIN_CONVENTIONS[name].access : (value.kind as "read" | "write"),
+  );
   validateLayer(where, value);
+}
+
+const IDEMPOTENCY_KEYS = new Set(["header", "generate"]);
+
+function validateIdempotency(where: string, value: unknown, kind: "read" | "write"): void {
+  if (value === undefined || value === false) return;
+  if (kind !== "write") {
+    throw new ConfigError(
+      `${where}.idempotency: only write operations send an idempotency key (this operation is a "${kind}").`,
+    );
+  }
+  if (value === true) return;
+  if (!isPlainObject(value)) {
+    throw new ConfigError(
+      `${where}.idempotency must be true, false, or { header?, generate? } (got ${typeName(value)}).`,
+    );
+  }
+  assertKnownKeys(`${where}.idempotency`, value, IDEMPOTENCY_KEYS);
+  if (
+    value.header !== undefined &&
+    (typeof value.header !== "string" || !/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(value.header))
+  ) {
+    throw new ConfigError(`${where}.idempotency.header must be a valid HTTP header name.`);
+  }
+  if (value.generate !== undefined && typeof value.generate !== "function") {
+    throw new ConfigError(`${where}.idempotency.generate must be a function.`);
+  }
 }
