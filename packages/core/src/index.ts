@@ -37,6 +37,9 @@ export {
 } from "./mock/index.js";
 export type { MockSource, MockDatasetLoader } from "./mock/index.js";
 
+/** Operation selection (defaults, groups, `readOnly` / `writeOnly`) shared with `@apixa/mocking`. */
+export { expandOperations, BUILTIN_CONVENTIONS } from "./operation/index.js";
+
 export { convertKey, transformKeys, KEY_CASES } from "./transform/index.js";
 
 export type * from "./types/index.js";

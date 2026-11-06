@@ -91,6 +91,8 @@ export type {
   FullPath,
   ConcatPaths,
   ResourceOpsOf,
+  KnownOpName,
+  MaybeOpName,
   MockEntityOf,
   Widen,
   RootTypes,

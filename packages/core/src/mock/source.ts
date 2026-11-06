@@ -15,6 +15,11 @@ export interface MockSource {
   /** Inline records are available synchronously; providers / datasets load on demand. */
   load: () => readonly unknown[] | Promise<readonly unknown[]>;
   seed?: { limit?: number; offset?: number };
+  /**
+   * The records are an immutable, module-cached built-in dataset that nothing else mutates, so
+   * the store may keep references to it as its reset source instead of a private cloned snapshot.
+   */
+  immutable?: boolean;
 }
 
 const MOCK_OBJECT_KEYS = new Set(["data", "idKey", "seed"]);
@@ -68,7 +73,7 @@ export function normalizeMockSource(resource: string, value: unknown): MockSourc
         `${label}.idKey "${idKey}" does not match dataset "${id}" (uses "${datasetIdKey}").`,
       );
     }
-    return { label, idKey: datasetIdKey, load: () => loadNamedDataset(id), seed };
+    return { label, idKey: datasetIdKey, load: () => loadNamedDataset(id), seed, immutable: true };
   }
 
   if (Array.isArray(data)) {

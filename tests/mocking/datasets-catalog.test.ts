@@ -41,11 +41,24 @@ describe("one coherent dataset catalog", () => {
     vi.restoreAllMocks();
   });
 
-  it("the package entry and the datasets entry never statically import dataset JSON", async () => {
-    for (const file of ["index.ts", "datasets.ts", "catalog.ts", "mock-api.ts", "resource.ts"]) {
+  it("the package entry, the loader and registration never statically import dataset JSON", async () => {
+    for (const file of [
+      "index.ts",
+      "loader.ts",
+      "register.ts",
+      "catalog.ts",
+      "mock-api.ts",
+      "resource.ts",
+    ]) {
       const source = await readFile(resolve(pkgRoot, "src", file), "utf8");
       expect(source, file).not.toMatch(/^import .*\.json["'];?$/m);
     }
+  });
+
+  it("only the datasets entry statically imports JSON (its direct exports are eager by design)", async () => {
+    const source = await readFile(resolve(pkgRoot, "src", "datasets.ts"), "utf8");
+    expect(source).toMatch(/^import .*\.json["'];?$/m);
+    expect(source).toContain("loadDataset");
   });
 
   it("only the explicit registration entry has side effects", async () => {
