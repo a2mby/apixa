@@ -77,8 +77,10 @@ export class MockStore {
         offset,
         limit === undefined ? undefined : offset + limit,
       ) as Row[];
-      // The source (imported module, inline array) is never mutated: keep a private copy.
-      this.initial = seeded.map(clone);
+      // The source is never mutated. Inline arrays and providers can change under us, so keep a
+      // private snapshot for reset. A built-in dataset is an immutable module-cached array, so
+      // its (shallow) seeded slice is the reset source: only the working rows are cloned.
+      this.initial = this.source.immutable ? seeded : seeded.map(clone);
       this.applyInitial();
     })().finally(() => {
       this.loading = undefined;

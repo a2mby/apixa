@@ -8,9 +8,11 @@ Standalone, in-memory mock APIs built from local JSON datasets. **No network req
 import { defineMockApi } from "@apixa/mocking";
 
 export const mockApi = defineMockApi({
-  users: "users-mock",
-  products: { type: "products-mock", slice: 50 },
-  countries: { type: "countries-csc", pagination: true },
+  resources: {
+    users: { type: "users-mock", readOnly: true, operations: { getBySlug: false } },
+    products: { type: "products-mock", slice: 50, operations: { delete: false } },
+    countries: { type: "countries-csc", pagination: true },
+  },
 });
 
 const { data, total } = await mockApi.countries.getAll({ page: 1, pageSize: 10 });
@@ -46,7 +48,9 @@ const { data: commentsPage } = useQuery(commentsQuery);
 const comments = commentsPage?.data ?? [];
 ```
 
-Each top-level key is a resource. There are no handlers to write — every resource gets the same CRUD operations, typed from its dataset.
+The config mirrors `defineApi`: each key under `resources` becomes a property on the returned client, typed from its dataset. Type `defineMockApi({` and let autocomplete guide you: root settings, then the resource's options, then `operations`. No generic, entity type or callback annotation is needed.
+
+> The older flat form, `defineMockApi({ users: "users-mock" })`, still works as a compatibility shorthand. Prefer `resources`.
 
 | Option       | Meaning                                                                                                                                                          |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -56,7 +60,43 @@ Each top-level key is a resource. There are no handlers to write — every resou
 
 Any other option (`handlers`, `path`, `mock`, …) is a type error and throws `INVALID_CONFIG`.
 
+### Root settings
+
+Core's operation-selection settings (same names and precedence as `defineApi`'s resource settings) may also be set on the **root** of a standalone mock, where they apply to every resource. A resource's own value wins over the root; `operationGroups` merge group by group. Root settings that need a network (`baseURL`, `transport`, `headers`, `retry`, `timeout`, `transforms`, `middleware`, …) do not exist here.
+
+| Setting             | Meaning                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `defaultOperations` | `false` starts with no builtins; enable some with `operationGroups` / `operations`. |
+| `readOnly`          | Removes the 7 write builtins (explicit groups / operations still win).              |
+| `writeOnly`         | Removes the 9 read builtins (explicit groups / operations still win).               |
+| `operationGroups`   | `{ read, write, many, extended }` booleans turn a whole group on or off.            |
+
+Resolution is Core's own: builtin defaults → `defaultOperations` → `readOnly` / `writeOnly` → `extended` → `read` / `write` → `many` → individual `operations` entries. The returned type follows the same rules, so a disabled method is absent from autocomplete and fails type checking.
+
+### Custom operations
+
+`operations` values are `true` (keep a builtin), `false` (remove it), or a function. Functions receive a bound, typed `ctx` first; callers never pass it. A builtin override gets its builtin's arguments automatically; a custom operation infers its arguments and return from the handler (annotate an argument inline when it cannot be inferred):
+
+```ts
+const api = defineMockApi({
+  resources: {
+    users: {
+      type: "users-mock",
+      operations: {
+        getById: async (ctx, id) => (await ctx.rows()).find((row) => row.id === id)!,
+        byEmail: async (ctx, email: string) => (await ctx.rows()).find((r) => r.email === email),
+      },
+    },
+  },
+});
+await api.users.byEmail("a@b.co"); // User | undefined
+```
+
+HTTP-shaped operation forms (`{ method, path, … }`) have no local meaning and are rejected (`INVALID_CONFIG`).
+
 ### Operations
+
+Each resource has the 16 Core builtins by default (see root settings to trim them). The six CRUD methods:
 
 | Method               | Behavior                                                                                |
 | -------------------- | --------------------------------------------------------------------------------------- |
@@ -86,7 +126,7 @@ Failures extend `MockingErrors` (`MockApiError`, `InvalidSliceError`); branch on
 
 ## Datasets
 
-Loaded from the root [`datasets/`](../../datasets/) catalog (`manifest.json` stays the source of truth). Each dataset is its own lazy chunk, so unused ones are never loaded.
+Loaded from the root [`datasets/`](../../datasets/) catalog (`manifest.json` stays the source of truth). Each dataset is its own lazy chunk, so datasets you never request are never loaded.
 
 | Dataset id            | Entity type       | Id field    | Records | License  |
 | --------------------- | ----------------- | ----------- | ------: | -------- |
@@ -108,14 +148,43 @@ Loaded from the root [`datasets/`](../../datasets/) catalog (`manifest.json` sta
 
 **Not available** through `defineMockApi()`: `states-csc` (1 MB), `states-parseapi` and `counties-parseapi` (>500 KB, and their id field isn't unique, so `getById` would be ambiguous). They stay in `datasets/` and load with `@apixa/mocking/node`. See [`datasets/ATTRIBUTION.md`](../../datasets/ATTRIBUTION.md) for licenses (ODbL sets are share-alike).
 
-## Typed data — `@apixa/mocking/data`
+## Dataset access — `@apixa/mocking/datasets`
+
+The canonical entry point for reading records yourself. You never need it for `defineMockApi()` or Core's `mock: "users-mock"` — those load their dataset on first use.
 
 ```ts
-import { users, products } from "@apixa/mocking/data";
-import type { User, Product } from "@apixa/mocking/data";
+// Lazy: nothing is imported until you call it, and only the selected dataset loads.
+import { loadDataset } from "@apixa/mocking/datasets";
+const users = await loadDataset("users-mock"); // readonly MockUser[]
+const countries = await loadDataset("countries-csc"); // reference sets are lazy-only
+
+// Eager: direct named exports of the small synthetic sets.
+import { users, products, companies, orders, posts, comments } from "@apixa/mocking/datasets";
+import type { User, Product } from "@apixa/mocking/datasets";
 ```
 
-Read-only typed records for the small synthetic sets (`users`, `products`, `companies`, `orders`, `posts`, `comments`) straight from the root JSON — no copies. Entity types for **every** dataset above are exported too; reference sets (countries, currencies, …) are types only, so importing them costs nothing at runtime.
+|                | `loadDataset(id)`                    | named imports (`users`, …)                                 |
+| -------------- | ------------------------------------ | ---------------------------------------------------------- |
+| When it loads  | When called (its own chunk)          | When the module is evaluated; unused names are tree-shaken |
+| Datasets       | Every catalog id                     | The six small synthetic sets                               |
+| Returns / type | `Promise<readonly Entity[]>`         | `readonly Entity[]`                                        |
+| Shared array   | Yes — the module-cached source array | Yes — the same array                                       |
+
+Both hand back the module-cached source array: treat it as read-only. Stores made by `defineMockApi()` always copy it. **Direct imports do not save memory** — they only choose when the records load; module caching keeps the source resident either way. `listDatasetIds()` (from the main entry and `/datasets`) is kept for compatibility; `type` autocompletes the ids.
+
+Compatibility paths still work: `@apixa/mocking/data` (the same eager records and entity types, without the loaders) and `@apixa/mocking/data/users-mock`. `loadDatasetRecords(id)` and `@apixa/mocking/register` are unchanged.
+
+### Memory
+
+What stays in memory after a dataset loads:
+
+1. **The source records** — the imported JSON module, cached by the runtime/bundler. Shared by every store and every caller.
+2. **One working copy per store** — each `defineMockApi()` resource (and each Core mocked resource) owns the rows it mutates, so state is isolated per resource and per client.
+3. **Return copies** — every call returns fresh copies; they are garbage once you drop them.
+
+For built-in datasets the store no longer keeps a _third_ copy (a private snapshot for `reset`): the source slice itself is the reset source. Inline arrays and provider results still get a private snapshot, because the caller can change them after load. Measured with `node --expose-gc scripts/measure-mock-memory.mjs` (`countries-csc`, 250 records, 20 independent stores): about **48% less heap** (0.23 → 0.12 MB per store); the shared source is counted once either way.
+
+**`slice` is a seed window, not a loading optimization.** The dataset's JSON module is imported and validated in full, then the window is applied to what the store copies. A small `slice` reduces the per-store working copy only; the full source stays resident in the module cache. Truly skipping unselected records would need a chunked or indexed data format — not implemented.
 
 ## Core inline mocking
 
@@ -124,7 +193,7 @@ Install `@apixa/mocking` next to `@apixa/core` for **runtime** mocks. Types for 
 ```ts
 import { defineApi } from "@apixa/core";
 import "@apixa/mocking/register";
-import type { User } from "@apixa/mocking/data";
+import type { User } from "@apixa/mocking/datasets";
 
 const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
   baseURL: "https://api.example.com",
@@ -142,7 +211,7 @@ const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
 - `slice` and `pagination` are Core resource options (next to `path` / `mock`): on live resources `slice` caps `getAll` array results; with `mock` set it seeds the mock store (creates may still grow past the seed).
 - Mocked resources never hit the network; others use the normal transport.
 - With `pagination: true`, list GET returns `{ data, total, page, pageSize, previous, next }` (`page` / `pageSize` query; defaults `1` / `20`).
-- Built-in presets for this path live under `@apixa/mocking/data` (and `@apixa/mocking/data/users-mock`).
+- Built-in presets for this path live under `@apixa/mocking/datasets` (compat: `@apixa/mocking/data` and `@apixa/mocking/data/users-mock`).
 
 ### Customizing `mock` suggestions
 
@@ -210,7 +279,7 @@ Notes:
 
 ## Node loaders
 
-`listDatasets` / `loadDataset` live at `@apixa/mocking/node` (filesystem). Do not import `/node` in browser bundles.
+`listDatasets` / `loadDataset` (filesystem, returns `{ meta, records }`) live at `@apixa/mocking/node`. Do not import `/node` in browser bundles. The lazy, browser-safe `loadDataset` is the one in `@apixa/mocking/datasets`.
 
 ## Removed
 

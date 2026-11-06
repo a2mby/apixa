@@ -2,6 +2,29 @@
 
 Project log. Newest entry first.
 
+## 2026-11-06 — Finalize `@apixa/mocking` entry points and mock-store memory
+
+`@apixa/mocking/datasets` is now the canonical dataset entry: lazy `loadDataset(id)` plus eager
+direct named imports (the six small synthetic sets). `/data` and `/data/users-mock` remain as
+compatibility re-exports; `/node` and `register` are unchanged (register imports a lazy-only
+`loader`, so it never loads records). `MockSource.immutable` lets a store reset from the
+module-cached built-in dataset instead of keeping a private snapshot (~48% less heap per store in
+`scripts/measure-mock-memory.mjs`); inline arrays and providers keep their snapshot. `slice` is
+documented as a seed window — the full JSON is still imported. Added packed-consumer and
+browser-bundle verification (`scripts/mocking-consumer.mjs`).
+
+## 2026-11-06 — `defineMockApi` follows the `defineApi` structure
+
+`defineMockApi({ resources: { … } })` is now the main form: resources live under `resources`, and
+the operation-selection settings (`defaultOperations`, `readOnly`, `writeOnly`, `operationGroups`)
+can be set on the root as shared defaults (resource wins; groups merge per group). Selection runs
+through Core's own `expandOperations`, and the client type reuses Core's `KnownOpName` /
+`MaybeOpName`, so a disabled method is absent from autocomplete and type checking. Handlers in
+`operations` get a typed `ctx` and builtin arguments from the dataset with no annotations; custom
+operations infer their arguments and return from the handler. HTTP-shaped operation objects are
+rejected (no local meaning). The flat `{ users: "users-mock" }` form remains as a compatibility
+shorthand. Core now exports `expandOperations`, `BUILTIN_CONVENTIONS`, `KnownOpName`, `MaybeOpName`.
+
 ## 2026-11-06 — Harden Query parity and explicit mocking register (#65)
 
 Named mock datasets now load only after an explicit `@apixa/mocking/register` import (Core

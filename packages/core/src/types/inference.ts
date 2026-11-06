@@ -506,10 +506,12 @@ type Selected<R, Name extends AllBuiltinOpName> = "operations" extends keyof R
         : GroupSelected<R, Name>
     : boolean
   : GroupSelected<R, Name>;
-type KnownOpName<R> = {
+/** Builtin names that are certainly present for a resource config (groups, flags, `operations`). */
+export type KnownOpName<R> = {
   [Name in AllBuiltinOpName]: [Selected<R, Name>] extends [true] ? Name : never;
 }[AllBuiltinOpName];
-type MaybeOpName<R> = {
+/** Builtin names that may be present (config is not narrow enough to decide). */
+export type MaybeOpName<R> = {
   [Name in AllBuiltinOpName]: [Selected<R, Name>] extends [true] | [false] ? never : Name;
 }[AllBuiltinOpName];
 

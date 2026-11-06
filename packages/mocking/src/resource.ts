@@ -2,102 +2,30 @@ import { MockError, MockStore, type MockSource } from "@apixa/core";
 import { catalog, type DatasetId } from "./catalog.js";
 import { MockApiError, type MockApiErrorCode } from "./errors.js";
 import type { MockSlice } from "./slice.js";
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  MOCK_BUILTINS,
+  type MockOperationContext,
+  type MockOperationFn,
+  type PageParams,
+} from "./mock-types.js";
 
-export const DEFAULT_PAGE = 1;
-export const DEFAULT_PAGE_SIZE = 20;
-
-export type PageParams = { page?: number; pageSize?: number };
-
-/** Envelope when a mock resource has `pagination: true`. `previous` / `next` are page numbers. */
-export type Page<T> = {
-  data: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  /** Previous page number, or `null` on the first page. */
-  previous: number | null;
-  /** Next page number, or `null` on the last page. */
-  next: number | null;
-};
+export {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  MOCK_BUILTINS,
+  type MockResource,
+  type MockOperationContext,
+  type MockOperationFn,
+  type MockOperationValue,
+  type MockResourceDefaults,
+  type Page,
+  type PageParams,
+  type ResourceInput,
+} from "./mock-types.js";
 
 type Id = string | number;
-
-/** `create` / `update` input: the entity, with its id optional. */
-export type ResourceInput<T, IdKey extends keyof T> = Omit<T, IdKey> & Partial<Pick<T, IdKey>>;
-
-/** `pagination: true` → page envelope; anything else → plain `T[]` (never a `Page | T[]` union). */
-type GetAll<T, Paginated> = [Paginated] extends [true]
-  ? (params?: PageParams) => Promise<Page<T>>
-  : () => Promise<T[]>;
-
-/** Plain CRUD helpers custom operation functions may reuse through `ctx.defaults`. */
-export type MockResourceDefaults<T extends object> = {
-  getAll(): Promise<T[]>;
-  getById(id: Id): Promise<T>;
-  create(input: unknown): Promise<T>;
-  update(id: Id, input: unknown): Promise<T>;
-  patch(id: Id, partial: unknown): Promise<T>;
-  delete(id: Id): Promise<void>;
-};
-
-/** What a custom mock operation function receives as its first argument. */
-export interface MockOperationContext<T extends object = Record<string, unknown>> {
-  idKey: string;
-  /** Live, mutable rows — read or write directly for a custom operation. */
-  rows(): Promise<T[]>;
-  fail(code: MockApiErrorCode, message: string): MockApiError;
-  defaults: MockResourceDefaults<T>;
-}
-
-/** A fully custom mock operation; `ctx` is bound, callers never pass it. */
-export type MockOperationFn<T extends object = Record<string, unknown>> = {
-  bivariant(ctx: MockOperationContext<T>, ...args: unknown[]): Promise<unknown>;
-}["bivariant"];
-
-/** Per-operation customization: `false` removes a builtin, a function replaces it, `true` keeps it. */
-export type MockOperationValue = boolean | MockOperationFn;
-
-/** The 16 builtins — the same names and in-memory semantics as Core mocked resources. */
-export const MOCK_BUILTINS = [
-  "getAll",
-  "getById",
-  "getBySlug",
-  "getMany",
-  "getBy",
-  "findFirst",
-  "search",
-  "exists",
-  "count",
-  "create",
-  "update",
-  "patch",
-  "upsert",
-  "delete",
-  "createMany",
-  "deleteMany",
-] as const;
-
-/**
- * In-memory CRUD for one resource. No network, no persistence. Every method returns a fresh
- * copy. Failures reject with `MockApiError` (check `code`).
- */
-export interface MockResource<
-  T extends object,
-  IdKey extends keyof T,
-  Paginated extends boolean | undefined = undefined,
-> {
-  getAll: GetAll<T, Paginated>;
-  getById(id: Id): Promise<T>;
-  /** Missing id → generated (numeric-id data only). Duplicate id → `DUPLICATE_ID`. */
-  create(input: ResourceInput<T, IdKey>): Promise<T>;
-  /** Replaces the record. The id is kept; passing a different id is `INVALID_INPUT`. */
-  update(id: Id, input: ResourceInput<T, IdKey>): Promise<T>;
-  /** Merges the supplied fields (keys set to `undefined` are skipped). */
-  patch(id: Id, partial: Partial<T>): Promise<T>;
-  delete(id: Id): Promise<void>;
-  /** The other 10 builtins and custom operations. */
-  [operation: string]: (...args: never[]) => Promise<unknown>;
-}
 
 const CODES: Record<string, MockApiErrorCode> = {
   MOCK_NOT_FOUND: "NOT_FOUND",
@@ -117,10 +45,11 @@ function translate(error: unknown): never {
   throw error;
 }
 
+/** `operations` is the already-resolved set (Core's `expandOperations`): enabled names only. */
 export type ResourceOptions = {
   slice?: MockSlice;
   pagination?: boolean;
-  operations?: Record<string, MockOperationValue>;
+  operations: Record<string, unknown>;
 };
 
 function seedFromSlice(slice: MockSlice | undefined): MockSource["seed"] {
@@ -141,6 +70,8 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
     idKey: entry.idKey,
     load: async () => (await entry.load()).default,
     seed: seedFromSlice(options.slice),
+    // Catalog datasets are module-cached and never mutated: no private snapshot needed.
+    immutable: true,
   });
   const fail = (code: MockApiErrorCode, message: string) =>
     new MockApiError(code, `${label}: ${message}`);
@@ -246,23 +177,12 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
     };
 
   const resource: Record<string, (...args: never[]) => Promise<unknown>> = {};
-  for (const opName of MOCK_BUILTINS) {
-    const override = options.operations?.[opName];
-    if (override === false) continue;
-    resource[opName] = typeof override === "function" ? custom(override) : builtins[opName];
-  }
-  for (const [opName, override] of Object.entries(options.operations ?? {})) {
-    if (
-      (MOCK_BUILTINS as readonly string[]).includes(opName) ||
-      override === false ||
-      override === undefined
-    )
-      continue;
-    if (typeof override === "function") {
-      resource[opName] = custom(override);
-      continue;
+  for (const [opName, definition] of Object.entries(options.operations)) {
+    if (typeof definition === "function") {
+      resource[opName] = custom(definition as MockOperationFn<Row>);
+    } else if ((MOCK_BUILTINS as readonly string[]).includes(opName)) {
+      resource[opName] = builtins[opName as (typeof MOCK_BUILTINS)[number]];
     }
-    throw fail("INVALID_CONFIG", `unknown builtin operation "${opName}"`);
   }
-  return resource as unknown as MockResource<Row, string, boolean | undefined>;
+  return resource;
 }
