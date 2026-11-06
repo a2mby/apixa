@@ -242,12 +242,8 @@ describe("resource query operation and native inference", () => {
       // @ts-expect-error disabled in the Core runtime config
       useResourceQuery(api.users, { queryKey: ["users"], operation: "search", args: [] });
       // @ts-expect-error query-side read overrides were removed
-      useResourceQuery(api.users, {
-        queryKey: ["users"],
-        operation: "stats",
-        args: ["day"],
-        readOperations: ["stats"],
-      });
+      // prettier-ignore
+      useResourceQuery(api.users, { queryKey: ["users"], operation: "stats", args: ["day"], readOperations: ["stats"] });
 
       const options = createResourceQueryOptions(api.users, {
         queryKey: ["users"],

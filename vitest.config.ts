@@ -10,8 +10,6 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     alias: {
       "@apixa/core": resolve(root, "packages/core/src/index.ts"),
-      "@apixa/mocking/data/users-mock": resolve(root, "packages/mocking/src/data/users-mock.ts"),
-      "@apixa/mocking/data": resolve(root, "packages/mocking/src/data/index.ts"),
       "@apixa/mocking/node": resolve(root, "packages/mocking/src/node.ts"),
       "@apixa/mocking/datasets": resolve(root, "packages/mocking/src/datasets.ts"),
       "@apixa/mocking": resolve(root, "packages/mocking/src/index.ts"),

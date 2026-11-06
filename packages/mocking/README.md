@@ -172,7 +172,7 @@ import type { User, Product } from "@apixa/mocking/datasets";
 
 Both hand back the module-cached source array: treat it as read-only. Stores made by `defineMockApi()` always copy it. **Direct imports do not save memory** — they only choose when the records load; module caching keeps the source resident either way. `listDatasetIds()` (from the main entry and `/datasets`) is kept for compatibility; `type` autocompletes the ids.
 
-Compatibility paths still work: `@apixa/mocking/data` (the same eager records and entity types, without the loaders) and `@apixa/mocking/data/users-mock`. `loadDatasetRecords(id)` and `@apixa/mocking/register` are unchanged.
+The former `@apixa/mocking/data` and `@apixa/mocking/data/users-mock` paths were removed — import records and entity types from `@apixa/mocking/datasets`. `@apixa/mocking/register` and `@apixa/mocking/node` are internal tooling (Core's lazy loader and Node filesystem access), not part of the everyday API.
 
 ### Memory
 
@@ -211,7 +211,7 @@ const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
 - `slice` and `pagination` are Core resource options (next to `path` / `mock`): on live resources `slice` caps `getAll` array results; with `mock` set it seeds the mock store (creates may still grow past the seed).
 - Mocked resources never hit the network; others use the normal transport.
 - With `pagination: true`, list GET returns `{ data, total, page, pageSize, previous, next }` (`page` / `pageSize` query; defaults `1` / `20`).
-- Built-in presets for this path live under `@apixa/mocking/datasets` (compat: `@apixa/mocking/data` and `@apixa/mocking/data/users-mock`).
+- Built-in presets for this path live under `@apixa/mocking/datasets`.
 
 ### Customizing `mock` suggestions
 

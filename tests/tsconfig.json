@@ -8,9 +8,7 @@
       "@apixa/core": ["../packages/core/src/index.ts"],
       "@apixa/mocking": ["../packages/mocking/src/index.ts"],
       "@apixa/mocking/datasets": ["../packages/mocking/src/datasets.ts"],
-      "@apixa/mocking/data": ["../packages/mocking/src/data/index.ts"],
       "@apixa/mocking/node": ["../packages/mocking/src/node.ts"],
-      "@apixa/mocking/data/users-mock": ["../packages/mocking/src/data/users-mock.ts"],
       "@apixa/tanstack-query": ["../packages/tanstack-query/src/index.ts"],
       "@apixa/tanstack-query/advanced": ["../packages/tanstack-query/src/advanced.ts"]
     }

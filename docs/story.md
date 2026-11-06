@@ -2,6 +2,12 @@
 
 Project log. Newest entry first.
 
+## 2026-11-06 — Remove the `@apixa/mocking/data` entry points
+
+`@apixa/mocking/data` and `@apixa/mocking/data/users-mock` were only compatibility re-exports of
+`@apixa/mocking/datasets`, so both are gone. Records and entity types now come from `/datasets`;
+`/register` and `/node` remain as internal tooling.
+
 ## 2026-11-06 — Explicit operation kinds and the final TanStack Query hooks
 
 Core now requires `kind: "read" | "write"` on every custom operation, rejects `kind` on built-ins, and
