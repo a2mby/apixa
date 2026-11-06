@@ -2,6 +2,13 @@
 
 Project log. Newest entry first.
 
+## 2026-11-06 — Expose Cursor commands to Claude and Codex, add `/ship-changes`
+
+`.claude/commands`, `.claude/skills` and `.agents/skills` now symlink to `.cursor/`, so Claude Code and
+Codex can use the same commands and skill. `/ship-changes` reads the working tree, opens one or more
+issues, and lands each on `main`. The sync script no longer drops the `## graphify` section of
+`AGENTS.md`.
+
 ## 2026-11-06 — Remove the `@apixa/mocking/data` entry points
 
 `@apixa/mocking/data` and `@apixa/mocking/data/users-mock` were only compatibility re-exports of
