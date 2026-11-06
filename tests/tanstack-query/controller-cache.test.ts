@@ -57,7 +57,7 @@ describe("createResourceController cache policy", () => {
     expect(controller.listOptions().queryKey).toEqual(["users", "list", { active: true }]);
   });
 
-  it("invalidates lists and seeds detail after create; runs consumer onSuccess after sync", async () => {
+  it("invalidates lists after create; runs consumer onSuccess after sync", async () => {
     const resource = createFakeUsers();
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -88,10 +88,7 @@ describe("createResourceController cache policy", () => {
     await mutation.onSuccess?.(data, { name: "Grace" }, undefined, ctx);
 
     expect(order[0]).toBe("resolved");
-    expect(client.getQueryData(controller.keys.detail("2"))).toEqual({
-      id: "2",
-      name: "Grace",
-    });
+    expect(client.getQueryData(controller.keys.detail("2"))).toBeUndefined();
     expect(order).toContain("consumer");
     expect(consumerSawInvalidated).toBe(true);
   });
@@ -237,5 +234,39 @@ describe("query / mutation controller separation", () => {
       const source = await readFile(new URL(file, root), "utf8");
       expect(source, file).not.toMatch(/useMutation|mutationOptions|mutation-controller/);
     }
+  });
+});
+
+describe("safe advanced cache synchronization", () => {
+  it("invalidates rather than replacing details for arbitrary responses", async () => {
+    const { syncCacheAfterUpdate } = await import("../../packages/tanstack-query/src/cache.js");
+    for (const response of [
+      null,
+      undefined,
+      { name: "Grace" },
+      { ok: true },
+      { data: { id: "1" } },
+      { id: "1", name: "Grace" },
+    ]) {
+      const client = new QueryClient();
+      const keys = createResourceKeys({ queryKey: ["users"] });
+      const original = { id: "1", name: "Ada", email: "ada@example.com" };
+      client.setQueryData(keys.detail("1"), original);
+      await syncCacheAfterUpdate(client, keys, response, { id: "1" });
+      expect(client.getQueryData(keys.detail("1"))).toEqual(original);
+      expect(client.getQueryState(keys.detail("1"))?.isInvalidated).toBe(true);
+    }
+  });
+
+  it("accepts an explicit mapping for complete entities with custom IDs", async () => {
+    const { syncCacheAfterCreate, syncCacheAfterUpdate } =
+      await import("../../packages/tanstack-query/src/cache.js");
+    const client = new QueryClient();
+    const keys = createResourceKeys({ queryKey: ["users"] });
+    const response = { data: { userId: "1", name: "Grace" } };
+    const map = (value: typeof response) => ({ id: value.data.userId, entity: value.data });
+    await syncCacheAfterCreate(client, keys, response, map);
+    await syncCacheAfterUpdate(client, keys, response, { id: "1" }, map);
+    expect(client.getQueryData(keys.detail("1"))).toEqual(response.data);
   });
 });

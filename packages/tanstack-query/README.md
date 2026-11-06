@@ -12,7 +12,7 @@ Apixa adds resource identity (hierarchical keys), operation selection, exact Cor
 types, and signal binding. TanStack still owns observers, caching, deduplication, retries,
 scheduling, polling, state transitions, Suspense, and hydration — Apixa adds no cache or scheduler.
 
-Install `@apixa/tanstack-query`, `@apixa/core`, `@tanstack/react-query`, and React 18 or 19. Use TanStack's `QueryClientProvider`; Apixa has no provider or global cache.
+Install `@apixa/tanstack-query`, `@apixa/core`, `@tanstack/react-query` 5.90.1 or later in v5, and React 18 or 19. Use TanStack's `QueryClientProvider`; Apixa has no provider or global cache.
 
 ## A list query
 
@@ -294,5 +294,15 @@ After building, run `node scripts/query-performance.mjs [iterations]` from the r
   the Core client directly for `ApiResponse` envelopes.
 - Imperative inherited reads use `fetchQuery`'s default `staleTime` (0): each call refetches
   unless the entry is fresh. Use the reactive hook or `ensureQueryData` for cache-first reads.
-- `useResource` exposes non-defined `data` even with `query.initialData`; use `useResourceQuery`
-  for `DefinedUseQueryResult` narrowing.
+- Hand-written resource objects without Core metadata receive exactly their supplied arguments.
+  Automatic signal injection is unavailable for these functions; use an `args` builder and
+  `keyParts` to explicitly forward TanStack's signal when the function supports it.
+- A generic Core operation such as `echo<T extends { id: string }>(value: T): Promise<T>`
+  loses its input/output type relationship through operation wrappers. Call the Core operation
+  directly when preserving the generic result is required.
+- Replace a mounted `QueryClientProvider` together with a keyed remount of its consumers; native
+  TanStack query observers retain the client they were created with.
+
+### Advanced cache synchronization
+
+The advanced create and update helpers invalidate by default. Pass a mapping function only when the response contains a complete entity: `(response) => ({ id: response.userId, entity: response })`. This supports custom identifier fields and avoids treating acknowledgments or partial responses as complete records. Delete removes the detail and invalidates lists.

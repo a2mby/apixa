@@ -119,10 +119,11 @@ Read-only typed records for the small synthetic sets (`users`, `products`, `comp
 
 ## Core inline mocking
 
-Install `@apixa/mocking` next to `@apixa/core` for **runtime** mocks. Types for `mock` / `slice` / `pagination` and known catalog ids ship on Core — no mocking import needed for autocomplete. When a resource has `mock: "<dataset-id>"`, Core lazy-loads `@apixa/mocking/register` on first request. You can still call `enableResourceMocks()` or import `@apixa/mocking/register` explicitly (e.g. to fail fast at `defineApi` time via the processor).
+Install `@apixa/mocking` next to `@apixa/core` for **runtime** mocks. Types for `mock` / `slice` / `pagination` and known catalog ids ship on Core — no mocking import needed for autocomplete. Import `@apixa/mocking/register` once before requesting a named dataset. This registers a loader only; records still load lazily and each Core client keeps its own mock state. Core and inline mocks do not depend on Mocking.
 
 ```ts
 import { defineApi } from "@apixa/core";
+import "@apixa/mocking/register";
 import type { User } from "@apixa/mocking/data";
 
 const api = defineApi<{ users: { path: "/users"; entity: User } }>()({

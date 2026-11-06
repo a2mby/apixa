@@ -52,7 +52,7 @@ type ArgumentSelection<R, N extends keyof R> =
 
 type OptionalArguments<R, N extends keyof R> =
   [] extends OperationParameters<R, N>
-    ? { args?: Arguments<R, N>; keyParts?: QueryKey }
+    ? { args?: QueryArguments<R, N>; keyParts?: QueryKey } | ArgumentSelection<R, N>
     : ArgumentSelection<R, N>;
 
 export type DefaultResourceQueryOptions<
@@ -176,14 +176,16 @@ export function buildResourceQueryOptions(
     ? args
     : query === undefined
       ? undefined
-      : withOptions([], info, { query });
+      : info.optionsIndex === null
+        ? [{ query }]
+        : withOptions([], info, { query });
   if (staticArgs) assertNoFullResponse(staticArgs, info);
 
   const keys = createResourceKeys({ queryKey, scope });
   const identity = keyParts ?? normalizeIdentity(staticArgs ?? [], info);
   let generatedKey: QueryKey;
   if (operation === "getAll") {
-    const listQuery = listQueryOf(identity, info);
+    const listQuery = query !== undefined ? query : listQueryOf(identity, info);
     generatedKey =
       keyParts !== undefined
         ? keys.list(keyParts)

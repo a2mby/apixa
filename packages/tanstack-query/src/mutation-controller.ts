@@ -99,7 +99,7 @@ export function operationMutationOptions<
 
 /**
  * Advanced: create/update/delete `mutationOptions` with per-op cache sync
- * (detail seed/removal + list invalidation), then consumer `onSuccess`.
+ * (detail invalidation/removal + list invalidation), then consumer `onSuccess`.
  */
 export type ResourceMutationController<TResource extends ResourceLike> = {
   keys: ResourceKeyFactory;

@@ -11,7 +11,7 @@ import {
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { composeResult } from "./compose.js";
 import { createResourceKeys } from "./keys.js";
-import type { OperationArgs, OperationData } from "./mutation-controller.js";
+import type { OperationData } from "./mutation-controller.js";
 import {
   ResourceMutationStore,
   validateConfig,
@@ -22,7 +22,7 @@ import type {
   ResourceMutationResult,
   UseResourceMutationOptions,
 } from "./mutation-types.js";
-import type { AsyncFn } from "./types.js";
+import type { AsyncFn, OperationParameters } from "./types.js";
 
 export type { UseResourceMutationOptions } from "./mutation-types.js";
 
@@ -69,9 +69,9 @@ export function useResourceMutation<
   operationName: TName,
   options: UseOperationMutationOptions<
     OperationData<TResource, TName>,
-    OperationArgs<TResource, TName>
+    OperationParameters<TResource, TName>
   >,
-): UseMutationResult<OperationData<TResource, TName>, Error, OperationArgs<TResource, TName>>;
+): UseMutationResult<OperationData<TResource, TName>, Error, OperationParameters<TResource, TName>>;
 export function useResourceMutation(
   resource: object,
   nameOrOptions: string | RuntimeResourceMutationOptions,

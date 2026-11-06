@@ -33,6 +33,7 @@ Minimal resource — built-in CRUD is generated from `path`:
 
 ```ts
 import { defineApi } from "@apixa/core";
+import "@apixa/mocking/register";
 
 const api = defineApi({
   baseURL: "https://api.example.com",
@@ -158,10 +159,11 @@ const { data, total } = await mockApi.products.getAll({ page: 1, pageSize: 10 })
 
 Typed data: `import { users, type User } from "@apixa/mocking/data"`.
 
-Or mock individual resources of a Core client (`@apixa/mocking` as a dependency; no side-effect import):
+Or mock individual resources of a Core client (install `@apixa/mocking` and register the lazy dataset loader):
 
 ```ts
 import { defineApi } from "@apixa/core";
+import "@apixa/mocking/register";
 
 const api = defineApi({
   baseURL: "https://api.example.com",

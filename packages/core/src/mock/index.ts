@@ -12,4 +12,6 @@ export {
   isMockDatasetId,
   listMockDatasetIds,
   loadNamedDataset,
+  registerMockDatasetLoader,
+  type MockDatasetLoader,
 } from "./datasets.js";

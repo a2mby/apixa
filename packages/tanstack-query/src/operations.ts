@@ -37,8 +37,8 @@ const cache = new WeakMap<object, ReadonlyMap<string, OperationInfo>>();
 
 /**
  * Operation table of a resource client. Apixa clients carry Core metadata (exact `kind` and
- * options position). Plain objects (tests, hand-written clients) fall back to the builtin
- * conventions without path params; every other function is a write with no options binding.
+ * options position). Plain objects (tests, hand-written clients) classify builtin read names while leaving argument positions unknown; every other function is a
+ * write with no options binding.
  */
 export function describeOperations(resource: object): ReadonlyMap<string, OperationInfo> {
   const cached = cache.get(resource);
@@ -54,7 +54,9 @@ export function describeOperations(resource: object): ReadonlyMap<string, Operat
         ? { kind: meta.kind, builtin: meta.builtin, optionsIndex: meta.optionsIndex }
         : metadata
           ? { kind: "write", builtin: false, optionsIndex: null }
-          : (BUILTIN_DEFAULTS[name] ?? { kind: "write", builtin: false, optionsIndex: null }),
+          : BUILTIN_DEFAULTS[name]
+            ? { ...BUILTIN_DEFAULTS[name], optionsIndex: null }
+            : { kind: "write", builtin: false, optionsIndex: null },
     );
   }
   cache.set(resource, table);

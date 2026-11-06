@@ -170,7 +170,6 @@ describe("one mock engine", () => {
       "transport.ts",
       "store.ts",
       "processor.ts",
-      "register.ts",
       "register-entry.ts",
     ]) {
       expect(existsSync(resolve(pkgRoot, "src", file)), file).toBe(false);

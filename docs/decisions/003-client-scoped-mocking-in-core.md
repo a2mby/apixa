@@ -29,13 +29,13 @@ URL pathname. This had several problems:
   simulate throws `MOCK_UNSUPPORTED`. A mocked resource never reaches a transport.
 - Dataset IDs and entity types are Core types (`MockDatasetCatalog`). Records stay in
   `@apixa/mocking` and load one dataset at a time through `@apixa/mocking/datasets`, an optional
-  peer that Core imports dynamically.
+  peer registered explicitly through `@apixa/mocking/register`.
 - `defineMockApi()` is a thin adapter over the same `MockStore`.
 
 ## Consequences
 
-- No global registration, no setup call, and no initialization-order effects. Each client's
-  stores are isolated and reset with `resetMock()`.
+- The optional integration registers only a dataset loader, which must be imported before a
+  named dataset is first requested. Each client's stores remain isolated and reset with `resetMock()`.
 - This replaces the earlier convention "do not couple mocking to production request
   execution". The coupling is now an explicit execution branch in one pipeline, not a hidden
   transport swap.
