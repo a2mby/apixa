@@ -8,7 +8,7 @@ import {
   type Transport,
   type TransportRequest,
 } from "@apixa/core";
-import { users as usersDataset } from "@apixa/mocking/data";
+import { users as usersDataset } from "@apixa/mocking/datasets";
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
 
 /** A transport that fails the test if anything reaches it. */
@@ -329,17 +329,20 @@ describe("mock routing never falls back to the network", () => {
           path: "/users",
           mock: "users-mock",
           operations: {
-            search: { path: "/custom-search", method: "POST" },
+            search: { path: "/custom-search", method: "GET" },
             count: { path: "https://example.com/stats/count" },
-            archive: { method: "POST", path: "/:id/archive" },
-            byName: (ctx, name: string) => ctx.request({ method: "GET", query: { name } }),
+            archive: { kind: "write", method: "POST", path: "/:id/archive" },
+            byName: {
+              kind: "read",
+              run: (ctx, name: string) => ctx.request({ method: "GET", query: { name } }),
+            },
           },
         },
       },
     });
     expect(await api.users.getAll()).toHaveLength(100);
-    // POST override: the filter travels as the body, and the mock still runs `search` semantics
-    expect(await api.users.search({ username: "user001" })).toHaveLength(1);
+    // A path override keeps the mock search semantics.
+    expect(await api.users.search({ query: { username: "user001" } })).toHaveLength(1);
     expect(await api.users.count()).toBe(100);
     expect(await api.users.byName(usersDataset[0]!.name)).toHaveLength(1);
     const unsupported = await api.users.archive("1", {}).catch((e: unknown) => e);
@@ -358,9 +361,14 @@ describe("mock routing never falls back to the network", () => {
           mock: [{ id: 1, name: "Ali" }],
           operations: {
             getById: async (ctx, id) => ctx.request({ method: "GET", path: `/${String(id)}` }),
-            wrongPath: async (ctx, id) =>
-              ctx.request({ method: "GET", path: `/users/${String(id)}` }),
-            external: async (ctx) => ctx.request({ method: "GET", path: "https://evil.example/x" }),
+            wrongPath: {
+              kind: "read",
+              run: async (ctx, id) => ctx.request({ method: "GET", path: `/users/${String(id)}` }),
+            },
+            external: {
+              kind: "read",
+              run: async (ctx) => ctx.request({ method: "GET", path: "https://evil.example/x" }),
+            },
           },
         },
       },

@@ -32,7 +32,7 @@ export type ListOverrides<R extends { getAll: AsyncFn }> = Omit<
 
 /** React-free resource keys, query configurations, and QueryClient cache operations. */
 export type ResourceQueryController<R extends object> = {
-  keys: ResourceKeyFactory;
+  keys: ResourceKeyFactory<R>;
   listQueryParams: R extends { getAll: AsyncFn } ? InferListQuery<R> | undefined : undefined;
   listOptions: R extends { getAll: AsyncFn }
     ? [] extends OperationParameters<R, "getAll">

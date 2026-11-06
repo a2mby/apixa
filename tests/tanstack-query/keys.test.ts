@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createResourceKeys } from "../../packages/tanstack-query/src/keys.js";
+import { defineApi } from "@apixa/core";
+import { createResourceQueryOptions } from "../../packages/tanstack-query/src/query-options.js";
 
 describe("createResourceKeys", () => {
   it("builds hierarchical keys with optional scope and list query", () => {
@@ -39,5 +41,23 @@ describe("createResourceKeys", () => {
     scope.push("changed");
     expect(a.list()).toEqual(["tenant", "a", "users", "list"]);
     expect(b.list()).toEqual(["tenant", "b", "users", "list"]);
+  });
+
+  it("keeps transport controls out of Core read cache identity", () => {
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      resources: { users: { path: "/users" } },
+    });
+    const base = createResourceQueryOptions(api.users, {
+      queryKey: ["users"],
+      operation: "getById",
+      args: ["42"],
+    });
+    const controlled = createResourceQueryOptions(api.users, {
+      queryKey: ["users"],
+      operation: "getById",
+      args: ["42", { signal: new AbortController().signal, timeout: 500, retry: { retries: 2 } }],
+    });
+    expect(controlled.queryKey).toEqual(base.queryKey);
   });
 });

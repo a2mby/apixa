@@ -597,14 +597,14 @@ type CustomClientFn<R, Meta, Root extends RootTypes, Name extends CustomOpName<R
     >
   : StripCtx<FnOf<ResourceOpsOf<R>[Name]>>;
 
-/** Read/write classification of one operation: builtin convention, else custom `kind` (default write). */
+/** Read/write classification of one operation: builtin convention, else required custom `kind`. */
 export type OperationKindOf<R, Name> = Name extends AllBuiltinOpName
   ? Conventions[Name]["access"]
   : Name extends keyof ResourceOpsOf<R>
-    ? ResourceOpsOf<R>[Name] extends { kind: "read" }
-      ? "read"
-      : "write"
-    : "write";
+    ? ResourceOpsOf<R>[Name] extends { kind: infer Kind extends "read" | "write" }
+      ? Kind
+      : never
+    : never;
 
 /** Typed view of the non-enumerable metadata every resource client carries. */
 export type OperationMetadataBrand<R> = {
@@ -687,8 +687,27 @@ type Exact<T, Shape> = {
   [K in Exclude<keyof T, keyof Shape>]: ConfigTypeError<`Unknown option "${K & string}"`>;
 };
 
+type RequiredKind<M> = M extends "GET" | "HEAD" | "OPTIONS" ? "read" : "write";
+type ValidateMethodKind<Name, Op> = Op extends { method: infer Method extends string }
+  ? Name extends AllBuiltinOpName
+    ? RequiredKind<Method> extends Conventions[Name]["access"]
+      ? unknown
+      : {
+          method: ConfigTypeError<`HTTP method "${Method}" conflicts with builtin "${Name & string}" kind`>;
+        }
+    : Op extends { kind: infer Kind }
+      ? Kind extends RequiredKind<Method>
+        ? unknown
+        : {
+            method: ConfigTypeError<`HTTP method "${Method}" requires kind "${RequiredKind<Method>}"`>;
+          }
+      : unknown
+  : unknown;
+
 type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
-  ? unknown
+  ? Name extends AllBuiltinOpName
+    ? unknown
+    : ConfigTypeError<`custom function operation "${Name & string}" requires { kind, run }`>
   : Name extends AllBuiltinOpName
     ? Op extends { kind: unknown }
       ? {
@@ -698,18 +717,33 @@ type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
     : ValidateOperationShape<Name, Op>;
 
 type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
-  ? Exact<Op, { kind: unknown; run: unknown }>
+  ? Exact<Op, { kind: unknown; run: unknown }> &
+      (Name extends AllBuiltinOpName
+        ? unknown
+        : Op extends { kind: "read" | "write" }
+          ? unknown
+          : {
+              kind: ConfigTypeError<`custom operation "${Name & string}" requires kind "read" or "write"`>;
+            })
   : Op extends true
     ? Name extends AllBuiltinOpName
       ? unknown
       : ConfigTypeError<`true cannot create custom operation "${Name & string}"; give it { method, path } or a function`>
     : Op extends object
       ? Exact<Op, OperationDefinition> &
+          ValidateMethodKind<Name, Op> &
           (Name extends AllBuiltinOpName
             ? unknown
-            : Op extends { method: string }
-              ? unknown
-              : { method: ConfigTypeError<`custom operation "${Name & string}" needs a method`> })
+            : (Op extends { method: string }
+                ? unknown
+                : {
+                    method: ConfigTypeError<`custom operation "${Name & string}" needs a method`>;
+                  }) &
+                (Op extends { kind: "read" | "write" }
+                  ? unknown
+                  : {
+                      kind: ConfigTypeError<`custom operation "${Name & string}" requires kind "read" or "write"`>;
+                    }))
       : unknown;
 
 type MissingCustomOps<Meta, R> = Meta extends { operations: infer M }

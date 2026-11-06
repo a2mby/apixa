@@ -123,7 +123,10 @@ describe("operations customization", () => {
         users: {
           path: "/users",
           operations: {
-            archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+            archive: {
+              kind: "write",
+              run: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+            },
           },
         },
       },
@@ -154,7 +157,10 @@ describe("operations customization", () => {
         users: {
           path: "/users",
           operations: {
-            archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+            archive: {
+              kind: "write",
+              run: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+            },
           },
         },
       },
@@ -210,8 +216,11 @@ describe("operations customization", () => {
           operations: {
             getBySlug: {},
             patch: {},
-            archive: async (ctx, id: string) => {
-              await ctx.request({ method: "POST", path: `/${id}/archive` });
+            archive: {
+              kind: "write",
+              run: async (ctx, id: string) => {
+                await ctx.request({ method: "POST", path: `/${id}/archive` });
+              },
             },
           },
         },

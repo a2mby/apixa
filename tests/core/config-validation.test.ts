@@ -56,7 +56,9 @@ describe("configuration fails early with descriptive errors", () => {
       "custom op without method",
       {
         ...base,
-        resources: { users: { path: "/users", operations: { archive: { path: "/x" } } } },
+        resources: {
+          users: { path: "/users", operations: { archive: { kind: "write", path: "/x" } } },
+        },
       },
       /custom operation "archive" needs a method/,
     ],

@@ -2,11 +2,21 @@
 
 ## Unreleased
 
+### Removed — `@apixa/mocking`
+
+- **Breaking:** the `@apixa/mocking/data` and `@apixa/mocking/data/users-mock` entry points are removed. Import records and entity types (`User`, `Product`, …) from `@apixa/mocking/datasets`. `@apixa/mocking/register` and `@apixa/mocking/node` stay as internal tooling.
+
 ### Added — v1.0.0 TanStack integration (Core classification, mutations, facade)
 
-- `@apixa/core` — custom operations accept `kind: "read" | "write"` (default `"write"`) on config
-  objects and a new `{ kind?, run }` function form. Builtins keep their convention; `kind` on a
-  builtin is rejected. Every resource client exposes non-enumerable, typed operation metadata
+- `@apixa/core` — **breaking:** every custom operation must declare `kind: "read" | "write"`
+  (no implicit `"write"` default); function operations use `{ kind, run }` and the bare-function
+  shorthand is rejected for custom names. Builtins keep their canonical kind and reject any
+  explicit `kind`. Kind and HTTP method must agree (GET/HEAD/OPTIONS → read; POST/PUT/PATCH/DELETE
+  → write), validated at construction for declarative operations and per `ctx.request()` for
+  function operations, with `ConfigError` at runtime and compile-time checks for literals. Migrate
+  `archive: { method: "POST", … }` to `archive: { kind: "write", method: "POST", … }` and
+  `stats: async (ctx) => …` to `stats: { kind: "read", run: async (ctx) => … }`.
+  Every resource client exposes non-enumerable, typed operation metadata
   (`OPERATION_METADATA`, `getOperationMetadata`, `OperationKindsOf`) with `kind`, `builtin`,
   `implementation`, and the `RequestOptions` argument position. Execution is unchanged.
 - `@apixa/tanstack-query` — `useResourceMutation(resource, { queryKey, mutations })` inherits every
@@ -14,8 +24,12 @@
   arguments and result, native per-operation `states`, all native `UseMutationOptions` per
   operation, client-only operations via `mutationFn`, and typed invalidation (`"all"` default for
   writes, `"lists"`, details, callback, `false`). Backed by lazily created native
-  `MutationObserver`s behind one external store; the single-operation form remains.
-- `@apixa/tanstack-query` — `useResource(resource, { queryKey, query, mutation })`: a thin facade
+  `MutationObserver`s behind one external store. Writes only: reads are not exposed, and the
+  single-operation overload `useResourceMutation(resource, "create", options)` is removed (use
+  native `useMutation` with a Core operation for a standalone `UseMutationResult`).
+- `@apixa/tanstack-query` — `useResource(resource, { queryKey, scope, query, mutations })`: a thin
+  composition of both hooks (`mutations` is now top-level; the nested `mutation: { mutations }`
+  form is removed). It is a facade
   over both hooks with flat query state, flat operations, `operations.*` for every operation,
   `states.*` for writes, and read/write routing from Core's classification.
 - `useResourceQuery` inherits every enabled read (builtin and `kind: "read"`) as a cached
@@ -48,10 +62,11 @@
   `mutations`, no longer accepts the `mutations` option, and mounts no `useMutation` observers.
   It keeps `data`, list state, `query`, `getById`, `refetch`, `invalidate`, `keys`, and
   `controller` (now the query controller).
-- Run writes with `useResourceMutation(resource, "create" | "update" | "delete" | …, { queryKey })`
-  and tuple args — e.g. `users.create(body)` → `createUser.mutateAsync([body])`,
-  `users.update(id, body)` → `updateUser.mutateAsync([id, body])`. On success it awaits
-  invalidation of every query under the resource key, then runs consumer `onSuccess`.
+- Run writes with `useResourceMutation(resource, { queryKey })` and call the operations directly —
+  e.g. `users.create(body)`, `users.update(id, body)`. On success it awaits invalidation of every
+  query under the resource key, then runs consumer `onSuccess`. (The intermediate
+  single-operation `"create"` form was removed before release; `readOperations` is also removed —
+  declare `kind: "read"` in Core.)
 - `controller.ts` is split into `createResourceQueryController` and
   `createResourceMutationController` (plus `operationMutationOptions`), exported from
   `@apixa/tanstack-query/advanced`. `createResourceController` remains as a compatibility

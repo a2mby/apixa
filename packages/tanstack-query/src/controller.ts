@@ -11,18 +11,17 @@ import type {
   InferListData,
   InferUpdateBody,
   InferUpdateId,
-  ResourceLike,
 } from "./types.js";
 
 /** Compatibility shape: query controller + create/update/delete mutation options on one key factory. */
-export type ResourceController<TResource extends ResourceLike> =
-  ResourceQueryController<TResource> & ResourceMutationController<TResource>;
+export type ResourceController<TResource extends object> = ResourceQueryController<TResource> &
+  ResourceMutationController<TResource>;
 
 /**
  * Advanced compatibility factory composing the query and mutation controllers over one shared
  * key factory. Prefer `createResourceQueryController` / `createResourceMutationController`.
  */
-export function createResourceController<TResource extends ResourceLike>(
+export function createResourceController<TResource extends object>(
   resource: TResource,
   config: CreateResourceControllerConfig,
 ): ResourceController<TResource> {

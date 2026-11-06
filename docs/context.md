@@ -111,7 +111,10 @@ const api = defineApi<AppApi>()({
     path: "/users",
     operations: {
       delete: false, // remove a builtin
-      archive: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+      archive: {
+        kind: "write",
+        run: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+      },
     },
   },
 });
@@ -152,7 +155,7 @@ useMutation({
 ```
 
 **Implemented (v1.0.0 workstream, unreleased):** optional `@apixa/tanstack-query` with three
-hooks — `useResourceQuery` (reads), `useResourceMutation` (every operation as a mutation), and the
+hooks — `useResourceQuery` (reads), `useResourceMutation` (writes), and the
 `useResource` facade:
 
 ```tsx
@@ -166,7 +169,8 @@ users.states.create.isPending;
 ```
 
 All three share one QueryClient and one key structure; reads and writes are routed by Core's
-`kind` classification, never by name. Internals use TanStack Query (`useQuery`, `useMutation`, `queryOptions`,
+`kind` classification, never by name. Every custom operation declares its kind explicitly;
+Core rejects incompatible HTTP methods. Internals use TanStack Query (`useQuery`, `useMutation`, `queryOptions`,
 cache APIs). The Query hook forwards native options and results, reads any guaranteed built-in
 operation or explicitly declared custom read, and exposes resource cache helpers. A hook-free
 query-options factory supports native Suspense, parallel queries, prefetching, and hydration.

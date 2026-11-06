@@ -42,10 +42,13 @@ describe("configuration-driven client inference", () => {
         posts: {
           path: "/posts",
           operations: {
-            archive: async (_ctx: OperationFnContext, id: string) => ({
-              id,
-              archived: true as const,
-            }),
+            archive: {
+              kind: "read",
+              run: async (_ctx: OperationFnContext, id: string) => ({
+                id,
+                archived: true as const,
+              }),
+            },
           },
         },
       },
@@ -220,7 +223,7 @@ describe("configuration-driven client inference", () => {
       resources: {
         users: {
           path: "/users",
-          operations: { archive: { method: "POST", path: "/:id/archive" } },
+          operations: { archive: { kind: "write", method: "POST", path: "/:id/archive" } },
         },
       },
     });

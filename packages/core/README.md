@@ -2,6 +2,23 @@
 
 TypeScript API client: `defineApi()`, default-first resource CRUD, Fetch transport, standardized errors.
 
+## Custom operations
+
+Every custom operation declares `kind: "read" | "write"`. Declarative operations also declare
+an HTTP method; function operations use `{ kind, run }`:
+
+```ts
+operations: {
+  stats: { kind: "read", method: "GET", path: "/stats" },
+  archive: { kind: "write", run: (ctx, id: string) =>
+    ctx.request({ method: "POST", path: `/${id}/archive` }) },
+}
+```
+
+Built-ins inherit their fixed kind, including function overrides. GET, HEAD, and OPTIONS require
+`read`; POST, PUT, PATCH, and DELETE require `write`. Core validates declarative operations at
+API construction and every function `ctx.request()` before transport or mock dispatch.
+
 ## Request options
 
 ```ts

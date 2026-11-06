@@ -8,7 +8,6 @@ export type {
 } from "./use-resource-query.js";
 
 export { useResourceMutation } from "./use-resource-mutation.js";
-export type { UseOperationMutationOptions } from "./use-resource-mutation.js";
 export type {
   UseResourceMutationOptions,
   MutationsConfig,

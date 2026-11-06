@@ -14,9 +14,7 @@ import {
 } from "./operations.js";
 import type {
   AsyncFn,
-  CustomOperationName,
   InferListQuery,
-  InheritedReadName,
   OperationParameters,
   OperationReturn,
   QueryOperationName,
@@ -73,18 +71,7 @@ export type ExplicitResourceQueryOptions<
   OptionalArguments<R, N> & {
     operation: N;
     query?: N extends "getAll" ? InferListQuery<R & { getAll: AsyncFn }> : never;
-  } & (N extends InheritedReadName<R>
-    ? { readOperations?: never }
-    : N extends CustomOperationName<R>
-      ? {
-          /**
-           * Legacy opt-in for a custom operation Core does not classify as a read. Prefer
-           * `kind: "read"` on the Core operation.
-           */
-          readOperations: readonly N[];
-          keyParts: QueryKey;
-        }
-      : never);
+  };
 
 type DefinedData<T> = { initialData: T | (() => T) };
 export type GeneratedQueryOptions<TRaw, TSelected = TRaw> = ReturnType<
@@ -139,13 +126,15 @@ export function buildResourceQueryOptions(
   resource: object,
   options: RuntimeQueryOptions,
 ): GeneratedQueryOptions<unknown> {
+  if (Object.prototype.hasOwnProperty.call(options, "readOperations")) {
+    throw new Error('readOperations was removed; declare kind: "read" on the Core operation.');
+  }
   const {
     queryKey,
     scope,
     operation = "getAll",
     args,
     keyParts,
-    readOperations,
     query,
     ...nativeOptions
   } = options;
@@ -157,14 +146,8 @@ export function buildResourceQueryOptions(
     throw new Error(`Resource has no ${operation} operation.`);
   }
   const info = describeOperations(resource).get(operation)!;
-  const declared = readOperations?.includes(operation) === true;
-  if (info.kind !== "read" && !declared) {
-    throw new Error(
-      `Operation ${operation} is not a read; mark it kind: "read" in Core (or list it in readOperations).`,
-    );
-  }
-  if (declared && info.kind !== "read" && keyParts === undefined) {
-    throw new Error(`Custom query operation ${operation} requires keyParts.`);
+  if (info.kind !== "read") {
+    throw new Error(`Operation ${operation} is not a read; declare kind: "read" in Core.`);
   }
   if (typeof args === "function" && keyParts === undefined) {
     throw new Error("Argument-builder queries require keyParts.");
@@ -227,7 +210,6 @@ export type RuntimeQueryOptions = ResourceQueryNativeOptions<unknown> & {
   operation?: string;
   args?: readonly unknown[] | ((context: QueryFunctionContext) => readonly unknown[]);
   keyParts?: QueryKey;
-  readOperations?: readonly string[];
   query?: unknown;
 };
 
@@ -251,14 +233,19 @@ export function withOptions(
 }
 
 /**
- * Data-defining identity: the exact arguments minus the request signal, with an empty options
+ * Data-defining identity: exact arguments minus transport-only request controls, with an empty options
  * object and trailing `undefined`s dropped so equivalent calls share one cache entry.
  */
 export function normalizeIdentity(values: readonly unknown[], info: OperationInfo): unknown[] {
   const result = [...values];
   const index = info.optionsIndex;
   if (index !== null && isPlainObject(result[index])) {
-    const { signal: _signal, ...rest } = result[index] as Record<string, unknown>;
+    const {
+      signal: _signal,
+      timeout: _timeout,
+      retry: _retry,
+      ...rest
+    } = result[index] as Record<string, unknown>;
     result[index] = Object.keys(rest).length === 0 ? undefined : rest;
   }
   while (result.length > 0 && result[result.length - 1] === undefined) result.pop();

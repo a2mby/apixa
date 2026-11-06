@@ -9,7 +9,7 @@ export function Users() {
   const users = useResource(api.users, {
     queryKey: ["users"],
     query: { staleTime: 30_000 },
-    mutation: { mutations: { create: { invalidate: "lists" } } },
+    mutations: { create: { invalidate: "lists" } },
   });
   const [stats, setStats] = useState<string>("");
 

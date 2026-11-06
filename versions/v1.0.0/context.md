@@ -12,3 +12,7 @@ branch before this workstream. This milestone finishes the Query side, makes
 The package is still versioned `0.8.0` in source until the full v1 release is approved and
 published. This folder records the v1 Query contract and its verification without claiming a
 package release.
+
+Final stabilization requires an explicit `kind` for every custom Core operation, validates
+HTTP methods against that kind, and removes query-side read overrides and the single-operation
+mutation overload. The unified hook composes the public query and mutation hooks.

@@ -31,9 +31,12 @@ function recordingApi(respond: (request: TransportRequest) => unknown = () => [a
         path: "/users",
         operations: {
           stats: { kind: "read", method: "GET", path: "/stats" },
-          archive: { method: "POST", path: "/:id/archive" },
-          findByTeam: async (ctx, filter: { query: string; meta: string }) =>
-            ctx.request<User[]>({ query: { team: filter.query, tag: filter.meta } }),
+          archive: { kind: "write", method: "POST", path: "/:id/archive" },
+          findByTeam: {
+            kind: "read",
+            run: async (ctx, filter: { query: string; meta: string }) =>
+              ctx.request<User[]>({ query: { team: filter.query, tag: filter.meta } }),
+          },
         },
       },
       members: { path: "/orgs/:orgId/teams/:teamId/members" },
@@ -164,7 +167,6 @@ describe("Q2 — signal binding by Core argument position", () => {
           result.current.controller.operationOptions({
             operation: "findByTeam",
             args: [{ query: "red", meta: "m" }],
-            readOperations: ["findByTeam"],
             keyParts: ["red"],
           } as never),
         ),
@@ -234,12 +236,13 @@ describe("Q4 — inherited reads", () => {
         "getById",
         "getBySlug",
         "getMany",
+        "findByTeam",
         "search",
         "stats",
       ].sort(),
     );
     expect(result.current).not.toHaveProperty("archive");
-    expect(result.current).not.toHaveProperty("findByTeam");
+    expect(result.current).toHaveProperty("findByTeam");
     expect(await act(() => result.current.count())).toBe(3);
     expect(await act(() => result.current.operations.stats())).toEqual({ total: 3 });
     await waitFor(() => expect(client.getQueryData(["users", "operation", "count"])).toBe(3));

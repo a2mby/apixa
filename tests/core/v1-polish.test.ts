@@ -14,7 +14,12 @@ describe("operation-level transforms are typed", () => {
           path: "/users",
           operations: {
             getById: { transforms: { response: { keys: "kebab-case" } } },
-            raw: { method: "GET", path: "/raw", transforms: { response: { keys: "PascalCase" } } },
+            raw: {
+              kind: "read",
+              method: "GET",
+              path: "/raw",
+              transforms: { response: { keys: "PascalCase" } },
+            },
           },
         },
       },
@@ -74,7 +79,7 @@ describe("unknown bodies are optional", () => {
       resources: {
         users: {
           path: "/users",
-          operations: { archive: { method: "POST", path: "/:id/archive" } },
+          operations: { archive: { kind: "write", method: "POST", path: "/:id/archive" } },
         },
       },
     });

@@ -29,7 +29,7 @@ describe("defineApis", () => {
         resources: {
           users: {
             path: "/users",
-            operations: { archive: { method: "POST", path: "/:id/archive" } },
+            operations: { archive: { kind: "write", method: "POST", path: "/:id/archive" } },
           },
         },
       },

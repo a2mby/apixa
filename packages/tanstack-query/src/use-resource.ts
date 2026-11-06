@@ -10,7 +10,7 @@ import type {
 } from "./mutation-types.js";
 import {
   NATIVE_RESULT_KEYS,
-  useResourceQueryState,
+  useResourceQuery,
   type ListResource,
   type OperationOnlyQueryOptions,
   type QueryResultKey,
@@ -19,7 +19,7 @@ import {
   type UseResourceQueryOptions,
 } from "./use-resource-query.js";
 import {
-  useResourceMutationState,
+  useResourceMutation,
   type RuntimeResourceMutationOptions,
 } from "./use-resource-mutation.js";
 import type {
@@ -51,8 +51,8 @@ export type UseResourceOptions<R, Selected = DefaultData<R>, M = {}> = {
     : HasOptionalList<R> extends true
       ? WithoutShared<UseResourceQueryOptions<R, Selected>>
       : Omit<OperationOnlyQueryOptions, Shared>;
-  /** Exactly `useResourceMutation`'s options, minus the shared identity. */
-  mutation?: Omit<UseResourceMutationOptions<R, M>, Shared>;
+  /** Per-write native mutation options and client-only mutation functions. */
+  mutations?: UseResourceMutationOptions<R, M>["mutations"];
 };
 
 /** Reads run through the QueryClient cache; writes and client-only operations through mutations. */
@@ -138,24 +138,27 @@ export function useResource<R extends object, Selected = DefaultData<R>, M exten
 ): ResourceResult<R, Selected, M>;
 export function useResource(resource: object, options: RuntimeResourceOptions): unknown {
   const { queryKey, scope } = options;
-  const query = useResourceQueryState(resource, { ...options.query, queryKey, scope });
-  const mutation = useResourceMutationState(
-    resource,
-    { ...options.mutation, queryKey, scope },
-    // Reads route through the query layer; never through both engines.
-    (name, store) => !store.isRead(name),
-  );
-  const operations = { ...mutation.operations, ...query.helpers.operations };
+  const query = (
+    useResourceQuery as (resource: object, options: RuntimeOptions) => Record<string, unknown>
+  )(resource, { ...options.query, queryKey, scope });
+  const mutation = (
+    useResourceMutation as (
+      resource: object,
+      options: RuntimeResourceMutationOptions,
+    ) => Record<string, unknown>
+  )(resource, { mutations: options.mutations, queryKey, scope });
+  const operations = {
+    ...(mutation.operations as Record<string, unknown>),
+    ...(query.operations as Record<string, unknown>),
+  };
   const flat: Record<string, unknown> = {};
   for (const [name, fn] of Object.entries(operations)) {
     if (!NATIVE_RESULT_KEYS.has(name) && !FACADE_KEYS.has(name)) flat[name] = fn;
   }
-  return composeResult(query.observed ? query.native : undefined, {
+  return composeResult(query, {
     ...flat,
-    ...query.helpers,
-    ...(query.observed ? { query: query.native } : {}),
     operations: Object.freeze(operations),
-    states: mutation.states(),
+    states: mutation.states,
   });
 }
 
@@ -174,5 +177,5 @@ type RuntimeResourceOptions = {
   queryKey: QueryKey;
   scope?: QueryKey;
   query?: Omit<RuntimeOptions, Shared>;
-  mutation?: Omit<RuntimeResourceMutationOptions, Shared>;
+  mutations?: RuntimeResourceMutationOptions["mutations"];
 };

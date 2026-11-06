@@ -28,14 +28,14 @@ export interface LayerOptions extends MiddlewareOptions {
  * Runtime operation config: overrides merge with the builtin convention (unspecified fields keep
  * their defaults). Payload types live on the `defineApi<T>()` metadata, not here.
  */
-/** Read/write classification. Builtins use their convention; custom operations default to `"write"`. */
+/** Read/write classification. Builtins use their convention; custom operations declare it. */
 export type OperationKind = "read" | "write";
 
 export interface OperationDefinition extends LayerOptions {
   method?: HttpMethod;
   /**
    * Custom operations only: `"read"` marks it safe to run as a cached query (integrations such as
-   * `@apixa/tanstack-query`). Default `"write"`. Builtins keep their fixed convention.
+   * `@apixa/tanstack-query`). Required for custom operations. Builtins keep their fixed convention.
    */
   kind?: OperationKind;
   /** Path relative to the resource `path`, or an absolute URL on the API origin. */
@@ -46,7 +46,7 @@ export interface OperationDefinition extends LayerOptions {
 
 /** A function operation with metadata — same execution as passing the function directly. */
 export interface OperationRunDefinition {
-  /** Custom operations only. Default `"write"`. */
+  /** Required for custom operations. */
   kind?: OperationKind;
   run: OperationFn;
 }

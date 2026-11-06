@@ -1,4 +1,4 @@
-import { getOperationMetadata } from "@apixa/core";
+import { BUILTIN_CONVENTIONS, getOperationMetadata } from "@apixa/core";
 
 /** How the integration treats one operation. Derived from Core metadata, never from names/verbs. */
 export type OperationInfo = {
@@ -8,28 +8,10 @@ export type OperationInfo = {
   optionsIndex: number | null;
 };
 
-const BUILTIN_DEFAULTS: Record<string, OperationInfo> = {
-  getAll: { kind: "read", builtin: true, optionsIndex: 0 },
-  search: { kind: "read", builtin: true, optionsIndex: 0 },
-  count: { kind: "read", builtin: true, optionsIndex: 0 },
-  getById: { kind: "read", builtin: true, optionsIndex: 1 },
-  getBySlug: { kind: "read", builtin: true, optionsIndex: 1 },
-  getMany: { kind: "read", builtin: true, optionsIndex: 1 },
-  exists: { kind: "read", builtin: true, optionsIndex: 1 },
-  findFirst: { kind: "read", builtin: true, optionsIndex: 1 },
-  getBy: { kind: "read", builtin: true, optionsIndex: 2 },
-  create: { kind: "write", builtin: true, optionsIndex: 1 },
-  createMany: { kind: "write", builtin: true, optionsIndex: 1 },
-  deleteMany: { kind: "write", builtin: true, optionsIndex: 1 },
-  delete: { kind: "write", builtin: true, optionsIndex: 1 },
-  update: { kind: "write", builtin: true, optionsIndex: 2 },
-  patch: { kind: "write", builtin: true, optionsIndex: 2 },
-  upsert: { kind: "write", builtin: true, optionsIndex: 2 },
-};
-
+/** Plain resources use Core's canonical builtin table for their documented fallback. */
 export const BUILTIN_READ_NAMES: ReadonlySet<string> = new Set(
-  Object.entries(BUILTIN_DEFAULTS)
-    .filter(([, info]) => info.kind === "read")
+  Object.entries(BUILTIN_CONVENTIONS)
+    .filter(([, convention]) => convention.access === "read")
     .map(([name]) => name),
 );
 
@@ -54,8 +36,12 @@ export function describeOperations(resource: object): ReadonlyMap<string, Operat
         ? { kind: meta.kind, builtin: meta.builtin, optionsIndex: meta.optionsIndex }
         : metadata
           ? { kind: "write", builtin: false, optionsIndex: null }
-          : BUILTIN_DEFAULTS[name]
-            ? { ...BUILTIN_DEFAULTS[name], optionsIndex: null }
+          : Object.prototype.hasOwnProperty.call(BUILTIN_CONVENTIONS, name)
+            ? {
+                kind: BUILTIN_CONVENTIONS[name as keyof typeof BUILTIN_CONVENTIONS].access,
+                builtin: true,
+                optionsIndex: null,
+              }
             : { kind: "write", builtin: false, optionsIndex: null },
     );
   }

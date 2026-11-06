@@ -74,7 +74,7 @@ describe("resource-wide useResourceMutation", () => {
     });
     expect(counter.observers).toBe(0);
     expect(Object.keys(result.current.operations).sort()).toEqual(
-      ["archive", "create", "delete", "getAll", "getById", "update"].sort(),
+      ["archive", "create", "delete", "update"].sort(),
     );
 
     const created = await act(() => result.current.create({ name: "Grace" }));
@@ -242,7 +242,7 @@ describe("resource-wide useResourceMutation", () => {
     expect(seen).toEqual([2]);
   });
 
-  it("supports lists-only, detail, callback, and disabled invalidation; reads never invalidate", async () => {
+  it("supports lists-only, detail, callback, and disabled invalidation", async () => {
     const users = fakeUsers();
     const client = newClient();
     const seed = () => {
@@ -278,7 +278,6 @@ describe("resource-wide useResourceMutation", () => {
     client.clear();
     seed();
     await act(() => result.current.delete("2"));
-    await act(() => result.current.getById("1"));
     expect(stale()).toEqual([]);
     await act(() => result.current.archive("1"));
     expect(callback).toHaveBeenCalledWith(

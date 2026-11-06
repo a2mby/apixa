@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-06 — Explicit operation kinds and the final TanStack Query hooks
+
+Core now requires `kind: "read" | "write"` on every custom operation, rejects `kind` on built-ins, and
+validates kind against HTTP method at construction and per `ctx.request()`. `useResourceQuery`
+exposes reads only, `useResourceMutation` writes only (no single-operation overload, no
+`readOperations`), and `useResource` is a thin composition with top-level `mutations`. This advances
+the v1.0.0 Query workstream; the breaking changes are listed in `CHANGELOG.md`.
+
 ## 2026-11-06 — Finalize `@apixa/mocking` entry points and mock-store memory
 
 `@apixa/mocking/datasets` is now the canonical dataset entry: lazy `loadDataset(id)` plus eager

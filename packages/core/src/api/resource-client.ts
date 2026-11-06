@@ -18,6 +18,7 @@ import {
 } from "../request/index.js";
 import { convertKey } from "../transform/keys.js";
 import type { OperationFn, OperationFnContext, OperationFnRequestInit } from "../types/builtins.js";
+import { validateMethodKind } from "./validate.js";
 import type {
   LayerOptions,
   OperationDefinition,
@@ -133,13 +134,11 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
         runtime,
         opName,
         fn,
+        convention?.access ?? (definition as OperationRunDefinition).kind!,
         prepareLayers(where, [root, resourceLayer]),
       );
       metadata[opName] = Object.freeze({
-        kind:
-          convention?.access ??
-          (isRunDefinition(definition) ? definition.kind : undefined) ??
-          "write",
+        kind: convention?.access ?? (definition as OperationRunDefinition).kind!,
         builtin: convention !== undefined,
         implementation: "function",
         optionsIndex: null,
@@ -167,7 +166,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       );
     }
     metadata[opName] = Object.freeze({
-      kind: convention?.access ?? declared.kind ?? "write",
+      kind: convention?.access ?? declared.kind!,
       builtin: convention !== undefined,
       implementation: "request",
       optionsIndex: optionsIndexOf(opName, op, hasResourceParams),
@@ -333,6 +332,7 @@ function functionOperation(
   runtime: ResourceRuntime,
   opName: string,
   fn: OperationFn,
+  kind: "read" | "write",
   layers: ReturnType<typeof prepareLayers>,
 ): Fn {
   const base: PreparedOperation = {
@@ -348,6 +348,7 @@ function functionOperation(
     operation: opName,
     request: <T>(init: OperationFnRequestInit = {}) => {
       const method = init.method ?? "GET";
+      validateMethodKind(`resources.${runtime.name}.operations.${opName}`, kind, method);
       const options: RequestOptions = {
         headers: init.headers,
         signal: init.signal,
@@ -369,5 +370,5 @@ function functionOperation(
       }) as Promise<T>;
     },
   };
-  return (...args) => fn(ctx, ...args);
+  return (...args) => Promise.resolve().then(() => fn(ctx, ...args));
 }

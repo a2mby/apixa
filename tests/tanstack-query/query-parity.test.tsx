@@ -16,7 +16,10 @@ import type { ReactNode } from "react";
 import { readsDuringRender } from "../helpers/render.js";
 import { describe, expect, it, vi } from "vitest";
 import { createResourceQueryController } from "../../packages/tanstack-query/src/query-controller.js";
-import { createResourceQueryOptions } from "../../packages/tanstack-query/src/query-options.js";
+import {
+  buildResourceQueryOptions,
+  createResourceQueryOptions,
+} from "../../packages/tanstack-query/src/query-options.js";
 import { useResourceQuery } from "../../packages/tanstack-query/src/use-resource-query.js";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -33,7 +36,7 @@ function wrapper(queryClient: QueryClient) {
 }
 
 /** Test double carrying the same metadata Core supplies for generated operations. */
-function coreFixture<R extends object>(resource: R, positions: Record<string, number>): R {
+function coreFixture<R extends object>(resource: R, positions: Record<string, number | null>): R {
   Object.defineProperty(resource, OPERATION_METADATA, {
     value: Object.fromEntries(
       Object.entries(positions).map(([name, optionsIndex]) => [
@@ -153,21 +156,23 @@ describe("native query parity and read operations", () => {
   });
 
   it("supports count, a declared custom read, and separate operation keys", async () => {
-    const resource = {
-      count: vi.fn(async () => 7),
-      stats: vi.fn(async (period: "day" | "week") => ({ period, total: 9 })),
-    };
+    const resource = coreFixture(
+      {
+        count: vi.fn(async () => 7),
+        stats: vi.fn(async (period: "day" | "week") => ({ period, total: 9 })),
+      },
+      { count: 0, stats: null },
+    );
     const queryClient = client();
     const count = createResourceQueryOptions(resource, {
       queryKey: ["users"],
       operation: "count",
       args: [],
     });
-    const stats = createResourceQueryOptions(resource, {
+    const stats = buildResourceQueryOptions(resource, {
       queryKey: ["users"],
       operation: "stats",
       args: ["day"],
-      readOperations: ["stats"],
       keyParts: ["day"],
     });
     expect(count.queryKey).toEqual(["users", "operation", "count"]);
@@ -179,17 +184,9 @@ describe("native query parity and read operations", () => {
         queryKey: ["users"],
         operation: "stats",
         args: ["day"],
-        keyParts: ["day"],
-      } as never),
-    ).toThrow(/readOperations/);
-    expect(() =>
-      createResourceQueryOptions(resource, {
-        queryKey: ["users"],
-        operation: "stats",
-        args: ["day"],
         readOperations: ["stats"],
       } as never),
-    ).toThrow(/keyParts/);
+    ).toThrow(/readOperations was removed/);
   });
 
   it("executes every remaining builtin read directly with its Core argument tuple", async () => {
@@ -326,16 +323,12 @@ describe("native query parity and read operations", () => {
       expect(options.signal).toBeInstanceOf(AbortSignal);
       return ada;
     });
-    const options = createResourceQueryOptions(
-      { custom },
-      {
-        queryKey: ["users"],
-        operation: "custom",
-        readOperations: ["custom"],
-        keyParts: ["42"],
-        args: ({ signal }) => ["42", { signal }],
-      },
-    );
+    const options = buildResourceQueryOptions(coreFixture({ custom }, { custom: null }), {
+      queryKey: ["users"],
+      operation: "custom",
+      keyParts: ["42"],
+      args: ({ signal }) => ["42", { signal }],
+    });
     expect(await client().fetchQuery(options)).toEqual(ada);
     expect(custom).toHaveBeenCalledTimes(1);
   });

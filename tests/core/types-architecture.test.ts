@@ -56,10 +56,16 @@ describe("defineApi type architecture", () => {
         users: {
           path: "/users",
           operations: {
-            archive: { method: "POST", path: "/:id/archive" },
-            stats: async (ctx, range: "day" | "week") =>
-              ctx.request<{ total: number }>({ query: { range } }),
-            loose: async (ctx, value) => ctx.request({ query: { v: String(value) } }),
+            archive: { kind: "write", method: "POST", path: "/:id/archive" },
+            stats: {
+              kind: "read",
+              run: async (ctx, range: "day" | "week") =>
+                ctx.request<{ total: number }>({ query: { range } }),
+            },
+            loose: {
+              kind: "read",
+              run: async (ctx, value) => ctx.request({ query: { v: String(value) } }),
+            },
           },
         },
       },

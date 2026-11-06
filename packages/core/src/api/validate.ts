@@ -67,6 +67,27 @@ export const OPERATION_KEYS = new Set([
 const RUN_KEYS = new Set(["kind", "run"]);
 
 const METHODS = new Set<HttpMethod>(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]);
+export function requiredKind(method: HttpMethod): "read" | "write" {
+  return method === "GET" || method === "HEAD" || method === "OPTIONS" ? "read" : "write";
+}
+
+export function validateMethodKind(
+  where: string,
+  kind: "read" | "write",
+  method: HttpMethod,
+): void {
+  if (!METHODS.has(method)) {
+    throw new ConfigError(
+      `${where}: HTTP method "${String(method)}" is invalid. Use GET, HEAD, OPTIONS, POST, PUT, PATCH, or DELETE.`,
+    );
+  }
+  const required = requiredKind(method);
+  if (kind !== required) {
+    throw new ConfigError(
+      `${where}: Operation kind "${kind}" is incompatible with HTTP method "${method}". ${method} requires kind "${required}". Change the method or kind.`,
+    );
+  }
+}
 const GROUPS = new Set(["read", "write", "many", "extended"]);
 const HOOK_KEYS = new Set(["onRequest", "onResponse", "onError"]);
 
@@ -270,8 +291,15 @@ export function validateResource(
 }
 
 function validateOperation(where: string, name: string, value: unknown): void {
-  if (value === undefined || value === false || typeof value === "function") return;
   const builtin = isBuiltinName(name);
+  if (value === undefined || value === false) return;
+  if (typeof value === "function") {
+    if (!builtin)
+      throw new ConfigError(
+        `${where}: custom function operation requires { kind: "read" | "write", run }.`,
+      );
+    return;
+  }
   if (value === true) {
     if (!builtin) {
       throw new ConfigError(
@@ -285,15 +313,15 @@ function validateOperation(where: string, name: string, value: unknown): void {
       `${where} must be true, false, a config object, or a function (got ${typeName(value)}).`,
     );
   }
-  if (value.kind !== undefined) {
-    if (builtin) {
-      throw new ConfigError(
-        `${where}.kind: builtin "${name}" is always "${BUILTIN_CONVENTIONS[name].access}"; kind is for custom operations.`,
-      );
-    }
+  if (builtin && "kind" in value) {
+    throw new ConfigError(
+      `${where}.kind: builtin "${name}" is always "${BUILTIN_CONVENTIONS[name].access}"; kind is for custom operations.`,
+    );
+  }
+  if (!builtin) {
     if (value.kind !== "read" && value.kind !== "write")
       throw new ConfigError(
-        `${where}.kind must be "read" or "write" (got ${JSON.stringify(value.kind)}).`,
+        `${where}.kind must be explicitly set to "read" or "write" (got ${JSON.stringify(value.kind)}).`,
       );
   }
   if ("run" in value) {
@@ -311,6 +339,13 @@ function validateOperation(where: string, name: string, value: unknown): void {
   if (!builtin && value.method === undefined) {
     throw new ConfigError(`${where}: custom operation "${name}" needs a method.`);
   }
+  const method = (value.method ??
+    (builtin ? BUILTIN_CONVENTIONS[name].method : undefined)) as HttpMethod;
+  validateMethodKind(
+    where,
+    builtin ? BUILTIN_CONVENTIONS[name].access : (value.kind as "read" | "write"),
+    method,
+  );
   if (value.path !== undefined && typeof value.path !== "string")
     throw new ConfigError(`${where}.path must be a string.`);
   if (value.hasBody !== undefined && typeof value.hasBody !== "boolean")
