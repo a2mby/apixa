@@ -11,6 +11,8 @@ export type CreateResourceKeysInput = {
  * `[...scope, ...queryKey]`
  * `[...scope, ...queryKey, "list", query?]`
  * `[...scope, ...queryKey, "detail", id]`
+ * `[...scope, ...queryKey, "operation", op, ...args]`
+ * `[...scope, ...queryKey, "infinite", op, ...keyParts]` (InfiniteData, never shared with lists)
  * `[...scope, ...queryKey, "mutation", op]`
  */
 export function createResourceKeys(input: CreateResourceKeysInput): ResourceKeyFactory {
@@ -22,6 +24,8 @@ export function createResourceKeys(input: CreateResourceKeysInput): ResourceKeyF
     list: (query?: unknown) => (query === undefined ? [...root, "list"] : [...root, "list", query]),
     detail: (id: unknown) => [...root, "detail", id],
     operation: (op, parts = []) => [...root, "operation", op, ...parts],
+    infinites: () => [...root, "infinite"],
+    infinite: (op = "getAll", parts = []) => [...root, "infinite", op, ...parts],
     mutation: (op) => [...root, "mutation", op],
   };
 }

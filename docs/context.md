@@ -176,8 +176,11 @@ Core rejects incompatible HTTP methods. Internals use TanStack Query (`useQuery`
 cache APIs). The Query hook forwards native options and results, reads any guaranteed built-in
 operation or explicitly declared custom read, and exposes resource cache helpers. A hook-free
 query-options factory supports native Suspense, parallel queries, prefetching, and hydration.
-Correctness-first mutation invalidation remains the default; optimistic updates use native
-`onMutate`. A dedicated infinite-query helper and `patch-list` strategies stay later. Escape hatch: `@apixa/tanstack-query/advanced`.
+Correctness-first mutation invalidation remains the default. Query results also expose
+`prefetch`, `cache.get/set/remove` and `cancel`; `useResourceQuery` has an `infinite` mode on native
+`useInfiniteQuery`; callable writes carry their mutation state (`users.create.isPending`); and writes
+accept a declarative, concurrency-safe `optimistic` config (native `onMutate` still works).
+`patch-list` strategies stay later. Escape hatch: `@apixa/tanstack-query/advanced`.
 
 Core must not implement its own caching or state-management system just to support TanStack Query.
 

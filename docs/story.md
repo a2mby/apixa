@@ -2,6 +2,13 @@
 
 Project log. Newest entry first.
 
+## 2026-11-06 — Query DX: prefetch, cache, infinite, optimistic, and mutation state
+
+The three Query hooks now cover prefetching, typed cache access, cancellation, infinite lists, live
+mutation state on each write function, and declarative optimistic updates that stay correct under
+concurrent calls, with no new hooks and no custom cache or scheduler. Advanced server prefetch
+helpers back the updated `query-ssr-next` example. This advances the v1.0.0 Query workstream.
+
 ## 2026-11-06 — Opt-in idempotency keys on Core writes
 
 Write operations can declare `idempotency: true` or `{ header, generate }`, and Core then sends one

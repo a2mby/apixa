@@ -9,7 +9,14 @@ export function Users() {
   const users = useResource(api.users, {
     queryKey: ["users"],
     query: { staleTime: 30_000 },
-    mutations: { create: { invalidate: "lists" } },
+    mutations: {
+      create: {
+        // Shown at once, rolled back if the request fails, replaced by server data afterwards.
+        optimistic: {
+          list: (list, [body]) => [...list, { ...body, id: `temp-${list.length + 1}` }],
+        },
+      },
+    },
   });
   const [stats, setStats] = useState<string>("");
 
@@ -19,11 +26,13 @@ export function Users() {
     <section>
       <ul>
         {users.data.map((user) => (
-          <li key={user.id}>{user.name}</li>
+          <li key={user.id} onMouseEnter={() => void users.prefetch({ operation: "getById", args: [user.id] })}>
+            {user.name}
+          </li>
         ))}
       </ul>
       <button
-        disabled={users.states.create.isPending}
+        disabled={users.create.isPending}
         onClick={() => void users.create({ name: `User ${users.data.length + 1}`, active: true })}
       >
         Add user

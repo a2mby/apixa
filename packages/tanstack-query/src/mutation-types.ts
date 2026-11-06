@@ -5,11 +5,12 @@ import type {
   QueryKey,
   UseMutationOptions,
 } from "@tanstack/react-query";
+import type { OptimisticTarget } from "./optimistic.js";
 import type {
   AnyOperationName,
+  InferGetByIdArg,
   CallableOperationName,
   InheritedWriteName,
-  OperationCall,
   OperationParameters,
   OperationReturn,
   OptionalOperationName,
@@ -41,6 +42,31 @@ type NativeMutationOptions<TData, TArgs, TContext> = Omit<
   UseMutationOptions<TData, Error, TArgs, TContext>,
   "mutationFn" | "mutationKey"
 >;
+
+type DetailData<R> =
+  "getById" extends AnyOperationName<R> ? OperationReturn<R, "getById" & keyof R> : never;
+type ListData<R> =
+  "getAll" extends AnyOperationName<R> ? OperationReturn<R, "getAll" & keyof R> : never;
+type DetailId<R> = InferGetByIdArg<{ [K in keyof R]-?: NonNullable<R[K]> }>;
+
+/**
+ * Declarative optimistic update for one write. Runs before the request, rolls back on failure
+ * (only this call's change), and is replaced by server data after invalidation. Updaters get the
+ * raw cached data (never `select` output) and must return new objects (no mutation).
+ */
+export type OptimisticOptions<R, TArgs> = (
+  | {
+      /** Detail cache entries to update (every cached variant of each id). */
+      detail: (args: TArgs) => DetailId<R> | readonly DetailId<R>[] | null | undefined;
+      update: (current: DetailData<R>, args: TArgs) => DetailData<R>;
+    }
+  | { detail?: never; update?: never }
+) & {
+  /** Every cached list (`[..., "list", …]`) of the resource. Not infinite lists. */
+  list?: (current: ListData<R>, args: TArgs) => ListData<R>;
+  /** Any other cache entries (custom reads, infinite lists, other resources). */
+  targets?: (args: TArgs, keys: ResourceKeyFactory<R>) => readonly OptimisticTarget[];
+};
 
 /** Per-operation config for an inherited Core operation: every native mutation option. */
 export type OperationMutationOptions<TData, TArgs, TContext = unknown> = NativeMutationOptions<
@@ -77,6 +103,7 @@ export type MutationsConfig<R, M> = {
   // `keyof M` keeps per-key inference; the operation names make editors suggest every operation.
   [K in keyof M | AnyOperationName<R>]?: K extends InheritedWriteName<R> | OptionalWriteName<R>
     ? InheritedConfig<
+        R,
         OperationReturn<R, K>,
         OperationParameters<R, K>,
         K extends keyof M ? M[K] : unknown
@@ -94,11 +121,12 @@ export type MutationsConfig<R, M> = {
  * `M[K]` is inferred from `onMutate`'s raw return (possibly a Promise, as TanStack allows); the
  * other callbacks and `states[K].context` receive the awaited value.
  */
-type InheritedConfig<TData, TArgs, TRaw> = Omit<
+type InheritedConfig<R, TData, TArgs, TRaw> = Omit<
   OperationMutationOptions<TData, TArgs, Awaited<TRaw>>,
   "onMutate"
 > & {
   onMutate?: (variables: TArgs, context: MutationFunctionContext) => TRaw;
+  optimistic?: OptimisticOptions<R, TArgs>;
 };
 
 type ClientName<R, M> = Exclude<keyof M, AnyOperationName<R>> & string;
@@ -115,11 +143,51 @@ export type UseResourceMutationOptions<R, M = {}> = {
 
 type MutationState<TData, TArgs, TContext> = MutationObserverResult<TData, Error, TArgs, TContext>;
 
+/** Native mutation fields readable directly on a callable operation. */
+export type MutationStateKey =
+  | "data"
+  | "error"
+  | "variables"
+  | "context"
+  | "status"
+  | "isIdle"
+  | "isPending"
+  | "isSuccess"
+  | "isError"
+  | "isPaused"
+  | "failureCount"
+  | "failureReason"
+  | "submittedAt"
+  | "reset";
+
+type DistributivePick<T, K extends keyof T> = T extends unknown ? Pick<T, K> : never;
+
+/**
+ * A callable write that also exposes its native mutation state: `users.create(body)` and
+ * `users.create.isPending`. State is the latest invocation (like `useMutation`): with concurrent
+ * calls, `isPending` turning false does not mean every earlier call finished — await each call's
+ * promise for that.
+ */
+export type MutationOperation<TData, TArgs extends readonly unknown[], TContext = unknown> = ((
+  ...args: TArgs
+) => Promise<TData>) &
+  Readonly<DistributivePick<MutationState<TData, TArgs, TContext>, MutationStateKey>>;
+
 /** Every inherited write plus client-only ones, called with their own separate arguments. */
 export type ResourceMutationOperations<R, M = {}> = {
-  [K in InheritedWriteName<R>]: OperationCall<R, K>;
-} & { [K in OptionalWriteName<R>]?: OperationCall<R, K> } & {
-  [K in ClientName<R, M>]: (...args: ClientArgs<M[K]>) => Promise<ClientData<M[K]>>;
+  [K in InheritedWriteName<R>]: MutationOperation<
+    OperationReturn<R, K>,
+    OperationParameters<R, K>,
+    ContextOf<M, K>
+  >;
+} & {
+  [K in OptionalWriteName<R>]?: MutationOperation<
+    OperationReturn<R, K>,
+    OperationParameters<R, K>,
+    ContextOf<M, K>
+  >;
+} & {
+  [K in ClientName<R, M>]: MutationOperation<ClientData<M[K]>, ClientArgs<M[K]>>;
 };
 
 /** Native mutation state per operation (latest invocation, like `useMutation`). */

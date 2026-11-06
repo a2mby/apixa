@@ -3,7 +3,15 @@ import {
   type MutationObserverOptions,
   type QueryClient,
 } from "@tanstack/react-query";
-import { assertNoFullResponse, describeOperations, type OperationInfo } from "./operations.js";
+import { createIdempotencyKey } from "@apixa/core";
+import { OptimisticLayers, type OptimisticTarget } from "./optimistic.js";
+import {
+  assertNoFullResponse,
+  describeOperations,
+  isPlainObject,
+  type OperationInfo,
+} from "./operations.js";
+import { withOptions } from "./query-options.js";
 import type { ResourceKeyFactory } from "./types.js";
 
 type AnyFn = (...args: unknown[]) => Promise<unknown>;
@@ -16,6 +24,15 @@ export type RuntimeOperationConfig = Omit<
 > & {
   mutationFn?: AnyFn;
   invalidate?: unknown;
+  optimistic?: RuntimeOptimistic;
+};
+
+/** Untyped declarative optimistic config (typed in `mutation-types.ts`). */
+export type RuntimeOptimistic = {
+  detail?: (args: unknown[]) => unknown;
+  update?: (current: unknown, args: unknown[]) => unknown;
+  list?: (current: unknown, args: unknown[]) => unknown;
+  targets?: (args: unknown[], keys: ResourceKeyFactory) => readonly OptimisticTarget[];
 };
 export type RuntimeMutationsConfig = Readonly<Record<string, RuntimeOperationConfig | undefined>>;
 
@@ -30,6 +47,10 @@ export class ResourceMutationStore {
   readonly #listeners = new Set<() => void>();
   #version = 0;
   #config: RuntimeMutationsConfig;
+  /** Config of the current render (lazy observers and state getters use it). */
+  renderConfig: RuntimeMutationsConfig;
+  /** Idempotency key per call, keyed by the call's variables (TanStack retries reuse them). */
+  readonly #idempotencyKeys = new WeakMap<object, string>();
 
   constructor(
     readonly client: QueryClient,
@@ -39,6 +60,7 @@ export class ResourceMutationStore {
   ) {
     this.table = describeOperations(resource);
     this.#config = validateConfig(this.table, config);
+    this.renderConfig = this.#config;
   }
 
   /** Inherited operations first (Core order), then client-only ones. */
@@ -70,7 +92,8 @@ export class ResourceMutationStore {
 
   /** Run one call; each call keeps its own promise (concurrent calls are independent). */
   run(name: string, args: unknown[]): Promise<unknown> {
-    return this.observer(name).mutate(args);
+    // A fresh array per call: its identity is the call's identity (optimistic layer, idempotency).
+    return this.observer(name, this.renderConfig).mutate([...args]);
   }
 
   /** Commit the rendered config (from an effect), like `useMutation`'s `setOptions` effect. */
@@ -117,17 +140,24 @@ export class ResourceMutationStore {
     config: RuntimeMutationsConfig,
   ): MutationObserverOptions<unknown, Error, unknown[], unknown> {
     const info = this.table.get(name);
-    const { mutationFn, invalidate, onSuccess, ...native } = config[name] ?? {};
+    const entry = config[name] ?? {};
+    const { mutationFn, invalidate, optimistic, ...native } = entry;
     const resource = this.resource as Record<string, AnyFn>;
     const keys = this.keys;
     const policy = invalidate ?? "all";
-    const defaultSuccess = this.client.defaultMutationOptions<
+    const defaults = this.client.defaultMutationOptions<
       MutationObserverOptions<unknown, Error, unknown[], unknown>
-    >({ mutationKey: keys.mutation(name) }).onSuccess;
-    const success = Object.prototype.hasOwnProperty.call(config[name] ?? {}, "onSuccess")
-      ? onSuccess
-      : defaultSuccess;
-    return {
+    >({ mutationKey: keys.mutation(name) });
+    // Own options win; otherwise the QueryClient defaults (what TanStack would have used).
+    const own = <K extends "onMutate" | "onSuccess" | "onError">(key: K) =>
+      Object.prototype.hasOwnProperty.call(entry, key) ? entry[key] : defaults[key];
+    const success = own("onSuccess");
+    const layers = optimistic ? OptimisticLayers.for(this.client) : undefined;
+    const targets = optimistic ? optimisticTargets(name, optimistic, keys) : undefined;
+    const idempotencyKeys = this.#idempotencyKeys;
+    const owner = this.resource;
+
+    const options: MutationObserverOptions<unknown, Error, unknown[], unknown> = {
       ...native,
       mutationKey: keys.mutation(name),
       mutationFn: (args: unknown[]) => {
@@ -135,13 +165,29 @@ export class ResourceMutationStore {
         assertNoFullResponse(args, info);
         const run = resource[name];
         if (typeof run !== "function") throw new Error(`Resource has no ${name} operation.`);
-        return run(...args);
+        return run(...withIdempotencyKey(owner, name, info, args, idempotencyKeys));
       },
       onSuccess: async (data, args, onMutateResult, context) => {
+        layers?.settle(args, true);
         await applyInvalidation(policy, { client: context.client, keys, data, args });
         return success?.(data, args, onMutateResult, context);
       },
     };
+    if (layers && targets) {
+      const mutate = own("onMutate");
+      const failed = own("onError");
+      // Internal optimistic work runs first; the consumer's onMutate result stays the native
+      // `onMutateResult` that every callback (and `states[op].context`) receives.
+      options.onMutate = async (args, context) => {
+        await layers.begin(args, targets(args));
+        return mutate?.(args, context);
+      };
+      options.onError = async (error, args, onMutateResult, context) => {
+        layers.settle(args, false);
+        return failed?.(error, args, onMutateResult, context);
+      };
+    }
+    return options;
   }
 }
 
@@ -168,8 +214,30 @@ export function validateConfig(
         `mutations.${name}: not an operation of this resource; a client-only operation needs a mutationFn.`,
       );
     }
+    if (entry.optimistic !== undefined) validateOptimistic(name, entry.optimistic);
   }
   return config;
+}
+
+function validateOptimistic(name: string, optimistic: RuntimeOptimistic): void {
+  if (optimistic === null || typeof optimistic !== "object") {
+    throw new Error(`mutations.${name}.optimistic must be an object.`);
+  }
+  const { detail, update, list, targets } = optimistic;
+  if (detail !== undefined && typeof update !== "function") {
+    throw new Error(`mutations.${name}.optimistic.detail needs optimistic.update.`);
+  }
+  if (update !== undefined && detail === undefined) {
+    throw new Error(`mutations.${name}.optimistic.update needs optimistic.detail (the id).`);
+  }
+  if (detail === undefined && list === undefined && targets === undefined) {
+    throw new Error(`mutations.${name}.optimistic needs detail + update, list, or targets.`);
+  }
+  for (const [key, value] of Object.entries({ detail, list, targets })) {
+    if (value !== undefined && typeof value !== "function") {
+      throw new Error(`mutations.${name}.optimistic.${key} must be a function.`);
+    }
+  }
 }
 
 type InvalidationContext = {
@@ -188,7 +256,10 @@ export async function applyInvalidation(
   if (policy === true || policy === "all") {
     await client.invalidateQueries({ queryKey: keys.all() });
   } else if (policy === "lists") {
-    await client.invalidateQueries({ queryKey: keys.lists() });
+    await Promise.all([
+      client.invalidateQueries({ queryKey: keys.lists() }),
+      client.invalidateQueries({ queryKey: keys.infinites() }),
+    ]);
   } else if (typeof policy === "function") {
     await policy({ client, keys, data, args });
   } else if (typeof policy === "object") {
@@ -198,9 +269,57 @@ export async function applyInvalidation(
     };
     await Promise.all([
       lists ? client.invalidateQueries({ queryKey: keys.lists() }) : undefined,
+      lists ? client.invalidateQueries({ queryKey: keys.infinites() }) : undefined,
       ...(details?.(data, args) ?? []).map((id) =>
         client.invalidateQueries({ queryKey: keys.detail(id) }),
       ),
     ]);
   }
+}
+
+/** The targets of a declarative `optimistic` config (resolved per call). */
+function optimisticTargets(
+  name: string,
+  optimistic: RuntimeOptimistic,
+  keys: ResourceKeyFactory,
+): (args: unknown[]) => OptimisticTarget[] {
+  validateOptimistic(name, optimistic);
+  const { detail, update, list, targets } = optimistic;
+  return (args) => {
+    const out: OptimisticTarget[] = [];
+    if (detail) {
+      const ids = detail(args);
+      for (const id of Array.isArray(ids) ? ids : ids == null ? [] : [ids]) {
+        out.push({ queryKey: keys.detail(id), update: (current) => update!(current, args) });
+      }
+    }
+    if (list) out.push({ queryKey: keys.lists(), update: (current) => list(current, args) });
+    if (targets) out.push(...targets(args, keys));
+    return out;
+  };
+}
+
+/**
+ * Core operations with `idempotency` get one key per mutation call, created on the first attempt
+ * and reused by TanStack retries (they pass the same variables). A key already in the call
+ * options wins. Signatures Core does not own are never touched.
+ */
+function withIdempotencyKey(
+  resource: object,
+  name: string,
+  info: OperationInfo,
+  args: unknown[],
+  keys: WeakMap<object, string>,
+): unknown[] {
+  if (!info.idempotency || info.optionsIndex === null) return args;
+  const current = args[info.optionsIndex];
+  if (current !== undefined && !isPlainObject(current)) return args;
+  if (isPlainObject(current) && current.idempotencyKey !== undefined) return args;
+  let key = keys.get(args);
+  if (key === undefined) {
+    key = createIdempotencyKey(resource, name);
+    if (key === undefined) return args;
+    keys.set(args, key);
+  }
+  return withOptions(args, info, { idempotencyKey: key });
 }

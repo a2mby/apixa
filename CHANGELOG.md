@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### Added — TanStack Query DX refinement
+
+- `@apixa/core` — opt-in `idempotency` on write operations (`true` or `{ header, generate }`): one
+  `Idempotency-Key` per logical call, reused by Core retries and an error-middleware replay;
+  `options.idempotencyKey` supplies your own; reads reject it. New `createIdempotencyKey(resource,
+name)`; operation metadata gains `idempotency`.
+- `@apixa/tanstack-query` — `prefetch()`, `cache.get/set/remove`, and `cancel()` on query results
+  and `useResource` (same keys and functions as the hook, no observers); infinite mode in
+  `useResourceQuery` (`infinite: { initialPageParam, getNextPageParam, query | args, maxPages }`)
+  on native `useInfiniteQuery`, with its own `"infinite"` key namespace; advanced
+  `createResourceInfiniteQueryOptions`, `prefetchResourceQuery`, and
+  `prefetchResourceInfiniteQuery` for server rendering.
+- `@apixa/tanstack-query` — callable writes expose their native mutation state
+  (`users.create.isPending`, `.data`, `.error`, `.variables`, …) as live getters over the same
+  lazy observer as `states.create`.
+- `@apixa/tanstack-query` — declarative `optimistic: { detail + update | list | targets }` per
+  write: concurrency-safe layers (a failure removes only its own change; refetches during pending
+  calls keep them), rollback after unmount, native callback order preserved. TanStack mutation
+  retries reuse one idempotency key per call.
+
+### Changed — TanStack Query DX refinement
+
+- `invalidateLists()` and `invalidate: "lists"` also cover infinite lists. Reads named `prefetch`,
+  `cache`, `cancel`, or a native infinite-result field are only reachable through `operations`.
+
 ### Removed — `@apixa/mocking`
 
 - **Breaking:** the `@apixa/mocking/data` and `@apixa/mocking/data/users-mock` entry points are removed. Import records and entity types (`User`, `Product`, …) from `@apixa/mocking/datasets`. `@apixa/mocking/register` and `@apixa/mocking/node` stay as internal tooling.

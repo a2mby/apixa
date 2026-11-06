@@ -1,8 +1,14 @@
 import {
+  infiniteQueryOptions,
   queryOptions,
+  type GetNextPageParamFunction,
+  type GetPreviousPageParamFunction,
+  type InfiniteData,
+  type QueryClient,
   type QueryFunction,
   type QueryFunctionContext,
   type QueryKey,
+  type UseInfiniteQueryOptions,
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { createResourceKeys } from "./keys.js";
@@ -244,6 +250,7 @@ export function normalizeIdentity(values: readonly unknown[], info: OperationInf
       signal: _signal,
       timeout: _timeout,
       retry: _retry,
+      idempotencyKey: _idempotencyKey,
       ...rest
     } = result[index] as Record<string, unknown>;
     result[index] = Object.keys(rest).length === 0 ? undefined : rest;
@@ -270,4 +277,222 @@ function missingIdentifier(value: unknown): boolean {
     );
   }
   return false;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Infinite queries
+// ---------------------------------------------------------------------------------------------
+
+/** List query bag of an operation (`getAll`'s `query`); other reads take it through `args`. */
+type QueryBagOf<R, N extends keyof R> =
+  OperationParameters<R, N> extends readonly [(infer O)?, ...unknown[]]
+    ? NonNullable<O> extends { query?: infer Q }
+      ? Q
+      : never
+    : never;
+
+type PageArguments<R, N extends keyof R, TPageParam> =
+  | {
+      /** Query parameters for one page (merged into Core's `RequestOptions.query`). */
+      query: (pageParam: TPageParam) => QueryBagOf<R, N>;
+      args?: never;
+    }
+  | {
+      /** Exact Core arguments for one page. Bind `context.signal` yourself if you need it. */
+      args: (pageParam: TPageParam, context: QueryFunctionContext) => OperationParameters<R, N>;
+      query?: never;
+    }
+  | ([] extends OperationParameters<R, N> ? { query?: never; args?: never } : never);
+
+/** Paging config of an infinite resource query (native TanStack semantics). */
+export type ResourceInfiniteConfig<R, N extends keyof R, TPageParam> = {
+  initialPageParam: TPageParam;
+  getNextPageParam: GetNextPageParamFunction<TPageParam, OperationReturn<R, N>>;
+  getPreviousPageParam?: GetPreviousPageParamFunction<TPageParam, OperationReturn<R, N>>;
+  /** Native `maxPages`: older pages are dropped from the cache entry. */
+  maxPages?: number;
+} & PageArguments<R, N, TPageParam>;
+
+/** Native infinite options except the ones Apixa derives (key, function, paging). */
+export type ResourceInfiniteNativeOptions<TPage, TPageParam, TSelected> = Omit<
+  UseInfiniteQueryOptions<TPage, Error, TSelected, QueryKey, TPageParam>,
+  | "queryKey"
+  | "queryFn"
+  | "queryKeyHashFn"
+  | "initialPageParam"
+  | "getNextPageParam"
+  | "getPreviousPageParam"
+  | "maxPages"
+>;
+
+export type ResourceInfiniteQueryOptions<
+  R,
+  N extends QueryOperationName<R>,
+  TPageParam,
+  TSelected = InfiniteData<OperationReturn<R, N>, TPageParam>,
+> = ResourceInfiniteNativeOptions<OperationReturn<R, N>, TPageParam, TSelected> & {
+  /** Resource root, shared with the other hooks. */
+  queryKey: QueryKey;
+  scope?: QueryKey;
+  /** The read that loads one page. Default `getAll`. */
+  operation?: N;
+  /**
+   * Extra cache identity for this infinite list (filters that change the results). The page
+   * parameter is never part of the key.
+   */
+  keyParts?: QueryKey;
+  infinite: ResourceInfiniteConfig<R, N, TPageParam>;
+};
+
+export type GeneratedInfiniteQueryOptions<TPage, TPageParam, TSelected> = ReturnType<
+  typeof infiniteQueryOptions<TPage, Error, TSelected, QueryKey, TPageParam>
+>;
+
+/**
+ * Hook-free native `infiniteQueryOptions` for a read: use with `useInfiniteQuery`,
+ * `useSuspenseInfiniteQuery`, `queryClient.prefetchInfiniteQuery`, or `fetchInfiniteQuery`.
+ */
+export function createResourceInfiniteQueryOptions<
+  R,
+  const N extends QueryOperationName<R> = "getAll" & QueryOperationName<R>,
+  TPageParam = unknown,
+  TSelected = InfiniteData<OperationReturn<R, N>, TPageParam>,
+>(
+  resource: R,
+  options: ResourceInfiniteQueryOptions<R, N, TPageParam, TSelected>,
+): GeneratedInfiniteQueryOptions<OperationReturn<R, N>, TPageParam, TSelected> {
+  return buildResourceInfiniteQueryOptions(
+    resource as object,
+    options as unknown as RuntimeInfiniteQueryOptions,
+  ) as unknown as GeneratedInfiniteQueryOptions<OperationReturn<R, N>, TPageParam, TSelected>;
+}
+
+export type RuntimeInfiniteConfig = {
+  initialPageParam: unknown;
+  getNextPageParam: (...args: never[]) => unknown;
+  getPreviousPageParam?: (...args: never[]) => unknown;
+  maxPages?: number;
+  query?: (pageParam: unknown) => unknown;
+  args?: (pageParam: unknown, context: QueryFunctionContext) => readonly unknown[];
+};
+
+export type RuntimeInfiniteQueryOptions = Omit<ResourceQueryNativeOptions<unknown>, "enabled"> & {
+  operation?: string;
+  keyParts?: QueryKey;
+  infinite: RuntimeInfiniteConfig;
+  [native: string]: unknown;
+};
+
+/** Shared runtime engine for the infinite hook mode, prefetching, and the hook-free factory. */
+export function buildResourceInfiniteQueryOptions(
+  resource: object,
+  options: RuntimeInfiniteQueryOptions,
+): GeneratedInfiniteQueryOptions<unknown, unknown, unknown> {
+  const { queryKey, scope, operation = "getAll", keyParts, infinite, ...nativeOptions } = options;
+  for (const removed of ["args", "query"] as const) {
+    if (Object.prototype.hasOwnProperty.call(options, removed)) {
+      throw new Error(
+        `Infinite queries take ${removed} inside infinite: { ${removed}: (pageParam) => … }.`,
+      );
+    }
+  }
+  if (!Array.isArray(queryKey) || queryKey.length === 0) {
+    throw new Error("Resource query requires a non-empty queryKey.");
+  }
+  if (!infinite || typeof infinite !== "object") {
+    throw new Error("Infinite resource query requires an infinite config.");
+  }
+  if (!Object.prototype.hasOwnProperty.call(infinite, "initialPageParam")) {
+    throw new Error("infinite.initialPageParam is required (use null or 0 for the first page).");
+  }
+  if (typeof infinite.getNextPageParam !== "function") {
+    throw new Error("infinite.getNextPageParam must be a function.");
+  }
+  if (infinite.query !== undefined && infinite.args !== undefined) {
+    throw new Error("Use either infinite.query or infinite.args; combining them is ambiguous.");
+  }
+  const run = (resource as Record<string, unknown>)[operation];
+  if (typeof run !== "function") throw new Error(`Resource has no ${operation} operation.`);
+  const info = describeOperations(resource).get(operation)!;
+  if (info.kind !== "read") {
+    throw new Error(`Operation ${operation} is not a read; declare kind: "read" in Core.`);
+  }
+  if (infinite.query !== undefined && info.optionsIndex === null && operation !== "getAll") {
+    throw new Error(
+      `infinite.query needs Core's RequestOptions slot; ${operation} has a signature Core does not own — use infinite.args.`,
+    );
+  }
+  const keys = createResourceKeys({ queryKey, scope });
+  const { query: pageQuery, args: pageArgs, initialPageParam, maxPages } = infinite;
+
+  return infiniteQueryOptions({
+    ...nativeOptions,
+    queryKey: keys.infinite(operation, keyParts ?? []),
+    initialPageParam,
+    getNextPageParam: infinite.getNextPageParam as GetNextPageParamFunction<unknown, unknown>,
+    getPreviousPageParam: infinite.getPreviousPageParam as
+      GetPreviousPageParamFunction<unknown, unknown> | undefined,
+    ...(maxPages === undefined ? {} : { maxPages }),
+    queryFn: (context: QueryFunctionContext<QueryKey, unknown>) => {
+      const pageParam = context.pageParam;
+      let callArgs: unknown[];
+      if (pageArgs) {
+        callArgs = [...pageArgs(pageParam, context)];
+      } else {
+        const query = pageQuery?.(pageParam);
+        const extra: Record<string, unknown> = { signal: context.signal };
+        if (query !== undefined) extra.query = query;
+        callArgs =
+          info.optionsIndex === null
+            ? query === undefined
+              ? []
+              : [{ query }]
+            : withOptions([], info, extra);
+      }
+      assertNoFullResponse(callArgs, info);
+      return (run as (...values: unknown[]) => Promise<unknown>)(...callArgs);
+    },
+  } as never) as unknown as GeneratedInfiniteQueryOptions<unknown, unknown, unknown>;
+}
+
+/**
+ * Server-safe prefetch (no React): `queryClient.prefetchQuery` with exactly the key and function
+ * `useResourceQuery` uses for the same options. Use a request-scoped QueryClient on the server.
+ */
+export function prefetchResourceQuery<R, const N extends QueryOperationName<R>>(
+  client: QueryClient,
+  resource: R,
+  options: { operation: N } & ExplicitResourceQueryOptions<R, NoInfer<N>>,
+): Promise<void>;
+export function prefetchResourceQuery<R extends { getAll: AsyncFn }>(
+  client: QueryClient,
+  resource: R,
+  options: DefaultResourceQueryOptions<R>,
+): Promise<void>;
+export function prefetchResourceQuery(
+  client: QueryClient,
+  resource: object,
+  options: RuntimeQueryOptions,
+): Promise<void> {
+  return client.prefetchQuery(buildResourceQueryOptions(resource, options));
+}
+
+/** Server-safe `prefetchInfiniteQuery` for the infinite mode of `useResourceQuery`. */
+export function prefetchResourceInfiniteQuery<
+  R,
+  const N extends QueryOperationName<R> = "getAll" & QueryOperationName<R>,
+  TPageParam = unknown,
+>(
+  client: QueryClient,
+  resource: R,
+  options: ResourceInfiniteQueryOptions<R, N, TPageParam> & {
+    /** Pages to prefetch (native `pages`). Default 1. */
+    pages?: number;
+  },
+): Promise<void> {
+  const { pages, ...rest } = options as RuntimeInfiniteQueryOptions & { pages?: number };
+  return client.prefetchInfiniteQuery({
+    ...(buildResourceInfiniteQueryOptions(resource as object, rest) as object),
+    ...(pages === undefined ? {} : { pages }),
+  } as never);
 }

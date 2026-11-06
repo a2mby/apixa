@@ -1,6 +1,12 @@
 "use client";
 
-import { hashKey, shouldThrowError, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import {
+  hashKey,
+  shouldThrowError,
+  useQueryClient,
+  type MutationObserverResult,
+  type QueryKey,
+} from "@tanstack/react-query";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { composeResult } from "./compose.js";
 import { createResourceKeys } from "./keys.js";
@@ -71,6 +77,7 @@ export function useResourceMutationState(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [client, resource, keyHash],
   );
+  store.renderConfig = config;
   useEffect(() => {
     store.commit(config);
   });
@@ -89,7 +96,10 @@ export function useResourceMutationState(
   const operations = useMemo(() => {
     const out: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
     for (const name of names) {
-      out[name] = (...args: unknown[]) => store.run(name, args);
+      out[name] = withMutationState(
+        (...args: unknown[]) => store.run(name, args),
+        () => store.observer(name, store.renderConfig).getCurrentResult(),
+      );
     }
     return Object.freeze(out);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,3 +122,36 @@ export function useResourceMutationState(
 }
 
 const EMPTY: RuntimeMutationsConfig = Object.freeze({});
+
+/** Native mutation result fields exposed on each callable operation (`users.create.isPending`). */
+export const MUTATION_STATE_KEYS = [
+  "data",
+  "error",
+  "variables",
+  "context",
+  "status",
+  "isIdle",
+  "isPending",
+  "isSuccess",
+  "isError",
+  "isPaused",
+  "failureCount",
+  "failureReason",
+  "submittedAt",
+  "reset",
+] as const satisfies ReadonlyArray<keyof MutationObserverResult>;
+
+/**
+ * Live getters, not copies: each read returns the observer's current result (the same object
+ * `states[name]` returns), so the values are as fresh as the last render. Reading one creates
+ * that operation's observer lazily, exactly like reading `states[name]`.
+ */
+function withMutationState<F extends (...args: unknown[]) => Promise<unknown>>(
+  fn: F,
+  current: () => MutationObserverResult<unknown, Error, unknown[], unknown>,
+): F {
+  for (const key of MUTATION_STATE_KEYS) {
+    Object.defineProperty(fn, key, { enumerable: false, get: () => current()[key] });
+  }
+  return fn;
+}

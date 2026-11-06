@@ -1,7 +1,16 @@
 "use client";
 
-import type { DefinedUseQueryResult, QueryKey, UseQueryResult } from "@tanstack/react-query";
-import type { ExplicitResourceQueryOptions } from "./query-options.js";
+import type {
+  DefinedUseQueryResult,
+  InfiniteData,
+  QueryKey,
+  UseInfiniteQueryResult,
+  UseQueryResult,
+} from "@tanstack/react-query";
+import type {
+  ExplicitResourceQueryOptions,
+  ResourceInfiniteQueryOptions,
+} from "./query-options.js";
 import { composeResult } from "./compose.js";
 import type {
   ResourceMutationOperations,
@@ -14,7 +23,7 @@ import {
   type ListResource,
   type OperationOnlyQueryOptions,
   type QueryResultKey,
-  type ResourceOperationsQueryResult,
+  type ReadHelpers,
   type RuntimeOptions,
   type UseResourceQueryOptions,
 } from "./use-resource-query.js";
@@ -67,6 +76,7 @@ export type ResourceResult<
   M = {},
   Observed extends boolean = HasList<R>,
   Defined extends boolean = false,
+  TRaw = Observed extends true ? DefaultData<R> : never,
 > = (Observed extends true
   ? (Defined extends true
       ? DefinedUseQueryResult<Selected, Error>
@@ -76,18 +86,47 @@ export type ResourceResult<
         : UseQueryResult<Selected, Error>;
     }
   : {}) &
-  Omit<ResourceOperationsQueryResult<R>, "operations" | keyof InheritedReads<R>> & {
-    /** Guaranteed namespace: every inherited and client-only operation, collisions included. */
-    operations: ResourceOperations<R, M>;
-    /** Native mutation state per write / client-only operation (latest invocation). */
-    states: WriteStates<R, M>;
-  } & Omit<ResourceOperations<R, M>, FacadeKey>;
+  FacadeTail<R, M, TRaw>;
+
+/** Helpers, the guaranteed namespaces, and flat operations (shared by every facade mode). */
+type FacadeTail<R extends object, M, TRaw> = Omit<
+  ReadHelpers<R, TRaw>,
+  "operations" | keyof InheritedReads<R>
+> & {
+  /** Guaranteed namespace: every inherited and client-only operation, collisions included. */
+  operations: ResourceOperations<R, M>;
+  /** Native mutation state per write / client-only operation (latest invocation). */
+  states: WriteStates<R, M>;
+} & Omit<ResourceOperations<R, M>, FacadeKey>;
+
+/** `useResource` with `query: { infinite }`: native infinite state plus the same facade. */
+export type ResourceInfiniteResult<
+  R extends object,
+  N extends keyof R,
+  TPageParam,
+  Selected = InfiniteData<OperationReturn<R, N>, TPageParam>,
+  M = {},
+> = UseInfiniteQueryResult<Selected, Error> & {
+  query: UseInfiniteQueryResult<Selected, Error>;
+} & FacadeTail<R, M, InfiniteData<OperationReturn<R, N>, TPageParam>>;
 
 /**
  * Thin facade over `useResourceQuery` + `useResourceMutation` sharing one resource identity.
  * Flat query state (`users.data`), flat operations (`users.create(body)`, `users.getById(id)`),
  * `users.operations.*` for every operation, and `users.states.*` for mutation state.
  */
+export function useResource<
+  R extends object,
+  const N extends QueryOperationName<R> = Extract<"getAll", QueryOperationName<R>>,
+  TPageParam = unknown,
+  Selected = InfiniteData<OperationReturn<R, N>, TPageParam>,
+  M extends object = {},
+>(
+  resource: R,
+  options: Omit<UseResourceOptions<R, never, M>, "query"> & {
+    query: WithoutShared<ResourceInfiniteQueryOptions<R, N, TPageParam, Selected>>;
+  },
+): ResourceInfiniteResult<R, N, TPageParam, Selected, M>;
 export function useResource<
   R extends object,
   const N extends QueryOperationName<R>,
@@ -100,7 +139,7 @@ export function useResource<
       operation: N;
     } & DefinedData<OperationReturn<R, N>>;
   },
-): ResourceResult<R, Selected, M, true, true>;
+): ResourceResult<R, Selected, M, true, true, OperationReturn<R, N>>;
 export function useResource<
   R extends object,
   const N extends QueryOperationName<R>,
@@ -111,7 +150,7 @@ export function useResource<
   options: Omit<UseResourceOptions<R, Selected, M>, "query"> & {
     query: WithoutShared<ExplicitResourceQueryOptions<R, NoInfer<N>, Selected>> & { operation: N };
   },
-): ResourceResult<R, Selected, M, true>;
+): ResourceResult<R, Selected, M, true, false, OperationReturn<R, N>>;
 export function useResource<
   R extends { getAll: AsyncFn },
   Selected = DefaultData<R>,
@@ -171,6 +210,9 @@ const FACADE_KEYS = new Set([
   "invalidateDetail",
   "operations",
   "states",
+  "prefetch",
+  "cache",
+  "cancel",
 ]);
 
 type RuntimeResourceOptions = {
