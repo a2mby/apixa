@@ -8,16 +8,16 @@ import type {
 import type {
   AnyOperationName,
   CallableOperationName,
-  InheritedReadName,
+  InheritedWriteName,
   OperationCall,
   OperationParameters,
   OperationReturn,
   OptionalOperationName,
-  OptionalReadName,
+  OptionalWriteName,
   ResourceKeyFactory,
 } from "./types.js";
 
-/** What to invalidate after a successful mutation. Default: `"all"` for writes, nothing for reads. */
+/** What to invalidate after a successful mutation. Default: `"all"`. */
 export type MutationInvalidation<TData, TArgs> =
   /** `true` / `"all"`: every query under the resource key. `false`: nothing. */
   | boolean
@@ -75,17 +75,19 @@ type ClientData<F> = F extends (...args: never[]) => Promise<infer D> ? D : neve
  */
 export type MutationsConfig<R, M> = {
   // `keyof M` keeps per-key inference; the operation names make editors suggest every operation.
-  [K in keyof M | AnyOperationName<R>]?: K extends AnyOperationName<R>
+  [K in keyof M | AnyOperationName<R>]?: K extends InheritedWriteName<R> | OptionalWriteName<R>
     ? InheritedConfig<
         OperationReturn<R, K>,
         OperationParameters<R, K>,
         K extends keyof M ? M[K] : unknown
       >
-    : K extends keyof M
-      ? ClientMutationOptions<ClientArgs<M[K]>, ClientData<M[K]>> & {
-          mutationFn: M[K] & ClientFn;
-        }
-      : never;
+    : K extends AnyOperationName<R>
+      ? never
+      : K extends keyof M
+        ? ClientMutationOptions<ClientArgs<M[K]>, ClientData<M[K]>> & {
+            mutationFn: M[K] & ClientFn;
+          }
+        : never;
 };
 
 /**
@@ -113,22 +115,22 @@ export type UseResourceMutationOptions<R, M = {}> = {
 
 type MutationState<TData, TArgs, TContext> = MutationObserverResult<TData, Error, TArgs, TContext>;
 
-/** Every inherited operation plus client-only ones, called with their own separate arguments. */
+/** Every inherited write plus client-only ones, called with their own separate arguments. */
 export type ResourceMutationOperations<R, M = {}> = {
-  [K in CallableOperationName<R>]: OperationCall<R, K>;
-} & { [K in OptionalOperationName<R>]?: OperationCall<R, K> } & {
+  [K in InheritedWriteName<R>]: OperationCall<R, K>;
+} & { [K in OptionalWriteName<R>]?: OperationCall<R, K> } & {
   [K in ClientName<R, M>]: (...args: ClientArgs<M[K]>) => Promise<ClientData<M[K]>>;
 };
 
 /** Native mutation state per operation (latest invocation, like `useMutation`). */
 export type ResourceMutationStates<R, M = {}> = {
-  readonly [K in CallableOperationName<R>]: MutationState<
+  readonly [K in InheritedWriteName<R>]: MutationState<
     OperationReturn<R, K>,
     OperationParameters<R, K>,
     ContextOf<M, K>
   >;
 } & {
-  readonly [K in OptionalOperationName<R>]?: MutationState<
+  readonly [K in OptionalWriteName<R>]?: MutationState<
     OperationReturn<R, K>,
     OperationParameters<R, K>,
     ContextOf<M, K>
@@ -146,11 +148,8 @@ export type ResourceMutationResult<R, M = {}> = Omit<
   /** Guaranteed namespace: every operation, even ones whose name clashes with a result field. */
   operations: ResourceMutationOperations<R, M>;
   states: ResourceMutationStates<R, M>;
-  keys: ResourceKeyFactory;
+  keys: ResourceKeyFactory<R, M>;
 };
 
 /** Operations the unified facade routes through mutations (writes and client-only). */
-export type WriteStates<R, M> = Omit<
-  ResourceMutationStates<R, M>,
-  InheritedReadName<R> | OptionalReadName<R>
->;
+export type WriteStates<R, M> = ResourceMutationStates<R, M>;

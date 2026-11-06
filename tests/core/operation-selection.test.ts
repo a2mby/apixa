@@ -140,7 +140,7 @@ describe("operation selection", () => {
             getById: { path: "/lookup/:id" },
             exists: { path: "/exists/:id" },
             findFirst: { path: "/first" },
-            getMany: { path: "/batch", method: "POST" },
+            getMany: { path: "/batch", method: "GET" },
           },
         },
       },
@@ -151,7 +151,7 @@ describe("operation selection", () => {
     expect(seen).toEqual([
       { method: "GET", url: "https://api.example.com/users/exists/1", body: undefined },
       { method: "GET", url: "https://api.example.com/users/first?active=true", body: undefined },
-      { method: "POST", url: "https://api.example.com/users/batch?id=1&id=2", body: undefined },
+      { method: "GET", url: "https://api.example.com/users/batch?id=1&id=2", body: undefined },
     ]);
   });
 
@@ -195,7 +195,7 @@ describe("operation selection", () => {
     ]);
   });
 
-  it("preserves the many-operation wire bodies and honors hasBody on a method override", async () => {
+  it("preserves the many-operation wire bodies and honors hasBody on a compatible method override", async () => {
     const seen: Array<{ method: string; url: string; body: unknown }> = [];
     const api = defineApi({
       baseURL: "https://api.example.com",
@@ -204,7 +204,7 @@ describe("operation selection", () => {
         return { body: [] };
       }),
       resources: {
-        users: { path: "/users", operations: { count: { method: "POST", hasBody: false } } },
+        users: { path: "/users", operations: { count: { method: "HEAD", hasBody: false } } },
       },
     });
     await api.users.createMany([{ name: "Ada" }]);
@@ -213,7 +213,7 @@ describe("operation selection", () => {
     expect(seen).toEqual([
       { method: "POST", url: "https://api.example.com/users/bulk", body: '[{"name":"Ada"}]' },
       { method: "DELETE", url: "https://api.example.com/users/bulk", body: '["1","2"]' },
-      { method: "POST", url: "https://api.example.com/users/count", body: undefined },
+      { method: "HEAD", url: "https://api.example.com/users/count", body: undefined },
     ]);
   });
 });

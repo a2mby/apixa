@@ -7,6 +7,12 @@
 5. **Q-05 Advanced:** export hook-free query options for native hooks, prefetching, and hydration.
 6. **Q-06 Reliability:** bind signals, test retry layers and lifecycle behavior, build a Next SSR example and performance baseline.
 7. **Q-07 Closure:** run frozen install, build, typecheck, tests, consumer tarballs, and example builds; document outcomes and limits.
-8. **C:** Core `kind` / `{ kind, run }` classification and `OPERATION_METADATA` (no execution change).
-9. **M:** resource-wide `useResourceMutation` over lazily created `MutationObserver`s behind one external store.
-10. **U:** `useResource` facade composing the two hooks' shared internals.
+8. **C:** Core `kind` / `{ kind, run }` classification and `OPERATION_METADATA`; require custom
+   kinds and validate HTTP methods at construction or each function request.
+9. **M:** write-only resource-wide `useResourceMutation` over lazily created `MutationObserver`s;
+   remove the single-operation overload.
+10. **U:** `useResource` facade composing the public query and mutation hooks with flat
+    `mutations` options.
+11. **A:** correct advanced controller signatures and availability; retain hook-free options.
+12. **V:** document breaking changes and rerun build, typecheck, tests, packed consumers, and
+    available Next/Vite integrations.

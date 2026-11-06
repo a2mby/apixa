@@ -11,11 +11,16 @@
 - Signal forwarding, retry behavior, pagination identity, lifecycle, package builds, and examples.
 - Migration documentation for the query/write split.
 - Core `kind` / `{ kind, run }` classification and non-enumerable operation metadata.
+- Mandatory custom kinds, fixed builtin kinds, and method/kind validation before transport or
+  mock dispatch.
 - Resource-wide `useResourceMutation` (inherited operations, per-operation native options, states,
   client-only operations, typed invalidation) and the `useResource` facade.
+- Read-only query and write-only mutation exposure; removal of `readOperations` and the
+  single-operation mutation overload; flat `useResource` mutation configuration.
+- Advanced controller signatures that preserve Core operation arguments and results.
 
 ## Out
 
-- Core behavior changes, a second query cache, a global provider, or a custom infinite scheduler.
+- Unrelated Core behavior changes, a second query cache, a global provider, or a custom infinite scheduler.
 - Automatic classification of custom functions as reads (Core `kind` is explicit).
 - npm publication or declaring the entire v1.0.0 release shipped.

@@ -101,9 +101,12 @@ describe("useResourceMutation inference from real defineApi clients", () => {
         path: "/users",
         operations: {
           deleteMany: false,
-          archive: { method: "POST", path: "/:id/archive" },
-          stats: async (ctx, range: "day" | "week") =>
-            ctx.request<{ total: number }>({ query: { range } }),
+          archive: { kind: "write", method: "POST", path: "/:id/archive" },
+          stats: {
+            kind: "read",
+            run: async (ctx, range: "day" | "week") =>
+              ctx.request<{ total: number }>({ query: { range } }),
+          },
         },
       },
       ro: { path: "/ro", readOnly: true },
@@ -112,67 +115,57 @@ describe("useResourceMutation inference from real defineApi clients", () => {
 
   it("infers tuple args and data for create / update / delete", () => {
     if (false as boolean) {
-      const create = useResourceMutation(api.users, "create", { queryKey: ["users"] });
-      expectTypeOf(create.mutateAsync)
-        .parameter(0)
-        .toEqualTypeOf<
-          import("../../packages/tanstack-query/src/types.js").OperationParameters<
-            typeof api.users,
-            "create"
-          >
-        >();
-      expectTypeOf(create.mutateAsync).returns.resolves.toEqualTypeOf<User>();
-      void create.mutateAsync([{ name: "Ada", email: "a@x.dev" }]);
-      // @ts-expect-error create takes a tuple, not a bare body
-      void create.mutateAsync({ name: "Ada", email: "a@x.dev" });
-
-      const update = useResourceMutation(api.users, "update", { queryKey: ["users"] });
-      void update.mutateAsync(["42", { name: "Grace" }]);
-      expectTypeOf(update.data).toEqualTypeOf<User | undefined>();
-      // @ts-expect-error id is a string
-      void update.mutateAsync([42, { name: "Grace" }]);
-
-      const remove = useResourceMutation(api.users, "delete", {
+      const users = useResourceMutation(api.users, {
         queryKey: ["users"],
-        onSuccess: (_data, variables) => {
-          expectTypeOf(variables[0]).toEqualTypeOf<string>();
+        mutations: {
+          delete: {
+            onSuccess: (_data, variables) => expectTypeOf(variables[0]).toEqualTypeOf<string>(),
+          },
         },
       });
-      void remove.mutateAsync(["42"]);
+      expectTypeOf(users.create).returns.resolves.toEqualTypeOf<User>();
+      void users.create({ name: "Ada", email: "a@x.dev" });
+      // @ts-expect-error create takes a body, not a tuple
+      void users.create([{ name: "Ada", email: "a@x.dev" }]);
+      void users.update("42", { name: "Grace" });
+      expectTypeOf(users.states.update.data).toEqualTypeOf<User | undefined>();
+      // @ts-expect-error id is a string
+      void users.update(42, { name: "Grace" });
+      void users.delete("42");
+      // @ts-expect-error reads are absent from mutation hook
+      void users.stats("day");
     }
     expect(true).toBe(true);
   });
 
   it("infers custom function and parameterized declarative operations", () => {
     if (false as boolean) {
-      const stats = useResourceMutation(api.users, "stats", { queryKey: ["users"] });
-      expectTypeOf(stats.mutateAsync).parameter(0).toEqualTypeOf<["day" | "week"]>();
-      expectTypeOf(stats.mutateAsync).returns.resolves.toEqualTypeOf<{ total: number }>();
-      // @ts-expect-error "month" is not a valid range
-      void stats.mutateAsync(["month"]);
-
-      const archive = useResourceMutation(api.users, "archive", { queryKey: ["users"] });
-      expectTypeOf(archive.mutateAsync)
-        .parameter(0)
-        .toEqualTypeOf<
-          import("../../packages/tanstack-query/src/types.js").OperationParameters<
-            typeof api.users,
-            "archive"
-          >
-        >();
-      void archive.mutateAsync(["42"]);
+      const users = useResourceMutation(api.users, { queryKey: ["users"] });
+      expectTypeOf(users.archive).parameters.toEqualTypeOf<
+        import("../../packages/tanstack-query/src/types.js").OperationParameters<
+          typeof api.users,
+          "archive"
+        >
+      >();
+      void users.archive("42");
+      // @ts-expect-error custom reads are absent
+      void users.stats("day");
     }
     expect(true).toBe(true);
   });
 
   it("rejects disabled operations and writes on read-only resources", () => {
     if (false as boolean) {
+      const users = useResourceMutation(api.users, { queryKey: ["users"] });
       // @ts-expect-error deleteMany is disabled at runtime config
-      useResourceMutation(api.users, "deleteMany", { queryKey: ["users"] });
+      void users.deleteMany(["1"]);
+      const ro = useResourceMutation(api.ro, { queryKey: ["ro"] });
       // @ts-expect-error read-only resource has no create
-      useResourceMutation(api.ro, "create", { queryKey: ["ro"] });
+      void ro.create({});
       // @ts-expect-error unknown operation name
-      useResourceMutation(api.users, "archvie", { queryKey: ["users"] });
+      void users.archvie("1");
+      // @ts-expect-error reads cannot be configured as mutations
+      useResourceMutation(api.users, { queryKey: ["users"], mutations: { getById: { retry: 2 } } });
     }
     expect(true).toBe(true);
   });
@@ -186,8 +179,11 @@ describe("resource query operation and native inference", () => {
         path: "/users",
         operations: {
           search: false,
-          stats: async (ctx, period: "day" | "week") =>
-            ctx.request<{ total: number }>({ query: { period } }),
+          stats: {
+            kind: "read",
+            run: async (ctx, period: "day" | "week") =>
+              ctx.request<{ total: number }>({ query: { period } }),
+          },
         },
       },
     },
@@ -240,14 +236,18 @@ describe("resource query operation and native inference", () => {
         queryKey: ["users"],
         operation: "stats",
         args: ["day"],
-        readOperations: ["stats"],
         keyParts: ["day"],
       });
       expectTypeOf(stats.data).toEqualTypeOf<{ total: number } | undefined>();
       // @ts-expect-error disabled in the Core runtime config
       useResourceQuery(api.users, { queryKey: ["users"], operation: "search", args: [] });
-      // @ts-expect-error custom reads require an explicit safety declaration and key
-      useResourceQuery(api.users, { queryKey: ["users"], operation: "stats", args: ["day"] });
+      // @ts-expect-error query-side read overrides were removed
+      useResourceQuery(api.users, {
+        queryKey: ["users"],
+        operation: "stats",
+        args: ["day"],
+        readOperations: ["stats"],
+      });
 
       const options = createResourceQueryOptions(api.users, {
         queryKey: ["users"],
@@ -363,10 +363,10 @@ describe("builder and legacy argument contracts", () => {
       createResourceQueryOptions(optional, { queryKey: ["users"], args: () => [] });
       createResourceQueryOptions(optional, { queryKey: ["users"], args: () => [], keyParts: [] });
       const api = defineApi<AppApi>()({ ...base, resources: { users: { path: "/users" } } });
-      const mutation = useResourceMutation(api.users, "getAll", { queryKey: ["users"] });
-      void mutation.mutateAsync([{ full: false }]);
+      const users = useResourceQuery(api.users, { queryKey: ["users"] });
+      void users.getAll({ full: false });
       // @ts-expect-error the hook supports raw payloads only
-      void mutation.mutateAsync([{ full: true }]);
+      void users.getAll({ full: true });
     }
   });
 });

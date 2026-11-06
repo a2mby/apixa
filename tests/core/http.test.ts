@@ -35,10 +35,7 @@ describe("request execution", () => {
           operations: {
             getAll: { method: "GET" },
             getById: { method: "GET", path: "/:id" },
-            getPost: {
-              method: "GET",
-              path: "/:userId/posts/:postId",
-            },
+            getPost: { kind: "read", method: "GET", path: "/:userId/posts/:postId" },
           },
         },
       },
@@ -74,7 +71,7 @@ describe("request execution", () => {
           path: "/users",
           operations: {
             create: { method: "POST" },
-            getPost: { method: "GET", path: "/:userId/posts/:postId" },
+            getPost: { kind: "read", method: "GET", path: "/:userId/posts/:postId" },
           },
         },
       },
@@ -95,7 +92,7 @@ describe("request execution", () => {
           path: "/users",
           operations: {
             getById: { method: "GET", path: "/:id" },
-            getPost: { method: "GET", path: "/:userId/posts/:postId" },
+            getPost: { kind: "read", method: "GET", path: "/:userId/posts/:postId" },
           },
         },
       },
@@ -118,7 +115,7 @@ describe("request execution", () => {
           path: "/users",
           operations: {
             getById: { method: "GET", path: "/:id" },
-            getPost: { method: "GET", path: "/:userId/posts/:postId" },
+            getPost: { kind: "read", method: "GET", path: "/:userId/posts/:postId" },
           },
         },
       },

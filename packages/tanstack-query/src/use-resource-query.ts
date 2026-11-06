@@ -161,7 +161,6 @@ export type RuntimeOptions = {
   operation?: string;
   args?: readonly unknown[] | ((context: QueryFunctionContext) => readonly unknown[]);
   keyParts?: QueryKey;
-  readOperations?: readonly string[];
   [native: string]: unknown;
 };
 

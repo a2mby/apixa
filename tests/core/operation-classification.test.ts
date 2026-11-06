@@ -1,6 +1,7 @@
 import {
   ConfigError,
   defineApi,
+  defineApis,
   getOperationMetadata,
   OPERATION_METADATA,
   type OperationKindsOf,
@@ -26,13 +27,16 @@ describe("custom operation classification (kind)", () => {
         operations: {
           deleteMany: false,
           stats: { kind: "read", method: "GET", path: "/stats" },
-          archive: { method: "POST", path: "/:id/archive" },
+          archive: { kind: "write", method: "POST", path: "/:id/archive" },
           report: {
             kind: "read",
             run: async (ctx, range: "day" | "week") =>
               ctx.request<{ total: number }>({ path: "/report", query: { range } }),
           },
-          legacy: async (ctx, id: string) => ctx.request<User>({ path: `/${id}/legacy` }),
+          legacy: {
+            kind: "read",
+            run: async (ctx, id: string) => ctx.request<User>({ path: `/${id}/legacy` }),
+          },
           getAll: async (ctx, team: string) => ctx.request<User[]>({ query: { team } }),
         },
       },
@@ -40,7 +44,7 @@ describe("custom operation classification (kind)", () => {
     },
   });
 
-  it("classifies builtins by convention and custom operations by kind (default write)", () => {
+  it("classifies builtins by convention and custom operations by their required kind", () => {
     const meta = getOperationMetadata(api.users)!;
     expect(meta.getById).toMatchObject({ kind: "read", builtin: true, implementation: "request" });
     expect(meta.create).toMatchObject({ kind: "write", builtin: true });
@@ -51,7 +55,7 @@ describe("custom operation classification (kind)", () => {
       implementation: "function",
       optionsIndex: null,
     });
-    expect(meta.legacy).toMatchObject({ kind: "write", implementation: "function" });
+    expect(meta.legacy).toMatchObject({ kind: "read", implementation: "function" });
     expect(meta.getAll).toMatchObject({ kind: "read", builtin: true, implementation: "function" });
     expect(meta.deleteMany).toBeUndefined();
 
@@ -61,7 +65,7 @@ describe("custom operation classification (kind)", () => {
     expectTypeOf<Kinds["stats"]>().toEqualTypeOf<"read">();
     expectTypeOf<Kinds["report"]>().toEqualTypeOf<"read">();
     expectTypeOf<Kinds["archive"]>().toEqualTypeOf<"write">();
-    expectTypeOf<Kinds["legacy"]>().toEqualTypeOf<"write">();
+    expectTypeOf<Kinds["legacy"]>().toEqualTypeOf<"read">();
     expectTypeOf<Kinds["getAll"]>().toEqualTypeOf<"read">();
     expectTypeOf<Kinds>().not.toHaveProperty("deleteMany");
   });
@@ -109,14 +113,39 @@ describe("custom operation classification (kind)", () => {
     const build = (ops: unknown) => () =>
       defineApi({ ...base, resources: { u: { path: "/u", operations: ops as never } } });
     expect(build({ stats: { kind: "query", method: "GET" } })).toThrow(
-      /kind must be "read" or "write"/,
+      /kind must be explicitly set to "read" or "write"/,
     );
     expect(build({ getById: { kind: "write" } })).toThrow(/builtin "getById" is always "read"/);
     expect(build({ stats: { kind: "read", run: 1 } })).toThrow(/run must be a function/);
-    expect(build({ stats: { run: async () => 1, method: "GET" } })).toThrow(
+    expect(build({ stats: { kind: "read", run: async () => 1, method: "GET" } })).toThrow(
       /unknown option "method"/,
     );
     expect(build({ stats: { kind: "read", run: async () => 1 } })).not.toThrow(ConfigError);
+    expect(build({ stats: { method: "GET" } })).toThrow(/kind must be explicitly set/);
+    expect(build({ stats: async () => 1 })).toThrow(/requires \{ kind:/);
+    expect(build({ stats: { kind: "read", method: "POST" } })).toThrow(
+      /POST requires kind "write"/,
+    );
+    expect(build({ archive: { kind: "write", method: "GET" } })).toThrow(
+      /GET requires kind "read"/,
+    );
+    expect(build({ getMany: { method: "POST" } })).toThrow(/getMany: Operation kind "read"/);
+    expect(build({ create: { method: "GET" } })).toThrow(/create: Operation kind "write"/);
+    expect(build({ getMany: true, deleteMany: true })).not.toThrow(ConfigError);
+    for (const method of ["HEAD", "OPTIONS"]) {
+      expect(build({ stats: { kind: "read", method } })).not.toThrow(ConfigError);
+    }
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+      expect(build({ archive: { kind: "write", method } })).not.toThrow(ConfigError);
+    }
+    expect(() =>
+      defineApis({
+        backend: {
+          ...base,
+          resources: { u: { path: "/u", operations: { bad: { kind: "read", method: "POST" } } } },
+        },
+      } as never),
+    ).toThrow(/defineApis.backend: resources.u.operations.bad/);
     if (false as boolean) {
       defineApi({
         ...base,
@@ -125,9 +154,85 @@ describe("custom operation classification (kind)", () => {
       });
       defineApi({
         ...base,
-        // @ts-expect-error the run form only accepts kind and run
-        resources: { u: { path: "/u", operations: { s: { run: async () => 1, method: "GET" } } } },
+        resources: {
+          u: {
+            path: "/u",
+            operations: {
+              s: {
+                kind: "read",
+                run: async () => 1,
+                // @ts-expect-error the run form only accepts kind and run
+                method: "GET",
+              },
+            },
+          },
+        },
+      });
+      defineApi({
+        ...base,
+        // @ts-expect-error custom declarative operations require kind
+        resources: { u: { path: "/u", operations: { s: { method: "GET" } } } },
+      });
+      defineApi({
+        ...base,
+        // @ts-expect-error custom function shorthand requires kind and run
+        resources: { u: { path: "/u", operations: { s: async () => 1 } } },
+      });
+      defineApi({
+        ...base,
+        resources: {
+          u: {
+            path: "/u",
+            operations: {
+              // @ts-expect-error read cannot use POST
+              s: { kind: "read", method: "POST" },
+            },
+          },
+        },
+      });
+      defineApi({
+        ...base,
+        resources: {
+          u: {
+            path: "/u",
+            operations: {
+              // @ts-expect-error builtin method cannot change to the other kind
+              getMany: { method: "POST" },
+            },
+          },
+        },
       });
     }
+  });
+
+  it("validates every function request before dispatch", async () => {
+    const calls: string[] = [];
+    const client = defineApi({
+      baseURL: "https://api.example.com",
+      transport: createFakeTransport((request) => {
+        calls.push(request.method);
+        return { body: 1 };
+      }),
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            stats: { kind: "read", run: (ctx) => ctx.request({ method: "POST" }) },
+            archive: { kind: "write", run: (ctx) => ctx.request({}) },
+            multi: {
+              kind: "read",
+              run: async (ctx) => {
+                await ctx.request({ method: "HEAD" });
+                return ctx.request({ method: "DELETE" });
+              },
+            },
+          },
+        },
+      },
+    });
+    await expect(client.users.stats()).rejects.toThrow(/POST requires kind "write"/);
+    await expect(client.users.archive()).rejects.toThrow(/GET requires kind "read"/);
+    await expect(client.users.multi()).rejects.toThrow(/DELETE requires kind "write"/);
+    expect(calls).toEqual(["HEAD"]);
   });
 });

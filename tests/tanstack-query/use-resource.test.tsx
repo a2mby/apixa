@@ -40,9 +40,9 @@ function makeApi() {
         path: "/users",
         operations: {
           stats: { kind: "read", method: "GET", path: "/stats" },
-          archive: { method: "POST", path: "/:id/archive" },
+          archive: { kind: "write", method: "POST", path: "/:id/archive" },
           refetch: { kind: "read", method: "GET", path: "/refetch" },
-          status: { method: "POST", path: "/status" },
+          status: { kind: "write", method: "POST", path: "/status" },
         },
       },
       audit: { path: "/audit", operations: { getAll: false } },
@@ -145,7 +145,7 @@ describe("useResource", () => {
           useResource(api.users, {
             queryKey: ["users"],
             query: { select: (users) => users.filter((u) => u.active).map((u) => u.name) },
-            mutation: { mutations: { create: { onSuccess, invalidate: "lists" } } },
+            mutations: { create: { onSuccess, invalidate: "lists" } },
           }),
           "data",
         ),
@@ -158,14 +158,14 @@ describe("useResource", () => {
     await waitFor(() => expect(result.current.data).toEqual(["Ada", "Di"]));
   });
 
-  it("supports client-only operations through mutation.mutations", async () => {
+  it("supports client-only operations through mutations", async () => {
     const { api } = makeApi();
     const sync = vi.fn(async (id: string) => ({ synced: id }));
     const { result } = renderHook(
       () =>
         useResource(api.users, {
           queryKey: ["users"],
-          mutation: { mutations: { sync: { mutationFn: sync, invalidate: false } } },
+          mutations: { sync: { mutationFn: sync, invalidate: false } },
         }),
       { wrapper: wrap(newClient()) },
     );
@@ -222,13 +222,11 @@ describe("useResource types", () => {
       const users = useResource(api.users, {
         queryKey: ["users"],
         query: { staleTime: 60_000, retry: 2, enabled: () => true },
-        mutation: {
-          mutations: {
-            create: {
-              onSuccess: (data) => expectTypeOf(data).toEqualTypeOf<User>(),
-            },
-            notify: { mutationFn: async (id: string, text: string) => ({ id, text }) },
+        mutations: {
+          create: {
+            onSuccess: (data) => expectTypeOf(data).toEqualTypeOf<User>(),
           },
+          notify: { mutationFn: async (id: string, text: string) => ({ id, text }) },
         },
       });
       expectTypeOf(users.data).toEqualTypeOf<User[] | undefined>();
@@ -250,7 +248,7 @@ describe("useResource types", () => {
       useResource(api.users, {
         queryKey: ["users"],
         // @ts-expect-error inherited operations cannot be redefined
-        mutation: { mutations: { create: { mutationFn: async () => ada } } },
+        mutations: { create: { mutationFn: async () => ada } },
       });
     }
     expect(true).toBe(true);

@@ -44,7 +44,10 @@ export class ResourceMutationStore {
   /** Inherited operations first (Core order), then client-only ones. */
   names(config: RuntimeMutationsConfig = this.#config): string[] {
     const clientOnly = Object.keys(config).filter((name) => !this.table.has(name));
-    return [...this.table.keys(), ...clientOnly];
+    return [...this.table]
+      .filter(([, info]) => info.kind === "write")
+      .map(([name]) => name)
+      .concat(clientOnly);
   }
 
   isRead(name: string): boolean {
@@ -117,7 +120,7 @@ export class ResourceMutationStore {
     const { mutationFn, invalidate, onSuccess, ...native } = config[name] ?? {};
     const resource = this.resource as Record<string, AnyFn>;
     const keys = this.keys;
-    const policy = invalidate ?? (info?.kind === "read" ? false : "all");
+    const policy = invalidate ?? "all";
     const defaultSuccess = this.client.defaultMutationOptions<
       MutationObserverOptions<unknown, Error, unknown[], unknown>
     >({ mutationKey: keys.mutation(name) }).onSuccess;
@@ -149,6 +152,11 @@ export function validateConfig(
 ): RuntimeMutationsConfig {
   for (const [name, entry] of Object.entries(config)) {
     if (entry === undefined) continue;
+    if (table.get(name)?.kind === "read") {
+      throw new Error(
+        `mutations.${name}: Core classifies "${name}" as a read; use useResourceQuery instead.`,
+      );
+    }
     const inherited = table.has(name);
     if (inherited && entry.mutationFn !== undefined) {
       throw new Error(

@@ -1,15 +1,14 @@
 import { mutationOptions, type MutationFunctionContext } from "@tanstack/react-query";
 import { syncCacheAfterCreate, syncCacheAfterDelete, syncCacheAfterUpdate } from "./cache.js";
 import { createResourceKeys } from "./keys.js";
+import { describeOperations } from "./operations.js";
 import type {
   AsyncFn,
   CreateResourceControllerConfig,
-  InferCreateBody,
-  InferDeleteId,
-  InferEntity,
+  InheritedWriteName,
+  OperationParameters,
+  OperationReturn,
   ResourceKeyFactory,
-  ResourceLike,
-  UpdateVariables,
 } from "./types.js";
 
 /** Consumer lifecycle callbacks, run after Apixa's own cache work on success. */
@@ -74,6 +73,11 @@ export function operationMutationOptions<
 ) {
   type TData = OperationData<TResource, TName>;
   type TArgs = OperationArgs<TResource, TName>;
+  if (describeOperations(resource).get(operationName)?.kind === "read") {
+    throw new Error(
+      `Operation ${operationName} is a read; use createResourceQueryOptions instead.`,
+    );
+  }
   return mutationOptions<TData, Error, TArgs>({
     mutationKey: keys.mutation(operationName),
     mutationFn: (args: TArgs) => {
@@ -98,80 +102,49 @@ export function operationMutationOptions<
 }
 
 /**
- * Advanced: create/update/delete `mutationOptions` with per-op cache sync
- * (detail invalidation/removal + list invalidation), then consumer `onSuccess`.
+ * Conventional names exposed only when a write exists. Variables are the exact Core argument
+ * tuple; callers can use `operationMutationOptions` for any other write name.
  */
-export type ResourceMutationController<TResource extends ResourceLike> = {
-  keys: ResourceKeyFactory;
-  createOptions: (
-    handlers?: ConsumerMutationHandlers<InferEntity<TResource>, InferCreateBody<TResource>>,
-  ) => ReturnType<
-    typeof mutationOptions<InferEntity<TResource>, Error, InferCreateBody<TResource>>
-  >;
-  updateOptions: (
-    handlers?: ConsumerMutationHandlers<InferEntity<TResource>, UpdateVariables<TResource>>,
-  ) => ReturnType<
-    typeof mutationOptions<InferEntity<TResource>, Error, UpdateVariables<TResource>>
-  >;
-  deleteOptions: (
-    handlers?: ConsumerMutationHandlers<void, InferDeleteId<TResource>>,
-  ) => ReturnType<typeof mutationOptions<void, Error, InferDeleteId<TResource>>>;
-};
+type NamedOptions<R extends object, N extends keyof R> = (
+  config?: OperationMutationConfig<OperationReturn<R, N>, OperationParameters<R, N>>,
+) => ReturnType<typeof mutationOptions<OperationReturn<R, N>, Error, OperationParameters<R, N>>>;
 
-/** Pure (React-free) mutation controller for the conventional write operations. */
-export function createResourceMutationController<TResource extends ResourceLike>(
-  resource: TResource,
+export type ResourceMutationController<R extends object> = {
+  keys: ResourceKeyFactory<R>;
+} & ("create" extends InheritedWriteName<R>
+  ? { createOptions: NamedOptions<R, "create" & keyof R> }
+  : {}) &
+  ("update" extends InheritedWriteName<R>
+    ? { updateOptions: NamedOptions<R, "update" & keyof R> }
+    : {}) &
+  ("delete" extends InheritedWriteName<R>
+    ? { deleteOptions: NamedOptions<R, "delete" & keyof R> }
+    : {});
+
+/** Hook-free mutation options for enabled conventional writes, including write-only resources. */
+export function createResourceMutationController<R extends object>(
+  resource: R,
   config: CreateResourceControllerConfig,
   keys: ResourceKeyFactory = createResourceKeys(config),
-): ResourceMutationController<TResource> {
-  const createOptions: ResourceMutationController<TResource>["createOptions"] = (handlers) =>
-    mutationOptions({
-      mutationKey: keys.mutation("create"),
-      mutationFn: (body: InferCreateBody<TResource>) => {
-        if (!resource.create) throw new Error("Resource has no create operation.");
-        return resource.create(body) as Promise<InferEntity<TResource>>;
-      },
-      onMutate: handlers?.onMutate,
-      onSuccess: async (data, variables, onMutateResult, context) => {
-        // Apixa cache sync first, then consumer
-        await syncCacheAfterCreate(context.client, keys, data);
-        await handlers?.onSuccess?.(data, variables, onMutateResult, context);
-      },
-      onError: handlers?.onError,
-      onSettled: handlers?.onSettled,
-    });
-
-  const updateOptions: ResourceMutationController<TResource>["updateOptions"] = (handlers) =>
-    mutationOptions({
-      mutationKey: keys.mutation("update"),
-      mutationFn: ({ id, body }: UpdateVariables<TResource>) => {
-        if (!resource.update) throw new Error("Resource has no update operation.");
-        return resource.update(id, body) as Promise<InferEntity<TResource>>;
-      },
-      onMutate: handlers?.onMutate,
-      onSuccess: async (data, variables, onMutateResult, context) => {
-        await syncCacheAfterUpdate(context.client, keys, data, variables);
-        await handlers?.onSuccess?.(data, variables, onMutateResult, context);
-      },
-      onError: handlers?.onError,
-      onSettled: handlers?.onSettled,
-    });
-
-  const deleteOptions: ResourceMutationController<TResource>["deleteOptions"] = (handlers) =>
-    mutationOptions({
-      mutationKey: keys.mutation("delete"),
-      mutationFn: (id: InferDeleteId<TResource>) => {
-        if (!resource.delete) throw new Error("Resource has no delete operation.");
-        return resource.delete(id) as Promise<void>;
-      },
-      onMutate: handlers?.onMutate,
-      onSuccess: async (_data, id, onMutateResult, context) => {
-        await syncCacheAfterDelete(context.client, keys, id);
-        await handlers?.onSuccess?.(undefined as void, id, onMutateResult, context);
-      },
-      onError: handlers?.onError,
-      onSettled: handlers?.onSettled,
-    });
-
-  return { keys, createOptions, updateOptions, deleteOptions };
+): ResourceMutationController<R> {
+  const result: Record<string, unknown> = { keys };
+  const table = describeOperations(resource);
+  for (const name of ["create", "update", "delete"] as const) {
+    if (table.get(name)?.kind !== "write") continue;
+    result[`${name}Options`] = (options: OperationMutationConfig<unknown, unknown[]> = {}) =>
+      operationMutationOptions(resource as Record<string, AsyncFn>, name, keys, {
+        ...options,
+        invalidate: false,
+        onSuccess: async (data, args, onMutateResult, context) => {
+          if (options.invalidate !== false) {
+            if (name === "create") await syncCacheAfterCreate(context.client, keys, data);
+            if (name === "update")
+              await syncCacheAfterUpdate(context.client, keys, data, { id: args[0] });
+            if (name === "delete") await syncCacheAfterDelete(context.client, keys, args[0]);
+          }
+          await options.onSuccess?.(data, args, onMutateResult, context);
+        },
+      });
+  }
+  return result as ResourceMutationController<R>;
 }

@@ -8,7 +8,7 @@ export const OPERATION_METADATA: unique symbol = Symbol.for("apixa.operations");
 
 /** Metadata Core records for one generated operation. Informational: it never changes execution. */
 export interface OperationMetadata<Kind extends OperationKind = OperationKind> {
-  /** Builtins: their convention. Custom: `kind` from the definition, default `"write"`. */
+  /** Builtins: their convention. Custom: required `kind` from the definition. */
   readonly kind: Kind;
   /** True when the name is one of the 16 builtins (whether generated or overridden). */
   readonly builtin: boolean;

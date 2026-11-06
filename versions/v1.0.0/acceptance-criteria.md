@@ -11,6 +11,11 @@
 - [x] Frozen install, complete build/typecheck/test, Next production build, and packed consumers pass.
 - [x] Core classifies custom operations (`kind`, `{ kind, run }`) with typed runtime metadata.
 - [x] `useResourceQuery` keeps tracked-property re-render parity, binds signals by Core position, and inherits every enabled read.
-- [x] `useResourceMutation` inherits every enabled operation with exact types, native options, independent states, and client-only operations.
+- [x] `useResourceMutation` inherits every enabled write with exact types, native options, independent states, and client-only operations.
 - [x] `useResource` composes both hooks with flat state/operations, `operations`, `states`, and read/write routing.
+- [x] Custom Core operations require explicit kinds; incompatible HTTP methods fail before dispatch.
+- [x] Query-side `readOperations` and the single-operation mutation overload are removed.
+- [x] `useResource` takes flat `mutations` options and composes the two public hooks.
+- [ ] Advanced controllers preserve every valid Core signature and operation availability.
+- [ ] Packed consumers and React 18/19 integration checks pass on this stabilization change.
 - [ ] Full v1 release requirements beyond this Query workstream are completed and published.

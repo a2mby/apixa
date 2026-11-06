@@ -23,29 +23,33 @@ Shared rules for building Apixa Core, writing docs, and shipping version milesto
 
 ## Operation customization
 
-A resource's `operations` accepts, per key, `true`, `false`, a config object, or a function:
+A resource's `operations` accepts, per key, `true`, `false`, a config object, or a
+`{ kind, run }` function definition:
 
 - **Config object** — the existing `{ method, path, headers, timeout, retry, hasBody }` shape.
-- **Function** — `(ctx, ...args) => Promise<T>`. `ctx.request(init)` runs the call through Core's
+- **Custom function** — `{ kind: "read" | "write", run: (ctx, ...args) => Promise<T> }`.
+  `ctx.request(init)` runs the call through Core's
   normal pipeline (headers inheritance, retry, middleware, error classification) instead of
   reimplementing it. Called exactly like a generated operation: `api.resource.<name>(...)`.
 - **`false`** — removes a builtin from the generated client. Removing a name that was never
   active is a no-op.
 - **`true`** — enables a builtin with its default method and path. A custom name needs a config
-  with `method` or a function; `true` alone cannot create an implementation.
+  with `kind` and `method` or `{ kind, run }`; `true` alone cannot create an implementation.
 
-- **`{ kind?, run }`** — a function operation with metadata; executes exactly like the plain
-  function form.
+- **Built-in function override** — may remain a bare function; its kind is inherited from the
+  built-in convention.
 
 **Read/write classification.** Builtins are fixed by their convention (`access` in
 `operation/conventions.ts`; overriding a builtin keeps it). Custom operations take
-`kind: "read" | "write"` on the config object or `{ run }` form; omitted means `"write"`. `kind`
-on a builtin name is a configuration error. Every resource client carries the result as
+`kind: "read" | "write"` on the config object or `{ kind, run }` form. Missing kinds
+are configuration errors. `kind` on a builtin name is also a configuration error. GET, HEAD,
+and OPTIONS require `"read"`; POST, PUT, PATCH, and DELETE require `"write"`. The same
+validation applies to every function-operation `ctx.request()` before dispatch. Every resource client carries the result as
 non-enumerable, frozen metadata under `OPERATION_METADATA` (`getOperationMetadata(resource)`):
 `{ kind, builtin, implementation: "request" | "function", optionsIndex }`, where `optionsIndex` is
 the position of the trailing `RequestOptions` argument (`null` for function operations, whose
 signature Core does not own). It is typed per operation (`OperationKindsOf<typeof api.users>`) and
-never changes execution — integrations use it instead of guessing from names or HTTP verbs.
+integrations use it instead of guessing from names or HTTP verbs.
 
 A custom definition (object or function) with a builtin's name always overrides the convention.
 `operations` suggests the 16 known names below for autocomplete while still accepting arbitrary

@@ -2,6 +2,8 @@ import { defineApi } from "@apixa/core";
 import type { MutationObserverResult } from "@tanstack/react-query";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { useResourceMutation } from "../../packages/tanstack-query/src/use-resource-mutation.js";
+import { createResourceMutationController } from "../../packages/tanstack-query/src/mutation-controller.js";
+import { createResourceController } from "../../packages/tanstack-query/src/controller.js";
 import type { OperationParameters } from "../../packages/tanstack-query/src/types.js";
 import type { CreateBodyOf } from "../helpers/types.js";
 
@@ -15,7 +17,7 @@ const api = defineApi<{ users: { entity: User }; org: { entity: User } }>()({
       path: "/users",
       operations: {
         deleteMany: false,
-        archive: { method: "POST", path: "/:id/archive" },
+        archive: { kind: "write", method: "POST", path: "/:id/archive" },
         stats: {
           kind: "read",
           run: async (ctx, range: "day" | "week") =>
@@ -41,7 +43,7 @@ describe("resource-wide useResourceMutation types", () => {
       expectTypeOf(users.update).parameter(0).toEqualTypeOf<string>();
       expectTypeOf(users.delete).returns.resolves.toEqualTypeOf<void>();
       expectTypeOf(users.archive).parameter(0).toEqualTypeOf<string>();
-      expectTypeOf(users.stats).parameters.toEqualTypeOf<["day" | "week"]>();
+      expectTypeOf(users).not.toHaveProperty("stats");
       expectTypeOf(users.patch).parameters.toEqualTypeOf<[id: string, name: string]>();
       expectTypeOf(users.operations.create).toEqualTypeOf(users.create);
       expectTypeOf(users.states.create).toEqualTypeOf<
@@ -56,7 +58,7 @@ describe("resource-wide useResourceMutation types", () => {
       expectTypeOf(org.update)
         .parameter(0)
         .toEqualTypeOf<{ orgId: string | number; id: string | number }>();
-      expectTypeOf(org.getAll).parameter(0).toEqualTypeOf<string | number>();
+      expectTypeOf(org).not.toHaveProperty("getAll");
     }
     expect(true).toBe(true);
   });
@@ -131,5 +133,27 @@ describe("resource-wide useResourceMutation types", () => {
       });
     }
     expect(true).toBe(true);
+  });
+
+  it("advanced controllers preserve parameterized Core tuples without requiring getAll", () => {
+    const writeOnly = defineApi<{ org: { entity: User } }>()({
+      baseURL: "https://api.example.com",
+      resources: {
+        org: { path: "/orgs/:orgId/users", writeOnly: true, operations: { delete: false } },
+      },
+    });
+    const mutation = createResourceMutationController(writeOnly.org, { queryKey: ["org"] });
+    const combined = createResourceController(writeOnly.org, { queryKey: ["org"] });
+    type CreateOptions = ReturnType<typeof mutation.createOptions>;
+    type UpdateOptions = ReturnType<typeof mutation.updateOptions>;
+    expectTypeOf<Parameters<NonNullable<CreateOptions["mutationFn"]>>[0]>().toEqualTypeOf<
+      OperationParameters<typeof writeOnly.org, "create">
+    >();
+    expectTypeOf<Parameters<NonNullable<UpdateOptions["mutationFn"]>>[0]>().toEqualTypeOf<
+      OperationParameters<typeof writeOnly.org, "update">
+    >();
+    expectTypeOf(mutation).not.toHaveProperty("deleteOptions");
+    expectTypeOf(combined.listOptions).toBeNever();
+    expectTypeOf(combined).toHaveProperty("createOptions");
   });
 });

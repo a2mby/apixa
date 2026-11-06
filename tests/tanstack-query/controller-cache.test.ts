@@ -83,9 +83,9 @@ describe("createResourceController cache policy", () => {
       mutationKey: controller.keys.mutation("create"),
     };
     // TanStack v5 mutationFn(variables, context)
-    const data = await mutation.mutationFn!({ name: "Grace" }, ctx);
+    const data = await mutation.mutationFn!([{ name: "Grace" }], ctx);
     order.push("resolved");
-    await mutation.onSuccess?.(data, { name: "Grace" }, undefined, ctx);
+    await mutation.onSuccess?.(data, [{ name: "Grace" }], undefined, ctx);
 
     expect(order[0]).toBe("resolved");
     expect(client.getQueryData(controller.keys.detail("2"))).toBeUndefined();
@@ -110,7 +110,7 @@ describe("createResourceController cache policy", () => {
       meta: undefined as undefined,
       mutationKey: controller.keys.mutation("create"),
     };
-    await expect(mutation.mutationFn!({ name: "X" }, ctx)).rejects.toThrow("boom");
+    await expect(mutation.mutationFn!([{ name: "X" }], ctx)).rejects.toThrow("boom");
     // onSuccess not called → list still valid
     expect(client.getQueryState(controller.keys.list())?.isInvalidated).toBeFalsy();
   });
@@ -131,8 +131,8 @@ describe("createResourceController cache policy", () => {
       meta: undefined as undefined,
       mutationKey: controller.keys.mutation("delete"),
     };
-    await mutation.mutationFn!("1", ctx);
-    await mutation.onSuccess?.(undefined as void, "1", undefined, ctx);
+    await mutation.mutationFn!(["1"], ctx);
+    await mutation.onSuccess?.(undefined as void, ["1"], undefined, ctx);
 
     expect(client.getQueryData(controller.keys.detail("1"))).toBeUndefined();
     expect(client.getQueryState(controller.keys.list())?.isInvalidated).toBe(true);
@@ -152,6 +152,31 @@ describe("createResourceController cache policy", () => {
 });
 
 describe("query / mutation controller separation", () => {
+  it("uses exact tuples for writes on a resource without getAll", async () => {
+    const resource = {
+      create: vi.fn(async (orgId: string, body: { name: string }) => ({ id: "1", orgId, ...body })),
+      update: vi.fn(async (key: { orgId: string; id: string }, body: { name: string }) => ({
+        ...key,
+        ...body,
+      })),
+    };
+    const controller = createResourceMutationController(resource, { queryKey: ["org-users"] });
+    const ctx = {
+      client: new QueryClient(),
+      meta: undefined,
+      mutationKey: controller.keys.mutation("create"),
+    };
+    const created = await controller.createOptions().mutationFn!(["acme", { name: "Ada" }], ctx);
+    expect(created).toEqual({ id: "1", orgId: "acme", name: "Ada" });
+    expect(resource.create).toHaveBeenCalledWith("acme", { name: "Ada" });
+    const updated = await controller.updateOptions().mutationFn!(
+      [{ orgId: "acme", id: "1" }, { name: "Grace" }],
+      ctx,
+    );
+    expect(updated.name).toBe("Grace");
+    expect(resource.update).toHaveBeenCalledWith({ orgId: "acme", id: "1" }, { name: "Grace" });
+    expect(controller).not.toHaveProperty("deleteOptions");
+  });
   it("the query controller is read-only; the mutation controller is write-only", () => {
     const resource = createFakeUsers();
     const query = createResourceQueryController(resource, { queryKey: ["users"] });

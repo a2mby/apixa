@@ -1,11 +1,11 @@
 # `@apixa/tanstack-query`
 
-Three independent hooks map Apixa resource clients onto TanStack Query v5:
+Three hooks map Apixa resource clients onto TanStack Query v5:
 
 | Hook                  | Does                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------- |
 | `useResourceQuery`    | One native read observer (`getAll` or a selected read) plus every inherited read.     |
-| `useResourceMutation` | Every enabled Core operation as a native mutation, with per-operation state.          |
+| `useResourceMutation` | Every enabled Core write as a native mutation, with per-operation state.              |
 | `useResource`         | A thin facade over both, sharing one `queryKey`: flat state, flat operations, states. |
 
 Apixa adds resource identity (hierarchical keys), operation selection, exact Core argument/return
@@ -108,7 +108,7 @@ const users = useResourceQuery(api.users, {
 An argument-builder function requires `keyParts`, since functions cannot be a safe cache identity.
 
 Custom operations are reads only when Core says so — never by name or HTTP verb. Mark them in
-`defineApi` (omitted `kind` means `"write"`):
+`defineApi` (`kind` is required for every custom operation):
 
 ```ts
 operations: {
@@ -121,8 +121,8 @@ operations: {
 const stats = useResourceQuery(api.users, { queryKey: ["users"], operation: "stats" });
 ```
 
-Its arguments become its key. A custom operation Core does not classify as a read can still be
-observed with the legacy opt-in `readOperations: ["name"]` plus `keyParts`.
+Its arguments become its key. A custom write cannot be observed as a query. The legacy
+`readOperations` option has been removed.
 
 The signal is bound at the position Core records for each operation's `RequestOptions` (the
 `OPERATION_METADATA` Core attaches to every client), so nested params or filter objects that
@@ -136,7 +136,7 @@ Use native `useQuery` with the Core operation directly when a full response is r
 
 ## Keys, filters, pagination, and cache
 
-List keys remain `[...scope, ...queryKey, "list", query?]`; detail keys remain `[...scope, ...queryKey, "detail", id]` (extra arguments follow the id). Other reads use `[...scope, ...queryKey, "operation", name, ...identity]`. Identity is the exact argument tuple minus the signal; an empty options object and trailing `undefined`s are dropped, so `getById("42")` and `getById("42", {})` share one entry, and `invalidateDetail("42")` also covers keyed variants such as `[..., "detail", "42", { query }]`. `query: { active: true }` is a short form for the ordinary `getAll({ query })` call and is included in the list key. Use either `query` or `args`, not both. With `args`, all tuple values except top-level AbortSignals are included by default. `keyParts` overrides that derivation and is mandatory for custom operations or argument builders.
+List keys remain `[...scope, ...queryKey, "list", query?]`; detail keys remain `[...scope, ...queryKey, "detail", id]` (extra arguments follow the id). Other reads use `[...scope, ...queryKey, "operation", name, ...identity]`. Identity is the exact argument tuple minus the signal; an empty options object and trailing `undefined`s are dropped, so `getById("42")` and `getById("42", {})` share one entry, and `invalidateDetail("42")` also covers keyed variants such as `[..., "detail", "42", { query }]`. `query: { active: true }` is a short form for the ordinary `getAll({ query })` call and is included in the list key. Use either `query` or `args`, not both. With `args`, all tuple values except top-level AbortSignals are included by default. `keyParts` overrides that derivation and is mandatory for argument builders.
 
 ```tsx
 const page = useResourceQuery(api.users, {
@@ -211,10 +211,10 @@ users.states.update.error;
 users.states.exportUser.data;
 ```
 
-- **Every enabled Core operation is inherited**, including custom ones; `mutations` only
+- **Every enabled Core write is inherited**, including custom writes; `mutations` only
   overrides options or adds client-only operations. Calls take the operation's own separate
   arguments and return its exact result type; TanStack receives them as a tuple.
-- Editors suggest every operation name inside `mutations: {}` and every native
+- Editors suggest every write operation name inside `mutations: {}` and every native
   `UseMutationOptions` field inside each entry (`retry`, `retryDelay`, `gcTime`, `networkMode`,
   `scope`, `throwOnError`, `meta`, `onMutate`, `onSuccess`, `onError`, `onSettled`).
 - An unknown name needs a `mutationFn`; a `mutationFn` on an inherited name is rejected (inherited
@@ -230,7 +230,7 @@ users.states.exportUser.data;
 - Writes are not retried unless configured (TanStack's default).
 
 **Invalidation** (after success only, awaited before your `onSuccess`): writes and client-only
-operations default to `"all"` (every query under the resource key); reads default to none.
+operations default to `"all"` (every query under the resource key). Reads use `useResourceQuery`.
 
 ```ts
 invalidate: "all" | "lists" | false
@@ -245,8 +245,8 @@ TypeScript fixes the config before it sees `onMutate`'s return, and that callbac
 `{}`. Annotate the parameter (`async ([id, body]: OperationParameters<typeof api.users, "update">)`)
 or omit it.
 
-The single-operation form remains: `useResourceMutation(api.users, "create", { queryKey })`
-returns a native `UseMutationResult` called with a tuple (`mutateAsync([body])`).
+For a standalone native `UseMutationResult`, call TanStack’s `useMutation` with a Core
+operation as `mutationFn`, or use `operationMutationOptions` from the advanced entry.
 
 ## Unified facade: `useResource`
 
@@ -254,7 +254,7 @@ returns a native `UseMutationResult` called with a tuple (`mutateAsync([body])`)
 const users = useResource(api.users, {
   queryKey: ["users"],
   query: { staleTime: 60_000, select: (list) => list.filter((u) => u.active) },
-  mutation: { mutations: { create: { invalidate: "lists" } } },
+  mutations: { create: { invalidate: "lists" } },
 });
 
 users.data;
@@ -267,8 +267,8 @@ users.states.create.isPending;
 await users.operations.archive(id); // guaranteed namespace
 ```
 
-`query` takes exactly `useResourceQuery`'s options and `mutation` exactly `useResourceMutation`'s,
-minus the shared `queryKey`/`scope`. Read-classified operations run through the query layer and
+`query` takes `useResourceQuery` options minus the shared `queryKey`/`scope`.
+`mutations` is the resource-wide mutation configuration. Read-classified operations run through the query layer and
 writes/client-only operations through mutations — never both. `states` holds writes and
 client-only operations only. Flat names never shadow query fields or `states`/`operations`; every
 operation is always in `operations`. Without a guaranteed `getAll`, there is no list state and no
@@ -280,9 +280,21 @@ automatic query.
 off `useResourceQuery`. Use `useResource` for the old all-in-one shape (`users.create(body)`,
 `users.states.create`), or `useResourceMutation(api.users, { queryKey })` for writes alone.
 
-`createResourceController` remains in the advanced entry for old controller users, composing the
-query and mutation controllers. The advanced entry also exports `ResourceMutationStore`,
+`createResourceController` remains in the advanced entry, composing the query and mutation
+controllers. Conventional `createOptions`, `updateOptions`, and `deleteOptions` use exact Core
+argument tuples as mutation variables. For example, `mutateAsync([id, body])` for `update`. The advanced entry also exports `ResourceMutationStore`,
 `applyInvalidation`, and `describeOperations` for custom integrations.
+
+## v1.0.0 breaking changes
+
+- Custom declarative operations require `kind: "read" | "write"`; custom functions require
+  `{ kind, run }`. A bare custom function is rejected. Built-in overrides inherit their fixed kind.
+- GET, HEAD, and OPTIONS require `"read"`; POST, PUT, PATCH, and DELETE require `"write"`.
+  This includes every `ctx.request()` made by a function operation.
+- Reads are available through `useResourceQuery`; writes and client-only mutations are available
+  through `useResourceMutation`. A read name cannot be configured under `mutations`.
+- `useResourceMutation(resource, "create", options)` and `readOperations` were removed.
+- `useResource` takes `mutations` at the top level, alongside `queryKey`, `scope`, and `query`.
 
 ## Performance baseline
 

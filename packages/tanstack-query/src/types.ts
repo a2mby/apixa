@@ -1,4 +1,4 @@
-import type { OperationKindsOf } from "@apixa/core";
+import type { BUILTIN_CONVENTIONS, OperationKindsOf } from "@apixa/core";
 import type { InvalidateQueryFilters, QueryKey } from "@tanstack/react-query";
 
 // Structural resource ops — `any` only at the boundary so Core clients assign cleanly.
@@ -91,18 +91,12 @@ export type InheritedReads<R> = { [K in InheritedReadName<R>]: OperationCall<R, 
   [K in OptionalReadName<R>]?: OperationCall<R, K>;
 };
 
-export type BuiltinReadOperation =
-  | "getAll"
-  | "getById"
-  | "getBySlug"
-  | "getMany"
-  | "getBy"
-  | "findFirst"
-  | "search"
-  | "count"
-  | "exists";
-export type BuiltinWriteOperation =
-  "create" | "update" | "delete" | "patch" | "upsert" | "createMany" | "deleteMany";
+export type BuiltinReadOperation = {
+  [K in keyof typeof BUILTIN_CONVENTIONS]: (typeof BUILTIN_CONVENTIONS)[K]["access"] extends "read"
+    ? K
+    : never;
+}[keyof typeof BUILTIN_CONVENTIONS];
+export type BuiltinWriteOperation = Exclude<keyof typeof BUILTIN_CONVENTIONS, BuiltinReadOperation>;
 export type ReadOperationName<R> = Extract<CallableOperationName<R>, BuiltinReadOperation>;
 export type CustomOperationName<R> = Exclude<
   CallableOperationName<R>,
@@ -110,7 +104,7 @@ export type CustomOperationName<R> = Exclude<
 >;
 /** Custom operations Core classifies as reads (`kind: "read"`). */
 export type CustomReadName<R> = Extract<InheritedReadName<R>, CustomOperationName<R>>;
-export type QueryOperationName<R> = ReadOperationName<R> | CustomOperationName<R>;
+export type QueryOperationName<R> = InheritedReadName<R>;
 
 type PromiseData<F> = F extends (...args: never[]) => Promise<infer R>
   ? R
@@ -161,14 +155,24 @@ export type UpdateVariables<R extends ResourceLike> = {
   body: InferUpdateBody<R>;
 };
 
-export type ResourceKeyFactory = {
+type ReadKeyName<R> = unknown extends R
+  ? string
+  : Extract<InheritedReadName<R> | OptionalReadName<R>, string>;
+type MutationKeyName<R, M> = unknown extends R
+  ? string
+  : Extract<
+      InheritedWriteName<R> | OptionalWriteName<R> | Exclude<keyof M, AnyOperationName<R>>,
+      string
+    >;
+
+export type ResourceKeyFactory<R = unknown, M = {}> = {
   all: () => QueryKey;
   lists: () => QueryKey;
   list: (query?: unknown) => QueryKey;
-  detail: (id: unknown) => QueryKey;
-  operation: (op: string, parts?: QueryKey) => QueryKey;
+  detail: (id: R extends { getById: AsyncFn } ? InferGetByIdArg<R> : unknown) => QueryKey;
+  operation: (op: ReadKeyName<R>, parts?: QueryKey) => QueryKey;
   /** Mutation key for any operation name (`create`, `patch`, a custom op, …). */
-  mutation: (op: string) => QueryKey;
+  mutation: (op: MutationKeyName<R, M>) => QueryKey;
 };
 
 export type CreateResourceControllerConfig = {
