@@ -171,6 +171,10 @@ export type ResourceKeyFactory<R = unknown, M = {}> = {
   list: (query?: unknown) => QueryKey;
   detail: (id: R extends { getById: AsyncFn } ? InferGetByIdArg<R> : unknown) => QueryKey;
   operation: (op: ReadKeyName<R>, parts?: QueryKey) => QueryKey;
+  /** Prefix of every infinite query of the resource. */
+  infinites: () => QueryKey;
+  /** Infinite query key: `[...root, "infinite", op, ...keyParts]` (no page parameter). */
+  infinite: (op?: ReadKeyName<R>, parts?: QueryKey) => QueryKey;
   /** Mutation key for any operation name (`create`, `patch`, a custom op, …). */
   mutation: (op: MutationKeyName<R, M>) => QueryKey;
 };

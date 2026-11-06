@@ -5,13 +5,32 @@
 
 export { createResourceQueryController } from "./query-controller.js";
 export type { ResourceQueryController, ListOverrides } from "./query-controller.js";
-export { createResourceQueryOptions } from "./query-options.js";
+export {
+  createResourceQueryOptions,
+  createResourceInfiniteQueryOptions,
+  prefetchResourceQuery,
+  prefetchResourceInfiniteQuery,
+} from "./query-options.js";
 export type {
   ResourceQueryNativeOptions,
   DefaultResourceQueryOptions,
   ExplicitResourceQueryOptions,
   GeneratedQueryOptions,
+  GeneratedInfiniteQueryOptions,
+  ResourceInfiniteQueryOptions,
+  ResourceInfiniteConfig,
 } from "./query-options.js";
+export { createQueryHelpers } from "./query-helpers.js";
+export type {
+  QueryTarget,
+  InfiniteKeyTarget,
+  PrefixTarget,
+  ResourceCache,
+  ResourcePrefetch,
+  ResourceCancel,
+} from "./query-helpers.js";
+export { OptimisticLayers } from "./optimistic.js";
+export type { OptimisticTarget } from "./optimistic.js";
 
 export {
   createResourceMutationController,

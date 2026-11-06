@@ -1,11 +1,16 @@
 # Next.js App Router query hydration
 
-This runnable example prefetches an Apixa resource on the server with
-`createResourceQueryOptions`, dehydrates the request-scoped TanStack `QueryClient`, and renders
-`useResource` in a client component against the hydrated cache: the hydrated list, a `create`
-write that invalidates it, `states.create.isPending`, and a Core `kind: "read"` custom operation
-(`stats`) fetched through the QueryClient cache. A deterministic local
-transport supplies data, so no API service or credentials are required.
+This runnable example prefetches Apixa resources on the server with `prefetchResourceQuery` and
+`prefetchResourceInfiniteQuery`, dehydrates the request-scoped TanStack `QueryClient`, and renders
+client components against the hydrated cache:
+
+- `useResource` with the hydrated list, an optimistic `create` (with a Core idempotency key)
+  that invalidates it, `users.create.isPending`, hover prefetching with `users.prefetch(...)`, and
+  a Core `kind: "read"` custom operation (`stats`) fetched through the QueryClient cache;
+- `useResourceQuery` in infinite mode for cursor-paginated posts (`fetchNextPage`).
+
+The paging config lives in `lib/api.ts` so the server and the client build the same cache key.
+A deterministic local transport supplies data, so no API service or credentials are required.
 
 From the repository root:
 

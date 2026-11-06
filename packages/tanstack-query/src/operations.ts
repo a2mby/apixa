@@ -6,6 +6,8 @@ export type OperationInfo = {
   builtin: boolean;
   /** Position of Core's trailing `RequestOptions` argument; `null` when Core doesn't own it. */
   optionsIndex: number | null;
+  /** Core sends an idempotency key for this operation (`idempotency` configured). */
+  idempotency: boolean;
 };
 
 /** Plain resources use Core's canonical builtin table for their documented fallback. */
@@ -33,16 +35,22 @@ export function describeOperations(resource: object): ReadonlyMap<string, Operat
     table.set(
       name,
       meta
-        ? { kind: meta.kind, builtin: meta.builtin, optionsIndex: meta.optionsIndex }
+        ? {
+            kind: meta.kind,
+            builtin: meta.builtin,
+            optionsIndex: meta.optionsIndex,
+            idempotency: meta.idempotency === true,
+          }
         : metadata
-          ? { kind: "write", builtin: false, optionsIndex: null }
+          ? { kind: "write", builtin: false, optionsIndex: null, idempotency: false }
           : Object.prototype.hasOwnProperty.call(BUILTIN_CONVENTIONS, name)
             ? {
                 kind: BUILTIN_CONVENTIONS[name as keyof typeof BUILTIN_CONVENTIONS].access,
                 builtin: true,
                 optionsIndex: null,
+                idempotency: false,
               }
-            : { kind: "write", builtin: false, optionsIndex: null },
+            : { kind: "write", builtin: false, optionsIndex: null, idempotency: false },
     );
   }
   cache.set(resource, table);

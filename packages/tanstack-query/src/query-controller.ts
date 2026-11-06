@@ -128,8 +128,13 @@ export function createResourceQueryController<R extends object>(
     operationOptions,
     invalidate: (client: QueryClient, filters?: InvalidateQueryFilters) =>
       client.invalidateQueries({ ...filters, queryKey: keys.all() }),
-    invalidateLists: (client: QueryClient, filters?: InvalidateQueryFilters) =>
-      client.invalidateQueries({ ...filters, queryKey: keys.lists() }),
+    invalidateLists: async (client: QueryClient, filters?: InvalidateQueryFilters) => {
+      // Infinite lists are lists too (separate namespace, because their data is InfiniteData).
+      await Promise.all([
+        client.invalidateQueries({ ...filters, queryKey: keys.lists() }),
+        client.invalidateQueries({ ...filters, queryKey: keys.infinites() }),
+      ]);
+    },
     invalidateDetail: (client: QueryClient, id: unknown, filters?: InvalidateQueryFilters) =>
       // Prefix match: also covers detail variants keyed with extra arguments.
       client.invalidateQueries({ ...filters, queryKey: keys.detail(id) }),

@@ -159,6 +159,77 @@ await users.getById("42"); // cached imperative fetch, if available
 
 Invalidation only marks inactive/disabled queries stale; it does not promise a fetch. The advanced `createResourceQueryController` delegates `refetch`, `cancel`, `remove`, `reset`, `getCached`, `setCached`, `fetch`, `prefetch`, and `ensure` to `QueryClient`, preserving each native action's distinct semantics. `getCached` and `setCached` operate on **raw** data, before `select`.
 
+## Prefetching, cache access, and cancellation
+
+Every query result (and `useResource`) carries three helpers. They use the hook's QueryClient,
+its keys, and its query function; they mount no observer.
+
+```tsx
+const users = useResourceQuery(api.users, { queryKey: ["users"], staleTime: 60_000 });
+
+await users.prefetch(); // the observed query, with the hook's options
+await users.prefetch({ operation: "getById", args: ["42"] }); // any read (writes are rejected)
+await users.prefetch({ query: { page: 2 } }); // another getAll variant
+await users.prefetch({ operation: "stats", args: ["week"], staleTime: 0 }); // override inherited options
+
+users.cache.get(); // raw data of the observed query (never `select` output); no request
+users.cache.set((old) => [...(old ?? []), newUser]); // setQueryData; no request
+users.cache.get({ operation: "getById", args: ["42"] }); // User | undefined
+users.cache.remove(); // only the observed entry (exact)
+users.cache.remove({ lists: true }); // explicit prefix: every list variant
+users.cache.remove({ all: true }); // explicit prefix: everything under the resource key
+
+await users.cancel(); // cancelQueries for the observed entry (or a target / prefix)
+```
+
+- `prefetch` is `queryClient.prefetchQuery` (or `prefetchInfiniteQuery`): fresh data per
+  `staleTime` is not fetched again, and concurrent prefetches share one request. A target inherits
+  the hook's `staleTime`, `gcTime`, `retry`, `retryDelay`, `networkMode`, and `meta` unless it
+  sets them.
+- Targets build exactly the key the hook, `createResourceQueryOptions`, and imperative reads use.
+  Without an observed query (no `getAll`), pass a target — there is no ambiguous default.
+- `cache.set` writes raw cache data; on an infinite entry it must keep `pages` and `pageParams`
+  arrays of equal length. Removal is separate from invalidation; neither replaces `refetch()`.
+- `prefetch`, `cache`, and `cancel` are reserved result names. An operation with one of those names
+  stays callable through `users.operations.<name>`.
+
+## Infinite queries
+
+Infinite pagination is a mode of `useResourceQuery` (no separate hook), backed by native
+`useInfiniteQuery`:
+
+```tsx
+const posts = useResourceQuery(api.posts, {
+  queryKey: ["posts"],
+  staleTime: 30_000,
+  infinite: {
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor, // null / undefined: no next page
+    getPreviousPageParam: (firstPage) => firstPage.prevCursor, // optional
+    query: (cursor) => ({ cursor, limit: 10 }), // merged into Core's RequestOptions.query
+    maxPages: 5, // optional native eviction
+  },
+});
+
+posts.data?.pages; // typed pages of getAll's response
+posts.data?.pageParams;
+posts.hasNextPage;
+posts.isFetchingNextPage;
+await posts.fetchNextPage();
+await posts.fetchPreviousPage();
+```
+
+- Any read works (`operation: "feed"`). `infinite.query(pageParam)` fills Core's query for
+  operations whose signature Core owns; `infinite.args(pageParam, context)` builds the exact
+  argument tuple for anything else (forward `context.signal` yourself there). Page-number APIs use
+  `initialPageParam: 1` and `getNextPageParam: (last) => last.page < last.totalPages ? last.page + 1 : undefined`.
+- The key is `[...scope, ...queryKey, "infinite", operation, ...keyParts]`: never shared with a
+  regular list (`InfiniteData` vs `T[]`) and never including the page parameter. Put filters that
+  change results in `queryKey` or `keyParts`.
+- `invalidate()`, `invalidateLists()`, and mutation `invalidate: "lists"` include infinite lists.
+- The mode is fixed for a mounted component: switching `infinite` on or off throws (hook order
+  never changes). Use a different component or React `key`.
+
 ## Hook-free query options
 
 Import the factory from `@apixa/tanstack-query/advanced` in React components, server components, loaders, or imperative code. It uses the same key and execution engine as the hook and carries TanStack's query-key data tag.
@@ -180,13 +251,45 @@ await queryClient.fetchQuery(options);
 await queryClient.ensureQueryData(options);
 ```
 
-Native `useInfiniteQuery` remains available for infinite pagination. Build its `queryFn` using the Core operation and native `pageParam`; there is no separate Apixa infinite-query scheduler. `useSuspenseQuery` does not accept `enabled`, `placeholderData`, or `throwOnError`, per TanStack's own semantics; use a suitable generated options object without those fields. Do not pass a `suspense` boolean to `useResourceQuery`.
+`createResourceInfiniteQueryOptions(resource, { queryKey, infinite })` is the infinite counterpart for native `useInfiniteQuery`, `useSuspenseInfiniteQuery`, and `prefetchInfiniteQuery`. `useSuspenseQuery` does not accept `enabled`, `placeholderData`, or `throwOnError`, per TanStack's own semantics; use a suitable generated options object without those fields. Do not pass a `suspense` boolean to `useResourceQuery`.
 
-For Next.js App Router, create a **request-scoped** `QueryClient` in the server page, prefetch generated options, pass `dehydrate(client)` to `HydrationBoundary`, and call the hook from a client component under `QueryClientProvider`. A [working example](../../examples/query-ssr-next/) includes a production build. The main package entry retains `"use client"`; the hook-free advanced entry does not.
+### Server rendering (Next.js App Router)
+
+```tsx
+// app/page.tsx (server component)
+import {
+  prefetchResourceInfiniteQuery,
+  prefetchResourceQuery,
+} from "@apixa/tanstack-query/advanced";
+import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
+
+export default async function Page() {
+  const client = new QueryClient(); // request-scoped: never share a server cache between users
+  await Promise.all([
+    prefetchResourceQuery(client, api.users, { queryKey: ["users"] }),
+    prefetchResourceInfiniteQuery(client, api.posts, {
+      queryKey: ["posts"],
+      infinite: postsPaging,
+    }),
+  ]);
+  return (
+    <HydrationBoundary state={dehydrate(client)}>
+      <Users />
+      <Posts />
+    </HydrationBoundary>
+  );
+}
+```
+
+Client components call the hooks with the same `queryKey` (and the same `infinite` config, kept in
+a shared module) under `QueryClientProvider`; with a `staleTime` the hydrated data is used without
+an immediate refetch. The advanced entry is hook-free and server-safe; the main entry keeps
+`"use client"`. Native `queryClient.prefetchQuery(createResourceQueryOptions(...))` remains the
+escape hatch. A [working example](../../examples/query-ssr-next/) includes a production build.
 
 ## Cancellation, retries, and errors
 
-TanStack's signal is forwarded to standard Core read operations. Core combines it with its timeout and preserves its own `HttpError`, `TimeoutError`, `AbortError`, and other error classes. Cancelling through `queryClient.cancelQueries` aborts an in-flight request. A custom read's argument builder must forward `signal` explicitly. Core retry and TanStack retry are separate layers: a Core retry repeats a transport attempt within one operation call; a TanStack retry repeats the operation call. Set one layer deliberately if exact attempt counts matter. Native `throwOnError` supports React error boundaries.
+TanStack's signal is forwarded to standard Core read operations (and infinite pages), so a key change (search, page), an unmount, or `users.cancel()` aborts the obsolete request; TanStack reverts the query state instead of reporting an error, and an intentional abort is not retried. Core combines it with its timeout and preserves its own `HttpError`, `TimeoutError`, `AbortError`, and other error classes. Cancelling through `queryClient.cancelQueries` aborts an in-flight request. A custom read's argument builder must forward `signal` explicitly. Core retry and TanStack retry are separate layers: a Core retry repeats a transport attempt within one operation call; a TanStack retry repeats the operation call. Set one layer deliberately if exact attempt counts matter. Native `throwOnError` supports React error boundaries.
 
 ## Mutations: `useResourceMutation`
 
@@ -206,7 +309,10 @@ await users.update(id, body);
 await users.archive(id);
 await users.exportUser(id);
 
-users.states.create.isPending;
+users.create.isPending; // state directly on the callable operation
+users.create.data;
+users.create.variables;
+users.states.create.isPending; // the same state through `states`
 users.states.update.error;
 users.states.exportUser.data;
 ```
@@ -219,6 +325,10 @@ users.states.exportUser.data;
   `scope`, `throwOnError`, `meta`, `onMutate`, `onSuccess`, `onError`, `onSettled`).
 - An unknown name needs a `mutationFn`; a `mutationFn` on an inherited name is rejected (inherited
   operations always run Core). Disabled operations are absent.
+- `users.<op>.isPending` (and `data`, `error`, `variables`, `status`, `isIdle`, `isSuccess`,
+  `isError`, `isPaused`, `context`, `failureCount`, `failureReason`, `submittedAt`, `reset`) are
+  live getters over the same observer as `states.<op>` — never copied values. Reading one creates
+  only that operation's observer.
 - `states.<op>` is TanStack's `MutationObserverResult` for the **latest** call, exactly like
   `useMutation`. Every call still resolves its own promise; for all in-flight calls use native
   `useMutationState({ filters: { mutationKey: users.keys.mutation("create") } })`.
@@ -227,7 +337,10 @@ users.states.exportUser.data;
   `MutationObserver`s) and follows QueryClient, resource, and option changes.
 - Mutation keys: `[...scope, ...queryKey, "mutation", op]`. Apixa's `scope` is the key prefix;
   TanStack's serial-execution `scope: { id }` belongs inside an operation's config.
-- Writes are not retried unless configured (TanStack's default).
+- Writes are not retried unless configured (TanStack's default). When the Core operation has
+  `idempotency` configured, Apixa creates one key per call and passes it on every TanStack retry
+  (`options.idempotencyKey`), so retries of one logical write share a key. Core transport retries
+  inside an attempt reuse it too. A key you pass in the call options wins.
 
 **Invalidation** (after success only, awaited before your `onSuccess`): writes and client-only
 operations default to `"all"` (every query under the resource key). Reads use `useResourceQuery`.
@@ -238,7 +351,53 @@ invalidate: { lists: true, details: (data, [id]) => [id] }
 invalidate: async ({ client, keys, data, args }) => { /* your own QueryClient work */ }
 ```
 
-Optimistic updates use native `onMutate` / `onError` with `QueryClient` and rollback context.
+### Declarative optimistic updates
+
+```tsx
+const users = useResourceMutation(api.users, {
+  queryKey: ["users"],
+  mutations: {
+    update: {
+      optimistic: {
+        detail: ([id]) => id, // every cached variant of this detail
+        update: (current, [, changes]) => ({ ...current, ...changes }), // typed: User → User
+      },
+    },
+    create: {
+      optimistic: { list: (users, [body]) => [...users, { id: "temp", ...body }] }, // every list
+    },
+    delete: {
+      optimistic: { list: (users, [id]) => users.filter((u) => u.id !== id) },
+    },
+    archive: {
+      optimistic: {
+        targets: ([id], keys) => [{ queryKey: keys.operation("stats"), update: (s: Stats) => s }],
+      },
+    },
+  },
+});
+```
+
+What happens per call: Apixa cancels in-flight fetches of the affected entries, applies the change
+to entries that already have data (it never invents an entry), runs the Core operation through the
+native mutation lifecycle, and on failure removes **only that call's change**. Updaters receive
+raw cached data (not `select` output) and must return new objects.
+
+Concurrency: each entry keeps its last server data plus an ordered stack of optimistic changes.
+A failing call is removed from the stack and the entry is recomputed, so it never restores a stale
+snapshot over another call's change (A fails after B succeeded → B's change stays). Server data
+that arrives while calls are pending (a refetch or invalidation) becomes the new base and pending
+changes are re-applied on top. Bookkeeping is dropped when nothing is pending; a manual
+`setQueryData` on the entry hands it back to you (no later rollback there). Rollback still runs
+after an unmount: the callbacks belong to the mutation, not the component.
+
+Callback order: internal optimistic work → your `onMutate` (its result is the native context of
+every callback and `states.<op>.context`); on error: rollback → your `onError`; on success: the
+`invalidate` policy (default `"all"`) → your `onSuccess`; then `onSettled`. Without `optimistic`,
+mutations behave exactly as before.
+
+You can still write optimistic updates by hand with native `onMutate` / `onError`, `QueryClient`,
+and rollback context.
 `states.<op>.context` and the callbacks infer `onMutate`'s (awaited) return. **TypeScript limit:**
 when `onMutate` has an unannotated parameter _and_ a sibling callback reads the context,
 TypeScript fixes the config before it sees `onMutate`'s return, and that callback's context is
@@ -264,8 +423,14 @@ users.invalidate();
 await users.getById(id); // read → QueryClient cache
 await users.create(body); // write → mutation lifecycle
 users.states.create.isPending;
+users.create.isPending; // this write — not the same as users.isPending (the list query)
+await users.prefetch({ operation: "getById", args: [id] });
+users.cache.get();
 await users.operations.archive(id); // guaranteed namespace
 ```
+
+`query: { infinite: { … } }` gives the facade the infinite result (`fetchNextPage`, `pages`, …)
+next to the same writes and helpers.
 
 `query` takes `useResourceQuery` options minus the shared `queryKey`/`scope`.
 `mutations` is the resource-wide mutation configuration. Read-classified operations run through the query layer and
@@ -284,6 +449,19 @@ off `useResourceQuery`. Use `useResource` for the old all-in-one shape (`users.c
 controllers. Conventional `createOptions`, `updateOptions`, and `deleteOptions` use exact Core
 argument tuples as mutation variables. For example, `mutateAsync([id, body])` for `update`. The advanced entry also exports `ResourceMutationStore`,
 `applyInvalidation`, and `describeOperations` for custom integrations.
+
+## Query and mutation DX additions (unreleased)
+
+Additive: `prefetch`, `cache`, and `cancel` helpers; infinite mode in `useResourceQuery`
+(`createResourceInfiniteQueryOptions`, `prefetchResourceQuery`, `prefetchResourceInfiniteQuery`
+in the advanced entry); mutation state on callable operations; declarative `optimistic` updates;
+Core `idempotency` keys reused across TanStack retries. Behavior changes for existing code:
+
+- A read operation named `prefetch`, `cache`, or `cancel` (or a native infinite-result field) is
+  no longer flattened onto the query result; call it through `operations.<name>`.
+- `invalidateLists()` and mutation `invalidate: "lists"` / `{ lists: true }` also invalidate the
+  resource's infinite lists.
+- The key factory gains `infinite(op?, keyParts?)` and `infinites()`.
 
 ## v1.0.0 breaking changes
 
@@ -305,7 +483,16 @@ After building, run `node scripts/query-performance.mjs [iterations]` from the r
 - Core's `{ full: true }` option is excluded from hook arguments (hooks cache raw payloads); call
   the Core client directly for `ApiResponse` envelopes.
 - Imperative inherited reads use `fetchQuery`'s default `staleTime` (0): each call refetches
-  unless the entry is fresh. Use the reactive hook or `ensureQueryData` for cache-first reads.
+  unless the entry is fresh. Use the reactive hook, `prefetch` (which inherits the hook's
+  `staleTime`), or `ensureQueryData` for cache-first reads.
+- Direct mutation state (`users.create.isPending`) is the latest call, like `useMutation`. It
+  does not mean every earlier concurrent call finished: await each promise, or use native
+  `useMutationState` for all in-flight calls.
+- Optimistic `list` updaters cover regular lists only; reach infinite lists with `targets`.
+  A refetch that started before a call succeeded and lands after it may briefly show data without
+  that call's change, until the success invalidation's refetch arrives.
+- Core `idempotency` applies to declarative operations; a function operation passes its own
+  header through `ctx.request({ headers })`.
 - Hand-written resource objects without Core metadata receive exactly their supplied arguments.
   Automatic signal injection is unavailable for these functions; use an `args` builder and
   `keyParts` to explicitly forward TanStack's signal when the function supports it.
