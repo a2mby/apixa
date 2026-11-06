@@ -24,7 +24,11 @@ import type {
   OperationDefinition,
   OperationRunDefinition,
 } from "../types/definition.js";
-import { OPERATION_METADATA, type OperationMetadata } from "./metadata.js";
+import {
+  OPERATION_METADATA,
+  registerIdempotencyGenerators,
+  type OperationMetadata,
+} from "./metadata.js";
 import type { HeadersSource, PathParams, QueryParams } from "../types/http.js";
 import type { RetryOption } from "../types/retry.js";
 import type { RequestOptions } from "../types/transport.js";
@@ -119,6 +123,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
 
   const out: Record<string, Fn> = {};
   const metadata: Record<string, OperationMetadata> = {};
+  const generators: Record<string, () => string> = {};
   for (const [opName, definition] of Object.entries(operations)) {
     const where = `resources.${name}.operations.${opName}`;
     const convention = isBuiltinName(opName) ? BUILTIN_CONVENTIONS[opName] : undefined;
@@ -142,6 +147,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
         builtin: convention !== undefined,
         implementation: "function",
         optionsIndex: null,
+        idempotency: false,
       });
       continue;
     }
@@ -160,6 +166,14 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       hasBody,
       ...prepareLayers(where, [root, resourceLayer, declared]),
     };
+    if (declared.idempotency !== undefined && declared.idempotency !== false) {
+      const config = declared.idempotency === true ? {} : declared.idempotency;
+      op.idempotency = {
+        header: config.header ?? "Idempotency-Key",
+        generate: config.generate ?? defaultIdempotencyKey,
+      };
+      generators[opName] = op.idempotency.generate;
+    }
     if (convention && "strategy" in convention && hasBody) {
       throw new ConfigError(
         `${where}: hasBody is unsupported on ${opName} (it has no body mapping).`,
@@ -170,6 +184,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       builtin: convention !== undefined,
       implementation: "request",
       optionsIndex: optionsIndexOf(opName, op, hasResourceParams),
+      idempotency: op.idempotency !== undefined,
     });
     const run = (call: CallInput) => runOperation(client, runtime, op, call);
     out[opName] = convention
@@ -182,7 +197,23 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   }
 
   Object.defineProperty(out, OPERATION_METADATA, { value: Object.freeze(metadata) });
+  if (Object.keys(generators).length > 0)
+    registerIdempotencyGenerators(out, Object.freeze(generators));
   return { client: out, store: runtime.mock?.store };
+}
+
+/** `crypto.randomUUID()` (browsers, Node 19+), else a v4 UUID from `getRandomValues`. */
+function defaultIdempotencyKey(): string {
+  const webCrypto = (globalThis as { crypto?: Crypto }).crypto;
+  if (typeof webCrypto?.randomUUID === "function") return webCrypto.randomUUID();
+  if (typeof webCrypto?.getRandomValues !== "function") {
+    throw new ConfigError("idempotency: no Web Crypto in this runtime; pass idempotency.generate.");
+  }
+  const bytes = webCrypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function isRunDefinition(value: unknown): value is OperationRunDefinition {

@@ -31,8 +31,26 @@ export interface LayerOptions extends MiddlewareOptions {
 /** Read/write classification. Builtins use their convention; custom operations declare it. */
 export type OperationKind = "read" | "write";
 
+/**
+ * Opt-in idempotency key for a write. Apixa only sends the key; the backend must deduplicate.
+ * `true` sends a generated UUID in `Idempotency-Key`.
+ */
+export type IdempotencyOption =
+  | boolean
+  | {
+      /** Header name. Default `"Idempotency-Key"`. */
+      header?: string;
+      /** Key generator, called once per logical call. Default `crypto.randomUUID()`. */
+      generate?: () => string;
+    };
+
 export interface OperationDefinition extends LayerOptions {
   method?: HttpMethod;
+  /**
+   * Writes only. One key per logical call, reused across Core retries and an error-middleware
+   * replay. Pass `idempotencyKey` in the call options to supply (and reuse) your own key.
+   */
+  idempotency?: IdempotencyOption;
   /**
    * Custom operations only: `"read"` marks it safe to run as a cached query (integrations such as
    * `@apixa/tanstack-query`). Required for custom operations. Builtins keep their fixed convention.

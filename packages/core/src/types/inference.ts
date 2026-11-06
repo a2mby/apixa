@@ -704,6 +704,19 @@ type ValidateMethodKind<Name, Op> = Op extends { method: infer Method extends st
       : unknown
   : unknown;
 
+type EffectiveKind<Name, Op> = Name extends AllBuiltinOpName
+  ? Conventions[Name]["access"]
+  : Op extends { kind: infer Kind }
+    ? Kind
+    : never;
+type ValidateIdempotency<Name, Op> = Op extends { idempotency: infer I }
+  ? [I] extends [false | undefined]
+    ? unknown
+    : [EffectiveKind<Name, Op>] extends ["write"]
+      ? unknown
+      : { idempotency: ConfigTypeError<`idempotency is only for write operations`> }
+  : unknown;
+
 type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
   ? Name extends AllBuiltinOpName
     ? unknown
@@ -732,6 +745,7 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
     : Op extends object
       ? Exact<Op, OperationDefinition> &
           ValidateMethodKind<Name, Op> &
+          ValidateIdempotency<Name, Op> &
           (Name extends AllBuiltinOpName
             ? unknown
             : (Op extends { method: string }

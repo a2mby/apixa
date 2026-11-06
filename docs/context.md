@@ -97,6 +97,8 @@ operation selection; `AppApi` supplies payload types without repeating paths. Bo
 and direct inferred forms remain supported. Root builtins (`baseURL`, `headers` /
 `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core. Call options
 support `signal` / `timeout`; opt-in `retry` and thin `middleware` shipped in v0.6.0.
+Writes may opt into `idempotency` (`true` or `{ header, generate }`): one key per call,
+reused by Core retries and middleware replay (v1.0.0 workstream, unreleased).
 
 **Implemented (v0.10.0):** `operations` accepts a config object, a function, or `false` per key —
 add, remove, or override any operation, on both `defineApi` and `@apixa/mocking` resources. 11 new
