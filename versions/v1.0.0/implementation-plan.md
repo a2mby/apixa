@@ -16,3 +16,7 @@
 11. **A:** correct advanced controller signatures and availability; retain hook-free options.
 12. **V:** document breaking changes and rerun build, typecheck, tests, packed consumers, and
     available Next/Vite integrations.
+13. **D:** Query DX refinement in the three hooks (prefetch, cache, cancel, infinite mode, direct
+    mutation state, declarative optimistic layers, SSR prefetch helpers) and opt-in Core
+    idempotency; then a hardening pass: deterministic race tests, a runtime matrix on the TanStack
+    peer minimum, real-browser hydration, and packed/Core-only consumers.

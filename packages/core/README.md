@@ -61,6 +61,8 @@ await api.orders.create(body, { idempotencyKey: "checkout-42" }); // your own ke
   (`@apixa/tanstack-query` does this for mutation retries).
 - Apixa only sends the key. Deduplication, persistence, and concurrent identical requests are the
   backend's job; a header alone does not guarantee exactly-once execution.
+- Function operations (`{ kind, run }`) reject `idempotency` with a `ConfigError`; set the header
+  yourself in `ctx.request({ headers: { "Idempotency-Key": key } })`.
 
 ## Retries
 

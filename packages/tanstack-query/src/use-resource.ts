@@ -89,10 +89,7 @@ export type ResourceResult<
   FacadeTail<R, M, TRaw>;
 
 /** Helpers, the guaranteed namespaces, and flat operations (shared by every facade mode). */
-type FacadeTail<R extends object, M, TRaw> = Omit<
-  ReadHelpers<R, TRaw>,
-  "operations" | keyof InheritedReads<R>
-> & {
+type FacadeTail<R extends object, M, TRaw> = Omit<ReadHelpers<R, TRaw>, "operations"> & {
   /** Guaranteed namespace: every inherited and client-only operation, collisions included. */
   operations: ResourceOperations<R, M>;
   /** Native mutation state per write / client-only operation (latest invocation). */

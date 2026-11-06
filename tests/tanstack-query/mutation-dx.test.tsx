@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { defineApi, type TransportRequest } from "@apixa/core";
+import { defineApi, HttpError, type TransportRequest } from "@apixa/core";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { useResource } from "../../packages/tanstack-query/src/use-resource.js";
@@ -193,6 +193,66 @@ describe("idempotency keys through TanStack mutation retries", () => {
     );
     await act(() => result.current.create({ name: "Ada" }, { idempotencyKey: "mine" }));
     expect(keys()).toEqual(["mine"]);
+  });
+
+  it("nested Core and TanStack retries: one key for every attempt, a new key next call", async () => {
+    // Core retries once inside each TanStack attempt; TanStack retries the whole call once.
+    const requests: TransportRequest[] = [];
+    let i = 0;
+    const statuses = [503, 503, 503, 200, 200];
+    const client = defineApi({
+      baseURL: "https://x.dev",
+      retry: { retries: 1, baseDelayMs: 0, jitter: false, methods: ["POST"] },
+      transport: createFakeTransport((request) => {
+        requests.push(request);
+        const status = statuses[Math.min(i++, statuses.length - 1)]!;
+        return { status, body: { id: "1", name: "Ada" } };
+      }),
+      resources: { users: { path: "/users", operations: { create: { idempotency: true } } } },
+    });
+    const { result } = renderHook(
+      () =>
+        useResourceMutation(client.users, {
+          queryKey: ["users"],
+          mutations: { create: { retry: 1, retryDelay: 0 } },
+        }),
+      { wrapper: wrap(newClient()) },
+    );
+    await act(() => result.current.create({ name: "Ada" }));
+    const keys = requests.map((r) => r.headers.get("idempotency-key"));
+    expect(keys).toHaveLength(4); // 2 Core attempts × 2 TanStack attempts
+    expect(new Set(keys).size).toBe(1);
+    await act(() => result.current.create({ name: "Ada" }));
+    expect(requests[4]!.headers.get("idempotency-key")).not.toBe(keys[0]);
+  });
+
+  it("nested retries exhausted: the mutation rejects after 4 attempts that share one key", async () => {
+    const requests: TransportRequest[] = [];
+    const client = defineApi({
+      baseURL: "https://x.dev",
+      retry: { retries: 1, baseDelayMs: 0, jitter: false, methods: ["POST"] },
+      transport: createFakeTransport((request) => {
+        requests.push(request);
+        return { status: 503, body: {} };
+      }),
+      resources: { users: { path: "/users", operations: { create: { idempotency: true } } } },
+    });
+    const { result } = renderHook(
+      () =>
+        useResourceMutation(client.users, {
+          queryKey: ["users"],
+          mutations: { create: { retry: 1, retryDelay: 0 } },
+        }),
+      { wrapper: wrap(newClient()) },
+    );
+    await act(async () => {
+      await expect(result.current.create({ name: "Ada" })).rejects.toBeInstanceOf(HttpError);
+    });
+    await waitFor(() => expect(result.current.create.isError).toBe(true));
+    const keys = requests.map((r) => r.headers.get("idempotency-key"));
+    expect(keys).toHaveLength(4);
+    expect(new Set(keys).size).toBe(1);
+    expect(result.current.create.failureCount).toBe(2);
   });
 
   it("operations without idempotency never get a key", async () => {

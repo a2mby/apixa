@@ -18,6 +18,14 @@
 - Read-only query and write-only mutation exposure; removal of `readOperations` and the
   single-operation mutation overload; flat `useResource` mutation configuration.
 - Advanced controller signatures that preserve Core operation arguments and results.
+- Query DX refinement inside the three hooks (no new hooks): `prefetch`, `cache.get/set/remove`,
+  and `cancel` on query results; infinite mode in `useResourceQuery` on native
+  `useInfiniteQuery`; direct mutation state on callable writes; declarative, concurrency-safe
+  `optimistic` updates; advanced `prefetchResourceQuery` / `prefetchResourceInfiniteQuery` for SSR;
+  `"lists"` invalidation covering infinite lists.
+- Opt-in Core `idempotency` on write operations (one key per call, reused by Core retries,
+  middleware replay, and TanStack mutation retries). Off by default; the only Core behavior
+  addition in this workstream.
 
 ## Out
 
