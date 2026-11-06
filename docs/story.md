@@ -2,6 +2,13 @@
 
 Project log. Newest entry first.
 
+## 2026-11-07 — Stale fetches can no longer replace confirmed mutation data
+
+A fetch sent before a write reached the server is now restarted when the write succeeds, instead of
+landing afterwards and restoring old data on optimistic or inactive entries. Deterministic race and
+manual-cache-takeover tests cover the behaviour, and the Query README documents the optimistic
+ordering model. Part of the v1.0.0 Query hardening.
+
 ## 2026-11-06 — Query DX: prefetch, cache, infinite, optimistic, and mutation state
 
 The three Query hooks now cover prefetching, typed cache access, cancellation, infinite lists, live

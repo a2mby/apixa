@@ -4,7 +4,12 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import { createIdempotencyKey } from "@apixa/core";
-import { OptimisticLayers, type OptimisticTarget } from "./optimistic.js";
+import {
+  inFlightFetches,
+  OptimisticLayers,
+  restartStaleFetches,
+  type OptimisticTarget,
+} from "./optimistic.js";
 import {
   assertNoFullResponse,
   describeOperations,
@@ -168,8 +173,17 @@ export class ResourceMutationStore {
         return run(...withIdempotencyKey(owner, name, info, args, idempotencyKeys));
       },
       onSuccess: async (data, args, onMutateResult, context) => {
-        layers?.settle(args, true);
-        await applyInvalidation(policy, { client: context.client, keys, data, args });
+        // Fetches of optimistic entries sent before the server had this change are stale.
+        const stale = layers?.settle(args, true) ?? [];
+        const invalidation = applyInvalidation(policy, {
+          client: context.client,
+          keys,
+          data,
+          args,
+        });
+        // After invalidation has (synchronously) restarted what it covers, restart the rest.
+        restartStaleFetches(stale);
+        await invalidation;
         return success?.(data, args, onMutateResult, context);
       },
     };
@@ -247,6 +261,19 @@ type InvalidationContext = {
   args: unknown[];
 };
 
+/**
+ * Native `invalidateQueries`, plus one correction: a fetch already in flight for an inactive entry
+ * was sent before the write and would land afterwards, clearing the invalid mark with old data.
+ * Active entries are restarted by TanStack itself (`cancelRefetch`); only still-current fetches of
+ * the rest are restarted here, so no request is added for idle entries.
+ */
+function invalidate(client: QueryClient, queryKey: readonly unknown[]): Promise<void> {
+  const inFlight = inFlightFetches(client.getQueryCache().findAll({ queryKey }));
+  const done = client.invalidateQueries({ queryKey });
+  restartStaleFetches(inFlight);
+  return done;
+}
+
 /** Delegates to `QueryClient.invalidateQueries`; awaited before the consumer `onSuccess`. */
 export async function applyInvalidation(
   policy: unknown,
@@ -254,12 +281,9 @@ export async function applyInvalidation(
 ): Promise<void> {
   if (policy === false || policy === undefined) return;
   if (policy === true || policy === "all") {
-    await client.invalidateQueries({ queryKey: keys.all() });
+    await invalidate(client, keys.all());
   } else if (policy === "lists") {
-    await Promise.all([
-      client.invalidateQueries({ queryKey: keys.lists() }),
-      client.invalidateQueries({ queryKey: keys.infinites() }),
-    ]);
+    await Promise.all([invalidate(client, keys.lists()), invalidate(client, keys.infinites())]);
   } else if (typeof policy === "function") {
     await policy({ client, keys, data, args });
   } else if (typeof policy === "object") {
@@ -268,11 +292,9 @@ export async function applyInvalidation(
       details?: (data: unknown, args: unknown[]) => readonly unknown[];
     };
     await Promise.all([
-      lists ? client.invalidateQueries({ queryKey: keys.lists() }) : undefined,
-      lists ? client.invalidateQueries({ queryKey: keys.infinites() }) : undefined,
-      ...(details?.(data, args) ?? []).map((id) =>
-        client.invalidateQueries({ queryKey: keys.detail(id) }),
-      ),
+      lists ? invalidate(client, keys.lists()) : undefined,
+      lists ? invalidate(client, keys.infinites()) : undefined,
+      ...(details?.(data, args) ?? []).map((id) => invalidate(client, keys.detail(id))),
     ]);
   }
 }

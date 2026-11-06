@@ -22,9 +22,18 @@ name)`; operation metadata gains `idempotency`.
   calls keep them), rollback after unmount, native callback order preserved. TanStack mutation
   retries reuse one idempotency key per call.
 
+### Fixed — TanStack Query DX refinement
+
+- `@apixa/tanstack-query` — a fetch sent before a write reached the server could land after the
+  write succeeded and replace confirmed data: optimistic entries not covered by the mutation's
+  invalidation kept the stale response, and an in-flight fetch of an inactive entry cleared its
+  invalid mark with old data. Such fetches are now restarted (native `cancelRefetch`) when the
+  write succeeds.
+
 ### Changed — TanStack Query DX refinement
 
-- `invalidateLists()` and `invalidate: "lists"` also cover infinite lists. Reads named `prefetch`,
+- `invalidateLists()` and `invalidate: "lists"` also cover infinite lists. Mutation invalidation
+  restarts a fetch already running for an inactive matching entry. Reads named `prefetch`,
   `cache`, `cancel`, or a native infinite-result field are only reachable through `operations`.
 
 ### Removed — `@apixa/mocking`

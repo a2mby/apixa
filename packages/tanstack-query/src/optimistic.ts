@@ -28,6 +28,34 @@ export type OptimisticTarget = {
   update(current: never): unknown;
 };
 
+/** A fetch that was in flight at some moment, identified by its native promise. */
+export type InFlightFetch = { query: Query; promise: Promise<unknown> };
+
+/** The fetches currently in flight for `queries` (entries with data only; see below). */
+export function inFlightFetches(queries: Iterable<Query>): InFlightFetch[] {
+  const out: InFlightFetch[] = [];
+  for (const query of queries) {
+    const promise = query.promise;
+    if (query.state.fetchStatus === "fetching" && query.state.data !== undefined && promise) {
+      out.push({ query, promise });
+    }
+  }
+  return out;
+}
+
+/**
+ * Restarts fetches that were sent before a write reached the server and are still the entry's
+ * current fetch (nothing, such as a native invalidation, has replaced them since). Like native
+ * `refetch({ cancelRefetch: true })`: the old response is discarded and callers awaiting it get
+ * the new one. Entries without data are not restarted (TanStack would dedupe the fetch anyway).
+ */
+export function restartStaleFetches(fetches: readonly InFlightFetch[]): void {
+  for (const { query, promise } of fetches) {
+    if (query.state.fetchStatus !== "fetching" || query.promise !== promise) continue;
+    void query.fetch(undefined, { cancelRefetch: true }).catch(() => undefined);
+  }
+}
+
 const REGISTRIES = new WeakMap<QueryClient, OptimisticLayers>();
 
 /**
@@ -101,12 +129,20 @@ export class OptimisticLayers {
     this.#subscribe();
   }
 
-  settle(token: object, succeeded: boolean): void {
+  /**
+   * Settles one mutation's layers. On success, returns the fetches of its entries that were in
+   * flight at commit time: they were sent before the server had the change, so their responses
+   * are stale (pass them to `restartStaleFetches` once invalidation has started).
+   */
+  settle(token: object, succeeded: boolean): InFlightFetch[] {
+    const inFlight: InFlightFetch[] = [];
     for (const [hash, entry] of [...this.#entries]) {
       const index = entry.layers.findIndex((layer) => layer.token === token);
       if (index === -1) continue;
-      if (succeeded) entry.layers[index]!.committed = true;
-      else entry.layers.splice(index, 1);
+      if (succeeded) {
+        entry.layers[index]!.committed = true;
+        inFlight.push(...inFlightFetches([entry.query]));
+      } else entry.layers.splice(index, 1);
       if (entry.layers.every((layer) => layer.committed)) {
         // Nothing pending: visible data is final until the next server fetch.
         if (!succeeded) this.#write(entry);
@@ -116,6 +152,7 @@ export class OptimisticLayers {
       }
     }
     this.#maybeUnsubscribe();
+    return inFlight;
   }
 
   #write(entry: Entry): void {
