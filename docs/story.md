@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-06 — Harden Query parity and explicit mocking register (#65)
+
+Named mock datasets now load only after an explicit `@apixa/mocking/register` import (Core
+`registerMockDatasetLoader`), instead of a dynamic Core import of the mocking package.
+`@apixa/tanstack-query` tightens `useResource` / plain-signature / mutation-callback parity with
+native TanStack, bumps the React Query peer floor to 5.90.1, and extends consumer verification
+scripts and tests. Advances the in-progress v1.0.0 Query workstream.
+
 ## 2026-11-04 — Land v1.0.0 TanStack Query workstream (#63)
 
 Shipped the Query workstream under `versions/v1.0.0/`: Core operation `kind` / metadata so

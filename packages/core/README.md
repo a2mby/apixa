@@ -34,7 +34,7 @@ Context: `{ request, response?, attempt, meta }`.
 
 ## Plugin seams
 
-`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. Runtime mocking stays in optional peer `@apixa/mocking` (`mock: "<dataset-id>"`).
+`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), install `@apixa/mocking` and import `@apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration.
 
 ## Errors
 

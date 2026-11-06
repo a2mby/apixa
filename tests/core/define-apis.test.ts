@@ -1,3 +1,4 @@
+import "../../packages/mocking/src/register.js";
 import { ConfigError, defineApis, type TransportRequest } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";

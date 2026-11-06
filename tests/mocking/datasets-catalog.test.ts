@@ -1,3 +1,4 @@
+import "../../packages/mocking/src/register.js";
 import { defineApi, listMockDatasetIds, MOCK_DATASETS } from "@apixa/core";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -47,11 +48,11 @@ describe("one coherent dataset catalog", () => {
     }
   });
 
-  it("the package has no side effects", async () => {
+  it("only the explicit registration entry has side effects", async () => {
     const pkg = JSON.parse(await readFile(resolve(pkgRoot, "package.json"), "utf8")) as {
       sideEffects: unknown;
     };
-    expect(pkg.sideEffects).toBe(false);
+    expect(pkg.sideEffects).toEqual(["./dist/register.js"]);
   });
 
   it("an unknown dataset id never reaches the loader", () => {

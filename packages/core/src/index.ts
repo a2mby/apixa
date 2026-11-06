@@ -33,8 +33,9 @@ export {
   MOCK_DATASETS,
   isMockDatasetId,
   listMockDatasetIds,
+  registerMockDatasetLoader,
 } from "./mock/index.js";
-export type { MockSource } from "./mock/index.js";
+export type { MockSource, MockDatasetLoader } from "./mock/index.js";
 
 export { convertKey, transformKeys, KEY_CASES } from "./transform/index.js";
 

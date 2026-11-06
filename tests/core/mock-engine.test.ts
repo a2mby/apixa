@@ -1,3 +1,4 @@
+import "../../packages/mocking/src/register.js";
 import {
   ConfigError,
   defineApi,

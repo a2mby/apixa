@@ -4,7 +4,7 @@
  * - `defineMockApi()` — standalone in-memory mock API (no `defineApi()`, no network), built on
  *   Core's shared mock engine so its operations behave exactly like Core mocked resources.
  * - Core `defineApi` resources accept `mock: "<dataset-id>" | records | provider` directly; Core
- *   lazy-loads the selected dataset from `@apixa/mocking/datasets`. No setup call is needed.
+ *   uses `@apixa/mocking/register` to opt in to the lazy named-dataset loader.
  *
  * Node filesystem loaders live at `@apixa/mocking/node`; typed records at `@apixa/mocking/data`.
  */

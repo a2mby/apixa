@@ -118,6 +118,12 @@ export class ResourceMutationStore {
     const resource = this.resource as Record<string, AnyFn>;
     const keys = this.keys;
     const policy = invalidate ?? (info?.kind === "read" ? false : "all");
+    const defaultSuccess = this.client.defaultMutationOptions<
+      MutationObserverOptions<unknown, Error, unknown[], unknown>
+    >({ mutationKey: keys.mutation(name) }).onSuccess;
+    const success = Object.prototype.hasOwnProperty.call(config[name] ?? {}, "onSuccess")
+      ? onSuccess
+      : defaultSuccess;
     return {
       ...native,
       mutationKey: keys.mutation(name),
@@ -130,7 +136,7 @@ export class ResourceMutationStore {
       },
       onSuccess: async (data, args, onMutateResult, context) => {
         await applyInvalidation(policy, { client: context.client, keys, data, args });
-        return onSuccess?.(data, args, onMutateResult, context);
+        return success?.(data, args, onMutateResult, context);
       },
     };
   }

@@ -467,3 +467,63 @@ describe("resource-wide useResourceMutation", () => {
     errors.mockRestore();
   });
 });
+
+describe("mutation default callbacks", () => {
+  it("matches native callback precedence and invalidates once", async () => {
+    const { MutationObserver } = await import("@tanstack/react-query");
+    for (const local of [false, true]) {
+      const nativeCalls: string[] = [];
+      const apixaCalls: string[] = [];
+      const nativeClient = new QueryClient({
+        defaultOptions: {
+          mutations: {
+            onSuccess: async () => {
+              nativeCalls.push("default");
+            },
+          },
+        },
+      });
+      const client = new QueryClient({
+        defaultOptions: {
+          mutations: {
+            onSuccess: async () => {
+              apixaCalls.push("default");
+            },
+          },
+        },
+      });
+      const invalidate = vi.spyOn(client, "invalidateQueries");
+      const native = new MutationObserver(nativeClient, {
+        mutationFn: async () => "ok",
+        ...(local
+          ? {
+              onSuccess: async () => {
+                nativeCalls.push("local");
+              },
+            }
+          : {}),
+      });
+      await native.mutate(undefined);
+      const resource = { create: async () => "ok" };
+      const { result } = renderHook(
+        () =>
+          useResourceMutation(resource, {
+            queryKey: ["users"],
+            mutations: {
+              create: local
+                ? {
+                    onSuccess: async () => {
+                      apixaCalls.push("local");
+                    },
+                  }
+                : {},
+            },
+          }),
+        { wrapper: wrap(client) },
+      );
+      await act(() => result.current.create());
+      expect(apixaCalls).toEqual(nativeCalls);
+      expect(invalidate).toHaveBeenCalledTimes(1);
+    }
+  });
+});

@@ -1,4 +1,3 @@
-/// <reference path="../ambient-mocking-datasets.d.ts" />
 import { MockError } from "../errors/index.js";
 import type { MockDatasetCatalog, MockDatasetId } from "../types/mock-datasets.js";
 
@@ -33,18 +32,23 @@ export function listMockDatasetIds(): MockDatasetId[] {
   return Object.keys(MOCK_DATASETS) as MockDatasetId[];
 }
 
-/** Load one dataset's records through the optional `@apixa/mocking` peer (lazy, per dataset). */
+/** Loader installed explicitly by an optional dataset integration. Records remain lazy. */
+export type MockDatasetLoader = (id: string) => Promise<readonly unknown[]>;
+let datasetLoader: MockDatasetLoader | undefined;
+
+/** Register the named-dataset loader. Mock stores and data remain scoped to each client. */
+export function registerMockDatasetLoader(loader: MockDatasetLoader): void {
+  datasetLoader = loader;
+}
+
+/** Load one dataset through the explicitly registered optional integration. */
 export async function loadNamedDataset(id: MockDatasetId): Promise<readonly unknown[]> {
-  let mod: { loadDatasetRecords(id: string): Promise<readonly unknown[]> };
-  try {
-    mod = await import("@apixa/mocking/datasets");
-  } catch (cause) {
+  if (!datasetLoader) {
     throw new MockError(
       "MOCK_LOAD",
-      `mock: "${id}" needs the optional peer "@apixa/mocking" (it ships the dataset records). ` +
-        `Install it, or pass inline records / a provider instead.`,
-      { cause },
+      `mock: "${id}" needs the optional "@apixa/mocking" integration. ` +
+        `Install it and import "@apixa/mocking/register", or pass inline records / a provider instead.`,
     );
   }
-  return mod.loadDatasetRecords(id);
+  return datasetLoader(id);
 }

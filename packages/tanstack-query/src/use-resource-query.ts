@@ -29,6 +29,7 @@ import type {
   InferGetByIdArg,
   InheritedReads,
   OperationReturn,
+  OptionalOperationName,
   QueryOperationName,
 } from "./types.js";
 
@@ -103,7 +104,16 @@ type DefinedData<T> = { initialData: T | (() => T) };
  */
 export function useResourceQuery<R extends object>(
   resource: R,
-  options: "getAll" extends CallableOperationName<R> ? never : OperationOnlyQueryOptions,
+  options: "getAll" extends CallableOperationName<R> | OptionalOperationName<R>
+    ? never
+    : OperationOnlyQueryOptions,
+): ResourceOperationsQueryResult<R>;
+export function useResourceQuery<
+  R extends object,
+  Selected = OperationReturn<ListResource<R>, "getAll">,
+>(
+  resource: R,
+  options: "getAll" extends OptionalOperationName<R> ? UseResourceQueryOptions<R, Selected> : never,
 ): ResourceOperationsQueryResult<R>;
 export function useResourceQuery<
   R extends object,

@@ -36,6 +36,7 @@ export type { ResourceController } from "./controller.js";
 export { createResourceKeys } from "./keys.js";
 
 export { syncCacheAfterCreate, syncCacheAfterUpdate, syncCacheAfterDelete } from "./cache.js";
+export type { CompleteEntityMapping } from "./cache.js";
 
 export type {
   ResourceLike,

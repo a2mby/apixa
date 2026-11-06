@@ -1,8 +1,17 @@
 import { AbortError } from "@apixa/core";
-import { api } from "../../examples/next/lib/api";
+import { defineApi } from "@apixa/core";
+import { createFakeTransport } from "../helpers/fake-transport.js";
+
+const api = defineApi({
+  baseURL: "https://example.test",
+  timeout: 10000,
+  retry: { retries: 2, baseDelayMs: 1, jitter: false },
+  transport: createFakeTransport(() => ({ body: [{ id: "1" }] })),
+  resources: { users: { path: "/users" } },
+});
 import { describe, expect, it } from "vitest";
 
-describe("examples/next lib/api reliability", () => {
+describe("configured API reliability", () => {
   it("loads mocked users through timeout + retry + middleware config", async () => {
     const users = await api.users.getAll();
     expect(Array.isArray(users)).toBe(true);

@@ -294,7 +294,7 @@ Behaviour **[Fact]** (`resource.ts`): every method returns `structuredClone`s; `
 `useResourceQuery(resource, { queryKey, scope?, query?, enabled?, staleTime?, gcTime?, refetchOnWindowFocus?, mutations? })` returns list state (`data,isPending,…,query`), imperatives (`getById, create, update(id, body), delete, invalidate, refetch`), `keys`, `mutations.{create,update,delete}` (full `UseMutationResult`s), `controller`.
 `/advanced`: `createResourceController`, `createResourceKeys`, `syncCacheAfterCreate/Update/Delete`.
 Keys: `[...scope, ...queryKey, "list", query?]`, `[…, "detail", id]`, `[…, "mutation", op]`.
-Cache policy **[Fact]** (`cache.ts`): create → seed `detail(id)` + invalidate lists; update → seed detail (or invalidate) + invalidate lists; delete → remove detail + invalidate lists; Apixa sync runs _before_ consumer `onSuccess`. `ResourceLike` still requires only the original 5 ops (`types.ts`); the working tree adds `useResourceMutation` (Appendix V) for the other builtins and custom ops.
+Cache policy **[Fact]** (`cache.ts`): create → invalidate lists; update → invalidate detail and lists; explicit complete-entity mappings can seed details; delete → remove detail + invalidate lists; Apixa sync runs _before_ consumer `onSuccess`. `ResourceLike` still requires only the original 5 ops (`types.ts`); the working tree adds `useResourceMutation` (Appendix V) for the other builtins and custom ops.
 
 ### G4. Deprecated / internal-but-exported
 

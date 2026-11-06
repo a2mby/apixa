@@ -1,6 +1,7 @@
 "use client";
 
-import type { QueryKey, UseQueryResult } from "@tanstack/react-query";
+import type { DefinedUseQueryResult, QueryKey, UseQueryResult } from "@tanstack/react-query";
+import type { ExplicitResourceQueryOptions } from "./query-options.js";
 import { composeResult } from "./compose.js";
 import type {
   ResourceMutationOperations,
@@ -22,16 +23,22 @@ import {
   type RuntimeResourceMutationOptions,
 } from "./use-resource-mutation.js";
 import type {
+  AsyncFn,
   CallableOperationName,
+  QueryOperationName,
   InheritedReadName,
   InheritedReads,
   OperationReturn,
   OptionalReadName,
+  OptionalOperationName,
 } from "./types.js";
 
+type HasOptionalList<R> = "getAll" extends OptionalOperationName<R> ? true : false;
 type HasList<R> = "getAll" extends CallableOperationName<R> ? true : false;
 type DefaultData<R> = HasList<R> extends true ? OperationReturn<ListResource<R>, "getAll"> : never;
 type Shared = "queryKey" | "scope";
+type WithoutShared<T> = T extends unknown ? Omit<T, Shared> : never;
+type DefinedData<T> = { initialData: T | (() => T) };
 
 export type UseResourceOptions<R, Selected = DefaultData<R>, M = {}> = {
   /** Resource identity shared by the query and every mutation. */
@@ -40,8 +47,10 @@ export type UseResourceOptions<R, Selected = DefaultData<R>, M = {}> = {
   scope?: QueryKey;
   /** Exactly `useResourceQuery`'s options, minus the shared identity. */
   query?: HasList<R> extends true
-    ? Omit<UseResourceQueryOptions<R, Selected>, Shared>
-    : Omit<OperationOnlyQueryOptions, Shared>;
+    ? WithoutShared<UseResourceQueryOptions<R, Selected>>
+    : HasOptionalList<R> extends true
+      ? WithoutShared<UseResourceQueryOptions<R, Selected>>
+      : Omit<OperationOnlyQueryOptions, Shared>;
   /** Exactly `useResourceMutation`'s options, minus the shared identity. */
   mutation?: Omit<UseResourceMutationOptions<R, M>, Shared>;
 };
@@ -56,8 +65,16 @@ export type ResourceResult<
   R extends object,
   Selected = DefaultData<R>,
   M = {},
-> = (HasList<R> extends true
-  ? UseQueryResult<Selected, Error> & { query: UseQueryResult<Selected, Error> }
+  Observed extends boolean = HasList<R>,
+  Defined extends boolean = false,
+> = (Observed extends true
+  ? (Defined extends true
+      ? DefinedUseQueryResult<Selected, Error>
+      : UseQueryResult<Selected, Error>) & {
+      query: Defined extends true
+        ? DefinedUseQueryResult<Selected, Error>
+        : UseQueryResult<Selected, Error>;
+    }
   : {}) &
   Omit<ResourceOperationsQueryResult<R>, "operations" | keyof InheritedReads<R>> & {
     /** Guaranteed namespace: every inherited and client-only operation, collisions included. */
@@ -71,9 +88,53 @@ export type ResourceResult<
  * Flat query state (`users.data`), flat operations (`users.create(body)`, `users.getById(id)`),
  * `users.operations.*` for every operation, and `users.states.*` for mutation state.
  */
+export function useResource<
+  R extends object,
+  const N extends QueryOperationName<R>,
+  Selected = OperationReturn<R, N>,
+  M extends object = {},
+>(
+  resource: R,
+  options: Omit<UseResourceOptions<R, Selected, M>, "query"> & {
+    query: WithoutShared<ExplicitResourceQueryOptions<R, NoInfer<N>, Selected>> & {
+      operation: N;
+    } & DefinedData<OperationReturn<R, N>>;
+  },
+): ResourceResult<R, Selected, M, true, true>;
+export function useResource<
+  R extends object,
+  const N extends QueryOperationName<R>,
+  Selected = OperationReturn<R, N>,
+  M extends object = {},
+>(
+  resource: R,
+  options: Omit<UseResourceOptions<R, Selected, M>, "query"> & {
+    query: WithoutShared<ExplicitResourceQueryOptions<R, NoInfer<N>, Selected>> & { operation: N };
+  },
+): ResourceResult<R, Selected, M, true>;
+export function useResource<
+  R extends { getAll: AsyncFn },
+  Selected = DefaultData<R>,
+  M extends object = {},
+>(
+  resource: R,
+  options: Omit<UseResourceOptions<R, Selected, M>, "query"> & {
+    query: WithoutShared<UseResourceQueryOptions<R, Selected>> &
+      DefinedData<OperationReturn<ListResource<R>, "getAll">>;
+  },
+): ResourceResult<R, Selected, M, true, true>;
 export function useResource<R extends object, Selected = DefaultData<R>, M extends object = {}>(
   resource: R,
-  options: UseResourceOptions<R, Selected, M>,
+  options: UseResourceOptions<R, Selected, M> &
+    (HasList<R> extends true
+      ? {} extends WithoutShared<UseResourceQueryOptions<R, Selected>>
+        ? {}
+        : { query: WithoutShared<UseResourceQueryOptions<R, Selected>> }
+      : HasOptionalList<R> extends true
+        ? {} extends WithoutShared<UseResourceQueryOptions<R, Selected>>
+          ? {}
+          : { query: WithoutShared<UseResourceQueryOptions<R, Selected>> }
+        : {}),
 ): ResourceResult<R, Selected, M>;
 export function useResource(resource: object, options: RuntimeResourceOptions): unknown {
   const { queryKey, scope } = options;

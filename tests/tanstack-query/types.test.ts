@@ -115,7 +115,12 @@ describe("useResourceMutation inference from real defineApi clients", () => {
       const create = useResourceMutation(api.users, "create", { queryKey: ["users"] });
       expectTypeOf(create.mutateAsync)
         .parameter(0)
-        .toEqualTypeOf<Parameters<typeof api.users.create>>();
+        .toEqualTypeOf<
+          import("../../packages/tanstack-query/src/types.js").OperationParameters<
+            typeof api.users,
+            "create"
+          >
+        >();
       expectTypeOf(create.mutateAsync).returns.resolves.toEqualTypeOf<User>();
       void create.mutateAsync([{ name: "Ada", email: "a@x.dev" }]);
       // @ts-expect-error create takes a tuple, not a bare body
@@ -149,7 +154,12 @@ describe("useResourceMutation inference from real defineApi clients", () => {
       const archive = useResourceMutation(api.users, "archive", { queryKey: ["users"] });
       expectTypeOf(archive.mutateAsync)
         .parameter(0)
-        .toEqualTypeOf<Parameters<typeof api.users.archive>>();
+        .toEqualTypeOf<
+          import("../../packages/tanstack-query/src/types.js").OperationParameters<
+            typeof api.users,
+            "archive"
+          >
+        >();
       void archive.mutateAsync(["42"]);
     }
     expect(true).toBe(true);
@@ -342,5 +352,21 @@ describe("query typing with defineApis and runtime selection", () => {
       expectTypeOf(opOnly.operations).toHaveProperty("count");
     }
     expect(true).toBe(true);
+  });
+});
+
+describe("builder and legacy argument contracts", () => {
+  it("requires builder identity and rejects full responses", () => {
+    if (false as boolean) {
+      const optional = { getAll: async (_options?: { filter?: string }) => [] as string[] };
+      // @ts-expect-error argument builders require explicit cache identity
+      createResourceQueryOptions(optional, { queryKey: ["users"], args: () => [] });
+      createResourceQueryOptions(optional, { queryKey: ["users"], args: () => [], keyParts: [] });
+      const api = defineApi<AppApi>()({ ...base, resources: { users: { path: "/users" } } });
+      const mutation = useResourceMutation(api.users, "getAll", { queryKey: ["users"] });
+      void mutation.mutateAsync([{ full: false }]);
+      // @ts-expect-error the hook supports raw payloads only
+      void mutation.mutateAsync([{ full: true }]);
+    }
   });
 });

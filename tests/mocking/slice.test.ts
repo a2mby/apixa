@@ -1,3 +1,4 @@
+import "../../packages/mocking/src/register.js";
 import { describe, expect, it } from "vitest";
 import { defineApi } from "@apixa/core";
 import { defineMockApi, InvalidSliceError, MockingErrors } from "@apixa/mocking";

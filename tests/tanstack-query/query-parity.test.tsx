@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { defineApi, isHttpError, isTimeoutError } from "@apixa/core";
+import { defineApi, isHttpError, isTimeoutError, OPERATION_METADATA } from "@apixa/core";
 import {
   QueryClient,
   QueryClientProvider,
@@ -30,6 +30,19 @@ function wrapper(queryClient: QueryClient) {
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+}
+
+/** Test double carrying the same metadata Core supplies for generated operations. */
+function coreFixture<R extends object>(resource: R, positions: Record<string, number>): R {
+  Object.defineProperty(resource, OPERATION_METADATA, {
+    value: Object.fromEntries(
+      Object.entries(positions).map(([name, optionsIndex]) => [
+        name,
+        { kind: "read", builtin: true, implementation: "request", optionsIndex },
+      ]),
+    ),
+  });
+  return resource;
 }
 
 describe("native query parity and read operations", () => {
@@ -115,7 +128,7 @@ describe("native query parity and read operations", () => {
       expect(options?.signal).toBeInstanceOf(AbortSignal);
       return ada;
     });
-    const resource = { getById };
+    const resource = coreFixture({ getById }, { getById: 1 });
     const queryClient = client();
     const { result } = renderHook(
       () =>
@@ -197,6 +210,14 @@ describe("native query parity and read operations", () => {
       search: vi.fn(async (_options?: { query?: { name: string }; signal?: AbortSignal }) => [ada]),
       exists: vi.fn(async (_id: string, _options?: { signal?: AbortSignal }) => true),
     };
+    coreFixture(resource, {
+      getBySlug: 1,
+      getMany: 1,
+      getBy: 2,
+      findFirst: 1,
+      search: 0,
+      exists: 1,
+    });
     const queryClient = client();
     const root = { queryKey: ["users"] };
     expect(
@@ -265,13 +286,10 @@ describe("native query parity and read operations", () => {
       expect(options?.signal).toBeInstanceOf(AbortSignal);
       return [ada];
     });
-    const options = createResourceQueryOptions(
-      { getAll },
-      {
-        queryKey: ["users"],
-        args: [{}],
-      },
-    );
+    const options = createResourceQueryOptions(coreFixture({ getAll }, { getAll: 0 }), {
+      queryKey: ["users"],
+      args: [{}],
+    });
     expect(await client().fetchQuery(options)).toEqual([ada]);
     expect(getAll).toHaveBeenCalledTimes(1);
 
@@ -279,14 +297,11 @@ describe("native query parity and read operations", () => {
       expect(options?.signal).toBeInstanceOf(AbortSignal);
       return ada;
     });
-    const detail = createResourceQueryOptions(
-      { getById },
-      {
-        queryKey: ["users"],
-        operation: "getById",
-        args: ["42", {}],
-      },
-    );
+    const detail = createResourceQueryOptions(coreFixture({ getById }, { getById: 1 }), {
+      queryKey: ["users"],
+      operation: "getById",
+      args: ["42", {}],
+    });
     expect(await client().fetchQuery(detail)).toEqual(ada);
     expect(getById).toHaveBeenCalledTimes(1);
 
@@ -298,14 +313,11 @@ describe("native query parity and read operations", () => {
       },
     );
     await client().fetchQuery(
-      createResourceQueryOptions(
-        { findFirst },
-        {
-          queryKey: ["users"],
-          operation: "findFirst",
-          args: [{ query: "Ada" }],
-        },
-      ),
+      createResourceQueryOptions(coreFixture({ findFirst }, { findFirst: 1 }), {
+        queryKey: ["users"],
+        operation: "findFirst",
+        args: [{ query: "Ada" }],
+      }),
     );
   });
 
@@ -348,7 +360,7 @@ describe("native query parity and read operations", () => {
 
   it("rejects Core full-response requests that would break raw-data inference", () => {
     expect(() =>
-      createResourceQueryOptions({ getAll: async () => [ada] }, {
+      createResourceQueryOptions(coreFixture({ getAll: async () => [ada] }, { getAll: 0 }), {
         queryKey: ["users"],
         args: [{ full: true }],
       } as never),
@@ -391,6 +403,7 @@ describe("native query parity and read operations", () => {
         return new Promise<User>(() => {});
       }),
     };
+    coreFixture(resource, { getById: 1 });
     const queryClient = client();
     const { result } = renderHook(
       () =>

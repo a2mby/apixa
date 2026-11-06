@@ -28,8 +28,12 @@ try {
   run("pnpm", ["--dir", "packages/core", "pack", "--pack-destination", pack]);
   run("pnpm", ["--dir", "packages/mocking", "pack", "--pack-destination", pack]);
   run("pnpm", ["--dir", "packages/tanstack-query", "pack", "--pack-destination", pack]);
-  for (const major of [18, 19]) {
-    const directory = join(temporary, `react-${major}`);
+  for (const [major, withMocking] of [
+    [18, false],
+    [19, false],
+    [19, true],
+  ]) {
+    const directory = join(temporary, `react-${major}${withMocking ? "-mocking" : "-standalone"}`);
     mkdirSync(directory);
     writeFileSync(
       join(directory, "package.json"),
@@ -40,17 +44,19 @@ try {
           pnpm: { overrides: { "@apixa/core": `file:${coreTarball}` } },
           dependencies: {
             "@apixa/core": `file:${coreTarball}`,
-            // Core's optional dynamic dataset import must resolve in a Vite bundle.
-            "@apixa/mocking": `file:${mockingTarball}`,
+            ...(withMocking ? { "@apixa/mocking": `file:${mockingTarball}` } : {}),
             "@apixa/tanstack-query": `file:${queryTarball}`,
-            "@tanstack/react-query": "5.104.4",
-            react: major === 18 ? "18.3.1" : "19.3.0",
-            "react-dom": major === 18 ? "18.3.1" : "19.3.0",
+            "@tanstack/react-query": major === 18 ? "5.90.1" : "5.104.4",
+            react: major === 18 ? "18.3.1" : "19.1.1",
+            "react-dom": major === 18 ? "18.3.1" : "19.1.1",
           },
           devDependencies: {
             "@types/react": major === 18 ? "^18.3.0" : "^19.1.13",
             "@types/react-dom": major === 18 ? "^18.3.0" : "^19.1.9",
+            "@types/node": "^22.13.10",
             typescript: "^5.8.2",
+            jsdom: "^26.1.0",
+            ...(major === 19 ? { next: "15.5.27" } : {}),
             vite: "^6.3.5",
           },
         },
@@ -84,7 +90,7 @@ try {
     );
     writeFileSync(
       join(directory, "src.tsx"),
-      `import { defineApi, getOperationMetadata } from "@apixa/core";
+      `${withMocking ? 'import "@apixa/mocking/register";\n' : ""}import { defineApi, getOperationMetadata } from "@apixa/core";
 import { useResource, useResourceMutation, useResourceQuery } from "@apixa/tanstack-query";
 import { createResourceQueryOptions } from "@apixa/tanstack-query/advanced";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -105,7 +111,23 @@ const api = defineApi<{ users: { entity: User } }>()({
 const options = createResourceQueryOptions(api.users, { queryKey: ["users"] });
 const client = new QueryClient();
 if (getOperationMetadata(api.users)?.stats?.kind !== "read") throw new Error("metadata missing");
+const optionalArgs = { getAll: async (org?: string) => [org] };
+const dynamic: { getAll?: (org: string) => Promise<string[]> } = {};
+const noList = { getById: async (id: string) => ({ id }) };
+const parameterized = { getAll: async (org: string) => [{ id: org }], getById: async (id: string) => ({ id }) };
 function App() {
+  // @ts-expect-error required default-query argument
+  useResource(parameterized, { queryKey: ["parameterized"] });
+  // @ts-expect-error dynamically optional getAll still needs arguments when present
+  useResource(dynamic, { queryKey: ["dynamic"] });
+  useResource(dynamic, { queryKey: ["dynamic"], query: { args: ["org"] } });
+  useResource(optionalArgs, { queryKey: ["optional"] });
+  const observed = useResource(noList, { queryKey: ["detail"], query: { operation: "getById", args: ["x"] } });
+  const maybeId: string | undefined = observed.data?.id;
+  void maybeId;
+  const selected = useResource(parameterized, { queryKey: ["parameterized"], query: { operation: "getById", args: ["1"], initialData: { id: "1" }, select: data => data.id } });
+  const selectedId: string = selected.data;
+  void selectedId;
   const users = useResourceQuery(api.users, {
     queryKey: ["users"], enabled: false, select: (data) => data.map((user) => user.name),
   });
@@ -127,9 +149,39 @@ createRoot(document.getElementById("root")!).render(
 );
 `,
     );
+    writeFileSync(
+      join(directory, "runtime.mjs"),
+      `${withMocking ? 'import "@apixa/mocking/register";\n' : ""}${readFileSync(join(root, "scripts/query-consumer-runtime.mjs"), "utf8")}${
+        withMocking
+          ? `
+const { defineApi } = await import("@apixa/core");
+const mocked = defineApi({ baseURL: "https://example.test", resources: { users: { path: "/users", mock: "users-mock" } } });
+assert.ok((await mocked.users.getAll()).length > 0);
+console.log("Registered named mock dataset loaded");
+`
+          : ""
+      }`,
+    );
     run("pnpm", ["install", "--no-frozen-lockfile"], directory);
     run("pnpm", ["exec", "tsc", "--noEmit"], directory);
+    run("node", ["runtime.mjs"], directory);
     run("pnpm", ["exec", "vite", "build"], directory);
+    if (major === 19) {
+      mkdirSync(join(directory, "app"));
+      writeFileSync(
+        join(directory, "app/layout.jsx"),
+        "export default function Layout({ children }) { return <html><body>{children}</body></html> }",
+      );
+      writeFileSync(
+        join(directory, "app/client.jsx"),
+        '"use client"; import { useResource } from "@apixa/tanstack-query"; import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; const c = new QueryClient(); const r = { getAll: async () => [] }; function View() { const value = useResource(r, { queryKey: ["test"] }); return <span>{value.data?.length ?? 0}</span> } export default function Client() { return <QueryClientProvider client={c}><View /></QueryClientProvider> }',
+      );
+      writeFileSync(
+        join(directory, "app/page.jsx"),
+        `${withMocking ? 'import "@apixa/mocking/register";\nimport { defineApi } from "@apixa/core";\n' : ""}import Client from "./client";\nexport default async function Page() { ${withMocking ? 'const api = defineApi({ baseURL: "https://example.test", resources: { users: { path: "/users", mock: "users-mock" } } }); const users = await api.users.getAll(); if (!users.length) throw new Error("empty mock dataset");' : ""} return <Client /> }`,
+      );
+      run("pnpm", ["exec", "next", "build"], directory);
+    }
     run(
       "node",
       [
@@ -139,7 +191,9 @@ createRoot(document.getElementById("root")!).render(
       ],
       directory,
     );
-    console.log(`React ${major}: packed ESM, declarations, and Vite build passed`);
+    console.log(
+      `React ${major} (${withMocking ? "with mocking" : "standalone"}): packed runtime, declarations, and Vite build passed`,
+    );
   }
 } finally {
   rmSync(temporary, { recursive: true, force: true });
