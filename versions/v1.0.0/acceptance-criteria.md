@@ -17,5 +17,15 @@
 - [x] Query-side `readOperations` and the single-operation mutation overload are removed.
 - [x] `useResource` takes flat `mutations` options and composes the two public hooks.
 - [ ] Advanced controllers preserve every valid Core signature and operation availability.
-- [ ] Packed consumers and React 18/19 integration checks pass on this stabilization change.
+- [x] Packed consumers and React 18/19 integration checks pass on this stabilization change.
+- [x] Query DX features (prefetch, cache, cancel, infinite mode, direct mutation state, optimistic
+      updates) live inside the three hooks; no new hooks.
+- [x] The Query suite passes at runtime on TanStack 5.90.1 and 5.106.1 with React 18.3.1 and 19.1.1.
+- [x] Optimistic updates stay correct under concurrent, out-of-order, failing, and retried calls;
+      a fetch sent before a successful write cannot replace its confirmed data.
+- [x] The SSR example hydrates in a real browser (dev and production) without warnings, loading
+      flashes, or duplicate initial fetches; request-scoped caches do not share data.
+- [x] Opt-in idempotency keeps one key per call across Core retries, middleware replay, and
+      TanStack retries; function operations reject the option.
+- [x] A Core-only consumer builds and runs without React or TanStack installed.
 - [ ] Full v1 release requirements beyond this Query workstream are completed and published.

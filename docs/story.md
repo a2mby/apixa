@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-07 — v1.0.0 Query hardening verified and recorded
+
+`useResource` helper types now match runtime precedence for reserved names. New tests pin
+idempotency across every retry layer, request-scoped SSR isolation, concurrency stress, and
+infinite edge cases. The v1.0.0 scope, plan, and acceptance criteria now include the Query DX work;
+seven acceptance items are checked, including runtime runs on the TanStack 5.90.1 peer minimum and
+real-browser hydration. The full v1 release item stays open.
+
 ## 2026-11-07 — Stale fetches can no longer replace confirmed mutation data
 
 A fetch sent before a write reached the server is now restarted when the write succeeds, instead of
