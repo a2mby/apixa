@@ -387,9 +387,20 @@ Concurrency: each entry keeps its last server data plus an ordered stack of opti
 A failing call is removed from the stack and the entry is recomputed, so it never restores a stale
 snapshot over another call's change (A fails after B succeeded → B's change stays). Server data
 that arrives while calls are pending (a refetch or invalidation) becomes the new base and pending
-changes are re-applied on top. Bookkeeping is dropped when nothing is pending; a manual
-`setQueryData` on the entry hands it back to you (no later rollback there). Rollback still runs
-after an unmount: the callbacks belong to the mutation, not the component.
+changes are re-applied on top. A fetch of an affected entry that was sent before the server had the
+change, and is still running when the call succeeds, is restarted (native `cancelRefetch`), so a
+stale response never replaces confirmed data. Bookkeeping is dropped when nothing is pending.
+Rollback still runs after an unmount: the callbacks belong to the mutation, not the component.
+
+Manual writes take over: `cache.set()` or native `setQueryData` on an entry with pending changes
+hands that entry back to you. Apixa forgets its changes there and never rolls it back, so a
+functional write built on the optimistic value keeps that value even if the call later fails,
+until the next fetch (the default `invalidate: "all"` brings it). Other entries stay managed.
+
+Ordering model: the visible data applies successful changes in the order the calls were sent. If
+two calls change the same field and the server finishes them in a different order, the cache and
+the server can disagree until the next fetch. The default `invalidate: "all"` (or any invalidation
+covering the entry) resolves it; with `invalidate: false` it persists until the entry refetches.
 
 Callback order: internal optimistic work → your `onMutate` (its result is the native context of
 every callback and `states.<op>.context`); on error: rollback → your `onError`; on success: the
@@ -452,15 +463,27 @@ argument tuples as mutation variables. For example, `mutateAsync([id, body])` fo
 
 ## Query and mutation DX additions (unreleased)
 
+Runtime-verified with React 18.3.1 and 19.1.1 against `@tanstack/react-query` 5.90.1 (the peer
+minimum) and 5.106.1; SSR hydration verified in Chromium with Next.js 15.5.
+
 Additive: `prefetch`, `cache`, and `cancel` helpers; infinite mode in `useResourceQuery`
 (`createResourceInfiniteQueryOptions`, `prefetchResourceQuery`, `prefetchResourceInfiniteQuery`
 in the advanced entry); mutation state on callable operations; declarative `optimistic` updates;
 Core `idempotency` keys reused across TanStack retries. Behavior changes for existing code:
 
-- A read operation named `prefetch`, `cache`, or `cancel` (or a native infinite-result field) is
-  no longer flattened onto the query result; call it through `operations.<name>`.
+- Framework properties win over operation names. A read named after a query-result property is
+  not flattened onto the result; call it through `operations.<name>` (always available, typed).
+  Reserved on `useResourceQuery`: `query`, `keys`, `controller`, `invalidate`, `invalidateLists`,
+  `invalidateDetail`, `operations`, `prefetch`, `cache`, `cancel`, every native result field
+  (`data`, `status`, `refetch`, `promise`, …), and the infinite fields (`fetchNextPage`,
+  `fetchPreviousPage`, `hasNextPage`, `hasPreviousPage`, `isFetchingNextPage`,
+  `isFetchingPreviousPage`, `isFetchNextPageError`, `isFetchPreviousPageError`) in both modes.
+  `useResource` adds `states`. New in this release: `prefetch`, `cache`, `cancel`, and the infinite
+  fields.
 - `invalidateLists()` and mutation `invalidate: "lists"` / `{ lists: true }` also invalidate the
-  resource's infinite lists.
+  resource's infinite lists (details, custom-read entries, and other resources are untouched).
+- Mutation invalidation restarts a fetch that is already running for an inactive matching entry
+  (it was sent before the write); idle inactive entries are only marked invalid, as natively.
 - The key factory gains `infinite(op?, keyParts?)` and `infinites()`.
 
 ## v1.0.0 breaking changes
@@ -488,11 +511,16 @@ After building, run `node scripts/query-performance.mjs [iterations]` from the r
 - Direct mutation state (`users.create.isPending`) is the latest call, like `useMutation`. It
   does not mean every earlier concurrent call finished: await each promise, or use native
   `useMutationState` for all in-flight calls.
-- Optimistic `list` updaters cover regular lists only; reach infinite lists with `targets`.
-  A refetch that started before a call succeeded and lands after it may briefly show data without
-  that call's change, until the success invalidation's refetch arrives.
-- Core `idempotency` applies to declarative operations; a function operation passes its own
-  header through `ctx.request({ headers })`.
+- Optimistic `list` updaters cover regular lists only; reach infinite lists with `targets`
+  (`keys.infinite()`), whose updater receives `{ pages, pageParams }`.
+- Optimistic ordering and manual-write takeover follow the model described under
+  [Declarative optimistic updates](#declarative-optimistic-updates).
+- A first fetch of an entry that has no data yet is never restarted (TanStack deduplicates it); if
+  it was sent before a write, invalidate that entry after the write to be sure.
+- Core `idempotency` applies to declarative operations; function operations reject the option
+  (`ConfigError`) and pass their own header through `ctx.request({ headers })`.
+- Hook results update on TanStack's notification tick, not synchronously inside `act()`; tests
+  should `waitFor` the new value.
 - Hand-written resource objects without Core metadata receive exactly their supplied arguments.
   Automatic signal injection is unavailable for these functions; use an `args` builder and
   `keyParts` to explicitly forward TanStack's signal when the function supports it.
