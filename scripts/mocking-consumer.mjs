@@ -32,8 +32,6 @@ try {
 import assert from "node:assert/strict";
 import { defineMockApi, MockApiError, MockingErrors, InvalidSliceError, listDatasetIds } from "@apixa/mocking";
 import { loadDataset, users, products, loadDatasetRecords } from "@apixa/mocking/datasets";
-import * as data from "@apixa/mocking/data";
-import usersData, { data as usersNamed } from "@apixa/mocking/data/users-mock";
 import * as node from "@apixa/mocking/node";
 import { defineApi } from "@apixa/core";
 
@@ -46,9 +44,6 @@ assert.ok(Array.isArray(users) && users.length > 0 && products.length > 0);
 assert.equal((await loadDataset("users-mock")).length, users.length);
 assert.equal((await loadDatasetRecords("users-mock")).length, users.length);
 await assert.rejects(() => loadDataset("nope"), (e) => e instanceof MockApiError && e.code === "UNKNOWN_DATASET");
-assert.equal(data.users, users);
-assert.equal(usersNamed.length, users.length);
-assert.equal(usersData, usersNamed);
 for (const name of ["loadDataset", "listDatasets", "getDataset", "findDatasetDirs", "resolveDatasetDir"]) {
   assert.equal(typeof node[name], "function", name);
 }
@@ -101,7 +96,6 @@ console.log("runtime ok");
       "datasets",
       'import { loadDataset, users } from "@apixa/mocking/datasets"; console.log(loadDataset, users);',
     ],
-    ["data", 'import { users } from "@apixa/mocking/data"; console.log(users);'],
   ]) {
     const out = bundle(name, source);
     for (const [file, text] of files(out)) {

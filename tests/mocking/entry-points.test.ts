@@ -1,7 +1,5 @@
 import { MockStore } from "@apixa/core";
 import * as index from "@apixa/mocking";
-import * as data from "@apixa/mocking/data";
-import usersDefault, { data as usersNamed } from "@apixa/mocking/data/users-mock";
 import * as datasets from "@apixa/mocking/datasets";
 import { loadDataset, users, type MockUser } from "@apixa/mocking/datasets";
 import * as node from "@apixa/mocking/node";
@@ -34,15 +32,8 @@ describe("@apixa/mocking entry points", () => {
     await expect(loadDataset("nope" as never)).rejects.toMatchObject({ code: "UNKNOWN_DATASET" });
   });
 
-  it("/data is a compatibility re-export of /datasets", () => {
-    for (const name of ["users", "products", "companies", "orders", "posts", "comments"]) {
-      expect(data[name as keyof typeof data], name).toBe(datasets[name as keyof typeof datasets]);
-    }
-    for (const name of ["productsDataset", "companiesDataset", "ordersDataset", "postsDataset"]) {
-      expect(data, name).toHaveProperty(name);
-    }
-    expect(usersDefault).toBe(usersNamed);
-    expect(usersNamed).toHaveLength(users.length);
+  it("has no /data compatibility entry", async () => {
+    await expect(import("@apixa/mocking/data" as string)).rejects.toThrow();
   });
 
   it("keeps the Node filesystem helpers on /node", () => {

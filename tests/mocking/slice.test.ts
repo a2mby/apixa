@@ -2,7 +2,7 @@ import "../../packages/mocking/src/register.js";
 import { describe, expect, it } from "vitest";
 import { defineApi } from "@apixa/core";
 import { defineMockApi, InvalidSliceError, MockingErrors } from "@apixa/mocking";
-import { type User } from "@apixa/mocking/data";
+import { type User } from "@apixa/mocking/datasets";
 
 describe("mock slice", () => {
   it("slice: number takes the first N and clamps when N exceeds the dataset", async () => {

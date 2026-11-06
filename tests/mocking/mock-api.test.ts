@@ -5,7 +5,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { defineApi } from "@apixa/core";
 import { defineMockApi, MockApiError, type MockApiErrorCode, type Page } from "@apixa/mocking";
-import { users as usersPreset, type Comment, type Product, type User } from "@apixa/mocking/data";
+import {
+  users as usersPreset,
+  type Comment,
+  type Product,
+  type User,
+} from "@apixa/mocking/datasets";
 
 const datasetsRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)), "datasets");
 

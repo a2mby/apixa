@@ -78,7 +78,7 @@ apixa/
 └─ .cursor/                agent rules/commands/skill that enforce the docs/versions workflow
 ```
 
-**Entry points [Fact]:** Core `packages/core/src/index.ts`; mocking `.`, `./register`, `./node`, `./data`, `./data/users-mock` (`packages/mocking/package.json` exports); tanstack `.` and `./advanced`.
+**Entry points [Fact]:** Core `packages/core/src/index.ts`; mocking `.`, `./datasets`, `./register` (internal), `./node` (internal) (`packages/mocking/package.json` exports); tanstack `.` and `./advanced`.
 **Generated code:** `dist/` (tsup, gitignored but present on disk), `examples/next/.next/`. **Not CI:** no `.github/` directory exists (verified).
 
 ```mermaid
@@ -285,7 +285,6 @@ const { data, headers } = await api.users.getAll({ full: true });
 | `enableResourceMocks / disableResourceMocks`                                            | register/unregister the processor (idempotent)                                                                                                                                                                               |
 | `applyResourceMocksToConfig`, `createSelectiveMockTransportFromSpecs`                   | bridge internals, exported                                                                                                                                                                                                   |
 | `./node`: `loadDataset, listDatasets, getDataset, findDatasetDirs, resolveDatasetDir`   | filesystem loaders (`APIXA_DATASETS_DIR` → `./datasets` → repo-relative)                                                                                                                                                     |
-| `./data`, `./data/users-mock`                                                           | typed JSON records (side-effectful `users-mock`)                                                                                                                                                                             |
 
 Behaviour **[Fact]** (`resource.ts`): every method returns `structuredClone`s; `create` without id works only for all-numeric-id datasets; `update` replaces but keeps id (different id → `INVALID_INPUT`); `patch` skips `undefined`; `delete` of missing → `NOT_FOUND`; pagination: defaults page 1/size 20, page beyond last → `INVALID_PAGINATION`, empty set = single empty page; `search` = case-insensitive substring on every key given; `getAll(params)` with pagination off → `INVALID_PAGINATION`; unknown op name with `true` → `INVALID_CONFIG`.
 
@@ -315,7 +314,7 @@ Cache policy **[Fact]** (`cache.ts`): create → invalidate lists; update → in
 | resource              | `slice`                                                                          | none     | non-array `getAll` payloads pass through                                                                                                                                                                                      |
 | resource              | `mock`, `pagination`                                                             | —        | dataset id; `pagination` only meaningful with `mock` (dropped otherwise)                                                                                                                                                      |
 | env                   | `APIXA_DATASETS_DIR`                                                             | —        | Node dataset root (`paths.ts`)                                                                                                                                                                                                |
-| build                 | tsup per package, ESM only, `sideEffects` flags                                  |          | mocking marks `register-entry`, `core-augmentation`, `data/users-mock` as side-effectful                                                                                                                                      |
+| build                 | tsup per package, ESM only, `sideEffects` flags                                  |          | mocking marks `register-entry`, `core-augmentation` as side-effectful                                                                                                                                                         |
 | tooling               | Prettier (`.prettierrc.json`), `engines.node >=18`, `packageManager pnpm@9.15.0` |          | **No ESLint config** despite `eslint-disable` comments in sources                                                                                                                                                             |
 
 ---

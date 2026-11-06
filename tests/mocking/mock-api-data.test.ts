@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import * as mocking from "@apixa/mocking";
 import * as mockingNode from "@apixa/mocking/node";
-import * as data from "@apixa/mocking/data";
-import type { Comment, Company, Order, Post, Product, User } from "@apixa/mocking/data";
+import * as data from "@apixa/mocking/datasets";
+import type { Comment, Company, Order, Post, Product, User } from "@apixa/mocking/datasets";
 import { catalog, listDatasetIds } from "../../packages/mocking/src/catalog";
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
@@ -61,7 +61,7 @@ describe("dataset catalog", () => {
   });
 });
 
-describe("@apixa/mocking/data", () => {
+describe("@apixa/mocking/datasets records", () => {
   it("exports typed records that match the root datasets", async () => {
     expect(data.users).toEqual(await readJson("users/users-mock/data.json"));
     expect(data.products).toEqual(await readJson("products/products-mock/data.json"));
@@ -73,8 +73,8 @@ describe("@apixa/mocking/data", () => {
   });
 
   it("exposes the exports it documents, and nothing from the large datasets", () => {
-    expect(Object.keys(data).sort()).toEqual(
-      [
+    expect(Object.keys(data)).toEqual(
+      expect.arrayContaining([
         "comments",
         "commentsDataset",
         "companies",
@@ -86,8 +86,9 @@ describe("@apixa/mocking/data", () => {
         "products",
         "productsDataset",
         "users",
-      ].sort(),
+      ]),
     );
+    expect(data).not.toHaveProperty("countries");
   });
 
   it("types records as read-only entities", () => {
@@ -134,7 +135,7 @@ describe("package surface", () => {
       scripts: { build: string };
     };
     expect(Object.keys(pkg.exports)).toEqual(
-      expect.arrayContaining([".", "./datasets", "./node", "./data", "./data/users-mock"]),
+      expect.arrayContaining([".", "./datasets", "./node", "./register"]),
     );
     for (const [subpath, target] of Object.entries(pkg.exports)) {
       const source = target.import.replace("./dist/", "src/").replace(/\.js$/, ".ts");
@@ -149,7 +150,7 @@ describe("one mock engine", () => {
   const legacy =
     /["']\.\/(?:register|processor|store|transport|response|bridge|presets\/registry)(?:\.js)?["']/;
 
-  it.each(["mock-api.ts", "resource.ts", "catalog.ts", "datasets.ts", "data/index.ts"])(
+  it.each(["mock-api.ts", "resource.ts", "catalog.ts", "datasets.ts"])(
     "%s has no legacy bridge imports and no network access",
     async (file) => {
       const source = await readFile(resolve(pkgRoot, "src", file), "utf8");

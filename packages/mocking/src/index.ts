@@ -6,7 +6,7 @@
  * - Core `defineApi` resources accept `mock: "<dataset-id>" | records | provider` directly; Core
  *   uses `@apixa/mocking/register` to opt in to the lazy named-dataset loader.
  *
- * Node filesystem loaders live at `@apixa/mocking/node`; typed records at `@apixa/mocking/data`.
+ * Node filesystem loaders live at `@apixa/mocking/node`; typed records at `@apixa/mocking/datasets`.
  */
 
 export { defineMockApi } from "./mock-api.js";
