@@ -73,7 +73,7 @@ Keep the initial core small and cohesive. Do not implement every future feature 
 **Implemented direction (v0.2.0 + v0.4.0):** a resource with `path` gets built-in CRUD; type payloads via resource-only `defineApi<AppApi>()({ … })`.
 
 ```ts
-import { defineApi } from "@apixa/core";
+import { defineApi } from "apixa";
 
 type User = { id: string; name: string; email: string };
 
@@ -156,12 +156,12 @@ useMutation({
 });
 ```
 
-**Implemented (v1.0.0 workstream, unreleased):** optional `@apixa/react` (TanStack Query inside) with three
+**Implemented (v1.0.0 workstream, unreleased):** optional `apixa/react` (TanStack Query inside) with three
 hooks — `useResourceQuery` (reads), `useResourceMutation` (writes), and the
 `useResource` facade:
 
 ```tsx
-import { useResource } from "@apixa/react";
+import { useResource } from "apixa/react";
 
 const users = useResource(api.users, { queryKey: ["users"] });
 users.data; // list query (native TanStack state)
@@ -180,7 +180,7 @@ Correctness-first mutation invalidation remains the default. Query results also 
 `prefetch`, `cache.get/set/remove` and `cancel`; `useResourceQuery` has an `infinite` mode on native
 `useInfiniteQuery`; callable writes carry their mutation state (`users.create.isPending`); and writes
 accept a declarative, concurrency-safe `optimistic` config (native `onMutate` still works).
-`patch-list` strategies stay later. Escape hatch: `@apixa/react/advanced`. `ApixaProvider` and an Apixa `QueryClient` (TanStack's, with
+`patch-list` strategies stay later. Escape hatch: `apixa/react/advanced`. `ApixaProvider` and an Apixa `QueryClient` (TanStack's, with
 ergonomic defaults) are optional: the hooks also work under TanStack's own provider.
 
 Core must not implement its own caching or state-management system just to support TanStack Query.
@@ -218,10 +218,10 @@ The intended responsibilities are:
 - `transport-fetch`: Fetch transport implementation, if separation proves useful.
 - `client`: Browser-specific configuration and behavior.
 - `server`: Server-specific configuration and behavior.
-- `mocking`: **Implemented (redesigned in #58)** — resource `mock` is a data source (`"<dataset-id>"`, inline records, a provider, or `{ data, idKey, seed }`) executed by Core's client-scoped engine; `@apixa/mocking` ships lazily loaded dataset records (one module per synthetic set under `@apixa/mocking/datasets/<name>`) and `defineMockApi()` on the same engine, with Core as its peer dependency. A declarative custom operation on a mock runs its own inline `mock` handler, or fails with `MOCK_UNSUPPORTED` when it has none; builtins and function operations are simulated by Core. See ADR 003.
+- `mocking`: **Implemented (redesigned in #58)** — resource `mock` is a data source (`"<dataset-id>"`, inline records, a provider, or `{ data, idKey, seed }`) executed by Core's client-scoped engine; `@apixa/mocking` ships lazily loaded dataset records (one module per synthetic set under `apixa/mocking/datasets/<name>`) and `defineMockApi()` on the same engine, with Core as a private build dependency. A declarative custom operation on a mock runs its own inline `mock` handler, or fails with `MOCK_UNSUPPORTED` when it has none; builtins and function operations are simulated by Core. See ADR 003.
 - `react`: **Implemented** — `@apixa/react`, the optional React integration (hooks, `ApixaProvider`, `QueryClient`, hydration); TanStack Query is its engine, not its public name.
 - `internal/shared`: **Implemented, private** — framework-neutral integration helpers bundled into integrations, never published.
-- The unified `apixa` package (the repository root) re-exports Core, Mocking and optional React subpaths.
+- The root `apixa` package is the only npm publication. Its facade compiles private Core, Mocking, React and shared sources into one code-split distribution; React peers remain optional. All workspace implementation modules are private.
 - `openapi`: OpenAPI interoperability (planned).
 
 Do not prematurely implement remaining packages or introduce unnecessary cross-package dependencies.

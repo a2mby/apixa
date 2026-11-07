@@ -30,18 +30,18 @@
 - [x] A Core-only consumer builds and runs without React or TanStack installed.
 - [x] A declarative custom operation on a mocked resource rejects with `MOCK_UNSUPPORTED` and never
       runs a builtin or touches the store; mock writes reject prototype-changing keys.
-- [x] `@apixa/core` is a bounded peer dependency of `@apixa/mocking`; registration reaches the app's
-      Core even when Core is duplicated, and npm refuses an incompatible Core.
+- [x] Core and Mocking are private modules in one `apixa` distribution; registration reaches the
+      canonical Core implementation without a separate package install or Core peer-resolution step.
 - [x] `defineMockApi` and Core mocks return the same `getAll` results for filters, pages, cursors,
       `slice` and reset; a paginated read copies only its page.
-- [x] One dataset can be imported on its own (`@apixa/mocking/datasets/<name>`) and loads only that
+- [x] One dataset can be imported on its own (`apixa/mocking/datasets/<name>`) and loads only that
       dataset in Node, Vite, esbuild and Next; `loadDataset` stays lazy.
 - [x] The tracked example typechecks inside `pnpm typecheck`, and CI runs the packed-consumer checks.
 - [x] A custom declarative operation can define its mocked behavior with an inline typed `mock`
       handler; without one it stays `MOCK_UNSUPPORTED`, and a live resource ignores it.
 - [x] `pnpm check:architecture` passes: dependency direction, no cycles, no React/TanStack/Node leakage
       into Core or edge-safe Mocking entries, no private shared specifier in built output.
-- [x] The `apixa` facade re-exports the canonical packages (curated root, `apixa/core`, mocking and
+- [x] The `apixa` facade compiles the canonical private modules (curated root, `apixa/core`, mocking and
       React subpaths); packed consumers cover a root-only Node install without React, React 18 and
       19 with Vite, and Next.js production and development builds with Server Component prefetch
       and hydration.
@@ -49,3 +49,20 @@
       Vercel Edge Runtime runs of the packed facade, Node 22 and 24, errors do not expose request
       headers or bodies.
 - [ ] Full v1 release requirements beyond this Query workstream are completed and published.
+
+## Single-package distribution gates
+
+- [x] Exactly one public package; all implementation modules private; no private dependencies or imports in the tarball.
+- [x] All 14 public paths resolve at runtime and in TypeScript 5.5.4/current; existing export snapshots unchanged.
+- [x] Core/root/Mocking work without framework peers; emitted declarations remain framework-independent.
+- [x] Runtime identities, lazy datasets and bundle sizes remain comparable to the audited baseline.
+- [x] Full verification passes on Node 22 and 24, including real Chromium, workerd and Vercel Edge Runtime.
+- [x] npm account can write `apixa`; one packed artifact passes publication dry-run with tag `next`.
+
+Verification (2026-11-08): unchanged baseline 76 files / 833 tests; migrated suite 76 files /
+841 tests on Node 24.20.0 and 22.23.4. Full Node 22 `pnpm verify` and the equivalent Node 24
+component gates passed, including React 18/19, TypeScript 5.5.4 and 7.0.2, Vite, Next, Chromium,
+workerd and Vercel Edge Runtime. A final checkout-path correction was rebuilt and rechecked with
+architecture/API checks, all 158 Mocking tests, and single-tarball Mocking consumers on both Nodes.
+The account `a2mby` has read-write access to `apixa`; publication dry-run passed with tag `next`.
+Nothing was published. Existing unchecked broader v1 workstream items above remain separate.

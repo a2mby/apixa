@@ -9,3 +9,5 @@ Task-oriented notes if you want to change Apixa without reading the whole archit
 | [Publish a release candidate](./publish-a-release-candidate.md) | You are cutting `1.0.0-rc.N` and need the exact order and checks |
 
 For agent-oriented checklists of the same ideas, see [`../agents/`](../agents/).
+
+- [Install Apixa and choose an entry point](./install-apixa.md)

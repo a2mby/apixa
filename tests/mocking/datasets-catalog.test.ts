@@ -65,7 +65,11 @@ describe("one coherent dataset catalog", () => {
     const pkg = JSON.parse(await readFile(resolve(pkgRoot, "package.json"), "utf8")) as {
       sideEffects: unknown;
     };
-    expect(pkg.sideEffects).toEqual(["./dist/register.js"]);
+    expect(pkg.sideEffects).toEqual(["./dist/register.js", "./src/register.ts"]);
+    const distribution = JSON.parse(
+      await readFile(resolve(pkgRoot, "../../package.json"), "utf8"),
+    ) as { sideEffects: unknown };
+    expect(distribution.sideEffects).toEqual(["./dist/mocking/register.js"]);
   });
 
   it("an unknown dataset id never reaches the loader", () => {

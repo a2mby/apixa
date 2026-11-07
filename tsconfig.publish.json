@@ -1,4 +1,19 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@apixa/core": ["packages/core/src/index.ts"],
+      "@apixa/internal-shared": ["packages/internal/shared/src/index.ts"],
+      "@apixa/mocking": ["packages/mocking/src/index.ts"],
+      "@apixa/mocking/datasets": ["packages/mocking/src/datasets.ts"],
+      "@apixa/mocking/datasets/*": ["packages/mocking/src/dataset-modules/*.ts"],
+      "@apixa/mocking/register": ["packages/mocking/src/register.ts"],
+      "@apixa/mocking/node": ["packages/mocking/src/node.ts"],
+      "@apixa/react": ["packages/react/src/index.ts"],
+      "@apixa/react/advanced": ["packages/react/src/advanced.ts"]
+    },
+    "jsx": "react-jsx"
+  },
   "include": ["src"]
 }

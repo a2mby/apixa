@@ -64,7 +64,7 @@ export async function loadDataset(id: string, options: LoadDatasetOptions = {}):
   if (!dir) {
     throw new Error(
       `Failed to load dataset "${id}": not found under ${root}. ` +
-        `The npm package ships no dataset files for "apixa/mocking/node" (or "@apixa/mocking/node"): pass { basePath } or set APIXA_DATASETS_DIR ` +
+        `The npm package ships no dataset files for "apixa/mocking/node": pass { basePath } or set APIXA_DATASETS_DIR ` +
         `to a folder of <dataset>/meta.json + data.json.`,
     );
   }

@@ -112,6 +112,9 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Query, resource-wide `useResourceMutation`, the `useResource` facade, and Core `kind`
   classification are implemented on the task branch; release is still pending
 
+- Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
+  and isolated public subpaths (ADR 005). Vue and Angular remain future work.
+
 ## Later: Proposed backlog catalog (planning only)
 
 Eighteen separately scoped proposals (`v0.12.0`–`v0.29.0`) live under

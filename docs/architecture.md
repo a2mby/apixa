@@ -4,13 +4,11 @@ This document describes the architecture Apixa is building toward, and how the c
 
 Apixa Core owns definitions, validation, and one execution lifecycle that ends in either HTTP or
 the in-memory mock engine (see [ADR 003](./decisions/003-client-scoped-mocking-in-core.md)).
-`@apixa/mocking` ships the dataset records, which load lazily and one dataset at a time through
-`@apixa/mocking/datasets`, plus the standalone `defineMockApi()`, a thin adapter over Core's
-`MockStore`. `@apixa/react` is the optional React integration; TanStack Query is the engine inside
-it. The root `apixa` package is a facade: it re-exports the published `@apixa/*` packages (curated
-at the root, full under `apixa/core`, `apixa/mocking*` and `apixa/react*`) and contains no logic.
-React and TanStack remain optional peers, and Core imports neither. Other packages (client, server,
-OpenAPI) remain planned boundaries.
+Mocking owns lazy dataset records and `defineMockApi()`, a thin adapter over Core's `MockStore`.
+React owns the optional React integration with TanStack Query as its engine. The only npm package
+is `apixa`; `src/` contains re-export entry points. Core, Mocking, React and shared helpers are
+private workspace modules whose canonical source is compiled into this single distribution.
+React and TanStack remain optional external peers. Core imports neither.
 
 ## High-level shape
 
@@ -112,23 +110,23 @@ that returns a value other than `undefined` recovers the call.
 
 Enforced by `pnpm check:architecture` (`scripts/check-architecture.mjs`, TypeScript module
 resolution over every package's real import graph, plus the built output). Marked **implemented**
-or **planned**. Rationale: [ADR 004](./decisions/004-four-packages-and-private-shared-internals.md).
+or **planned**. Rationale: [ADR 005](./decisions/005-single-package-distribution.md).
 Export contracts: [public-api.md](./public-api.md).
 
-| Package                  | Owns                                                                                                                                                      | May import                                                      | Status               |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------- |
-| `@apixa/core`            | Definitions, operations, request lifecycle, middleware, transforms, retry, errors, types, metadata, the `MockStore` bridge                                | nothing (no framework, no Node)                                 | implemented          |
-| `@apixa/mocking`         | `defineMockApi`, dataset catalog/loaders/modules, mock errors, `register`, Node utilities                                                                 | Core; `node:*` only from `node.ts`                              | implemented          |
-| `@apixa/internal-shared` | Framework-neutral integration algorithms (resource keys, operation classification)                                                                        | Core only                                                       | implemented, private |
-| `@apixa/react`           | `useResource*` hooks, `ApixaProvider`, `QueryClient`, `ApixaHydrationBoundary`, controllers, query options, cache sync, optimistic layers, mutation store | Core, shared, `react`, `@tanstack/react-query`                  | implemented          |
-| `apixa`                  | Entry points and curated re-exports only (the repository root package)                                                                                    | `@apixa/core`, `@apixa/mocking`, `@apixa/react` (optional peer) | implemented          |
+| Package                  | Owns                                                                                                                                                      | May import                                                       | Status               |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------- |
+| `@apixa/core`            | Definitions, operations, request lifecycle, middleware, transforms, retry, errors, types, metadata, the `MockStore` bridge                                | nothing (no framework, no Node)                                  | implemented, private |
+| `@apixa/mocking`         | `defineMockApi`, dataset catalog/loaders/modules, mock errors, `register`, Node utilities                                                                 | Core; `node:*` only from `node.ts`                               | implemented, private |
+| `@apixa/internal-shared` | Framework-neutral integration algorithms (resource keys, operation classification)                                                                        | Core only                                                        | implemented, private |
+| `@apixa/react`           | `useResource*` hooks, `ApixaProvider`, `QueryClient`, `ApixaHydrationBoundary`, controllers, query options, cache sync, optimistic layers, mutation store | Core, shared, `react`, `@tanstack/react-query`                   | implemented, private |
+| `apixa`                  | Entry points and curated re-exports only (the repository root package)                                                                                    | `@apixa/core`, `@apixa/mocking`, `@apixa/react` (private source) | implemented, public  |
 
 ```text
 @apixa/core  ◀── @apixa/mocking
      ▲
      └────────── @apixa/internal-shared ◀── @apixa/react
                                                    └── @tanstack/react-query, react (peers)
-apixa ──▶ re-exports @apixa/core, @apixa/mocking, and (optional peer) @apixa/react
+apixa public entries ──▶ compile private Core, Mocking, React and shared source into dist
 ```
 
 Rules (each is checked, except where noted):
@@ -146,18 +144,26 @@ Rules (each is checked, except where noted):
 7. Public entries re-export; they never `export *` from the private shared layer. Facade files
    contain only re-exports, and `apixa/react` lists exactly the names `@apixa/react` exports
    (a client boundary may not use `export *`). (checked)
-8. A consumer importing only `apixa` or `@apixa/core` needs neither React nor TanStack Query. (checked
-   by entry closure here and by the packed consumer in `pnpm verify:consumers`)
-9. One cache engine (TanStack's `QueryClient`) and one execution pipeline (Core's) exist. Runtime
-   identity: the facade never bundles `@apixa/*`; it imports them, so `apixa/*` and `@apixa/*` are the
-   same modules. `@apixa/react` is one code-split build, so its client and server entries share one
-   `QueryClient`. Datasets register through a `Symbol.for` slot on `globalThis`. (identity is covered
-   by `tests/facade` and the packed-consumer script, not by the graph rules)
-10. `@apixa/react/advanced` (and `apixa/react/advanced`) never reach `react`: a Server Component can
-    import it to construct a request-scoped `QueryClient`, prefetch and `dehydrate`. Only the main
-    entry is a `"use client"` boundary. (checked on source closure and built output)
-11. Publishable packages share one version, `engines.node >=22`, ESM only, `workspace:` ranges between
-    them, and React/TanStack are optional or peer-only, never a Core or Mocking dependency. (checked)
+8. Root/Core/Mocking runtime and declaration closures stay framework-free. Node imports stay
+   confined to `apixa/mocking/node`. Missing relative emitted modules and private bare imports fail checks.
+9. Runtime: one multi-entry code-split build resolves private workspace names to canonical source
+   via `tsconfig.publish.json`. React and TanStack remain external. Each Core class, MockStore,
+   QueryClient, provider, mutation store and optimistic layer has one definition in `dist`.
+   Packed consumers prove cross-subpath identity, dataset array identity and registration.
+10. Declarations: a separate TypeScript emit preserves one declaration per source module under
+    `dist/types`, rewriting private imports to relative paths. Facade declaration entries re-export
+    those canonical modules. This preserves unique symbols, generic inference and type identity,
+    without the cross-entry React imports introduced by declaration bundling. The entire emitted
+    declaration closure is typechecked, including TypeScript 5.5.4 in clean external consumers.
+11. Only `apixa/react` is a client boundary. `apixa/react/advanced` must not reach a client chunk
+    or React runtime import. Real Next Server Components construct a request-scoped QueryClient,
+    prefetch, and pass state to the hydration boundary. Native TanStack providers remain compatible.
+12. Only root `apixa` is publishable; all implementation manifests have `private: true`. Root has
+    no workspace dependencies, runtime dependencies or mandatory framework peers. Build aliases
+    replace installed private dependencies. RC publication targets root only, ESM, Node >=22, tag `next`.
+13. `pnpm verify:consumers`, `verify:browser` and `verify:edge` install one root tarball. Private
+    module builds remain available for independent development and source tests, but are never packed
+    for consumer verification or release. `pnpm verify:publish` only reads npm state and dry-runs one tarball.
 
 ### Where does new code go?
 
@@ -180,9 +186,9 @@ algorithms may move once a second integration needs them; moving them earlier wo
 
 ### Extending to another framework (future, not started)
 
-A new integration is a new package that imports Core and `@apixa/internal-shared`, adds its own
+A future integration is a private workspace module that imports Core and `@apixa/internal-shared`, adds its own
 adapter for its framework's cache, and is added to the package table in the check script and to
-`public-api.md`. Vue and Angular packages do not exist and must not be created ahead of that work.
+`public-api.md` with its `apixa/<framework>` subpath. Vue and Angular packages do not exist and must not be created ahead of that work.
 
 ### Stability
 

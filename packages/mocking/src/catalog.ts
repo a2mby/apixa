@@ -20,7 +20,7 @@ type CatalogEntry<K extends DatasetId> = {
 };
 
 /** The root `datasets/` folder stays the single source of truth — these are direct JSON imports. */
-export const catalog = {
+export const catalog: { [K in DatasetId]: CatalogEntry<K> } = {
   "users-mock": {
     idKey: "id",
     load: () => import("../../../datasets/users/users-mock/data.json"),
@@ -81,7 +81,7 @@ export const catalog = {
     idKey: "area_code",
     load: () => import("../../../datasets/reference/area-codes-parseapi/data.json"),
   },
-} satisfies { [K in DatasetId]: CatalogEntry<K> };
+};
 
 export function isDatasetId(value: unknown): value is DatasetId {
   return typeof value === "string" && Object.hasOwn(catalog, value);

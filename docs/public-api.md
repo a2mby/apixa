@@ -5,17 +5,12 @@ says **planned**. Symbol lists live in the entry files; this document fixes whic
 area and what must stay compatible. Checks: `tests/facade/`, `pnpm check:architecture`,
 `pnpm verify:consumers`.
 
-## Packages
+## Distribution and private modules
 
-| npm package      | Source             | Role                                            |
-| ---------------- | ------------------ | ----------------------------------------------- |
-| `apixa`          | `src/` (root)      | Facade: re-exports only; one install            |
-| `@apixa/core`    | `packages/core`    | Framework-independent engine                    |
-| `@apixa/mocking` | `packages/mocking` | `defineMockApi`, datasets                       |
-| `@apixa/react`   | `packages/react`   | React integration; TanStack Query is the engine |
-
-`@apixa/internal-shared` (`packages/internal/shared`) is private and never published. All four
-packages share one version (`1.0.0-rc.0`), require Node.js 22+, and are ESM only.
+Only `apixa` is published (`1.0.0-rc.0`, ESM, Node.js >=22). `packages/core`, `packages/mocking`,
+`packages/react` and `packages/internal/shared` are private workspace modules. Their `@apixa/*`
+names are for development; the public distribution imports none of those names. The facade in
+`src/` only re-exports canonical implementations, compiled together into shared runtime chunks.
 
 ## Entry points
 
@@ -30,9 +25,9 @@ packages share one version (`1.0.0-rc.0`), require Node.js 22+, and are ESM only
 | `apixa/react`                                                                                      | `ApixaProvider`, `QueryClient`, `ApixaHydrationBoundary`, `useResource`, `useResourceQuery`, `useResourceMutation` and types. `"use client"` | yes                   | none        |
 | `apixa/react/advanced`                                                                             | `QueryClient`, `dehydrate`, prefetch helpers, controllers, query options, optimistic layers. Server-safe: never reaches `react`              | TanStack only         | none        |
 
-`@apixa/core`, `@apixa/mocking` (same subpaths, without the `apixa/` prefix and with `datasets/<name>`
-as above) and `@apixa/react` (`.` and `./advanced`) expose the same objects: `apixa/*` re-exports
-them and bundles none of them.
+All public subpaths share the same Core implementation and types. React and advanced share
+one QueryClient, mutation store and optimistic layer. No separately installed implementation
+package is needed. Declarations preserve canonical modules using relative paths under `dist/types`.
 
 Removed: `apixa/tanstack-query` and `apixa/tanstack-query/advanced` (they existed only in the
 unpublished root manifest). `@apixa/tanstack-query` was never published to npm.
@@ -52,15 +47,15 @@ Everything else (`MockStore`, `resetMock`, `registerMockDatasetLoader`, `createI
 
 ## Install matrix
 
-| Goal             | Install                                                      |
-| ---------------- | ------------------------------------------------------------ |
-| Core and Mocking | `npm install apixa`                                          |
-| Plus React       | `npm install apixa @apixa/react react @tanstack/react-query` |
-| A single package | `@apixa/core`, `@apixa/mocking` (peer: Core), `@apixa/react` |
+| Goal             | Install                                         |
+| ---------------- | ----------------------------------------------- |
+| Core and Mocking | `npm install apixa`                             |
+| React            | `npm install apixa react @tanstack/react-query` |
 
-`apixa` depends on `@apixa/core` and `@apixa/mocking`. `@apixa/react`, `react` and
-`@tanstack/react-query` are optional peers of `apixa`, so a Core-only install never pulls React.
-Importing `apixa/react` without `@apixa/react` fails with a module-not-found error naming it.
+React (`^18.0.0 || ^19.0.0`) and TanStack Query (`^5.90.1`) are optional peers. Root/Core/Mocking
+work without them. Importing a React entry without its peers produces a native module-not-found
+error. Future framework integrations will use their own subpaths and optional peers; Vue and
+Angular are not implemented.
 
 ## Runtime support
 
@@ -80,17 +75,18 @@ above are the platforms' own engines, not deployed services).
 - Facade files only re-export. `apixa/react` lists names explicitly (a client boundary may not use
   `export *`); `pnpm check:architecture` keeps it equal to `@apixa/react`'s export list.
 - Hook signatures, error text and declaration shapes of public symbols stay stable. User-facing
-  messages name `apixa/...` first and mention the `@apixa/...` spelling.
-- No private specifier (`@apixa/internal-*`) may appear in published JavaScript or declarations.
-- `apixa` and `@apixa/core` work with neither React nor TanStack Query installed.
+  messages recommend only `apixa/...`.
+- No private specifier (`@apixa/*`) may appear in published JavaScript or declarations.
+- `apixa` and `apixa/core` work with neither React nor TanStack Query installed.
 
 ## Compatibility notes for this release
 
-- `@apixa/react` now depends on Core through a caret peer range (`^1.0.0-rc.0`); it was an exact
-  `workspace:*` pin as `@apixa/tanstack-query`.
-- `QueryClient` (Apixa) extends TanStack's. A plain TanStack `QueryClientProvider` keeps working;
-  `ApixaProvider` is optional.
-- `@apixa/react` is now one code-split build. Before, its entries were bundled separately, so
-  `@apixa/react` and `@apixa/react/advanced` carried two copies of shared modules.
-- npm already lists an `apixa@0.1.0` placeholder owned by the project maintainer. Publishing needs the
-  `@apixa` npm scope or organization to exist and be controlled by the project (not verified).
+- The unpublished four-package RC plan is superseded by [ADR 005](./decisions/005-single-package-distribution.md).
+  `@apixa/core`, `@apixa/mocking` and `@apixa/react` are now private development modules, not
+  supported npm installation paths. Every existing `apixa` subpath and its exported symbols stay unchanged.
+- `QueryClient` extends TanStack's. Native TanStack providers remain compatible; `ApixaProvider` is optional.
+- The registration and Node-loader errors now recommend only the public `apixa/mocking/*` paths.
+  Error codes and execution behavior are unchanged.
+- The export snapshot retains the 13 private module entries as compatibility references alongside
+  the 14 public entries. No symbol list changed in this migration.
+- The unscoped `apixa` package belongs to the project maintainer. No npm organization scope is needed.

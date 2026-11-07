@@ -1,23 +1,25 @@
-# `@apixa/mocking`
+# `apixa/mocking`
+
+Implementation: private workspace module `@apixa/mocking`. Public installation: `npm install apixa`.
 
 In-memory mock APIs for Apixa: inline records, named datasets, providers, and a standalone
 `defineMockApi()`. **Mocked resources never touch the network.**
 
 ```sh
-pnpm add @apixa/core @apixa/mocking   # Core is a peer dependency: one copy, ^1.0.0-rc.0
+npm install apixa
 ```
 
 **Owns:** `defineMockApi`, dataset catalog, loaders and modules, mock errors, `register`, and Node
-dataset utilities. **Imports:** Core only; `node:*` is confined to `@apixa/mocking/node`. It reuses
+dataset utilities. **Imports:** Core only; `node:*` is confined to `apixa/mocking/node`. It reuses
 Core's `MockStore` and never duplicates it. See [architecture](../../docs/architecture.md#architecture-contract-v100).
 
-| Import                           | What it is                                                                                    | Side effect |
-| -------------------------------- | --------------------------------------------------------------------------------------------- | ----------- |
-| `@apixa/mocking`                 | `defineMockApi`, error classes, lazy `loadDataset`, `listDatasetIds`, types                   | none        |
-| `@apixa/mocking/datasets`        | `loadDataset`, the six synthetic sets as named exports, entity types                          | none        |
-| `@apixa/mocking/datasets/<name>` | One synthetic set on its own: `users`, `products`, `companies`, `orders`, `posts`, `comments` | none        |
-| `@apixa/mocking/register`        | Lets Core's `mock: "<dataset-id>"` load named datasets                                        | **yes**     |
-| `@apixa/mocking/node`            | Filesystem loaders (`node:fs`; never import in a browser bundle)                              | none        |
+| Import                          | What it is                                                                                    | Side effect |
+| ------------------------------- | --------------------------------------------------------------------------------------------- | ----------- |
+| `apixa/mocking`                 | `defineMockApi`, error classes, lazy `loadDataset`, `listDatasetIds`, types                   | none        |
+| `apixa/mocking/datasets`        | `loadDataset`, the six synthetic sets as named exports, entity types                          | none        |
+| `apixa/mocking/datasets/<name>` | One synthetic set on its own: `users`, `products`, `companies`, `orders`, `posts`, `comments` | none        |
+| `apixa/mocking/register`        | Lets Core's `mock: "<dataset-id>"` load named datasets                                        | **yes**     |
+| `apixa/mocking/node`            | Filesystem loaders (`node:fs`; never import in a browser bundle)                              | none        |
 
 Core never imports this package. Inline records and providers need no Mocking at all.
 
@@ -26,8 +28,8 @@ Core never imports this package. Inline records and providers need no Mocking at
 `mock` is a data source. Operation behavior is never configured in `mock`; it lives in `operations`.
 
 ```ts
-import { defineApi } from "@apixa/core";
-import "@apixa/mocking/register"; // once per app, only for named datasets
+import { defineApi } from "apixa/core";
+import "apixa/mocking/register"; // once per app, only for named datasets
 
 const api = defineApi({
   baseURL: "https://api.example.com/v1",
@@ -154,7 +156,7 @@ store for these shapes: `GET/POST ""`, `GET/PUT/PATCH/DELETE "/:id"`, `GET "/cou
 ### Errors, reset and isolation
 
 ```ts
-import { resetMock } from "@apixa/core";
+import { resetMock } from "apixa/core";
 resetMock(api); // every mocked resource back to its seed (a store that never loaded stays unloaded)
 ```
 
@@ -177,7 +179,7 @@ A standalone mock: no `defineApi()`, no network. It runs on the same engine as a
 `getAll`, filtering, pagination and `slice` behave identically.
 
 ```ts
-import { defineMockApi } from "@apixa/mocking";
+import { defineMockApi } from "apixa/mocking";
 
 const mockApi = defineMockApi({
   resources: {
@@ -206,11 +208,11 @@ The older flat form `defineMockApi({ users: "users-mock" })` still works.
 ## Dataset access
 
 ```ts
-import { loadDataset } from "@apixa/mocking"; // or from "@apixa/mocking/datasets"
+import { loadDataset } from "apixa/mocking"; // or from "apixa/mocking/datasets"
 const countries = await loadDataset("countries-csc"); // lazy: loaded when called; readonly CountryCsc[]
 
-import { users } from "@apixa/mocking/datasets/users"; // one set, nothing else is loaded
-import { users, products } from "@apixa/mocking/datasets"; // named exports from the barrel
+import { users } from "apixa/mocking/datasets/users"; // one set, nothing else is loaded
+import { users, products } from "apixa/mocking/datasets"; // named exports from the barrel
 ```
 
 |                           | `loadDataset(id)`                | `datasets/<name>`       | `datasets` barrel           |
@@ -273,28 +275,28 @@ Loaded from the root [`datasets/`](../../datasets/) catalog (`manifest.json` sta
 | `timezones-parseapi`  | `Timezone`        | `timezone`  |     418 | CC0-1.0  |
 | `area-codes-parseapi` | `AreaCode`        | `area_code` |     424 | CC0-1.0  |
 
-**Not available** through `defineMockApi()`: `states-csc` (1 MB), `states-parseapi` and `counties-parseapi` (>500 KB, and their id field isn't unique, so `getById` would be ambiguous). They are not bundled; read them from a checkout of the repo's `datasets/` folder with `@apixa/mocking/node` and `{ basePath }`. See [`datasets/ATTRIBUTION.md`](../../datasets/ATTRIBUTION.md) for licenses (ODbL sets are share-alike).
+**Not available** through `defineMockApi()`: `states-csc` (1 MB), `states-parseapi` and `counties-parseapi` (>500 KB, and their id field isn't unique, so `getById` would be ambiguous). They are not bundled; read them from a checkout of the repo's `datasets/` folder with `apixa/mocking/node` and `{ basePath }`. See [`datasets/ATTRIBUTION.md`](../../datasets/ATTRIBUTION.md) for licenses (ODbL sets are share-alike).
 
 ## Node utilities
 
-`@apixa/mocking/node` reads datasets from disk: `loadDataset(id, { basePath })` returns
+`apixa/mocking/node` reads datasets from disk: `loadDataset(id, { basePath })` returns
 `{ meta, records }`, `listDatasets({ basePath })` lists them, `getDataset`, `findDatasetDirs` and
 `resolveDatasetDir` are the building blocks. The root is `basePath`, then `APIXA_DATASETS_DIR`, then
 `./datasets` in the working directory, then the repo's `datasets/` folder when running from a
 checkout. **The npm package contains no dataset files**, so an installed app must supply a root (a
 folder of `<dataset>/meta.json` + `data.json`), otherwise `loadDataset` rejects and `listDatasets`
-returns `[]`. Browser-safe, bundled records come from `@apixa/mocking/datasets`.
+returns `[]`. Browser-safe, bundled records come from `apixa/mocking/datasets`.
 
 ## Compatibility
 
-- `@apixa/core` is a **peer dependency** (`^0.1.0`). Install one copy.
-- `@apixa/mocking/register` stores its loader in a process-wide slot (`Symbol.for("@apixa/core.mockDatasetLoader")`),
-  so it reaches the Core the application runs even if a second copy was installed. The slot holds one
+- Core and Mocking are compiled from private workspace sources into the same `apixa` distribution. No Core peer installation is required.
+- `apixa/mocking/register` stores its loader in a process-wide slot (a stable global symbol),
+  so it reaches the Core the application runs across module boundaries. The slot holds one
   stateless function; mock stores and data stay per client.
 - Without `register`, a named dataset rejects with `MOCK_LOAD` explaining the missing import.
 
 ## Removed
 
-`createMockTransport()` and `createSelectiveMockTransport` are gone, and so are `@apixa/mocking/data`
-and `@apixa/mocking/data/<id>`. Use `defineMockApi()`, `mock: "<dataset-id>"`, or
-`@apixa/mocking/datasets/<name>`.
+`createMockTransport()` and `createSelectiveMockTransport` are gone, and so are `apixa/mocking/data`
+and `apixa/mocking/data/<id>`. Use `defineMockApi()`, `mock: "<dataset-id>"`, or
+`apixa/mocking/datasets/<name>`.
