@@ -2,6 +2,20 @@
 
 Project log. Newest entry first.
 
+## 2026-11-08 — One npm package, private modular implementations
+
+The owner's final v1 decision supersedes the four-publication plan: only `apixa@1.0.0-rc.0`
+will be published. Core, Mocking, React and shared helpers keep their source boundaries as private
+workspace modules. One code-split runtime build and a separate canonical declaration emit preserve
+identity and framework independence. All 14 `apixa` paths and their symbol snapshots remain unchanged.
+The former scoped package paths are development identities, not public installation paths; errors
+now recommend only `apixa/mocking/register` and `apixa/mocking/node`. Consumer, browser and Edge
+checks use one tarball. Scope ownership no longer blocks this packaging. The final checkout fallback in the Node helper
+recognizes both private and public build layouts. Verification passed 841 tests (76 files),
+single-tarball consumers on Node 22/24, Chromium, workerd and Vercel Edge Runtime; npm dry-run
+confirms `a2mby` can publish the root package. See
+[ADR 005](./decisions/005-single-package-distribution.md). Nothing was published, committed or pushed.
+
 ## 2026-11-07 — Release-candidate hardening (Phase 3)
 
 The four packages were verified as a release candidate and the audit found one real defect: thrown

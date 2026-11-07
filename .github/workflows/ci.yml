@@ -31,10 +31,10 @@ jobs:
       # Packages, tests, and the tracked example (examples/query-ssr-next).
       - run: corepack pnpm typecheck
       - run: corepack pnpm test
-      # Packed tarballs installed into clean projects: Core alone, Core + Mocking, peer ranges,
-      # export maps, registration with a duplicated Core, React 18/19 + Vite/Next builds.
+      # One root tarball in clean projects: framework-free Core/Mocking, identity, declarations,
+      # lazy datasets, optional peers, React 18/19 and Vite/Next builds.
       - run: corepack pnpm verify:consumers
-      # Real Chromium against the Next.js SSR example (production and development servers).
+      # Real Chromium against an external single-tarball copy of the Next SSR example.
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
       - run: corepack pnpm verify:browser

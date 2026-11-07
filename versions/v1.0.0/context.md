@@ -9,8 +9,8 @@ The previous v0.8 hook mixed reads and writes. The query/write split was started
 branch before this workstream. This milestone finishes the Query side, makes
 `useResourceMutation` resource-wide, and adds the `useResource` facade over both.
 
-The package is still versioned `0.8.0` in source until the full v1 release is approved and
-published. This folder records the v1 Query contract and its verification without claiming a
+The only public package is `apixa`, prepared as `1.0.0-rc.0` but not published. Core, Mocking,
+React and shared logic are private implementation workspaces (ADR 005). This folder records the v1 Query contract and its verification without claiming a
 package release.
 
 Final stabilization requires an explicit `kind` for every custom Core operation, validates

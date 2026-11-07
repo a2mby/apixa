@@ -10,3 +10,5 @@ Short how-tos for people improving Apixa — not project identity (`context.md`)
 Same topics may exist in both folders with different detail. Prefer the folder that matches the reader.
 
 Living docs still live next to this tree: [context](../context.md), [architecture](../architecture.md), [conventions](../conventions.md), [roadmap](../roadmap.md), [story](../story.md), [decisions/](../decisions/).
+
+- [Install Apixa and choose an entry point](./humans/install-apixa.md)

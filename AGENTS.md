@@ -9,7 +9,7 @@ Generated from `.cursor/rules/*.mdc` by `scripts/sync-agent-rules.sh`. Edit the 
 # Architecture ownership
 
 Source of truth: `docs/architecture.md` (contract), `docs/public-api.md` (exports + migration map),
-`docs/decisions/004-*.md` (why). Do not restate them elsewhere.
+`docs/decisions/005-*.md` (why). Do not restate them elsewhere.
 
 ## Where code goes
 
@@ -25,10 +25,12 @@ Source of truth: `docs/architecture.md` (contract), `docs/public-api.md` (export
 
 - core: nothing. mocking: core (`node:*` only inside `node.ts`'s closure). shared: core only.
 - react: core, shared, `react`, `@tanstack/react-query`. Never mocking. `src/advanced.ts` never reaches `react`.
-- facade (`src/`): only `export … from` the three public packages; `src/react/index.ts` lists names
-  explicitly and must equal `@apixa/react`'s exports. Never bundle `@apixa/*`.
+- facade (`src/`): only `export … from` the private implementation modules; `src/react/index.ts` lists names
+  explicitly and must equal `@apixa/react`'s exports. Compile canonical sources into the single `apixa` distribution; leave framework peers external.
 - Never import another package's `src/`; use its package name and an `exports` subpath.
-- Shared code never imports a framework. `@apixa/internal-shared` is private: keep it a
+- All implementation workspaces are private. Cross-workspace source dependencies are
+  `devDependencies`; public root uses build aliases and has no private dependencies.
+- Shared code never imports a framework. Keep `@apixa/internal-shared` a
   `devDependency`, never a `dependency`/`peerDependency`, never `export *` it from a public entry.
 - Do not add Vue, Angular, or other framework packages until a version scope says so.
 
@@ -43,7 +45,7 @@ Public symbols and import paths in `docs/public-api.md` (curated root list:
 (`pnpm verify` runs all of it: packed tarballs in clean projects, real Chromium against the Next example,
 workerd and the Vercel Edge Runtime). After a deliberate public export change run
 `node scripts/verify-public-api.mjs --update` and review `tests/facade/public-exports.snapshot.json`.
-`pnpm verify:publish` is read-only (npm account, scope, dry-run publish) and never publishes.
+`pnpm verify:publish` is read-only (npm account, root package permission, single-tarball dry-run) and never publishes.
 Run `graphify update .` after code changes. Update the package table in
 `scripts/check-architecture.mjs` when a package is added or renamed.
 
@@ -62,7 +64,7 @@ Run `graphify update .` after code changes. Update the package table in
 ## Before coding
 
 1. Read `docs/context.md` (principles). Do not recap it in chat.
-2. Read the **active** milestone under `versions/` (see `versions/README.md`; none open after v0.7.0).
+2. Read the **active** milestone under `versions/` (see `versions/README.md`).
 3. Implement against that folder’s `scope.md`, `implementation-plan.md`, and `acceptance-criteria.md`.
 
 ## Structure (do not invent a different layout)
@@ -70,7 +72,8 @@ Run `graphify update .` after code changes. Update the package table in
 ```text
 docs/           # living: context, architecture, roadmap, conventions, decisions/, story
 versions/       # frozen milestones only — never empty future stubs
-packages/core/  # only package until a version scope says otherwise
+packages/       # private core, mocking, react, internal/shared implementations
+src/            # facade for the only published npm package: apixa
 examples/next/  # only maintained example; do not edit other examples/*
 tests/
 ```

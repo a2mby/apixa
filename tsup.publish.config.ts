@@ -1,8 +1,6 @@
 import { defineConfig } from "tsup";
 
-// The `apixa` facade is re-exports only. Every `@apixa/*` package, React and TanStack Query stay
-// external, so `apixa/*` and `@apixa/*` resolve to the same module instances at runtime. Nothing
-// from Core, Mocking or React is bundled here.
+// Resolve private modules to canonical source through tsconfig.publish.json.
 const entries: Record<string, string> = {
   index: "src/index.ts",
   core: "src/core.ts",
@@ -20,18 +18,20 @@ const entries: Record<string, string> = {
   "react/advanced": "src/react/advanced.ts",
 };
 
-// One build per entry. A single multi-entry declaration build makes the declaration bundler add a
-// side-effect `import "@apixa/react"` for every external to every entry, so `apixa/core`'s types
-// would mention React. Separate builds keep each entry's declarations to what it re-exports.
-// `pnpm build:package` empties `dist` first.
-export default defineConfig(
-  Object.entries(entries).map(([name, file]) => ({
-    entry: { [name]: file },
-    format: "esm" as const,
-    target: "es2022",
-    dts: true,
-    splitting: false,
-    clean: false,
-    external: [/^@apixa\//, "react", "react-dom", /^@tanstack\//],
-  })),
-);
+// One runtime graph: Core classes, React context, stores and QueryClient are shared across entries.
+// Declarations are emitted separately, preserving modules and unique-symbol identity.
+export default defineConfig({
+  entry: entries,
+  format: ["esm"],
+  target: "es2022",
+  platform: "neutral",
+  dts: false,
+  splitting: true,
+  clean: true,
+  sourcemap: false,
+  noExternal: [/^@apixa\//],
+  external: ["react", "react/jsx-runtime", "react-dom", /^@tanstack\//, /^node:/],
+  esbuildOptions(options) {
+    options.chunkNames = "chunks/[name]-[hash]";
+  },
+});

@@ -22,7 +22,7 @@ const rel = (file) => relative(root, file);
  * with or without a subpath). Everything else is a violation.
  */
 const PACKAGES = {
-  "@apixa/core": { dir: "packages/core", workspace: [], external: [], publishable: true },
+  "@apixa/core": { dir: "packages/core", workspace: [], external: [], publishable: false },
   "@apixa/internal-shared": {
     dir: "packages/internal/shared",
     workspace: ["@apixa/core"],
@@ -33,13 +33,13 @@ const PACKAGES = {
     dir: "packages/mocking",
     workspace: ["@apixa/core"],
     external: [],
-    publishable: true,
+    publishable: false,
   },
   "@apixa/react": {
     dir: "packages/react",
     workspace: ["@apixa/core", "@apixa/internal-shared"],
     external: ["react", "@tanstack/react-query"],
-    publishable: true,
+    publishable: false,
   },
   // The facade is the repository root package. It may only re-export the public packages.
   apixa: {
@@ -262,7 +262,8 @@ for (const [name, info] of Object.entries(PACKAGES)) {
   const m = manifests[name];
   const declared = { ...m.dependencies, ...m.peerDependencies, ...m.devDependencies };
   for (const dep of packageEdges.get(name)) {
-    if (!(dep in declared)) fail("manifest", `${name} imports ${dep} but does not declare it`);
+    if (name !== "apixa" && !(dep in declared))
+      fail("manifest", `${name} imports ${dep} but does not declare it`);
   }
   for (const dep of Object.keys({
     ...m.dependencies,
@@ -402,7 +403,7 @@ for (const [file, { edges }] of graph) {
 
 const publicEntries = new Set();
 for (const [name, info] of Object.entries(PACKAGES)) {
-  if (!info.publishable) continue;
+  if (name === "@apixa/internal-shared") continue;
   for (const [subpath, target] of Object.entries(manifests[name].exports ?? {})) {
     const resolved = resolveWorkspace(subpath === "." ? name : `${name}/${subpath.slice(2)}`);
     if (resolved?.file) publicEntries.add(resolved.file);
@@ -414,7 +415,7 @@ for (const file of publicEntries) {
   for (const edge of entry?.edges ?? []) {
     // Entry files re-export other package modules directly (`export … from`); a private workspace
     // package must never be re-exported wholesale (`export *`) from a public entry.
-    if (edge.workspace && !PACKAGES[edge.workspace].publishable) {
+    if (edge.workspace === "@apixa/internal-shared") {
       const text = readFileSync(file, "utf8");
       const star = new RegExp(`export\\s+(type\\s+)?\\*\\s+from\\s+["']${edge.spec}["']`);
       if (star.test(text))
@@ -483,48 +484,49 @@ for (const [file, { pkg }] of graph) {
   }
 }
 
-// --- Rule: coordinated, independently publishable packages ------------------------------------------
-
+// --- Rule: exactly one public distribution ------------------------------------------------------
 {
-  const publishable = Object.entries(PACKAGES).filter(([, info]) => info.publishable);
-  const versions = new Set(publishable.map(([name]) => manifests[name].version));
-  if (versions.size !== 1) {
-    fail(
-      "release",
-      `publishable packages must share one version, found ${[...versions].join(", ")}`,
-    );
-  }
-  for (const [name] of publishable) {
-    const m = manifests[name];
-    if (m.private) fail("release", `${name} must not be private`);
-    if (m.type !== "module") fail("release", `${name} must be ESM ("type": "module")`);
-    if (m.engines?.node !== ">=22") fail("release", `${name} must declare engines.node ">=22"`);
-    if (!m.files?.includes("dist")) fail("release", `${name} must publish "dist"`);
-    for (const group of ["dependencies", "peerDependencies"]) {
-      for (const [dep, range] of Object.entries(m[group] ?? {})) {
-        if (dep in PACKAGES && !String(range).startsWith("workspace:")) {
-          fail(
-            "release",
-            `${name} ${group}.${dep} must use the workspace: protocol (rewritten on pack)`,
-          );
-        }
+  const m = manifests.apixa;
+  if (m.private) fail("release", "apixa must be public");
+  if (m.type !== "module" || m.engines?.node !== ">=22")
+    fail("release", "apixa must be ESM, Node >=22");
+  if (!m.files?.includes("dist")) fail("release", "apixa must publish dist");
+  if (m.publishConfig?.tag !== "next" || m.publishConfig?.access !== "public")
+    fail("release", "RC must use public access and next tag");
+  for (const group of [
+    "dependencies",
+    "optionalDependencies",
+    "peerDependencies",
+    "devDependencies",
+  ]) {
+    for (const [dep, range] of Object.entries(m[group] ?? {})) {
+      if (dep.startsWith("@apixa/") || /^(workspace:|link:|file:)/.test(range)) {
+        fail("release", `apixa ${group}.${dep} contains a workspace-only dependency`);
       }
     }
   }
-  // React and TanStack must never be required by Core-only installs.
   for (const name of ["@apixa/core", "@apixa/mocking"]) {
-    const m = manifests[name];
-    for (const dep of ["react", "@tanstack/react-query"]) {
-      if (dep in { ...m.dependencies, ...m.peerDependencies })
-        fail("release", `${name} must not depend on ${dep}`);
+    for (const dep of Object.keys({
+      ...manifests[name].dependencies,
+      ...manifests[name].peerDependencies,
+    })) {
+      if (FRAMEWORK_PACKAGES.test(dep)) fail("release", `${name} must not depend on ${dep}`);
     }
   }
-  const root_ = manifests.apixa;
-  for (const dep of ["react", "@tanstack/react-query", "@apixa/react"]) {
-    if (!root_.peerDependenciesMeta?.[dep]?.optional)
-      fail("release", `apixa must declare ${dep} as an optional peer`);
-    if (dep in (root_.dependencies ?? {}))
-      fail("release", `apixa must not list ${dep} as a hard dependency`);
+  for (const dep of ["react", "@tanstack/react-query"]) {
+    if (
+      !m.peerDependencies?.[dep] ||
+      !m.peerDependenciesMeta?.[dep]?.optional ||
+      dep in (m.dependencies ?? {})
+    ) {
+      fail("release", `apixa must declare ${dep} only as an optional peer`);
+    }
+  }
+  // Source imports are build aliases, not installed private dependencies of the public package.
+  const config = JSON.parse(readFileSync(join(root, "tsconfig.publish.json"), "utf8"));
+  for (const dep of packageEdges.get("apixa")) {
+    if (!config.compilerOptions?.paths?.[dep])
+      fail("manifest", `missing source build alias for ${dep}`);
   }
 }
 
@@ -540,15 +542,34 @@ function listBuilt(dir) {
   }
   return out;
 }
-// Generated output: statement-level `… from "x"`, side-effect `import "x"`, and `import("x")`. Matching
-// only at line starts keeps prose inside template strings and comments out of the results.
-const specifierPatterns = [
-  /^(?:import\b[^"'`]*|export\b[^"'`]*|\})\s*from\s*["']([^"']+)["'];?\s*$/gm,
-  /^import\s+["']([^"']+)["'];?\s*$/gm,
-  /\bimport\(\s*["']([^"']+)["']\s*\)/g,
-];
-const specifiersOf = (text) =>
-  specifierPatterns.flatMap((p) => [...text.matchAll(p)].map((m) => m[1]));
+// Parse imports rather than matching emitted formatting; covers declarations and dynamic imports.
+const specifiersOf = (text) => {
+  const source = ts.createSourceFile("output.ts", text, ts.ScriptTarget.Latest, true);
+  const found = [];
+  const visit = (node) => {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    )
+      found.push(node.moduleSpecifier.text);
+    else if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
+    )
+      found.push(node.argument.literal.text);
+    else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      ts.isStringLiteral(node.arguments[0])
+    )
+      found.push(node.arguments[0].text);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+};
 const builtDirs = [
   ["@apixa/core", "packages/core/dist"],
   ["@apixa/mocking", "packages/mocking/dist"],
@@ -566,7 +587,10 @@ function builtClosure(entry) {
     if (seen.has(file) || !existsSync(file)) continue;
     seen.add(file);
     for (const spec of specifiersOf(readFileSync(file, "utf8"))) {
-      if (spec.startsWith(".")) queue.push(resolve(dirname(file), spec));
+      if (spec.startsWith(".")) {
+        const target = resolve(dirname(file), spec);
+        queue.push(file.endsWith(".d.ts") ? target.replace(/\.js$/, ".d.ts") : target);
+      }
     }
   }
   return seen;
@@ -576,28 +600,24 @@ for (const [name, dir] of builtDirs) {
     builtChecked++;
     const text = readFileSync(file, "utf8");
     for (const spec of specifiersOf(text)) {
-      if (spec.startsWith(".")) continue;
+      if (spec.startsWith(".")) {
+        const target = resolve(dirname(file), spec);
+        const resolved = file.endsWith(".d.ts") ? target.replace(/\.js$/, ".d.ts") : target;
+        if (!existsSync(resolved)) fail("dist-resolve", `${rel(file)} cannot resolve ${spec}`);
+        continue;
+      }
       if (spec.startsWith("@apixa/internal-")) {
         fail("private-in-dist", `${rel(file)} has an unresolved private specifier ${spec}`);
       }
-      if (name === "apixa") {
-        // Each facade entry may mention only the package it re-exports (declarations included), so
-        // `apixa/core` types never reference Mocking or React and the root never reaches React.
-        const pkg = packageOf(spec);
-        const entry = relative(join(root, "dist"), file).replace(/\\/g, "/");
-        const allowed = entry.startsWith("react/")
-          ? ["@apixa/react"]
-          : entry.startsWith("mocking/")
-            ? ["@apixa/mocking"]
-            : entry.startsWith("core.")
-              ? ["@apixa/core"]
-              : ["@apixa/core", "@apixa/mocking"];
-        if (!allowed.includes(pkg)) {
-          fail(
-            "facade-dist",
-            `${rel(file)} (published facade) imports ${spec}; this entry may only reference ${allowed.join(", ")}`,
-          );
-        }
+      if (name === "apixa" && spec.startsWith("@apixa/")) {
+        fail("private-in-dist", `${rel(file)} has an unresolved private specifier ${spec}`);
+      }
+      if (
+        name === "apixa" &&
+        !isBuiltin(spec) &&
+        !/^(react|react-dom|@tanstack\/react-query)(\/|$)/.test(spec)
+      ) {
+        fail("facade-dist", `${rel(file)} imports an undeclared external ${spec}`);
       }
       if (
         name === "@apixa/core" &&
@@ -686,7 +706,6 @@ for (const [label, entry] of [
   for (const [label, dir] of [
     ["@apixa/mocking", "packages/mocking/dist"],
     ["@apixa/react", "packages/react/dist"],
-    ["apixa", "dist"],
   ]) {
     for (const file of listBuilt(join(root, dir))) {
       if (file.endsWith(".js") && DEFINITIONS.test(readFileSync(file, "utf8"))) {
@@ -697,6 +716,64 @@ for (const [label, entry] of [
       }
     }
   }
+}
+
+// Emitted runtime cycles can arise even when source modules are acyclic.
+{
+  const files = listBuilt(join(root, "dist")).filter((file) => file.endsWith(".js"));
+  const cycle = findCycle(files, (file) =>
+    readImports(file)
+      .filter((edge) => edge.kind === "static" && edge.spec.startsWith("."))
+      .map((edge) => resolve(dirname(file), edge.spec))
+      .filter((target) => files.includes(target)),
+  );
+  if (cycle) fail("cycle", `emitted module cycle: ${cycle.map(rel).join(" -> ")}`);
+}
+
+// Distribution entry closures: framework-free declarations and runtime, including indirect chunks.
+for (const [subpath, target] of Object.entries(manifests.apixa.exports)) {
+  for (const output of [target.import, target.types]) {
+    for (const file of builtClosure(join(root, output))) {
+      const text = readFileSync(file, "utf8");
+      for (const spec of specifiersOf(text)) {
+        if (!subpath.startsWith("./react") && FRAMEWORK_PACKAGES.test(spec))
+          fail("facade-dist", `${rel(file)} leaks ${spec} into ${subpath}`);
+        if (subpath !== "./mocking/node" && isBuiltin(spec))
+          fail("node-leak", `${rel(file)} leaks ${spec} into ${subpath}`);
+      }
+      if (
+        subpath === "./react/advanced" &&
+        file.endsWith(".js") &&
+        /^['"]use client['"];/.test(text)
+      )
+        fail("client-directive", `${rel(file)} is a client boundary reachable from advanced`);
+    }
+  }
+}
+// A single runtime definition for each singleton, including React internals. Private dev builds
+// are separate test artifacts and deliberately excluded from this published-distribution count.
+for (const symbol of [
+  "ApiError",
+  "HttpError",
+  "MockError",
+  "MockStore",
+  "QueryClient",
+  "ResourceMutationStore",
+  "OptimisticLayers",
+  "ApixaProvider",
+]) {
+  const definition = new RegExp(
+    `(?:var|let|const|class|function)\\s+${symbol}\\b\\s*(?:=|extends|\\{|\\()`,
+    "g",
+  );
+  const sites = listBuilt(join(root, "dist"))
+    .filter((f) => f.endsWith(".js"))
+    .flatMap((file) => [...readFileSync(file, "utf8").matchAll(definition)].map(() => rel(file)));
+  if (existsSync(join(root, "dist/index.js")) && sites.length !== 1)
+    fail(
+      "duplicate-core",
+      `${symbol} must have exactly one implementation; found ${sites.length}: ${sites.join(", ")}`,
+    );
 }
 
 // --- Report ---------------------------------------------------------------------------------------------

@@ -21,10 +21,12 @@ export function resolveDatasetsRoot(basePath?: string): string {
     return fromCwd;
   }
 
-  // packages/mocking/dist → ../../../datasets (repo root in the monorepo)
-  const fromPackage = resolve(dirname(fileURLToPath(import.meta.url)), "../../../datasets");
-  if (existsSync(fromPackage)) {
-    return fromPackage;
+  // The private module lives in packages/mocking/{src,dist}; the public distribution in
+  // dist/mocking (or dist/chunks). Neither published layout ships a filesystem catalog.
+  const moduleDir = dirname(fileURLToPath(import.meta.url));
+  for (const relative of ["../../datasets", "../../../datasets"]) {
+    const fromPackage = resolve(moduleDir, relative);
+    if (existsSync(fromPackage)) return fromPackage;
   }
 
   return fromCwd;

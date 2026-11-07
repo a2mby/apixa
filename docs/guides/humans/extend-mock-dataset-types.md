@@ -1,31 +1,21 @@
 # Extend mock dataset types
 
-## What you get
+For application-specific records, use an inline array or a provider in `mock`; the record type
+is inferred. No catalog extension or separate package installation is needed:
 
-When you use Core with `@apixa/mocking` and set `mock: "…"`, that string picks which local dataset fills the resource. Built-in catalog ids (like `"users-mock"`) autocomplete from Core alone. You can add your own id the same way the package registers presets.
+```ts
+import { defineApi } from "apixa";
+const api = defineApi({
+  baseURL: "/api",
+  resources: { pets: { path: "/pets", mock: [{ id: "1", name: "Rex" }] } },
+});
+const pets = await api.pets.getAll();
+```
 
-## How it works (simple)
+For built-in named datasets, import `apixa/mocking/register` before the first call. Records load
+lazily. `MockDatasetCatalog` owns the built-in entity/id-key mapping; `MockDatasetIds` is a derived
+type, not an open registry interface. The former `registerDatasetPreset` pattern is not implemented
+by the current API.
 
-1. Core ships known catalog ids on `MockDatasetIds` (for autocomplete without importing mocking).
-2. A custom dataset file calls `registerDatasetPreset("my-id", dataset)` at runtime.
-3. The same file merges `"my-id"` into `MockDatasetIds` with `declare module "@apixa/core"`.
-4. Your app **imports that file** so TypeScript sees the merge. Then `"my-id"` appears in `mock` suggestions.
-
-Core never imports `@apixa/mocking` at runtime. Custom ids are taught from the outside on purpose.
-
-## What to do
-
-1. Create a small module (in your app, or under `packages/mocking/src/data/` if it belongs in the package).
-2. Build a `Dataset` (`meta` + `records`).
-3. Call `registerDatasetPreset` with a stable string id.
-4. Add the matching `declare module "@apixa/core" { interface MockDatasetIds { "your-id": true } }`.
-5. Import that module from the file that calls `defineApi`.
-
-Copy-paste shape and notes: [`packages/mocking/README.md`](../../../packages/mocking/README.md) → **Customizing `mock` suggestions**.
-
-## Things that surprise people
-
-- Importing only an entity type (for example `CountryCode`) does **not** add custom ids. Only modules that contain the `declare module` merge teach suggestions.
-- Typos still type-check: the type is “known ids **or** any string,” because custom registry ids are legal. Missing presets fail when the mock runs, not at compile time.
-- Do not put new catalog ids into Core unless you are shipping a package catalog change (v0.9.0 filled the built-in list once).
-- With `defineMockApi` and `pagination: true`, `getAll()` returns a **page** (`data`, `total`, `page`, `pageSize`, `previous`, `next`), not `T[]`. In `useQuery`, keep that page as `data` and read `.data` / `.next` / `.previous` — do not default the whole page to `[]`.
+To contribute a built-in dataset, follow the [agent checklist](../agents/extend-mock-dataset-types.md).
+For paging, loading and individual dataset imports, see the [Mocking guide](../../../packages/mocking/README.md).

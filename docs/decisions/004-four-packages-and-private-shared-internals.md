@@ -1,6 +1,7 @@
 # 004 — Four public packages, one private shared integration layer
 
-Status: accepted and **implemented**: private shared package, boundary checks, the `apixa` facade and
+Status: superseded for publication by [ADR 005](./005-single-package-distribution.md).
+Historical decision, implemented during Phases 1–3: private shared package, boundary checks, the `apixa` facade and
 the `@apixa/react` package (formerly developed as `@apixa/tanstack-query`, never published).
 Export contract: [public-api.md](../public-api.md).
 

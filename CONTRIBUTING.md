@@ -60,7 +60,9 @@ This builds the Core, Mocking, and TanStack Query packages in dependency order.
 
 ## 2. Project Architecture
 
-Apixa is organized as a pnpm monorepo.
+Apixa is organized as a pnpm monorepo. Only the root `apixa` package is published.
+Core, Mocking, React and shared helpers are private implementation modules; their package names
+are source boundaries, not consumer installation dependencies. See [ADR 005](docs/decisions/005-single-package-distribution.md).
 
 ```text
 apixa/

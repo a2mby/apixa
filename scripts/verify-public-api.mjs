@@ -1,6 +1,6 @@
 // Public API contract check against the BUILT output (run `pnpm build` first).
 //
-// For every public entry of the four packages it checks that
+// For every public entry of apixa and the private modules used as compatibility references it checks that
 //   - the runtime exports (importing the real ESM file) equal the value exports of its `.d.ts`,
 //   - the declaration file type-checks on its own (TypeScript, skipLibCheck: false),
 //   - the exported names match the committed snapshot (`tests/facade/public-exports.snapshot.json`),
@@ -78,15 +78,13 @@ for (const [specifier, { dts }] of entries) {
     (isValue ? values : types).push(symbol.name);
   }
   declared.set(specifier, { values: values.sort(), types: types.sort() });
-  const own = [
-    ...program.getSyntacticDiagnostics(source),
-    ...program.getSemanticDiagnostics(source),
-  ];
-  for (const d of own) {
-    fail(
-      `${specifier}: declaration diagnostic: ${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`,
-    );
-  }
+}
+
+// Check the whole declaration closure, including preserved internal modules and peers.
+for (const d of ts.getPreEmitDiagnostics(program)) {
+  fail(
+    `${d.file ? relative(root, d.file.fileName) : "declarations"}: ${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`,
+  );
 }
 
 // ---- Runtime exports equal declared values ------------------------------------------------------------------------------
@@ -234,6 +232,6 @@ if (problems.length) {
   process.exit(1);
 }
 console.log(
-  `Public API verified: ${entries.size} entries (runtime = declarations = snapshot), ` +
+  `Public API verified: 14 public entries + 13 private reference entries (runtime = declarations = snapshot), ` +
     `${checkedImports} documented imports resolve.`,
 );

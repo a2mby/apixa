@@ -20,6 +20,8 @@ export default defineConfig({
   format: ["esm"],
   dts,
   splitting: true,
+  // Private development builds reuse Core; only the root distribution bundles all sources.
+  external: ["@apixa/core"],
   clean: true,
   async onSuccess() {
     const file = new URL("./dist/index.js", import.meta.url);

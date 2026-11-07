@@ -1,4 +1,4 @@
-// Packed-consumer verification for the four publishable packages and the `apixa` facade.
+// Packed-consumer verification for the single published `apixa` distribution.
 //
 // Every package is packed exactly as npm would publish it and installed into clean projects:
 //   A. Root-only Node consumer (no React): curated root, every subpath, runtime identity,
@@ -32,12 +32,7 @@ mkdirSync(packs);
 const curated = JSON.parse(
   readFileSync(join(root, "tests/facade/curated-root-exports.json"), "utf8"),
 );
-const PACKAGES = [
-  ["@apixa/core", "packages/core"],
-  ["@apixa/mocking", "packages/mocking"],
-  ["@apixa/react", "packages/react"],
-  ["apixa", "."],
-];
+const PACKAGES = [["apixa", "."]];
 const SUBPATHS = [
   "apixa",
   "apixa/core",
@@ -73,7 +68,7 @@ const write = (dir, name, contents) => {
 };
 
 try {
-  // ---- 1. Pack all four packages ----------------------------------------------------------
+  // ---- 1. Pack the root distribution ----------------------------------------------------------
   const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
   const tarballs = {};
   for (const [name, dir] of PACKAGES) {
@@ -113,9 +108,14 @@ try {
     assert.ok(!manifest.exports?.["./tanstack-query"], `${name} has no legacy alias`);
     const raw = JSON.stringify(manifest);
     assert.ok(!raw.includes("workspace:"), `${name} manifest still has workspace: ranges`);
-    for (const group of ["dependencies", "peerDependencies", "optionalDependencies"]) {
+    for (const group of [
+      "dependencies",
+      "peerDependencies",
+      "optionalDependencies",
+      "devDependencies",
+    ]) {
       assert.ok(
-        !("@apixa/internal-shared" in (manifest[group] ?? {})),
+        !Object.keys(manifest[group] ?? {}).some((dep) => dep.startsWith("@apixa/")),
         `${name} must not require the private shared package at runtime`,
       );
     }
@@ -143,6 +143,11 @@ try {
       assert.ok(!/\.map$|(^|\/)\.env|\.npmrc$|\.pem$/i.test(file), `${name} packs ${file}`);
       if (!/\.(js|ts|json|md)$/.test(file)) continue;
       const text = readFileSync(file, "utf8");
+      if (/\.(js|ts)$/.test(file))
+        assert.ok(
+          !/(?:from\s*|import\s*\(?\s*)["']@apixa\//.test(text),
+          `${file}: unresolved private import`,
+        );
       assert.ok(!/sourceMappingURL/.test(text), `${name}: ${file} references a source map`);
       assert.ok(
         !/\/Users\/|\/home\/[a-z]+\/|[A-Z]:\\Users\\/.test(text),
@@ -172,11 +177,8 @@ try {
       `${name}: npm pack --dry-run includes source files`,
     );
     if (name === "apixa") {
-      assert.deepEqual(Object.keys(manifest.dependencies ?? {}).sort(), [
-        "@apixa/core",
-        "@apixa/mocking",
-      ]);
-      for (const dep of ["react", "@tanstack/react-query", "@apixa/react"]) {
+      assert.deepEqual(Object.keys(manifest.dependencies ?? {}), []);
+      for (const dep of ["react", "@tanstack/react-query"]) {
         assert.equal(manifest.peerDependenciesMeta?.[dep]?.optional, true, `${dep} optional peer`);
       }
       assert.deepEqual(
@@ -200,30 +202,12 @@ try {
     console.log(`${name}: manifest and tarball contents verified (${listing.length} files)`);
   }
 
-  const overrides = {
-    "@apixa/core": `file:${tarballs["@apixa/core"]}`,
-    "@apixa/mocking": `file:${tarballs["@apixa/mocking"]}`,
-    "@apixa/react": `file:${tarballs["@apixa/react"]}`,
-  };
-
   // ---- A. Root-only Node consumer (npm, no React) -------------------------------------------------------------
   const consumer = join(temporary, "root-only");
   mkdirSync(consumer);
   writeFileSync(join(consumer, "package.json"), '{"private":true,"type":"module"}');
-  run(
-    "npm",
-    [
-      "install",
-      "--ignore-scripts",
-      "--no-audit",
-      "--no-fund",
-      tarballs.apixa,
-      tarballs["@apixa/core"],
-      tarballs["@apixa/mocking"],
-    ],
-    consumer,
-  );
-  for (const absent of ["react", "react-dom", "@tanstack", "@apixa/react"]) {
+  run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarballs.apixa], consumer);
+  for (const absent of ["react", "react-dom", "@tanstack", "@apixa"]) {
     assert.ok(
       !existsSync(join(consumer, "node_modules", absent)),
       `${absent} must not be installed`,
@@ -233,12 +217,6 @@ try {
     !existsSync(join(consumer, "node_modules/apixa/node_modules")),
     "apixa must not nest its own copy of Core or Mocking",
   );
-  assert.equal(
-    JSON.parse(readFileSync(join(consumer, "node_modules/@apixa/core/package.json"), "utf8"))
-      .version,
-    version,
-  );
-
   write(consumer, "expected.json", JSON.stringify(curated));
   write(
     consumer,
@@ -252,10 +230,10 @@ import "apixa/mocking/register";
 import * as datasetsFacade from "apixa/mocking/datasets";
 import * as usersFacade from "apixa/mocking/datasets/users";
 import * as nodeFacade from "apixa/mocking/node";
-import * as core from "@apixa/core";
-import * as mocking from "@apixa/mocking";
-import * as datasets from "@apixa/mocking/datasets";
-import * as node from "@apixa/mocking/node";
+const core = coreFacade;
+const mocking = mockingFacade;
+const datasets = datasetsFacade;
+const node = nodeFacade;
 const expected = JSON.parse(readFileSync("expected.json", "utf8"));
 const keys = (m) => Object.keys(m).sort();
 assert.deepEqual(keys(root), expected, "curated root exports");
@@ -265,16 +243,9 @@ for (const name of expected) {
 for (const hidden of ["MockStore", "resetMock", "registerMockDatasetLoader", "useResource", "QueryClient", "loadDataset"]) {
   assert.ok(!(hidden in root), hidden + " is not on the curated root");
 }
-assert.deepEqual(keys(coreFacade), keys(core));
-assert.deepEqual(keys(mockingFacade), keys(mocking));
-assert.deepEqual(keys(datasetsFacade), keys(datasets));
-assert.deepEqual(keys(nodeFacade), keys(node));
-for (const [facade, pkg] of [[coreFacade, core], [mockingFacade, mocking], [datasetsFacade, datasets], [nodeFacade, node]]) {
-  for (const name of Object.keys(pkg)) assert.equal(facade[name], pkg[name], name);
-}
 assert.equal(usersFacade.users, datasetsFacade.users);
 
-// One Core: errors thrown by an API built through the facade are the @apixa/core classes.
+// One Core: errors thrown by an API built through the facade are the apixa/core classes.
 const api = root.defineApi({
   baseURL: "https://example.test",
   transport: { request: async () => ({ status: 404, headers: new Headers(), raw: new Response(null), body: "{}" }) },
@@ -295,7 +266,7 @@ assert.ok((await mocking.loadDataset("users-mock")).length > 0);
 // React is an optional peer: the React entries fail clearly, and only when imported.
 for (const entry of ["apixa/react", "apixa/react/advanced"]) {
   const error = await import(entry).then(() => null, (e) => e);
-  assert.ok(error && /@apixa\\/react/.test(String(error.message)), entry + " names the missing peer: " + error?.message);
+  assert.ok(error && /react|@tanstack/.test(String(error.message)), entry + " names the missing peer: " + error?.message);
 }
 console.log("root-only runtime ok (Node " + process.versions.node + ")");
 `,
@@ -352,7 +323,7 @@ console.log("root-only runtime ok (Node " + process.versions.node + ")");
     };
   };
   const coreOnly = await staticClosure(
-    'import { defineApi } from "@apixa/core"; console.log(defineApi);',
+    'import { defineApi } from "apixa/core"; console.log(defineApi);',
   );
   const facadeOnly = await staticClosure(
     'import { defineApi } from "apixa"; console.log(defineApi);',
@@ -361,14 +332,14 @@ console.log("root-only runtime ok (Node " + process.versions.node + ")");
     'import { defineApi, defineMockApi } from "apixa"; console.log(defineApi, defineMockApi);',
   );
   const mockingOnly = await staticClosure(
-    'import { defineMockApi } from "@apixa/mocking"; console.log(defineMockApi);',
+    'import { defineMockApi } from "apixa/mocking"; console.log(defineMockApi);',
   );
   console.log("\nBundle impact (esbuild, browser, minified, code-split):");
   for (const [label, m] of [
-    ["@apixa/core only", coreOnly],
+    ["apixa/core only", coreOnly],
     ["apixa: defineApi only", facadeOnly],
     ["apixa: defineApi + defineMockApi", facadeMock],
-    ["@apixa/mocking: defineMockApi", mockingOnly],
+    ["apixa/mocking: defineMockApi", mockingOnly],
   ]) {
     console.log(
       `  ${label.padEnd(36)} initial ${kb(m.initial).padStart(9)}   lazy ${String(m.lazyChunks).padStart(2)} chunks ${kb(m.lazyBytes).padStart(9)}   unreferenced ${String(m.orphanChunks).padStart(2)} chunks ${kb(m.orphanBytes).padStart(9)}`,
@@ -382,11 +353,7 @@ console.log("root-only runtime ok (Node " + process.versions.node + ")");
     facadeMock.initial < 400 * 1024,
     "initial JavaScript for the root must not contain dataset contents",
   );
-  assert.equal(
-    coreOnly.lazyChunks + coreOnly.orphanChunks,
-    0,
-    "a Core-only import emits no dataset chunk",
-  );
+  assert.equal(coreOnly.lazyChunks, 0, "a Core-only import reaches no dataset chunk");
   assert.equal(
     facadeOnly.lazyChunks,
     0,
@@ -497,6 +464,17 @@ import { users, type User } from "apixa/mocking/datasets";
 import { users as usersOnly } from "apixa/mocking/datasets/users";
 import { listDatasets } from "apixa/mocking/node";
 import "apixa/mocking/register";
+import { OPERATION_METADATA as rootMetadata } from "apixa";
+import { OPERATION_METADATA as coreMetadata, type ApiRequest as CoreRequest } from "apixa/core";
+import type { ApiRequest as RootRequest } from "apixa";
+import * as products from "apixa/mocking/datasets/products";
+import * as companies from "apixa/mocking/datasets/companies";
+import * as orders from "apixa/mocking/datasets/orders";
+import * as posts from "apixa/mocking/datasets/posts";
+import * as comments from "apixa/mocking/datasets/comments";
+const sameSymbol: typeof coreMetadata = rootMetadata;
+const requestIdentity = (request: RootRequest): CoreRequest => request;
+void [sameSymbol, requestIdentity, products, companies, orders, posts, comments];
 type Account = { id: string; name: string };
 const api = defineApi<{ accounts: { entity: Account } }>()({
   baseURL: "/api",
@@ -567,6 +545,13 @@ void [all, one, transport, metadata, client, failure, first, usersOnly, MockStor
     }
   }
 
+  for (const absent of ["react", "react-dom", "@tanstack", "@apixa"]) {
+    assert.ok(
+      !existsSync(join(consumer, "node_modules", absent)),
+      `${absent} absent after declaration checks`,
+    );
+  }
+
   // ---- B. React 18 and 19 through the facade (pnpm) -------------------------------------------------------------
   const react = {
     18: { react: "18.3.1", dom: "18.3.1", types: "^18.3.0", domTypes: "^18.3.0", query: "5.90.1" },
@@ -588,11 +573,8 @@ void [all, one, transport, metadata, client, failure, first, usersOnly, MockStor
       JSON.stringify({
         private: true,
         type: "module",
-        pnpm: { overrides },
         dependencies: {
           apixa: `file:${tarballs.apixa}`,
-          "@apixa/react": overrides["@apixa/react"],
-          "@apixa/core": overrides["@apixa/core"],
           "@tanstack/react-query": v.query,
           react: v.react,
           "react-dom": v.dom,
@@ -687,20 +669,14 @@ import { renderToString } from "react-dom/server";
 import { useQueryClient } from "@tanstack/react-query";
 import * as facade from "apixa/react";
 import * as facadeAdvanced from "apixa/react/advanced";
-import * as pkg from "@apixa/react";
-import * as pkgAdvanced from "@apixa/react/advanced";
+const pkg = facade;
+
 import { defineApi } from "apixa";
-import { defineApi as coreDefineApi } from "@apixa/core";
+import { defineApi as coreDefineApi } from "apixa/core";
 
 // Identity: every path to the React API is the same module instance.
-assert.equal(facade.QueryClient, pkg.QueryClient);
-assert.equal(facadeAdvanced.QueryClient, pkgAdvanced.QueryClient);
 assert.equal(facade.QueryClient, facadeAdvanced.QueryClient, "client and server entries share one QueryClient");
-assert.equal(facade.ApixaProvider, pkg.ApixaProvider);
-assert.equal(facade.useResourceQuery, pkg.useResourceQuery);
 assert.equal(defineApi, coreDefineApi);
-assert.deepEqual(Object.keys(facade).sort(), Object.keys(pkg).sort());
-assert.deepEqual(Object.keys(facadeAdvanced).sort(), Object.keys(pkgAdvanced).sort());
 
 // Server: request-scoped client, prefetch, dehydrate; client: provider + boundary, render once.
 let calls = 0;
@@ -786,15 +762,11 @@ if (b.chunks < 16) { console.error("defineMockApi lost its lazy dataset chunks")
     run("node", ["probe.mjs"], dir);
     // One copy of everything that must be a singleton.
     const store = readdirSync(join(dir, "node_modules/.pnpm"));
-    for (const prefix of [
-      "@apixa+core@",
-      "@apixa+mocking@",
-      "@apixa+react@",
-      "apixa@",
-      "@tanstack+react-query@",
-      "react@",
-      "react-dom@",
-    ]) {
+    assert.ok(
+      !store.some((entry) => entry.startsWith("@apixa+")),
+      "no private workspace packages installed",
+    );
+    for (const prefix of ["apixa@", "@tanstack+react-query@", "react@", "react-dom@"]) {
       const copies = store.filter((entry) => entry.startsWith(prefix));
       assert.ok(copies.length <= 1, `duplicate ${prefix}: ${copies.join(", ")}`);
     }

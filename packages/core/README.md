@@ -1,4 +1,6 @@
-# `@apixa/core`
+# `apixa/core`
+
+Implementation: private workspace module `@apixa/core`. Public installation: `npm install apixa`.
 
 TypeScript API client: `defineApi()`, default-first resource CRUD, Fetch transport, standardized errors.
 
@@ -62,7 +64,7 @@ await api.orders.create(body, { idempotencyKey: "checkout-42" }); // your own ke
   `request.headers`.
 - The default key is `crypto.randomUUID()`. `createIdempotencyKey(resource, name)` returns a fresh
   key from the operation's own generator for integrations that retry whole calls
-  (`@apixa/react` does this for mutation retries).
+  (`apixa/react` does this for mutation retries).
 - Apixa only sends the key. Deduplication, persistence, and concurrent identical requests are the
   backend's job; a header alone does not guarantee exactly-once execution.
 - Function operations (`{ kind, run }`) reject `idempotency` with a `ConfigError`; set the header
@@ -86,7 +88,7 @@ Context: `{ request, response?, attempt, meta }`.
 
 ## Plugin seams
 
-`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), install `@apixa/mocking` and import `@apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `@apixa/mocking` README.
+`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), install `apixa/mocking` and import `apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `apixa/mocking` README.
 
 ## Errors
 

@@ -27,7 +27,7 @@
   middleware replay, and TanStack mutation retries). Off by default; the only Core behavior
   addition in this workstream.
 - Mocking stabilization: no URL-guessed custom operations on mocks, prototype-safe writes, Core as a
-  peer dependency of `@apixa/mocking`, one `getAll` contract for `defineApi` mocks and
+  private build dependency of Mocking, one `getAll` contract for `defineApi` mocks and
   `defineMockApi`, page-only reads, per-dataset import paths, and a verified packed-consumer and
   example gate.
 
@@ -46,4 +46,12 @@ Package layout and boundaries for the unified release are described in
 `@apixa/internal-shared` layer, `pnpm check:architecture`, the `@apixa/tanstack-query` →
 `@apixa/react` rename, `ApixaProvider`, an Apixa `QueryClient`, `ApixaHydrationBoundary`, the
 server-safe `dehydrate`, and the `apixa` facade (curated root plus `core`, `mocking*` and `react*`
-subpaths). Four packages are publishable at one coordinated version; none has been published.
+subpaths). The original four-publication strategy was superseded by the owner decision below; none was published.
+
+## Final packaging decision (2026-11-08)
+
+[ADR 005](../../docs/decisions/005-single-package-distribution.md) is authoritative: publish only
+`apixa@1.0.0-rc.0`. All four implementation modules remain private. In scope: a single code-split
+runtime distribution, isolated canonical declarations, optional React peers, all 14 existing public
+subpaths, single-tarball consumer/browser/Edge verification, architecture guards and release docs.
+No business-logic redesign, new frameworks, real publication, commit or push is part of this migration.

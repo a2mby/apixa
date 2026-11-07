@@ -8,7 +8,7 @@ describe("optional dataset registration", () => {
         baseURL: "https://example.test",
         resources: { users: { path: "/users", mock: "users-mock" } },
       });
-    await expect(makeApi().users.getAll()).rejects.toThrow("@apixa/mocking/register");
+    await expect(makeApi().users.getAll()).rejects.toThrow("apixa/mocking/register");
     const loader = vi.fn(async () => [{ id: "one" }]);
     registerMockDatasetLoader(loader);
     const api = makeApi();

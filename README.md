@@ -18,43 +18,48 @@ Working with APIs often means repeating the same patterns across resources and p
 
 Apixa aims to reduce this duplication while preserving TypeScript's type safety and flexibility.
 
-## npm packages
+## Installation
 
-Four packages are prepared for publication (version `1.0.0-rc.0`, Node.js 22+, ESM only). None has
-been published to npm under these names yet.
-
-| Package          | Use                                                                 |
-| ---------------- | ------------------------------------------------------------------- |
-| `apixa`          | The facade: one install, curated root, subpaths for everything else |
-| `@apixa/core`    | Framework-independent engine                                        |
-| `@apixa/mocking` | Mocking and datasets                                                |
-| `@apixa/react`   | React integration (TanStack Query is the engine inside)             |
+Apixa publishes one npm package: `apixa` (`1.0.0-rc.0`, ESM, Node.js 22+). The RC is prepared
+locally and has not been published. After release, install it with:
 
 ```sh
-npm install apixa                                   # Core + Mocking
-npm install apixa @apixa/react react @tanstack/react-query   # add the React integration
+npm install apixa
+# React applications also install the optional peers:
+npm install apixa react @tanstack/react-query
 ```
 
 ```ts
-import { defineApi, defineApis, defineMockApi } from "apixa"; // curated, framework-independent
-import { MockStore } from "apixa/core"; // the full Core surface
-import "apixa/mocking/register"; // lets `mock: "<dataset-id>"` load named datasets
-import { users } from "apixa/mocking/datasets"; // typed records; /datasets/users etc. one at a time
-import { listDatasets } from "apixa/mocking/node"; // Node-only filesystem loaders
+import { defineApi, defineApis, defineMockApi } from "apixa";
+import { MockStore } from "apixa/core";
+import "apixa/mocking/register";
+import { users } from "apixa/mocking/datasets/users";
+import { listDatasets } from "apixa/mocking/node"; // Node-only
+```
+
+```tsx
 import {
-  ApixaProvider,
   QueryClient,
+  ApixaProvider,
+  ApixaHydrationBoundary,
   useResource,
   useResourceQuery,
   useResourceMutation,
-} from "apixa/react"; // client components
-import { QueryClient, dehydrate } from "apixa/react/advanced"; // server-safe: Server Components
+} from "apixa/react";
+// Server Components use the server-safe entry:
+import { QueryClient as ServerQueryClient, dehydrate } from "apixa/react/advanced";
 ```
 
-`apixa` re-exports the published `@apixa/*` packages, so both spellings share one runtime instance.
-React and TanStack Query are optional peers: importing only `apixa` never loads them. Importing
-`apixa/react` without `@apixa/react` installed fails with a module-not-found error that names it. See
-[`docs/public-api.md`](./docs/public-api.md) for the export contract.
+Framework subpaths keep integrations isolated. Root, Core and Mocking imports require neither
+React nor TanStack Query. React and TanStack Query are optional peers, left external to the
+library build; install them only when using `apixa/react`. Missing peers produce the loader's
+module-not-found error when a React entry is imported. Future `apixa/vue` and `apixa/angular`
+subpaths are planned, not implemented.
+
+Core, Mocking, React and shared integration helpers remain private workspace modules. Their
+canonical code is compiled into one distribution with shared runtime chunks. No scoped package
+installation is required. See the [installation guide](./docs/guides/humans/install-apixa.md)
+and [public API contract](./docs/public-api.md).
 
 ### Runtime support
 
@@ -78,7 +83,7 @@ credentials.
 - **Convention-driven:** Generate common resource operations where appropriate.
 - **Fully customizable:** Support custom endpoints and override generated behavior.
 - **Framework-agnostic:** Keep the core independent of UI frameworks and data-fetching libraries.
-- **Composable:** Allow additional capabilities through optional packages.
+- **Composable:** Allow additional capabilities through isolated subpaths.
 
 ## Usage (implemented)
 
@@ -158,7 +163,7 @@ Set `defaultOperations: false` to start with no builtins, then enable individual
 groups. `writeOnly: true` filters read defaults. Group precedence and all default wire conventions
 are documented in [docs/conventions.md](docs/conventions.md#selection-order).
 
-Pass `transport` to inject a custom HTTP implementation (used in tests). The default is Fetch, shipped inside `@apixa/core`.
+Pass `transport` to inject a custom HTTP implementation (used in tests). The default is Fetch, shipped inside Core.
 
 ### Request reliability (implemented)
 
@@ -257,7 +262,7 @@ API methods are intended to return native promises, allowing them to work natura
 packages/
   core/             # API definitions and execution
   mocking/          # Local datasets and standalone mock APIs
-  react/            # React integration (@apixa/react)
+  react/            # Private React integration
   internal/shared/  # Private, never published: framework-neutral integration helpers
 datasets/           # Version-controlled JSON fixtures
 examples/
@@ -284,7 +289,7 @@ Planned later packages (not created yet): `transport-fetch`, `client`, `server`,
 
 ## Project Status
 
-Apixa is in early development. Last shipped: **v0.11.0**. The v1.0.0 TanStack Query workstream is in progress. `@apixa/core` exposes `defineApi()` with default-first CRUD, reliability, re-callable middleware, and extension seams. `@apixa/mocking` augments Core for resource mocks.
+Apixa is in early development. Last shipped: **v0.11.0**. The v1.0.0 TanStack Query workstream is in progress. Core exposes `defineApi()` with default-first CRUD, reliability, re-callable middleware, and extension seams. Mocking augments Core for resource mocks.
 
 See [versions/v1.0.0/acceptance-criteria.md](./versions/v1.0.0/acceptance-criteria.md) for the active milestone checklist.
 

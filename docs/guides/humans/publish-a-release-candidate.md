@@ -1,31 +1,27 @@
 # Publish a release candidate
 
-How `1.0.0-rc.N` reaches npm. Nothing in the repository publishes on its own.
+Only the root package `apixa` is published. Core, Mocking, React and shared workspaces all have
+`private: true`; recursive publication skips them. Release commands target the root explicitly.
+No npm organization scope is needed. The RC version is `1.0.0-rc.0`, ESM, Node.js >=22.
 
-1. **Verify a clean checkout of the release commit.**
-   `pnpm install --frozen-lockfile && pnpm verify`. This builds the four packages, checks the module
-   graph and the public API snapshot, runs the tests, installs the packed tarballs into clean projects
-   (React 18/19, Vite, Next.js), runs real Chromium against the Next.js example, and runs the facade in
-   `workerd` and the Vercel Edge Runtime.
-2. **Check the account.** `pnpm verify:publish` is read-only. It prints who is logged in, who owns the
-   `@apixa` scope, the 2FA mode, the publishing order, and dry-runs each publish. Fix anything under
-   "Action required" first.
-3. **Publish in dependency order**, each with the prerelease tag and a one-time password (the account
-   uses 2FA for writes). Always use `pnpm publish`, never `npm publish`: pnpm rewrites the `workspace:`
-   ranges in the manifests.
+1. From the release checkout, run `pnpm install --frozen-lockfile && pnpm verify`.
+   This checks source boundaries, the built graph and declaration closure, public API snapshots,
+   unit/security tests, single-tarball consumers, React 18/19, TypeScript compatibility, Vite,
+   Next Server Components, real Chromium hydration, workerd and Vercel Edge Runtime.
+2. Run `pnpm verify:publish`. This reads the npm account and `apixa` permission, checks version
+   availability, packs only root and runs `npm publish <tarball> --dry-run --tag next --access public`.
+   It never publishes and does not need an OTP for the dry-run.
+3. After release authorization, publish **only root**, supplying an OTP if npm requires one:
 
-   ```bash
-   pnpm --dir packages/core    publish --tag next --access public --otp=<code>
-   pnpm --dir packages/mocking publish --tag next --access public --otp=<code>
-   pnpm --dir packages/react   publish --tag next --access public --otp=<code>
-   pnpm --dir .                publish --tag next --access public --otp=<code>
+   ```sh
+   pnpm --dir . publish --tag next --access public
    ```
 
-   `publishConfig` in each manifest already says `tag: next` and `access: public`, so a forgotten flag
-   cannot move `latest`.
+   The account may require an OTP or a suitable granular token. Supply credentials through npm's
+   secure flow. Root `publishConfig` defaults to `next` and public access. Do not move `latest`
+   until the stable 1.0.0 release decision. No other package needs publication or installation.
 
-4. **Confirm.** `npm view <name> dist-tags` shows `next` at the new version and `latest` untouched
-   (`apixa` currently has a `0.1.0` placeholder on `latest`).
-5. **Smoke-test from the registry** in an empty project: `npm install apixa@next`, then import `apixa`.
+4. Confirm `npm view apixa dist-tags`: `next` should point to the RC and `latest` remain unchanged.
+5. Smoke-test `npm install apixa@next` in an empty project; for React add `react @tanstack/react-query`.
 
-Do not remove `publishConfig.tag` or move `latest` until the stable `1.0.0` decision is made.
+The migration and verification scripts do not publish, commit or push.

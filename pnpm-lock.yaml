@@ -7,17 +7,7 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@apixa/core':
-        specifier: workspace:^
-        version: link:packages/core
-      '@apixa/mocking':
-        specifier: workspace:^
-        version: link:packages/mocking
     devDependencies:
-      '@apixa/react':
-        specifier: workspace:*
-        version: link:packages/react
       '@faker-js/faker':
         specifier: '9'
         version: 9.9.0

@@ -7,14 +7,25 @@
 // `npx playwright-core install chromium`.
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { homedir, platform } from "node:os";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { homedir, platform, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const example = join(root, "examples/query-ssr-next");
+// Keep the tracked example untouched: materialize it in an external npm consumer.
+const temporary = mkdtempSync(join(tmpdir(), "apixa-browser-"));
+const example = join(temporary, "app");
 
 function findChromium() {
   if (process.env.APIXA_CHROMIUM) return process.env.APIXA_CHROMIUM;
@@ -258,28 +269,70 @@ async function exercise(mode, port) {
   }
 }
 
-console.log(`Chromium: ${executablePath}`);
-execFileSync(next, ["build"], { cwd: example, stdio: "inherit" });
+try {
+  const packs = join(temporary, "packs");
+  mkdirSync(packs);
+  execFileSync("pnpm", ["pack", "--pack-destination", packs], { cwd: root, stdio: "pipe" });
+  cpSync(join(root, "examples/query-ssr-next"), example, {
+    recursive: true,
+    filter: (file) => !/(^|\/)(node_modules|\.next|\.git)(\/|$)|tsbuildinfo$/.test(file),
+  });
+  const rewrite = (dir) => {
+    for (const item of readdirSync(dir, { withFileTypes: true })) {
+      const file = join(dir, item.name);
+      if (item.isDirectory()) rewrite(file);
+      else if (/\.(tsx?|jsx?|mjs)$/.test(file)) {
+        writeFileSync(
+          file,
+          readFileSync(file, "utf8")
+            .replaceAll("@apixa/core", "apixa/core")
+            .replaceAll("@apixa/mocking", "apixa/mocking")
+            .replaceAll("@apixa/react", "apixa/react"),
+        );
+      }
+    }
+  };
+  rewrite(example);
+  const manifest = JSON.parse(readFileSync(join(example, "package.json"), "utf8"));
+  manifest.dependencies = Object.fromEntries(
+    Object.entries(manifest.dependencies).filter(([name]) => !name.startsWith("@apixa/")),
+  );
+  manifest.dependencies.apixa = `file:${join(
+    packs,
+    readdirSync(packs).find((f) => f.endsWith(".tgz")),
+  )}`;
+  writeFileSync(join(example, "package.json"), JSON.stringify(manifest));
+  writeFileSync(join(example, "next.config.mjs"), "export default {};\n");
+  execFileSync("npm", ["install", "--no-audit", "--no-fund"], { cwd: example, stdio: "inherit" });
+  assert.ok(
+    !existsSync(join(example, "node_modules/@apixa")),
+    "browser consumer installs no private packages",
+  );
+  console.log(`Chromium: ${executablePath}`);
+  execFileSync(next, ["build"], { cwd: example, stdio: "inherit" });
 
-// The server bundle imports the React-free advanced entry; only the main entry is a client reference.
-const manifestFile = join(example, ".next/server/app/page_client-reference-manifest.js");
-const manifest = readFileSync(manifestFile, "utf8");
-assert.ok(
-  /packages\/react\/dist\/index\.js/.test(manifest),
-  "the hydration boundary must be a client reference",
-);
-assert.ok(
-  !/packages\/react\/dist\/advanced\.js/.test(manifest),
-  "the server-safe advanced entry must not be a client module",
-);
-assert.ok(
-  !/node:fs|\/mocking\/dist\/node\.js/.test(manifest),
-  "no Node-only module may reach a client reference",
-);
-note(
-  "Next bundle graph: ApixaHydrationBoundary is the only client reference from apixa/react; advanced stays server-side",
-);
+  // The server bundle imports the React-free advanced entry; only the main entry is a client reference.
+  const manifestFile = join(example, ".next/server/app/page_client-reference-manifest.js");
+  const clientManifest = readFileSync(manifestFile, "utf8");
+  assert.ok(
+    /apixa\/dist\/react\/index\.js/.test(clientManifest),
+    "the hydration boundary must be a client reference",
+  );
+  assert.ok(
+    !/apixa\/dist\/react\/advanced\.js/.test(clientManifest),
+    "the server-safe advanced entry must not be a client module",
+  );
+  assert.ok(
+    !/node:fs|\/dist\/mocking\/node\.js/.test(clientManifest),
+    "no Node-only module may reach a client reference",
+  );
+  note(
+    "Next bundle graph: ApixaHydrationBoundary is the only client reference from apixa/react; advanced stays server-side",
+  );
 
-await exercise("start", 3421);
-await exercise("dev", 3422);
-console.log(`\nbrowser verification ok (${results.length} checks)`);
+  await exercise("start", 3421);
+  await exercise("dev", 3422);
+  console.log(`\nbrowser verification ok (${results.length} checks)`);
+} finally {
+  rmSync(temporary, { recursive: true, force: true });
+}

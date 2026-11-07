@@ -21,7 +21,7 @@ function checkout(): string {
   const dir = mkdtempSync(join(tmpdir(), "apixa-arch-"));
   copies.push(dir);
   const keep = (src: string) => !src.includes("node_modules");
-  for (const path of ["packages", "src", "dist", "package.json"]) {
+  for (const path of ["packages", "src", "dist", "package.json", "tsconfig.publish.json"]) {
     if (existsSync(join(repo, path)))
       cpSync(join(repo, path), join(dir, path), { recursive: true, filter: keep });
   }
@@ -50,6 +50,55 @@ afterAll(() => {
 });
 
 const violations: [string, string, (dir: string) => void][] = [
+  [
+    "emitted-cycle",
+    "cycle",
+    (d) => {
+      append(d, "dist/index.js", '\nimport "./core.js";\n');
+      append(d, "dist/core.js", '\nimport "./index.js";\n');
+    },
+  ],
+  [
+    "private-runtime-import-in-tarball",
+    "private-in-dist",
+    (d) => append(d, "dist/index.js", '\nimport "@apixa/core";\n'),
+  ],
+  [
+    "duplicate-core-in-distribution",
+    "duplicate-core",
+    (d) => append(d, "dist/core.js", "\nclass HttpError extends Error {}\n"),
+  ],
+  [
+    "private-runtime-dependency",
+    "private-dependency",
+    (d) =>
+      edit(
+        d,
+        "package.json",
+        '"name": "apixa",',
+        '"name": "apixa", "dependencies": { "@apixa/core": "1.0.0-rc.0" },',
+      ),
+  ],
+  [
+    "react-peer-becomes-mandatory",
+    "release",
+    (d) => edit(d, "package.json", '"optional": true', '"optional": false'),
+  ],
+  [
+    "missing-distribution-chunk",
+    "dist-resolve",
+    (d) => append(d, "dist/core.js", '\nimport "./missing.js";\n'),
+  ],
+  [
+    "advanced-becomes-client-boundary",
+    "client-directive",
+    (d) => edit(d, "dist/react/advanced.js", /^/, '\"use client\";\n'),
+  ],
+  [
+    "emitted-root-loads-react",
+    "facade-dist",
+    (d) => append(d, "dist/core.js", '\nimport "react";\n'),
+  ],
   [
     "react-in-core",
     "external-dependency",
@@ -98,7 +147,7 @@ const violations: [string, string, (dir: string) => void][] = [
   [
     "facade-core-declarations-mention-react",
     "facade-dist",
-    (d) => append(d, "dist/core.d.ts", "\nimport '@apixa/react';\n"),
+    (d) => append(d, "dist/core.d.ts", "\nimport 'react';\n"),
   ],
   [
     "mocking-bundles-its-own-core",
@@ -106,10 +155,9 @@ const violations: [string, string, (dir: string) => void][] = [
     (d) => append(d, "packages/mocking/dist/index.js", "\nclass ApiError extends Error {}\n"),
   ],
   [
-    "versions-drift",
-    "release",
-    (d) =>
-      edit(d, "packages/react/package.json", '"version": "1.0.0-rc.0"', '"version": "1.0.0-rc.1"'),
+    "internal-package-becomes-public",
+    "private-package",
+    (d) => edit(d, "packages/react/package.json", '"private": true', '"private": false'),
   ],
   [
     "react-package-loses-use-client",

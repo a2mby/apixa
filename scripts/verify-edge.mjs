@@ -95,12 +95,7 @@ try {
   // ---- Pack and install the facade exactly as a consumer would -----------------------------------------------------
   const version = "1.0.0-rc.0";
   const tarballs = {};
-  for (const [name, dir] of [
-    ["@apixa/core", "packages/core"],
-    ["@apixa/mocking", "packages/mocking"],
-    ["@apixa/react", "packages/react"],
-    ["apixa", "."],
-  ]) {
+  for (const [name, dir] of [["apixa", "."]]) {
     run("pnpm", ["--dir", dir, "pack", "--pack-destination", packs], root, true);
     tarballs[name] = join(packs, `${name.replace("@", "").replace("/", "-")}-${version}.tgz`);
   }
@@ -112,9 +107,6 @@ try {
       "--no-audit",
       "--no-fund",
       tarballs.apixa,
-      tarballs["@apixa/core"],
-      tarballs["@apixa/mocking"],
-      tarballs["@apixa/react"],
       "react@19.1.1",
       "@tanstack/react-query@5.104.4",
       "workerd",

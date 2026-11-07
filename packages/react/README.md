@@ -1,4 +1,6 @@
-# `@apixa/react`
+# `apixa/react`
+
+Implementation: private workspace module `@apixa/react`. Public installation: `npm install apixa` plus `react @tanstack/react-query`.
 
 Three hooks map Apixa resource clients onto TanStack Query v5:
 
@@ -10,19 +12,19 @@ Three hooks map Apixa resource clients onto TanStack Query v5:
 
 **Owns:** the React integration (hooks, controllers, query options, cache sync, optimistic updates,
 mutation state). **Imports:** Core, the private `@apixa/internal-shared` (bundled at build time),
-`react`, and `@tanstack/react-query`; never Mocking. This package was developed as
+`react`, and `@tanstack/react-query`; never Mocking. This integration was developed as
 `@apixa/tanstack-query` and was never published under that name.
 
 Apixa adds resource identity (hierarchical keys), operation selection, exact Core argument/return
 types, and signal binding. TanStack still owns observers, caching, deduplication, retries,
 scheduling, polling, state transitions, Suspense, and hydration — Apixa adds no cache or scheduler.
 
-Install `@apixa/react`, `@apixa/core`, `@tanstack/react-query` 5.90.1 or later in v5, and React 18 or 19 (or `apixa` and import everything from `apixa/react`). Wrap the app in `ApixaProvider`, or keep using TanStack's own `QueryClientProvider`: the hooks work under either, and there is exactly one cache, TanStack's.
+Install `apixa react @tanstack/react-query` (TanStack Query >=5.90.1 within v5, React 18 or 19). Wrap the app in `ApixaProvider`, or keep using TanStack's own `QueryClientProvider`: the hooks work under either, and there is exactly one cache, TanStack's.
 
 ### `ApixaProvider` and `QueryClient`
 
 ```tsx
-import { ApixaProvider, QueryClient } from "@apixa/react";
+import { ApixaProvider, QueryClient } from "apixa/react";
 
 // Let the provider create one client and keep it for its lifetime…
 <ApixaProvider config={{ staleTime: 60_000, retry: 1 }}>{children}</ApixaProvider>;
@@ -33,7 +35,7 @@ const client = new QueryClient({ staleTime: 60_000, gcTime: 300_000, retry: fals
 ```
 
 `QueryClient` is TanStack's `QueryClient` (same instance type for the hooks, the controllers in
-`@apixa/react/advanced`, optimistic updates and dehydration). It accepts every native option plus
+`apixa/react/advanced`, optimistic updates and dehydration). It accepts every native option plus
 five shorthands that set `defaultOptions.queries`: `staleTime`, `gcTime`, `retry`, `networkMode`
 and `meta`. An explicit `defaultOptions.queries` value wins over its shorthand; mutation defaults
 are never touched. With `client` omitted, `ApixaProvider` creates the client once from `config`
@@ -43,7 +45,7 @@ and never recreates it on re-render.
 
 ```tsx
 "use client";
-import { useResourceQuery } from "@apixa/react";
+import { useResourceQuery } from "apixa/react";
 import { api } from "./api";
 
 function Users() {
@@ -257,10 +259,10 @@ await posts.fetchPreviousPage();
 
 ## Hook-free query options
 
-Import the factory from `@apixa/react/advanced` in React components, server components, loaders, or imperative code. It uses the same key and execution engine as the hook and carries TanStack's query-key data tag.
+Import the factory from `apixa/react/advanced` in React components, server components, loaders, or imperative code. It uses the same key and execution engine as the hook and carries TanStack's query-key data tag.
 
 ```tsx
-import { createResourceQueryOptions } from "@apixa/react/advanced";
+import { createResourceQueryOptions } from "apixa/react/advanced";
 import { useQuery, useQueries, useSuspenseQuery } from "@tanstack/react-query";
 
 const options = createResourceQueryOptions(api.users, {
@@ -282,13 +284,13 @@ await queryClient.ensureQueryData(options);
 
 ```tsx
 // app/page.tsx (server component)
-import { ApixaHydrationBoundary } from "@apixa/react";
+import { ApixaHydrationBoundary } from "apixa/react";
 import {
   QueryClient,
   dehydrate,
   prefetchResourceInfiniteQuery,
   prefetchResourceQuery,
-} from "@apixa/react/advanced";
+} from "apixa/react/advanced";
 
 export default async function Page() {
   const client = new QueryClient(); // request-scoped: never share a server cache between users

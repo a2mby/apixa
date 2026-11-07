@@ -8,7 +8,7 @@ alwaysApply: true
 ## Before coding
 
 1. Read `docs/context.md` (principles). Do not recap it in chat.
-2. Read the **active** milestone under `versions/` (see `versions/README.md`; none open after v0.7.0).
+2. Read the **active** milestone under `versions/` (see `versions/README.md`).
 3. Implement against that folder’s `scope.md`, `implementation-plan.md`, and `acceptance-criteria.md`.
 
 ## Structure (do not invent a different layout)
@@ -16,7 +16,8 @@ alwaysApply: true
 ```text
 docs/           # living: context, architecture, roadmap, conventions, decisions/, story
 versions/       # frozen milestones only — never empty future stubs
-packages/core/  # only package until a version scope says otherwise
+packages/       # private core, mocking, react, internal/shared implementations
+src/            # facade for the only published npm package: apixa
 examples/next/  # only maintained example; do not edit other examples/*
 tests/
 ```

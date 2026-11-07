@@ -26,3 +26,9 @@
     consumer checks in CI, and the tracked example inside `pnpm typecheck`.
 15. **A:** inline `mock` handlers for custom declarative operations (typed records, store view,
     params, query, body, signal) inside Core's existing mock lifecycle.
+
+16. **P — Final packaging:** preserve the Phase 1–3 implementation; make all workspaces private,
+    compile one root distribution with shared runtime chunks and isolated canonical declarations,
+    convert the existing consumer/browser/Edge and publishing checks to one tarball, update the
+    source and distribution guards, documentation and agent rules, then verify Node 22/24 and npm
+    dry-run. No real publication, commit or push.
