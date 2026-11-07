@@ -14,7 +14,9 @@ jobs:
         with:
           node-version: 22
       - name: Enable pnpm
-        run: corepack enable
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.0 --activate
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
       # Packages, tests, and the tracked example (examples/query-ssr-next).
