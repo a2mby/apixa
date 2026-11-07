@@ -36,3 +36,14 @@
 - Unrelated Core behavior changes, a second query cache, a global provider, or a custom infinite scheduler.
 - Automatic classification of custom functions as reads (Core `kind` is explicit).
 - npm publication or declaring the entire v1.0.0 release shipped.
+
+## Architecture addendum (2026-11-07)
+
+Package layout and boundaries for the unified release are described in
+[ADR 004](../../docs/decisions/004-four-packages-and-private-shared-internals.md),
+[docs/architecture.md](../../docs/architecture.md#architecture-contract-v100) and
+[docs/public-api.md](../../docs/public-api.md). In scope and implemented: the private
+`@apixa/internal-shared` layer, `pnpm check:architecture`, the `@apixa/tanstack-query` →
+`@apixa/react` rename, `ApixaProvider`, an Apixa `QueryClient`, `ApixaHydrationBoundary`, the
+server-safe `dehydrate`, and the `apixa` facade (curated root plus `core`, `mocking*` and `react*`
+subpaths). Four packages are publishable at one coordinated version; none has been published.

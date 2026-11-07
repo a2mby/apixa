@@ -10,11 +10,33 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     // Most specific first: aliases match by prefix, in order.
     alias: [
+      // The `apixa` facade: source entry per public subpath (anchored so `@apixa/*` is unaffected).
+      {
+        find: /^apixa\/mocking\/datasets\/(.+)$/,
+        replacement: resolve(root, "src/mocking/datasets/$1.ts"),
+      },
+      {
+        find: /^apixa\/mocking\/datasets$/,
+        replacement: resolve(root, "src/mocking/datasets/index.ts"),
+      },
+      {
+        find: /^apixa\/mocking\/(register|node)$/,
+        replacement: resolve(root, "src/mocking/$1.ts"),
+      },
+      { find: /^apixa\/mocking$/, replacement: resolve(root, "src/mocking/index.ts") },
+      { find: /^apixa\/react\/advanced$/, replacement: resolve(root, "src/react/advanced.ts") },
+      { find: /^apixa\/react$/, replacement: resolve(root, "src/react/index.ts") },
+      { find: /^apixa\/core$/, replacement: resolve(root, "src/core.ts") },
+      { find: /^apixa$/, replacement: resolve(root, "src/index.ts") },
       {
         find: /^@apixa\/mocking\/datasets\/(.+)$/,
         replacement: resolve(root, "packages/mocking/src/dataset-modules/$1.ts"),
       },
       { find: "@apixa/core", replacement: resolve(root, "packages/core/src/index.ts") },
+      {
+        find: "@apixa/internal-shared",
+        replacement: resolve(root, "packages/internal/shared/src/index.ts"),
+      },
       {
         find: "@apixa/mocking/register",
         replacement: resolve(root, "packages/mocking/src/register.ts"),
@@ -26,12 +48,12 @@ export default defineConfig({
       },
       { find: "@apixa/mocking", replacement: resolve(root, "packages/mocking/src/index.ts") },
       {
-        find: "@apixa/tanstack-query/advanced",
-        replacement: resolve(root, "packages/tanstack-query/src/advanced.ts"),
+        find: "@apixa/react/advanced",
+        replacement: resolve(root, "packages/react/src/advanced.ts"),
       },
       {
-        find: "@apixa/tanstack-query",
-        replacement: resolve(root, "packages/tanstack-query/src/index.ts"),
+        find: "@apixa/react",
+        replacement: resolve(root, "packages/react/src/index.ts"),
       },
     ],
   },

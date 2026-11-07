@@ -30,7 +30,7 @@ description: >-
 Stop and say why if asked to:
 
 - Create empty `versions/v0.2.0` (etc.) “for later”
-- Add `packages/transport-fetch|client|server|mocking|tanstack-query|openapi` outside active scope
+- Add `packages/transport-fetch|client|server|vue|angular|openapi` outside active scope
 - Put React / Next / TanStack Query into `@apixa/core`
 - Duplicate living context at repo root as `context.md`
 - Rewrite a shipped version folder for new features (open a new version instead)

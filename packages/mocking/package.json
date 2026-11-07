@@ -1,8 +1,17 @@
 {
   "name": "@apixa/mocking",
-  "version": "0.5.0",
+  "version": "1.0.0-rc.0",
   "description": "Standalone in-memory mock APIs and local JSON datasets for Apixa \u2014 no network, no backend.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a2mby/apixa.git",
+    "directory": "packages/mocking"
+  },
+  "homepage": "https://github.com/a2mby/apixa#readme",
+  "bugs": {
+    "url": "https://github.com/a2mby/apixa/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -70,7 +79,7 @@
     "typescript": "^5.8.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "keywords": [
     "apixa",
@@ -78,5 +87,9 @@
     "fixtures",
     "in-memory",
     "typescript"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
+  }
 }

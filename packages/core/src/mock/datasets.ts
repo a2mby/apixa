@@ -54,8 +54,9 @@ export async function loadNamedDataset(id: MockDatasetId): Promise<readonly unkn
   if (!datasetLoader) {
     throw new MockError(
       "MOCK_LOAD",
-      `mock: "${id}" needs the optional "@apixa/mocking" integration. ` +
-        `Install it and import "@apixa/mocking/register" once (before the first call), ` +
+      `mock: "${id}" needs the optional Mocking integration. ` +
+        `Import "apixa/mocking/register" once before the first call ` +
+        `(or "@apixa/mocking/register" if you installed @apixa/mocking directly), ` +
         `or pass inline records / a provider instead.`,
     );
   }

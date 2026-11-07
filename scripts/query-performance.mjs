@@ -1,6 +1,6 @@
 import { performance } from "node:perf_hooks";
 import { QueryClient } from "@tanstack/react-query";
-import { createResourceQueryOptions } from "../packages/tanstack-query/dist/advanced.js";
+import { createResourceQueryOptions } from "../packages/react/dist/advanced.js";
 
 // Run after `pnpm build`: `node scripts/query-performance.mjs [iterations]`.
 // This is a reproducible local baseline, not a cross-machine performance target.

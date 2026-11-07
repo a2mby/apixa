@@ -5,14 +5,24 @@
     "baseUrl": ".",
     "jsx": "react-jsx",
     "paths": {
+      "apixa": ["../src/index.ts"],
+      "apixa/core": ["../src/core.ts"],
+      "apixa/mocking": ["../src/mocking/index.ts"],
+      "apixa/mocking/register": ["../src/mocking/register.ts"],
+      "apixa/mocking/node": ["../src/mocking/node.ts"],
+      "apixa/mocking/datasets": ["../src/mocking/datasets/index.ts"],
+      "apixa/mocking/datasets/*": ["../src/mocking/datasets/*.ts"],
+      "apixa/react": ["../src/react/index.ts"],
+      "apixa/react/advanced": ["../src/react/advanced.ts"],
       "@apixa/core": ["../packages/core/src/index.ts"],
+      "@apixa/internal-shared": ["../packages/internal/shared/src/index.ts"],
       "@apixa/mocking": ["../packages/mocking/src/index.ts"],
       "@apixa/mocking/datasets": ["../packages/mocking/src/datasets.ts"],
       "@apixa/mocking/datasets/*": ["../packages/mocking/src/dataset-modules/*.ts"],
       "@apixa/mocking/register": ["../packages/mocking/src/register.ts"],
       "@apixa/mocking/node": ["../packages/mocking/src/node.ts"],
-      "@apixa/tanstack-query": ["../packages/tanstack-query/src/index.ts"],
-      "@apixa/tanstack-query/advanced": ["../packages/tanstack-query/src/advanced.ts"]
+      "@apixa/react": ["../packages/react/src/index.ts"],
+      "@apixa/react/advanced": ["../packages/react/src/advanced.ts"]
     }
   },
   "include": ["./**/*.ts", "./**/*.tsx"]

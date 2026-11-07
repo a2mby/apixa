@@ -18,3 +18,7 @@ examples/**
 
 # dataset build cache (re-fetched by scripts/datasets/build-collection.mjs)
 scripts/datasets/.cache/
+
+# graphify
+graphify-out/
+graph.json

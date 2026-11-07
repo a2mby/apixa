@@ -4,8 +4,12 @@ In-memory mock APIs for Apixa: inline records, named datasets, providers, and a 
 `defineMockApi()`. **Mocked resources never touch the network.**
 
 ```sh
-pnpm add @apixa/core @apixa/mocking   # Core is a peer dependency: one copy, ^0.1.0
+pnpm add @apixa/core @apixa/mocking   # Core is a peer dependency: one copy, ^1.0.0-rc.0
 ```
+
+**Owns:** `defineMockApi`, dataset catalog, loaders and modules, mock errors, `register`, and Node
+dataset utilities. **Imports:** Core only; `node:*` is confined to `@apixa/mocking/node`. It reuses
+Core's `MockStore` and never duplicates it. See [architecture](../../docs/architecture.md#architecture-contract-v100).
 
 | Import                           | What it is                                                                                    | Side effect |
 | -------------------------------- | --------------------------------------------------------------------------------------------- | ----------- |

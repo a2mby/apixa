@@ -29,8 +29,14 @@ export class ApiError extends Error {
     this.status = options?.status;
     this.code = options?.code ?? "NETWORK";
     this.data = options?.data;
-    this.request = options?.request;
-    this.response = options?.response;
+    // `request` carries the outgoing headers (Authorization, API keys) and body, and `response` the
+    // request again. Both stay readable (`error.request`) for middleware and handlers, but are
+    // non-enumerable so `console.log(error)`, `util.inspect`, `JSON.stringify` and error reporters
+    // that copy own enumerable properties do not leak credentials or request payloads.
+    Object.defineProperties(this, {
+      request: { value: options?.request, enumerable: false, writable: true, configurable: true },
+      response: { value: options?.response, enumerable: false, writable: true, configurable: true },
+    });
     this.retryable = options?.retryable ?? false;
     this.attempt = options?.attempt;
     this.cause = options?.cause;

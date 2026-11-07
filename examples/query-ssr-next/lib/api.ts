@@ -30,6 +30,10 @@ function respond(request: TransportRequest): unknown {
 // Deterministic local transport: this example builds and runs without an API server.
 const transport = {
   async request(request: TransportRequest) {
+    // Test hook (browser checks): records each request when a page installs `__apixaRequests`.
+    (globalThis as { __apixaRequests?: string[] }).__apixaRequests?.push(
+      `${request.method} ${new URL(request.url).pathname}${new URL(request.url).search}`,
+    );
     const body = respond(request);
     const raw = new Response(JSON.stringify(body), {
       status: 200,

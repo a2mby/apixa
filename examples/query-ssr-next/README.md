@@ -1,7 +1,7 @@
 # Next.js App Router query hydration
 
 This runnable example prefetches Apixa resources on the server with `prefetchResourceQuery` and
-`prefetchResourceInfiniteQuery`, dehydrates the request-scoped TanStack `QueryClient`, and renders
+`prefetchResourceInfiniteQuery`, dehydrates the request-scoped Apixa `QueryClient`, and renders
 client components against the hydrated cache:
 
 - `useResource` with the hydrated list, an optimistic `create` (with a Core idempotency key)
@@ -21,5 +21,6 @@ pnpm --filter @apixa/example-query-ssr-next build
 pnpm --filter @apixa/example-query-ssr-next dev
 ```
 
-The server imports the hook-free `@apixa/tanstack-query/advanced` entry. The client component
-imports the main hook entry, which is built with a `"use client"` directive.
+The server imports the React-free `@apixa/react/advanced` entry (`QueryClient`, `dehydrate`, the
+prefetch helpers). Client components import the main entry (`ApixaProvider`,
+`ApixaHydrationBoundary`, the hooks), which is built with a `"use client"` directive.

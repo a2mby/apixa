@@ -2,6 +2,50 @@
 
 ## Unreleased
 
+### Security — errors no longer expose credentials to logs
+
+- `@apixa/core` — `ApiError.request` and `.response` (which carry the outgoing `Authorization` and API-key
+  headers and the request body) are now non-enumerable. They stay readable (`error.request.headers`,
+  middleware and handlers are unchanged), but `console.log(error)`, `util.inspect`, `JSON.stringify` and
+  error reporters that copy enumerable properties no longer print bearer tokens, API keys or request
+  payloads.
+
+### Added — release-candidate verification
+
+- `pnpm check:api` compares every public entry's runtime exports, declarations and a committed snapshot
+  (`tests/facade/public-exports.snapshot.json`) and checks that documented imports exist.
+- `pnpm verify:browser` runs real Chromium against the Next.js SSR example (production and development):
+  server HTML, hydration without warnings or refetches, shared cache, mutations and invalidation,
+  `ApixaProvider` stability, a native TanStack provider, request isolation.
+- `pnpm verify:edge` runs the packed facade in `workerd` (Cloudflare Workers, no `nodejs_compat`) and the
+  Vercel Edge Runtime. `pnpm verify:publish` is a read-only npm account/scope check with dry-run publishes.
+- The architecture checker now also rejects Node globals and local paths in edge-safe built output and any
+  Core class defined outside Core's build, and its failure detection is itself tested.
+- All four manifests set `publishConfig` (`access: public`, `tag: next`), `repository`, `homepage`, `bugs`.
+- The `full: true` error says "Apixa React hooks" instead of "TanStack hooks" (same condition, same type).
+
+### Added — unified `apixa` facade and `@apixa/react`
+
+- `apixa` is a facade over `@apixa/core`, `@apixa/mocking` and (optional peer) `@apixa/react`: a
+  curated framework-independent root plus `apixa/core`, `apixa/mocking`, `apixa/mocking/register`,
+  `apixa/mocking/datasets[/<name>]`, `apixa/mocking/node`, `apixa/react` and `apixa/react/advanced`.
+  It re-exports (never bundles) the packages, so `apixa/*` and `@apixa/*` share one runtime.
+- `@apixa/react` — `ApixaProvider`, an Apixa `QueryClient` (TanStack's, with `staleTime`, `gcTime`,
+  `retry`, `networkMode`, `meta` shorthands), `ApixaHydrationBoundary` and `dehydrate`. `QueryClient`
+  and `dehydrate` are also exported from the React-free `@apixa/react/advanced`, so a Server Component
+  can build a request-scoped client, prefetch and hydrate. TanStack's `QueryClientProvider` still works.
+
+### Changed — packaging
+
+- `@apixa/tanstack-query` is renamed `@apixa/react` (never published under the old name). Its entries
+  are one code-split build, and its Core peer is `^1.0.0-rc.0` rather than an exact pin.
+- `@apixa/core`, `@apixa/mocking`, `@apixa/react` and `apixa` share version `1.0.0-rc.0` and require
+  Node.js 22+. The `apixa/tanstack-query*` aliases are gone.
+- A named mock dataset without registration now tells users to import `apixa/mocking/register` (or
+  `@apixa/mocking/register`).
+- Private `@apixa/internal-shared` holds the framework-neutral resource-key and operation-classification
+  helpers. `pnpm check:architecture` enforces the package boundaries.
+
 ### Added — mock handlers for custom declarative operations
 
 - `@apixa/core` — a custom declarative operation accepts an optional `mock` handler,

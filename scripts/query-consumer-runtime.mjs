@@ -4,8 +4,8 @@ import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useResource, useResourceMutation, useResourceQuery } from "@apixa/tanstack-query";
-import { createResourceQueryOptions } from "@apixa/tanstack-query/advanced";
+import { useResource, useResourceMutation, useResourceQuery } from "@apixa/react";
+import { createResourceQueryOptions } from "@apixa/react/advanced";
 
 const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost" });
 globalThis.window = dom.window;
