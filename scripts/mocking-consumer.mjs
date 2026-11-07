@@ -18,7 +18,8 @@ import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const esbuild = join(root, "packages/mocking/node_modules/.bin/esbuild");
+// A direct root dev dependency: pnpm does not link transitive CLIs into every package.
+const esbuild = join(root, "node_modules/.bin/esbuild");
 const work = mkdtempSync(join(tmpdir(), "apixa-mocking-"));
 const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: "pipe" });
 

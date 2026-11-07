@@ -29,6 +29,7 @@
     "@testing-library/react": "^16.3.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "esbuild": "0.25.12",
     "jsdom": "^26.1.0",
     "prettier": "^3.9.10",
     "react": "^19.1.1",
