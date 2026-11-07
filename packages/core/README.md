@@ -4,6 +4,10 @@ TypeScript API client: `defineApi()`, default-first resource CRUD, Fetch transpo
 
 ## Custom operations
 
+**Owns:** definitions, operations, request lifecycle, middleware, transforms, retry/timeout, errors,
+type inference, operation metadata, and the `MockStore` execution bridge. **Imports:** nothing
+(no React, TanStack Query, Mocking, or Node built-ins). See [architecture](../../docs/architecture.md#architecture-contract-v100).
+
 Every custom operation declares `kind: "read" | "write"`. Declarative operations also declare
 an HTTP method; function operations use `{ kind, run }`:
 
@@ -58,7 +62,7 @@ await api.orders.create(body, { idempotencyKey: "checkout-42" }); // your own ke
   `request.headers`.
 - The default key is `crypto.randomUUID()`. `createIdempotencyKey(resource, name)` returns a fresh
   key from the operation's own generator for integrations that retry whole calls
-  (`@apixa/tanstack-query` does this for mutation retries).
+  (`@apixa/react` does this for mutation retries).
 - Apixa only sends the key. Deduplication, persistence, and concurrent identical requests are the
   backend's job; a header alone does not guarantee exactly-once execution.
 - Function operations (`{ kind, run }`) reject `idempotency` with a `ConfigError`; set the header

@@ -1,7 +1,7 @@
 # v1.0.0 — Query integration context
 
 Apixa Core owns resource operations, request execution, cancellation, timeouts, and Core retries.
-`@apixa/tanstack-query` owns the mapping from those operations to TanStack Query v5. TanStack
+`@apixa/react` (developed as `@apixa/tanstack-query`) owns the mapping from those operations to TanStack Query v5. TanStack
 owns query observers, cache state, refetch scheduling, and query retries. React and TanStack do
 not enter Core.
 

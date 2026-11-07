@@ -2,6 +2,49 @@
 
 Project log. Newest entry first.
 
+## 2026-11-07 — Release-candidate hardening (Phase 3)
+
+The four packages were verified as a release candidate and the audit found one real defect: thrown
+errors exposed the outgoing `Authorization` header and request body to `console.log` and error
+reporters. `ApiError.request` and `.response` are now non-enumerable (still readable). Verification
+grew to match the claims: public exports are checked against declarations and a snapshot, the Next.js
+example runs in real Chromium, and the packed facade runs in `workerd` and the Vercel Edge Runtime.
+The architecture checker's failure detection is tested. The `@apixa` npm scope is owned by a different
+npm user than the one logged in here, so publishing `@apixa/*` is blocked until that is resolved; see
+[the release guide](./guides/humans/publish-a-release-candidate.md). Nothing was published.
+
+## 2026-11-07 — `apixa` facade and `@apixa/react` (Phase 2)
+
+`@apixa/tanstack-query` is now `@apixa/react` (it was never published under the old name), and the
+root `apixa` package is a re-export facade over `@apixa/core`, `@apixa/mocking` and the optional
+`@apixa/react`: a curated root plus `apixa/core`, `apixa/mocking*` and `apixa/react[/advanced]`. The
+React package gained `ApixaProvider`, an Apixa `QueryClient` (TanStack's, with `staleTime`, `gcTime`,
+`retry`, `networkMode` and `meta` shorthands), `ApixaHydrationBoundary` and `dehydrate`; `QueryClient`
+and `dehydrate` also live in the React-free advanced entry so Server Components can prefetch. Its
+two entries are now one code-split build, which gives them a single shared `QueryClient`. All four
+packages are at `1.0.0-rc.0` with Node 22+; nothing has been published. Packed consumers cover a
+root-only install without React, React 18 and 19, Vite, and Next.js production and development with
+Server Component prefetch and hydration. The facade's declarations are built per entry because a
+single multi-entry build made `apixa/core`'s types import `@apixa/react`.
+
+## 2026-11-07 — Architecture contract and shared integration layer (Phase 1)
+
+Four public packages (`apixa`, `@apixa/core`, `@apixa/mocking`, `@apixa/react`) and one private
+shared layer are now the documented target ([ADR 004](./decisions/004-four-packages-and-private-shared-internals.md)).
+Implemented: `@apixa/internal-shared` with the resource key algorithm and operation classification
+moved out of the TanStack package (behavior unchanged, bundled into its output), a dead Core
+declaration that named a Mocking module removed, and `pnpm check:architecture`, which checks
+dependency direction, cycles, framework and Node leakage, private imports and built output with the
+TypeScript module graph. Not done yet: the `apixa` facade, the `@apixa/react` rename, `ApixaProvider`
+and `QueryClient`; the migration map is in [public-api.md](./public-api.md).
+
+## 2026-11-07 — Unified npm package prepared
+
+The root `apixa` manifest now builds a publishable Core entry and optional Mocking and React
+subpaths from the existing packages. A packed consumer verifies the root can run without React or
+unpublished `@apixa/*` installs, while the React path works when its peers are present. No npm
+publication or version bump has occurred.
+
 ## 2026-11-07 — Mock handler types and cancellation verified
 
 The v1.0.0 Mocking work now has compile-time coverage for `defineApis` handler records, nested path

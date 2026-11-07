@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { MutationObserver, QueryClient } from "@tanstack/react-query";
-import {
-  createResourceKeys,
-  ResourceMutationStore,
-} from "../packages/tanstack-query/dist/advanced.js";
+import { createResourceKeys, ResourceMutationStore } from "../packages/react/dist/advanced.js";
 
 for (const rejecting of ["onError", "onSettled"]) {
   async function run(apixa) {

@@ -1,8 +1,17 @@
 {
   "name": "@apixa/core",
-  "version": "0.1.0",
-  "description": "TypeScript API framework — define your API once, use it everywhere.",
+  "version": "1.0.0-rc.0",
+  "description": "TypeScript API framework \u2014 define your API once, use it everywhere.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a2mby/apixa.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/a2mby/apixa#readme",
+  "bugs": {
+    "url": "https://github.com/a2mby/apixa/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -27,7 +36,7 @@
     "typescript": "^5.8.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "keywords": [
     "api",
@@ -36,5 +45,9 @@
     "http",
     "client",
     "framework"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
+  }
 }

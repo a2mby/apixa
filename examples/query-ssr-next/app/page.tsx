@@ -1,5 +1,10 @@
-import { prefetchResourceInfiniteQuery, prefetchResourceQuery } from "@apixa/tanstack-query/advanced";
-import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
+import { ApixaHydrationBoundary } from "@apixa/react";
+import {
+  QueryClient,
+  dehydrate,
+  prefetchResourceInfiniteQuery,
+  prefetchResourceQuery,
+} from "@apixa/react/advanced";
 import { api, postsPaging } from "../lib/api";
 import { Posts } from "./posts";
 import { Users } from "./users";
@@ -14,13 +19,13 @@ export default async function Page() {
     prefetchResourceInfiniteQuery(client, api.posts, { queryKey: ["posts"], infinite: postsPaging }),
   ]);
   return (
-    <HydrationBoundary state={dehydrate(client)}>
+    <ApixaHydrationBoundary state={dehydrate(client)}>
       <main>
         <h1>Users</h1>
         <Users />
         <h2>Posts</h2>
         <Posts />
       </main>
-    </HydrationBoundary>
+    </ApixaHydrationBoundary>
   );
 }

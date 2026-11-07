@@ -23,7 +23,7 @@ tests/
 
 - Living context stays at `docs/context.md` — **not** a duplicate root `context.md`.
 - Do **not** create future version folders until that milestone starts (use `/start-version`).
-- Do **not** create `transport-fetch`, `client`, `server`, `mocking`, `tanstack-query`, or `openapi` packages unless the **active** version scope says so.
+- Do **not** create `transport-fetch`, `client`, `server`, `openapi`, `vue`, or `angular` packages unless the **active** version scope says so. Existing packages: `core`, `mocking`, `react`, and the private `internal/shared`.
 
 ## Core non-negotiables
 

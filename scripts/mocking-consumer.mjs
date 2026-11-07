@@ -150,7 +150,11 @@ console.log("runtime ok");
     undefined,
     "core must not be a regular dependency",
   );
-  assert.match(mockingManifest.peerDependencies["@apixa/core"], /^\^0\./, "peer range is bounded");
+  assert.match(
+    mockingManifest.peerDependencies["@apixa/core"],
+    /^\^1\./,
+    "peer range is bounded to this major",
+  );
   for (const name of ["users", "products", "companies", "orders", "posts", "comments"]) {
     const entry = mockingManifest.exports[`./datasets/${name}`];
     assert.ok(entry?.import && entry?.types, `export map has ./datasets/${name}`);
@@ -158,16 +162,16 @@ console.log("runtime ok");
     readFileSync(join(app, "node_modules/@apixa/mocking", entry.types), "utf8");
   }
 
-  // An incompatible Core (0.2.0) next to this Mocking is refused by npm's peer resolution.
+  // An incompatible Core (2.0.0) next to this Mocking is refused by npm's peer resolution.
   const coreTarball = tarballs.find((t) => basename(t).startsWith("apixa-core-"));
   const mockingTarball = tarballs.find((t) => basename(t).startsWith("apixa-mocking-"));
-  const bumped = join(work, "core-0.2.0");
+  const bumped = join(work, "core-2.0.0");
   mkdirSync(bumped);
   run("tar", ["xzf", coreTarball, "-C", bumped]);
   const corePkg = JSON.parse(readFileSync(join(bumped, "package/package.json"), "utf8"));
-  corePkg.version = "0.2.0";
+  corePkg.version = "2.0.0";
   writeFileSync(join(bumped, "package/package.json"), JSON.stringify(corePkg));
-  run("tar", ["czf", join(bumped, "core-0.2.0.tgz"), "-C", bumped, "package"]);
+  run("tar", ["czf", join(bumped, "core-2.0.0.tgz"), "-C", bumped, "package"]);
   const incompatible = join(work, "incompatible");
   mkdirSync(incompatible);
   writeFileSync(
@@ -178,7 +182,7 @@ console.log("runtime ok");
   try {
     run(
       "npm",
-      ["install", "--no-audit", "--no-fund", join(bumped, "core-0.2.0.tgz"), mockingTarball],
+      ["install", "--no-audit", "--no-fund", join(bumped, "core-2.0.0.tgz"), mockingTarball],
       incompatible,
     );
   } catch (error) {

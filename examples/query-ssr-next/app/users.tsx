@@ -1,6 +1,6 @@
 "use client";
 
-import { useResource } from "@apixa/tanstack-query";
+import { useResource } from "@apixa/react";
 import { useState } from "react";
 import { api } from "../lib/api";
 

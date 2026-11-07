@@ -1,0 +1,19 @@
+{
+  "name": "@apixa/internal-shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Private, framework-neutral integration helpers shared by Apixa framework packages. Never published; bundled into consumers at build time.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@apixa/core": "workspace:*",
+    "typescript": "^5.8.2"
+  }
+}

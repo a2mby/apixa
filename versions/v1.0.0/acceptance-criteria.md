@@ -39,4 +39,13 @@
 - [x] The tracked example typechecks inside `pnpm typecheck`, and CI runs the packed-consumer checks.
 - [x] A custom declarative operation can define its mocked behavior with an inline typed `mock`
       handler; without one it stays `MOCK_UNSUPPORTED`, and a live resource ignores it.
+- [x] `pnpm check:architecture` passes: dependency direction, no cycles, no React/TanStack/Node leakage
+      into Core or edge-safe Mocking entries, no private shared specifier in built output.
+- [x] The `apixa` facade re-exports the canonical packages (curated root, `apixa/core`, mocking and
+      React subpaths); packed consumers cover a root-only Node install without React, React 18 and
+      19 with Vite, and Next.js production and development builds with Server Component prefetch
+      and hydration.
+- [x] Release-candidate gates pass: public API snapshot, real-browser SSR and hydration, `workerd` and
+      Vercel Edge Runtime runs of the packed facade, Node 22 and 24, errors do not expose request
+      headers or bodies.
 - [ ] Full v1 release requirements beyond this Query workstream are completed and published.

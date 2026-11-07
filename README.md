@@ -18,6 +18,59 @@ Working with APIs often means repeating the same patterns across resources and p
 
 Apixa aims to reduce this duplication while preserving TypeScript's type safety and flexibility.
 
+## npm packages
+
+Four packages are prepared for publication (version `1.0.0-rc.0`, Node.js 22+, ESM only). None has
+been published to npm under these names yet.
+
+| Package          | Use                                                                 |
+| ---------------- | ------------------------------------------------------------------- |
+| `apixa`          | The facade: one install, curated root, subpaths for everything else |
+| `@apixa/core`    | Framework-independent engine                                        |
+| `@apixa/mocking` | Mocking and datasets                                                |
+| `@apixa/react`   | React integration (TanStack Query is the engine inside)             |
+
+```sh
+npm install apixa                                   # Core + Mocking
+npm install apixa @apixa/react react @tanstack/react-query   # add the React integration
+```
+
+```ts
+import { defineApi, defineApis, defineMockApi } from "apixa"; // curated, framework-independent
+import { MockStore } from "apixa/core"; // the full Core surface
+import "apixa/mocking/register"; // lets `mock: "<dataset-id>"` load named datasets
+import { users } from "apixa/mocking/datasets"; // typed records; /datasets/users etc. one at a time
+import { listDatasets } from "apixa/mocking/node"; // Node-only filesystem loaders
+import {
+  ApixaProvider,
+  QueryClient,
+  useResource,
+  useResourceQuery,
+  useResourceMutation,
+} from "apixa/react"; // client components
+import { QueryClient, dehydrate } from "apixa/react/advanced"; // server-safe: Server Components
+```
+
+`apixa` re-exports the published `@apixa/*` packages, so both spellings share one runtime instance.
+React and TanStack Query are optional peers: importing only `apixa` never loads them. Importing
+`apixa/react` without `@apixa/react` installed fails with a module-not-found error that names it. See
+[`docs/public-api.md`](./docs/public-api.md) for the export contract.
+
+### Runtime support
+
+| Runtime                                      | Status                                                                                                                     |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Node.js 22, 24                               | Supported (CI matrix)                                                                                                      |
+| Modern browsers                              | Supported (verified in Chromium)                                                                                           |
+| Cloudflare Workers                           | `apixa`, `apixa/core`, `apixa/mocking*` (not `/node`) and `apixa/react/advanced`, run in `workerd` without `nodejs_compat` |
+| Vercel Edge Runtime                          | Same entries, run in `edge-runtime`                                                                                        |
+| React 18 / 19, Next.js 15 App Router, Vite 6 | Supported (packed consumers, production and development builds)                                                            |
+| TypeScript 5.5+                              | Declarations checked with 5.5.4 and the latest release, `Bundler` and `NodeNext` resolution                                |
+
+`apixa/mocking/node` reads the file system and is Node-only. Thrown errors keep `error.request`
+(including headers and body) readable but non-enumerable, so logging an error does not print
+credentials.
+
 ## Core Principles
 
 - **Define once:** Keep API definitions in a single source of truth.
@@ -32,7 +85,7 @@ Apixa aims to reduce this duplication while preserving TypeScript's type safety 
 Minimal resource — built-in CRUD is generated from `path`:
 
 ```ts
-import { defineApi } from "@apixa/core";
+import { defineApi } from "apixa";
 const api = defineApi({
   baseURL: "https://api.example.com",
   headers: { Accept: "application/json" },
@@ -51,7 +104,7 @@ Typed payloads use a Zustand-style **resource-only** state generic (no `type()` 
 Root config (`baseURL`, `headers`, …) is typed by Core — not listed on `AppApi`:
 
 ```ts
-import { defineApi } from "@apixa/core";
+import { defineApi } from "apixa";
 
 type User = { id: string; name: string; email: string };
 
@@ -138,7 +191,7 @@ See [`packages/core/README.md`](./packages/core/README.md) and CHANGELOG v0.7.0 
 Standalone, in-memory mock API from local datasets — no `defineApi()`, no network, no backend:
 
 ```ts
-import { defineMockApi } from "@apixa/mocking";
+import { defineMockApi } from "apixa/mocking";
 
 const mockApi = defineMockApi({
   resources: {
@@ -150,13 +203,13 @@ const mockApi = defineMockApi({
 const { data, total } = await mockApi.products.getAll({ page: 1, pageSize: 10 });
 ```
 
-Typed data: `import { users, type User } from "@apixa/mocking/datasets"`.
+Typed data: `import { users, type User } from "apixa/mocking/datasets"`.
 
-Or mock individual resources of a Core client (install `@apixa/mocking` and register the lazy dataset loader):
+Or mock individual resources of a Core client (register the included lazy dataset loader):
 
 ```ts
-import { defineApi } from "@apixa/core";
-import "@apixa/mocking/register";
+import { defineApi } from "apixa";
+import "apixa/mocking/register";
 
 const api = defineApi({
   baseURL: "https://api.example.com",
@@ -204,7 +257,8 @@ API methods are intended to return native promises, allowing them to work natura
 packages/
   core/             # API definitions and execution
   mocking/          # Local datasets and standalone mock APIs
-  tanstack-query/   # Optional React Query integration
+  react/            # React integration (@apixa/react)
+  internal/shared/  # Private, never published: framework-neutral integration helpers
 datasets/           # Version-controlled JSON fixtures
 examples/
   next/             # Primary frontend playground (Next.js)

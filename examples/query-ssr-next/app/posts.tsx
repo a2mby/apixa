@@ -1,6 +1,6 @@
 "use client";
 
-import { useResourceQuery } from "@apixa/tanstack-query";
+import { useResourceQuery } from "@apixa/react";
 import { api, postsPaging } from "../lib/api";
 
 export function Posts() {

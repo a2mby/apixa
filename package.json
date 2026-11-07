@@ -1,43 +1,155 @@
 {
   "name": "apixa",
-  "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0-rc.0",
   "description": "Define your API once. Use it everywhere.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a2mby/apixa.git"
+  },
+  "homepage": "https://github.com/a2mby/apixa#readme",
+  "bugs": {
+    "url": "https://github.com/a2mby/apixa/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./mocking": {
+      "types": "./dist/mocking/index.d.ts",
+      "import": "./dist/mocking/index.js"
+    },
+    "./mocking/register": {
+      "types": "./dist/mocking/register.d.ts",
+      "import": "./dist/mocking/register.js"
+    },
+    "./mocking/datasets": {
+      "types": "./dist/mocking/datasets/index.d.ts",
+      "import": "./dist/mocking/datasets/index.js"
+    },
+    "./mocking/datasets/users": {
+      "types": "./dist/mocking/datasets/users.d.ts",
+      "import": "./dist/mocking/datasets/users.js"
+    },
+    "./mocking/datasets/products": {
+      "types": "./dist/mocking/datasets/products.d.ts",
+      "import": "./dist/mocking/datasets/products.js"
+    },
+    "./mocking/datasets/companies": {
+      "types": "./dist/mocking/datasets/companies.d.ts",
+      "import": "./dist/mocking/datasets/companies.js"
+    },
+    "./mocking/datasets/orders": {
+      "types": "./dist/mocking/datasets/orders.d.ts",
+      "import": "./dist/mocking/datasets/orders.js"
+    },
+    "./mocking/datasets/posts": {
+      "types": "./dist/mocking/datasets/posts.d.ts",
+      "import": "./dist/mocking/datasets/posts.js"
+    },
+    "./mocking/datasets/comments": {
+      "types": "./dist/mocking/datasets/comments.d.ts",
+      "import": "./dist/mocking/datasets/comments.js"
+    },
+    "./mocking/node": {
+      "types": "./dist/mocking/node.d.ts",
+      "import": "./dist/mocking/node.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
+    "./react/advanced": {
+      "types": "./dist/react/advanced.d.ts",
+      "import": "./dist/react/advanced.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "./dist/mocking/register.js"
+  ],
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/tanstack-query build",
+    "build": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/react build && pnpm build:package",
+    "build:package": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsup --config tsup.publish.config.ts --tsconfig tsconfig.publish.json && node scripts/preserve-client-directive.mjs",
+    "prepack": "pnpm build:package",
     "dev": "pnpm --filter @apixa/core dev",
-    "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/mocking typecheck && pnpm --filter @apixa/tanstack-query typecheck && tsc --noEmit -p tests/tsconfig.json && pnpm typecheck:examples",
+    "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/internal-shared typecheck && pnpm --filter @apixa/mocking typecheck && pnpm --filter @apixa/react typecheck && tsc --noEmit -p tests/tsconfig.json && pnpm typecheck:examples",
     "typecheck:examples": "pnpm --filter @apixa/example-query-ssr-next typecheck",
     "test": "vitest run",
-    "verify:consumers": "node scripts/mocking-consumer.mjs && node scripts/verify-query-consumers.mjs",
-    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm verify:consumers",
+    "verify:consumers": "node scripts/mocking-consumer.mjs && node scripts/verify-react-consumers.mjs && node scripts/verify-unified-consumer.mjs",
+    "verify:browser": "node scripts/verify-browser.mjs",
+    "verify:edge": "node scripts/verify-edge.mjs",
+    "verify:publish": "node scripts/verify-publish-readiness.mjs",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:api": "node scripts/verify-public-api.mjs",
+    "verify": "pnpm build && pnpm check:architecture && pnpm check:api && pnpm typecheck && pnpm test && pnpm verify:consumers && pnpm verify:browser && pnpm verify:edge",
     "format": "prettier --write .",
     "datasets:build": "node scripts/datasets/build-collection.mjs",
     "example": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/example-basic start",
-    "example:next": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/tanstack-query build && pnpm --filter @apixa/example-next dev",
+    "example:next": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/react build && pnpm --filter @apixa/example-next dev",
     "example:react": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-react-vite dev",
     "example:vue": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-vue dev",
     "example:vanilla": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-vanilla dev",
     "example:angular": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-angular dev",
     "example:react-native": "pnpm --filter @apixa/core build && pnpm --filter @apixa/example-react-native dev"
   },
+  "peerDependencies": {
+    "@apixa/react": "workspace:^",
+    "@tanstack/react-query": "^5.90.1",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@apixa/react": {
+      "optional": true
+    },
+    "@tanstack/react-query": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@apixa/core": "workspace:*",
+    "@apixa/mocking": "workspace:*",
+    "@apixa/react": "workspace:*",
     "@faker-js/faker": "9",
     "@tanstack/react-query": "^5.104.4",
     "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.13.10",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "esbuild": "0.25.12",
     "jsdom": "^26.1.0",
+    "playwright-core": "^1.65.0",
     "prettier": "^3.9.10",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "tsup": "^8.4.0",
     "typescript": "^5.8.2",
     "vitest": "^3.2.4"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@apixa/core": "workspace:^",
+    "@apixa/mocking": "workspace:^"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
   }
 }
