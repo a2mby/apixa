@@ -2,6 +2,30 @@
 
 Project log. Newest entry first.
 
+## 2026-11-07 — Mock handler types and cancellation verified
+
+The v1.0.0 Mocking work now has compile-time coverage for `defineApis` handler records, nested path
+parameters, and raw handler responses under response transforms. Cancellation tests found and fixed
+a race that could start a handler after an async mock provider finished loading, even though the
+request had already been aborted. The Core, Mocking, packed-consumer, and tracked example gates pass.
+
+## 2026-11-07 — Custom declarative operations can define their own mock behavior
+
+A custom declarative operation now takes an optional `mock` handler with typed `records`, a small
+copy-safe `store`, path `params`, `query`, `body` and `signal`, so a mocked `getActive` or `archive`
+does exactly what the author wrote instead of being unsupported. Without a handler the operation
+still rejects with `MOCK_UNSUPPORTED`, and on a live resource the handler is ignored. The same
+engine, client-scoped stores and request lifecycle serve it; no second operation registry exists.
+
+## 2026-11-07 — Mocking stabilized for v1.0.0
+
+A custom declarative operation on a mocked resource no longer runs a builtin because its path looks
+like an id; it rejects with `MOCK_UNSUPPORTED`, mock writes refuse prototype-changing keys, and
+`@apixa/mocking` takes Core as a peer dependency. `defineMockApi` now shares Core's `getAll`
+contract (same filters, pages and `slice`), paginated reads copy only their page (100,000 rows: 169
+ms to 0.04 ms), and each synthetic dataset has its own import path. `pnpm typecheck` now covers the
+tracked example and CI runs the packed-consumer checks. See the CHANGELOG for the migration notes.
+
 ## 2026-11-07 — v1.0.0 Query hardening verified and recorded
 
 `useResource` helper types now match runtime precedence for reserved names. New tests pin

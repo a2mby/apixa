@@ -1,5 +1,10 @@
 import type { AllBuiltinOpName, OperationFnContext } from "./builtins.js";
-import type { ApiRootConfig, OperationDefinition, ResourceDefinition } from "./definition.js";
+import type {
+  ApiRootConfig,
+  OperationDefinition,
+  OperationRunDefinition,
+  ResourceDefinition,
+} from "./definition.js";
 import type { PathParams, QueryParams } from "./http.js";
 import type { MockDatasetCatalog, MockDatasetId } from "./mock-datasets.js";
 import type { KeyCase, TransformKeys } from "./transform.js";
@@ -8,6 +13,7 @@ import type { OPERATION_METADATA, OperationMetadata } from "../api/metadata.js";
 
 export type { BuiltinOpName, ExtendedBuiltinOpName, AllBuiltinOpName } from "./builtins.js";
 export type { MockDatasetIds } from "./mock-datasets.js";
+import type { OperationMockHandler } from "./mock-handler.js";
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type Conventions = typeof import("../operation/conventions.js").BUILTIN_CONVENTIONS;
@@ -744,6 +750,13 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
       : ConfigTypeError<`true cannot create custom operation "${Name & string}"; give it { method, path } or a function`>
     : Op extends object
       ? Exact<Op, OperationDefinition> &
+          (Name extends AllBuiltinOpName
+            ? Op extends { mock: unknown }
+              ? {
+                  mock: ConfigTypeError<`builtin "${Name & string}" is simulated by Core; mock is for custom operations`>;
+                }
+              : unknown
+            : unknown) &
           ValidateMethodKind<Name, Op> &
           ValidateIdempotency<Name, Op> &
           (Name extends AllBuiltinOpName
@@ -760,8 +773,17 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
                     }))
       : unknown;
 
+/**
+ * Metadata operations with no runtime definition. While a context-sensitive function (a custom
+ * `run` or `mock` handler) is being checked, `R` is still the open `ResourceDefinition` constraint
+ * (its `path` is `string`, not a literal), so nothing can be reported as missing yet.
+ */
 type MissingCustomOps<Meta, R> = Meta extends { operations: infer M }
-  ? Exclude<keyof M, AllBuiltinOpName | keyof ResourceOpsOf<R>>
+  ? R extends { path: infer P }
+    ? string extends P
+      ? never
+      : Exclude<keyof M, AllBuiltinOpName | keyof ResourceOpsOf<R>>
+    : Exclude<keyof M, AllBuiltinOpName | keyof ResourceOpsOf<R>>
   : never;
 
 type ValidateMock<M, Meta> = M extends { data: infer D }
@@ -834,3 +856,163 @@ export type ValidateConfig<Meta, Config> = Exact<Config, ApiRootConfig> &
 export type ValidateApisConfig<Defs, Configs> = {
   [K in keyof Configs]: ValidateConfig<K extends keyof Defs ? Defs[K] : {}, Configs[K]>;
 };
+
+// ---------------------------------------------------------------------------------------------
+// Custom declarative `mock` handlers: typed from the resource's mock records and the operation's
+// path. The handler sits inside the context-sensitive config object, so TypeScript cannot infer
+// anything *from* that object until the handler is checked. `defineApi` therefore captures the
+// leaves it needs (mock source, resource path, operation paths) through separate type
+// parameters that only read non-function members, and types the handler from those.
+// ---------------------------------------------------------------------------------------------
+
+// Real keys (not an index signature) so object literals keep their literal `kind` / `method` types.
+/** `true`, `false` and function operations carry no path or mock handler. */
+// `Function` has no call signature, so it never competes with `OperationFn` for contextual typing.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+type NonObjectOp = boolean | Function;
+// `run` repeats the real `OperationFn` so a function operation keeps its contextual parameter types.
+type OpShape = Omit<OperationDefinition, "path" | "mock"> & { run?: OperationRunDefinition["run"] };
+type ResShape<Except extends keyof ResourceDefinition> = Omit<ResourceDefinition, Except>;
+
+/** Inference sites only: they read `mock`, `path` and operation `path` leaves of the config. */
+export type HandlerCapture<
+  M extends Record<string, unknown>,
+  RP extends Record<string, unknown>,
+  OP extends Record<string, Record<string, unknown>>,
+> = {
+  resources?: { [K in keyof M]: { mock?: M[K] } & ResShape<"mock"> };
+} & {
+  resources?: { [K in keyof RP]: { path?: RP[K] } & ResShape<"path"> };
+} & {
+  resources?: {
+    [K in keyof OP]: {
+      operations?: { [O in keyof OP[K]]: ({ path?: OP[K][O] } & OpShape) | NonObjectOp };
+    } & ResShape<"operations">;
+  };
+};
+
+/** Raw mock records of a resource (`Record<string, unknown>` when they cannot be inferred). */
+type HandlerEntity<Mock> = [unknown] extends [Mock]
+  ? Record<string, unknown>
+  : MockEntityOf<Mock> extends infer E
+    ? [unknown] extends [E]
+      ? Record<string, unknown>
+      : E extends object
+        ? E
+        : Record<string, unknown>
+    : never;
+
+type HandlerState<Meta, K, O> = K extends keyof Meta
+  ? Meta[K] extends { operations?: infer Ops }
+    ? O extends keyof NonNullable<Ops>
+      ? NonNullable<Ops>[O]
+      : never
+    : never
+  : never;
+type HandlerQuery<P> = [P] extends [never]
+  ? Record<string, unknown>
+  : P extends { query: infer Q }
+    ? Q
+    : Record<string, unknown>;
+type HandlerBody<P> = [P] extends [never] ? unknown : P extends { body: infer B } ? B : unknown;
+type HandlerResult<P> = [P] extends [never]
+  ? unknown
+  : P extends { response: infer Res }
+    ? Res
+    : unknown;
+type HandlerParams<Base, Rel> = Base extends string
+  ? Rel extends string
+    ? PathParamsOf<ConcatPaths<Base, Rel>>
+    : PathParams
+  : PathParams;
+
+/** Types the `mock` handler of every custom declarative operation. Never infers (`NoInfer`). */
+export type HandlerOverlay<
+  Meta,
+  M extends Record<string, unknown>,
+  RP extends Record<string, unknown>,
+  OP extends Record<string, Record<string, unknown>>,
+> = NoInfer<{
+  resources?: {
+    [K in keyof OP]: ResShape<"operations"> & {
+      operations?: {
+        [O in keyof OP[K]]: O extends AllBuiltinOpName
+          ? unknown
+          : | NonObjectOp
+            | (OpShape & {
+                mock?: OperationMockHandler<
+                  K extends keyof M ? HandlerEntity<M[K]> : Record<string, unknown>,
+                  HandlerParams<K extends keyof RP ? RP[K] : "", OP[K][O]>,
+                  HandlerQuery<HandlerState<Meta, K, O>>,
+                  HandlerBody<HandlerState<Meta, K, O>>,
+                  HandlerResult<HandlerState<Meta, K, O>>
+                >;
+              });
+      };
+    };
+  };
+}>;
+
+/** `defineApis` version of {@link HandlerCapture}: one more level (client name) on every map. */
+
+/** Client-level options of one `defineApis` entry (everything except `resources`). */
+type ClientShape = Omit<ApiRootConfig, "resources">;
+export type ApisHandlerCapture<
+  M extends Record<string, Record<string, unknown>>,
+  RP extends Record<string, Record<string, unknown>>,
+  OP extends Record<string, Record<string, Record<string, unknown>>>,
+> = {
+  [C in keyof M]: ClientShape & {
+    resources?: { [K in keyof M[C]]: { mock?: M[C][K] } & ResShape<"mock"> };
+  };
+} & {
+  [C in keyof RP]: ClientShape & {
+    resources?: { [K in keyof RP[C]]: { path?: RP[C][K] } & ResShape<"path"> };
+  };
+} & {
+  [C in keyof OP]: ClientShape & {
+    resources?: {
+      [K in keyof OP[C]]: {
+        operations?: {
+          [O in keyof OP[C][K]]: ({ path?: OP[C][K][O] } & OpShape) | NonObjectOp;
+        };
+      } & ResShape<"operations">;
+    };
+  };
+};
+
+/** `defineApis` version of {@link HandlerOverlay}. Never infers (`NoInfer`). */
+export type ApisHandlerOverlay<
+  Defs,
+  M extends Record<string, Record<string, unknown>>,
+  RP extends Record<string, Record<string, unknown>>,
+  OP extends Record<string, Record<string, Record<string, unknown>>>,
+> = NoInfer<{
+  [C in keyof OP]: ClientShape & {
+    resources?: {
+      [K in keyof OP[C]]: ResShape<"operations"> & {
+        operations?: {
+          [O in keyof OP[C][K]]: O extends AllBuiltinOpName
+            ? unknown
+            : | NonObjectOp
+              | (OpShape & {
+                  mock?: OperationMockHandler<
+                    C extends keyof M
+                      ? K extends keyof M[C]
+                        ? HandlerEntity<M[C][K]>
+                        : Record<string, unknown>
+                      : Record<string, unknown>,
+                    HandlerParams<
+                      C extends keyof RP ? (K extends keyof RP[C] ? RP[C][K] : "") : "",
+                      OP[C][K][O]
+                    >,
+                    HandlerQuery<HandlerState<C extends keyof Defs ? Defs[C] : {}, K, O>>,
+                    HandlerBody<HandlerState<C extends keyof Defs ? Defs[C] : {}, K, O>>,
+                    HandlerResult<HandlerState<C extends keyof Defs ? Defs[C] : {}, K, O>>
+                  >;
+                });
+        };
+      };
+    };
+  };
+}>;

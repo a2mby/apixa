@@ -24,6 +24,8 @@ export type {
   MockOperationFn,
   MockOperationValue,
   Page,
+  CursorPage,
+  PaginationConfig,
   PageParams,
   ResourceInput,
 } from "./resource.js";
@@ -31,6 +33,7 @@ export { MockingErrors, InvalidSliceError, MockApiError, type MockApiErrorCode }
 export type { MockSlice } from "./slice.js";
 export type { DatasetId } from "./catalog.js";
 export { listDatasetIds } from "./catalog.js";
+export { loadDataset } from "./loader.js";
 
 export type {
   Dataset,

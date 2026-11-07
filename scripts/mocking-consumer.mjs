@@ -1,15 +1,25 @@
-// Packs @apixa/core + @apixa/mocking, installs the tarballs into a clean project, then checks
-// every entry point at runtime and with a browser bundle (esbuild, platform=browser).
+// Packs @apixa/core + @apixa/mocking, installs the tarballs into clean projects, then checks every
+// entry point at runtime and with a browser bundle (esbuild, platform=browser), the peer-dependency
+// contract, registration with a duplicated Core, Core without Mocking, and the Node utilities.
 // Run: pnpm build && node scripts/mocking-consumer.mjs
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  cpSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const esbuild = join(root, "packages/mocking/node_modules/.bin/esbuild");
+// A direct root dev dependency: pnpm does not link transitive CLIs into every package.
+const esbuild = join(root, "node_modules/.bin/esbuild");
 const work = mkdtempSync(join(tmpdir(), "apixa-mocking-"));
 const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: "pipe" });
 
@@ -32,6 +42,9 @@ try {
 import assert from "node:assert/strict";
 import { defineMockApi, MockApiError, MockingErrors, InvalidSliceError, listDatasetIds } from "@apixa/mocking";
 import { loadDataset, users, products, loadDatasetRecords } from "@apixa/mocking/datasets";
+import { users as usersOnly } from "@apixa/mocking/datasets/users";
+import { products as productsOnly } from "@apixa/mocking/datasets/products";
+import { loadDataset as rootLoad } from "@apixa/mocking";
 import * as node from "@apixa/mocking/node";
 import { defineApi } from "@apixa/core";
 
@@ -42,6 +55,9 @@ assert.ok(listDatasetIds().includes("users-mock"));
 
 assert.ok(Array.isArray(users) && users.length > 0 && products.length > 0);
 assert.equal((await loadDataset("users-mock")).length, users.length);
+assert.equal(usersOnly, users, "subpath and barrel share one array");
+assert.equal(productsOnly, products);
+assert.equal(await rootLoad("users-mock"), users);
 assert.equal((await loadDatasetRecords("users-mock")).length, users.length);
 await assert.rejects(() => loadDataset("nope"), (e) => e instanceof MockApiError && e.code === "UNKNOWN_DATASET");
 for (const name of ["loadDataset", "listDatasets", "getDataset", "findDatasetDirs", "resolveDatasetDir"]) {
@@ -52,6 +68,7 @@ const api = defineMockApi({
   resources: { users: { type: "users-mock", slice: 5, readOnly: true }, products: "products-mock" },
 });
 assert.equal((await api.users.getAll()).length, 5);
+assert.equal(await api.users.count(), users.length); // slice caps the list result only
 assert.equal(typeof api.users.create, "undefined");
 assert.equal(typeof api.products.create, "function");
 
@@ -123,6 +140,212 @@ console.log("runtime ok");
     !regEntry.includes("jeremiah11@yahoo.com"),
     "register must not inline users-mock records",
   );
+
+  // ---- peer dependency contract ----
+  const mockingManifest = JSON.parse(
+    readFileSync(join(app, "node_modules/@apixa/mocking/package.json"), "utf8"),
+  );
+  assert.equal(
+    mockingManifest.dependencies?.["@apixa/core"],
+    undefined,
+    "core must not be a regular dependency",
+  );
+  assert.match(mockingManifest.peerDependencies["@apixa/core"], /^\^0\./, "peer range is bounded");
+  for (const name of ["users", "products", "companies", "orders", "posts", "comments"]) {
+    const entry = mockingManifest.exports[`./datasets/${name}`];
+    assert.ok(entry?.import && entry?.types, `export map has ./datasets/${name}`);
+    readFileSync(join(app, "node_modules/@apixa/mocking", entry.import), "utf8");
+    readFileSync(join(app, "node_modules/@apixa/mocking", entry.types), "utf8");
+  }
+
+  // An incompatible Core (0.2.0) next to this Mocking is refused by npm's peer resolution.
+  const coreTarball = tarballs.find((t) => basename(t).startsWith("apixa-core-"));
+  const mockingTarball = tarballs.find((t) => basename(t).startsWith("apixa-mocking-"));
+  const bumped = join(work, "core-0.2.0");
+  mkdirSync(bumped);
+  run("tar", ["xzf", coreTarball, "-C", bumped]);
+  const corePkg = JSON.parse(readFileSync(join(bumped, "package/package.json"), "utf8"));
+  corePkg.version = "0.2.0";
+  writeFileSync(join(bumped, "package/package.json"), JSON.stringify(corePkg));
+  run("tar", ["czf", join(bumped, "core-0.2.0.tgz"), "-C", bumped, "package"]);
+  const incompatible = join(work, "incompatible");
+  mkdirSync(incompatible);
+  writeFileSync(
+    join(incompatible, "package.json"),
+    JSON.stringify({ name: "incompatible", type: "module" }),
+  );
+  let refused = "";
+  try {
+    run(
+      "npm",
+      ["install", "--no-audit", "--no-fund", join(bumped, "core-0.2.0.tgz"), mockingTarball],
+      incompatible,
+    );
+  } catch (error) {
+    refused = String(error.stderr ?? error);
+  }
+  assert.match(refused, /ERESOLVE|peer/i, "npm must refuse an incompatible Core");
+
+  // A deliberately duplicated Core still registers against the Core the app runs.
+  const dup = join(work, "dup");
+  cpSync(app, dup, { recursive: true });
+  cpSync(
+    join(dup, "node_modules/@apixa/core"),
+    join(dup, "node_modules/@apixa/mocking/node_modules/@apixa/core"),
+    { recursive: true },
+  );
+  writeFileSync(
+    join(dup, "dup.mjs"),
+    `import "@apixa/mocking/register";
+import { defineApi } from "@apixa/core";
+const a = defineApi({ baseURL: "https://x.test", resources: { u: { path: "/u", mock: "users-mock" } } });
+console.log("dup:" + (await a.u.getAll()).length);`,
+  );
+  assert.match(run("node", ["dup.mjs"], dup), /dup:100/);
+
+  // Core alone: no Mocking installed, inline mocks work, named datasets say what is missing.
+  const coreOnly = join(work, "core-only");
+  mkdirSync(coreOnly);
+  writeFileSync(
+    join(coreOnly, "package.json"),
+    JSON.stringify({ name: "core-only", type: "module" }),
+  );
+  run("npm", ["install", "--no-audit", "--no-fund", coreTarball], coreOnly);
+  writeFileSync(
+    join(coreOnly, "check.mjs"),
+    `import { defineApi } from "@apixa/core";
+const api = defineApi({ baseURL: "https://x.test", resources: { a: { path: "/a", mock: [{ id: "1" }] }, b: { path: "/b", mock: "users-mock" } } });
+console.log("inline:" + (await api.a.getAll()).length);
+await api.b.getAll().catch((e) => console.log("named:" + e.code));`,
+  );
+  const coreOut = run("node", ["check.mjs"], coreOnly);
+  assert.match(coreOut, /inline:1/);
+  assert.match(coreOut, /named:MOCK_LOAD/);
+  assert.ok(!readdirSync(join(coreOnly, "node_modules/@apixa")).includes("mocking"));
+
+  // Custom declarative `mock` handlers: no Mocking installed, and types resolve from the packed d.ts.
+  writeFileSync(
+    join(coreOnly, "handler.mjs"),
+    `import { defineApi } from "@apixa/core";
+const api = defineApi({ baseURL: "https://x.test", resources: { u: { path: "/u", mock: [{ id: "1", active: true }, { id: "2", active: false }], operations: {
+  getActive: { kind: "read", method: "GET", path: "/active", mock: ({ records }) => records.filter((r) => r.active) },
+  archive: { kind: "write", method: "POST", path: "/:id/archive", mock: ({ store, params }) => store.patch(params.id, { active: false }) },
+  stats: { kind: "read", method: "GET", path: "/stats" },
+} } } });
+await api.u.archive("1");
+console.log("handler:" + (await api.u.getActive()).length + ":" + (await api.u.getById("1")).active);
+await api.u.stats().catch((e) => console.log("unsupported:" + e.code));`,
+  );
+  const handlerOut = run("node", ["handler.mjs"], coreOnly);
+  assert.match(handlerOut, /handler:0:false/);
+  assert.match(handlerOut, /unsupported:MOCK_UNSUPPORTED/);
+  writeFileSync(
+    join(coreOnly, "handler.ts"),
+    `import { defineApi } from "@apixa/core";
+const api = defineApi({ baseURL: "https://x.test", resources: { u: { path: "/u", mock: [{ id: "1", name: "A", active: true }], operations: {
+  getActive: { kind: "read", method: "GET", path: "/active", mock: ({ records }) => records.filter((r) => r.active).map((r) => r.name.toUpperCase()) },
+  archive: { kind: "write", method: "POST", path: "/:id/archive", mock: async ({ store, params }) => store.patch(params.id, { active: false }) },
+} } } });
+export const run = async () => [await api.u.getActive(), await api.u.archive("1")];
+`,
+  );
+  writeFileSync(
+    join(coreOnly, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        strict: true,
+        noEmit: true,
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+        target: "ES2022",
+        lib: ["ES2022", "DOM"],
+        skipLibCheck: false,
+        types: [],
+        noUncheckedIndexedAccess: true,
+      },
+      include: ["handler.ts"],
+    }),
+  );
+  run(join(root, "node_modules/.bin/tsc"), ["-p", "."], coreOnly);
+
+  // Node utilities from the installed package need a caller-supplied root.
+  const fixtures = join(work, "datasets");
+  mkdirSync(join(fixtures, "demo/pets-demo"), { recursive: true });
+  writeFileSync(
+    join(fixtures, "demo/pets-demo/meta.json"),
+    JSON.stringify({
+      id: "pets-demo",
+      title: "Pets",
+      license: "MIT",
+      version: "1.0.0",
+      resource: { path: "/pets" },
+      schema: { fields: [{ name: "id", type: "string" }] },
+      records: 1,
+    }),
+  );
+  writeFileSync(join(fixtures, "demo/pets-demo/data.json"), JSON.stringify([{ id: "1" }]));
+  writeFileSync(
+    join(app, "node-utils.mjs"),
+    `import assert from "node:assert/strict";
+import { loadDataset, listDatasets, getDataset, findDatasetDirs, resolveDatasetDir } from "@apixa/mocking/node";
+const basePath = ${JSON.stringify(fixtures)};
+assert.deepEqual((await listDatasets({ basePath })).map((d) => d.id), ["pets-demo"]);
+assert.equal((await loadDataset("pets-demo", { basePath })).records.length, 1);
+assert.equal((await getDataset("pets-demo", { basePath })).meta.id, "pets-demo");
+assert.equal((await findDatasetDirs(basePath)).length, 1);
+assert.ok(await resolveDatasetDir(basePath, "pets-demo"));
+assert.deepEqual(await listDatasets(), []);
+await assert.rejects(() => loadDataset("states-csc"), /basePath|APIXA_DATASETS_DIR/);
+console.log("node utils ok");`,
+  );
+  assert.match(run("node", ["node-utils.mjs"], app), /node utils ok/);
+
+  // Native Node ESM: which Mocking modules does each import evaluate?
+  writeFileSync(
+    join(app, "trace-hooks.mjs"),
+    'export async function load(url, ctx, next) { if (url.includes("/@apixa/mocking/")) process.stderr.write("LOAD " + url + "\\n"); return next(url, ctx); }',
+  );
+  writeFileSync(
+    join(app, "trace-reg.mjs"),
+    'import { register } from "node:module"; register("./trace-hooks.mjs", import.meta.url);',
+  );
+  const evaluated = (code) =>
+    spawnSync("node", ["--import", "./trace-reg.mjs", "--input-type=module", "-e", code], {
+      cwd: app,
+      encoding: "utf8",
+    })
+      .stderr.split("\n")
+      .filter((l) => l.startsWith("LOAD "))
+      .map((l) => l.replace(/^.*\/dist\//, ""));
+  const one = evaluated('import { users } from "@apixa/mocking/datasets/users"; users.length;');
+  assert.ok(one.some((f) => f === "dataset-modules/users.js"));
+  assert.ok(
+    !one.some((f) => /dataset-modules\/(?!users)/.test(f)),
+    "one subpath loads one dataset",
+  );
+  assert.ok(!one.some((f) => f === "datasets.js"), "subpath does not load the barrel");
+  const rootOnly = evaluated(
+    'import { loadDataset } from "@apixa/mocking"; await loadDataset("countries-csc");',
+  );
+  assert.ok(!rootOnly.some((f) => f.startsWith("dataset-modules/")), "root loads no eager dataset");
+  assert.ok(
+    rootOnly.filter((f) => f.startsWith("data-")).length === 1,
+    "loadDataset loads one data module",
+  );
+  const registerOnly = evaluated('import "@apixa/mocking/register";');
+  assert.ok(!registerOnly.some((f) => f.startsWith("data-") || f.startsWith("dataset-modules/")));
+
+  // Bundles: one subpath ships one dataset, in esbuild's split mode too.
+  const markerOf = (out) =>
+    files(out)
+      .map(([, t]) => t)
+      .join("");
+  const sub = markerOf(
+    bundle("sub", 'import { users } from "@apixa/mocking/datasets/users"; console.log(users);'),
+  );
+  assert.ok(sub.includes("jeremiah11@yahoo.com"), "users records present");
+  assert.ok(!sub.includes("Kunze LLC"), "companies not pulled in by the users subpath");
+  assert.ok(!sub.includes("Licensed Wooden Cheese"), "products not pulled in by the users subpath");
 
   console.log("mocking consumer ok");
 } finally {

@@ -2,6 +2,7 @@ import {
   AbortError,
   ApiError,
   ConfigError,
+  MockError,
   HttpError,
   NetworkError,
   TimeoutError,
@@ -19,7 +20,10 @@ import {
 import {
   routeToIntent,
   runBuiltin,
+  runMockHandler,
   type BuiltinIntent,
+  type MockHandlerContext,
+  type MockResult,
   type MockSource,
   type MockStore,
   type PaginationMode,
@@ -75,6 +79,8 @@ export interface PreparedOperation {
   onError: readonly ErrorMiddleware[];
   requestKeys?: KeyCase;
   responseKeys?: KeyCase;
+  /** Custom declarative operation: how it behaves on a mocked resource (absent → unsupported). */
+  mockHandler?: (context: MockHandlerContext) => unknown;
   /** Opt-in idempotency header for writes (resolved at construction). */
   idempotency?: { header: string; generate: () => string };
 }
@@ -94,8 +100,13 @@ export interface CallInput {
   replayed?: boolean;
   /** The key chosen for this logical call; a replay reuses it. */
   idempotencyKey?: string;
-  /** Builtin semantics for a mocked resource; absent → route by method + relative path. */
+  /**
+   * Builtin semantics for a mocked resource. Absent, the call is only simulated when it came from
+   * `ctx.request()` (`routed`); a declarative custom operation is never guessed from its URL.
+   */
   intent?: (wire: { query?: Record<string, unknown>; body?: unknown }) => BuiltinIntent;
+  /** The call came from `ctx.request()` inside a function operation: mocks route it by method + path. */
+  routed?: boolean;
   /** Treat an HTTP 404 as a successful response for `fromHttp` to interpret (used by `exists`). */
   allow404?: boolean;
   /**
@@ -291,10 +302,32 @@ export async function runOperation(
         body: hasBody ? wireBody : undefined,
       };
       const relative = interpolatePath(call.relativePath ?? op.relativePath, call.params);
-      const intent = call.intent
-        ? call.intent(wire)
-        : routeToIntent(request.method, relative, wire.query, wire.body, source.label);
-      const result = await runBuiltin(store, source, intent, resource.pagination);
+      let result: MockResult;
+      if (!call.intent && !call.routed) {
+        // A custom declarative operation: only its own `mock` handler may run. Never guessed from
+        // the URL, never sent to a transport.
+        if (!op.mockHandler) {
+          throw new MockError(
+            "MOCK_UNSUPPORTED",
+            `${source.label}: custom operation "${resource.name}.${op.name}" (${request.method} ${relative || "/"}) has no mock behavior. ` +
+              `Add a \`mock\` handler to the operation, or implement it as a function operation ({ kind, run }) that uses ctx.request().`,
+          );
+        }
+        result = await runMockHandler(op.mockHandler, store, {
+          resource: resource.name,
+          operation: op.name,
+          method: request.method,
+          params: { ...(call.params ?? {}) },
+          query: wire.query,
+          body: wire.body,
+          signal,
+        });
+      } else {
+        const intent = call.intent
+          ? call.intent(wire)
+          : routeToIntent(request.method, relative, wire.query, wire.body, source.label);
+        result = await runBuiltin(store, source, intent, resource.pagination);
+      }
       throwIfAborted(signal);
       status = result.status;
       responseHeaders = new Headers();

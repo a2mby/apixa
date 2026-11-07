@@ -26,7 +26,7 @@ export type {
 
 const SELECTION_KEYS = ["defaultOperations", "readOnly", "writeOnly", "operationGroups"] as const;
 const ROOT_OPTIONS = ["resources", ...SELECTION_KEYS];
-const RESOURCE_OPTIONS = ["type", "slice", "pagination", "operations", ...SELECTION_KEYS];
+const RESOURCE_OPTIONS = ["type", "slice", "seed", "pagination", "operations", ...SELECTION_KEYS];
 const GROUPS: readonly OperationGroupName[] = ["read", "write", "many", "extended"];
 const EXPECTED_SHAPE =
   'defineMockApi() expects { resources: { users: { type: "users-mock" } } } (or the shorthand { users: "users-mock" }).';
@@ -110,6 +110,29 @@ function assertOperations(operations: unknown, label: string): void {
   }
 }
 
+function assertSeed(seed: unknown, label: string): void {
+  if (!isPlainObject(seed)) {
+    throw new MockApiError("INVALID_CONFIG", `${label}: seed must be { limit?, offset? }.`);
+  }
+  for (const [key, value] of Object.entries(seed)) {
+    if (key !== "limit" && key !== "offset") {
+      throw new MockApiError(
+        "INVALID_CONFIG",
+        `${label}: seed has unknown option "${key}". Supported: limit, offset.`,
+      );
+    }
+    if (
+      value !== undefined &&
+      (typeof value !== "number" || !Number.isInteger(value) || value < 0)
+    ) {
+      throw new MockApiError(
+        "INVALID_CONFIG",
+        `${label}: seed.${key} must be a non-negative integer (got ${String(value)}).`,
+      );
+    }
+  }
+}
+
 function assertResource(name: string, resource: unknown): asserts resource is MockResourceConfig {
   const label = `Mock resource "${name}"`;
   if (!isPlainObject(resource)) {
@@ -127,7 +150,7 @@ function assertResource(name: string, resource: unknown): asserts resource is Mo
     }
   }
 
-  const { type, slice, pagination, operations } = resource;
+  const { type, slice, seed, pagination, operations } = resource;
   if (!isDatasetId(type)) {
     throw new MockApiError(
       "UNKNOWN_DATASET",
@@ -136,10 +159,16 @@ function assertResource(name: string, resource: unknown): asserts resource is Mo
     );
   }
   if (slice !== undefined) assertSliceConfig(slice, label);
-  if (pagination !== undefined && typeof pagination !== "boolean") {
+  if (seed !== undefined) assertSeed(seed, label);
+  if (
+    pagination !== undefined &&
+    typeof pagination !== "boolean" &&
+    pagination !== "page" &&
+    pagination !== "cursor"
+  ) {
     throw new MockApiError(
       "INVALID_CONFIG",
-      `${label}: pagination must be a boolean (got ${String(pagination)}).`,
+      `${label}: pagination must be true, false, "page" or "cursor" (got ${String(pagination)}).`,
     );
   }
   assertSettings(resource as Record<string, unknown>, label);
@@ -224,6 +253,7 @@ export function defineMockApi(config: unknown): unknown {
     const settings = mergeSettings(root, pickSettings(raw));
     api[name] = createResource(name, resource.type as DatasetId, {
       slice: resource.slice,
+      seed: resource.seed,
       pagination: resource.pagination,
       operations: expandOperations(
         resource.operations as unknown as Parameters<typeof expandOperations>[0],

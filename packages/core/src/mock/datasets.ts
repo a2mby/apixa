@@ -34,20 +34,29 @@ export function listMockDatasetIds(): MockDatasetId[] {
 
 /** Loader installed explicitly by an optional dataset integration. Records remain lazy. */
 export type MockDatasetLoader = (id: string) => Promise<readonly unknown[]>;
-let datasetLoader: MockDatasetLoader | undefined;
+
+/**
+ * The loader lives in one process-wide slot, not in this module's scope. If a bundler or package
+ * manager installs `@apixa/core` twice, `@apixa/mocking/register` still reaches the copy the
+ * application runs. The slot holds one stateless function: mock stores and data stay per client.
+ */
+const LOADER_SLOT = Symbol.for("@apixa/core.mockDatasetLoader");
+type Slot = { [LOADER_SLOT]?: MockDatasetLoader };
 
 /** Register the named-dataset loader. Mock stores and data remain scoped to each client. */
 export function registerMockDatasetLoader(loader: MockDatasetLoader): void {
-  datasetLoader = loader;
+  (globalThis as Slot)[LOADER_SLOT] = loader;
 }
 
 /** Load one dataset through the explicitly registered optional integration. */
 export async function loadNamedDataset(id: MockDatasetId): Promise<readonly unknown[]> {
+  const datasetLoader = (globalThis as Slot)[LOADER_SLOT];
   if (!datasetLoader) {
     throw new MockError(
       "MOCK_LOAD",
       `mock: "${id}" needs the optional "@apixa/mocking" integration. ` +
-        `Install it and import "@apixa/mocking/register", or pass inline records / a provider instead.`,
+        `Install it and import "@apixa/mocking/register" once (before the first call), ` +
+        `or pass inline records / a provider instead.`,
     );
   }
   return datasetLoader(id);

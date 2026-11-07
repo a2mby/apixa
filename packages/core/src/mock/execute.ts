@@ -39,22 +39,35 @@ function positiveInt(
   return n;
 }
 
+/**
+ * Select the page window over rows held by reference, then copy only what is returned. Without
+ * pagination the whole selection is returned (and so copied).
+ */
 function paginate(
+  store: MockStore,
   label: string,
-  rows: Row[],
+  rows: readonly Row[],
   mode: PaginationMode | undefined,
   query: Record<string, unknown> = {},
 ): unknown {
-  if (!mode) return rows;
+  if (!mode) return store.cloneRows(rows);
   const pageSize = positiveInt(label, "pageSize", query.pageSize, DEFAULT_PAGE_SIZE, 1);
   if (mode === "page") {
     const page = positiveInt(label, "page", query.page, 1, 1);
     const start = (page - 1) * pageSize;
-    return { data: rows.slice(start, start + pageSize), total: rows.length, page, pageSize };
+    return {
+      data: store.cloneRows(rows.slice(start, start + pageSize)),
+      total: rows.length,
+      page,
+      pageSize,
+    };
   }
   const start = positiveInt(label, "cursor", query.cursor, 0, 0);
   const end = start + pageSize;
-  return { data: rows.slice(start, end), nextCursor: end < rows.length ? String(end) : null };
+  return {
+    data: store.cloneRows(rows.slice(start, end)),
+    nextCursor: end < rows.length ? String(end) : null,
+  };
 }
 
 /** Run one builtin straight against the store — never through another builtin. */
@@ -68,7 +81,7 @@ export async function runBuiltin(
   const q = intent.query;
   switch (intent.op) {
     case "getAll":
-      return { status: 200, data: paginate(source.label, store.list(q), pagination, q) };
+      return { status: 200, data: paginate(store, source.label, store.select(q), pagination, q) };
     case "getById":
       return { status: 200, data: store.get(intent.id) };
     case "getBySlug":

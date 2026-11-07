@@ -50,15 +50,23 @@ function assertMeta(value: unknown, id: string): DatasetMeta {
 }
 
 /**
- * Load a local dataset by id (`datasets/<domain>/<id>/meta.json` + `data.json`).
- * `id` may be the meta.id or a relative path under the datasets root.
- * Node-friendly; browsers should import JSON and pass it to `createMockTransport`.
+ * Load a dataset from disk by id (`<root>/<domain>/<id>/meta.json` + `data.json`). `id` may be the
+ * meta.id or a relative path under the root. Node only.
+ *
+ * The root is `options.basePath`, else `APIXA_DATASETS_DIR`, else `./datasets` in the working
+ * directory, else the repository's `datasets/` folder when running from a checkout. The published
+ * package contains no dataset files, so an installed app must supply a root. Records bundled for
+ * browsers and mocks come from `@apixa/mocking/datasets` instead.
  */
 export async function loadDataset(id: string, options: LoadDatasetOptions = {}): Promise<Dataset> {
   const root = resolveDatasetsRoot(options.basePath);
   const dir = await resolveDatasetDir(root, id);
   if (!dir) {
-    throw new Error(`Failed to load dataset "${id}": not found under ${root}`);
+    throw new Error(
+      `Failed to load dataset "${id}": not found under ${root}. ` +
+        `The npm package ships no files for "@apixa/mocking/node": pass { basePath } or set APIXA_DATASETS_DIR ` +
+        `to a folder of <dataset>/meta.json + data.json.`,
+    );
   }
 
   let metaRaw: string;

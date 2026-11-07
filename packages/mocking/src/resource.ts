@@ -1,19 +1,18 @@
-import { MockError, MockStore, type MockSource } from "@apixa/core";
+import {
+  applyResourceSliceToListResult,
+  MockError,
+  MockStore,
+  runBuiltin,
+  type BuiltinIntent,
+  type MockSource,
+  type PaginationMode,
+} from "@apixa/core";
 import { catalog, type DatasetId } from "./catalog.js";
 import { MockApiError, type MockApiErrorCode } from "./errors.js";
 import type { MockSlice } from "./slice.js";
-import {
-  DEFAULT_PAGE,
-  DEFAULT_PAGE_SIZE,
-  MOCK_BUILTINS,
-  type MockOperationContext,
-  type MockOperationFn,
-  type PageParams,
-} from "./mock-types.js";
+import { MOCK_BUILTINS, type MockOperationContext, type MockOperationFn } from "./mock-types.js";
 
 export {
-  DEFAULT_PAGE,
-  DEFAULT_PAGE_SIZE,
   MOCK_BUILTINS,
   type MockResource,
   type MockOperationContext,
@@ -21,6 +20,8 @@ export {
   type MockOperationValue,
   type MockResourceDefaults,
   type Page,
+  type CursorPage,
+  type PaginationConfig,
   type PageParams,
   type ResourceInput,
 } from "./mock-types.js";
@@ -38,7 +39,11 @@ const CODES: Record<string, MockApiErrorCode> = {
 /** Keep `defineMockApi`'s documented `MockApiError` surface over Core's shared engine. */
 function translate(error: unknown): never {
   if (error instanceof MockError) {
-    const translated = new MockApiError(CODES[error.code] ?? "INVALID_INPUT", error.message);
+    const code =
+      error.code === "MOCK_INVALID_INPUT" && PAGING_MESSAGE.test(error.message)
+        ? "INVALID_PAGINATION"
+        : (CODES[error.code] ?? "INVALID_INPUT");
+    const translated = new MockApiError(code, error.message);
     (translated as { cause?: unknown }).cause = error;
     throw translated;
   }
@@ -48,31 +53,32 @@ function translate(error: unknown): never {
 /** `operations` is the already-resolved set (Core's `expandOperations`): enabled names only. */
 export type ResourceOptions = {
   slice?: MockSlice;
-  pagination?: boolean;
+  seed?: MockSource["seed"];
+  pagination?: boolean | PaginationMode;
   operations: Record<string, unknown>;
 };
 
-function seedFromSlice(slice: MockSlice | undefined): MockSource["seed"] {
-  if (slice === undefined) return undefined;
-  if (typeof slice === "number") return { limit: slice };
-  return { offset: slice.start, limit: slice.end - slice.start };
-}
+/** Paging keys are config of the call, not filters; everything else in the query filters rows. */
+const PAGING_MESSAGE = /: (page|pageSize|cursor) must be/;
 
-/** One resource: Core's `MockStore` (shared engine) plus `defineMockApi`'s calling conventions. */
+/** One resource: Core's `MockStore` and `runBuiltin` (the shared engine) plus calling conventions. */
 export function createResource(name: string, type: DatasetId, options: ResourceOptions) {
   const label = `Mock resource "${name}"`;
   const entry = catalog[type] as {
     idKey: string;
     load: () => Promise<{ default: readonly unknown[] }>;
   };
-  const store = new MockStore({
+  const source: MockSource = {
     label,
     idKey: entry.idKey,
     load: async () => (await entry.load()).default,
-    seed: seedFromSlice(options.slice),
     // Catalog datasets are module-cached and never mutated: no private snapshot needed.
+    seed: options.seed,
     immutable: true,
-  });
+  };
+  const store = new MockStore(source);
+  const pagination: PaginationMode | undefined =
+    options.pagination === true ? "page" : options.pagination || undefined;
   const fail = (code: MockApiErrorCode, message: string) =>
     new MockApiError(code, `${label}: ${message}`);
 
@@ -88,64 +94,40 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
       }
     };
 
-  function resolvePage(params: unknown): { page: number; pageSize: number } {
-    if (params === undefined) return { page: DEFAULT_PAGE, pageSize: DEFAULT_PAGE_SIZE };
-    if (params === null || typeof params !== "object" || Array.isArray(params)) {
-      throw fail("INVALID_PAGINATION", "getAll() options must be { page?, pageSize? }");
-    }
-    for (const key of Object.keys(params)) {
-      if (key !== "page" && key !== "pageSize")
-        throw fail("INVALID_PAGINATION", `unknown option "${key}" (use page, pageSize)`);
-    }
-    const { page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE } = params as PageParams;
-    for (const [field, value] of [
-      ["page", page],
-      ["pageSize", pageSize],
-    ] as const) {
-      if (!Number.isInteger(value) || value < 1) {
-        throw fail("INVALID_PAGINATION", `${field} must be an integer >= 1 (got ${String(value)})`);
+  /** A builtin runs through Core's `runBuiltin`: the same code as a Core mocked resource. */
+  const run =
+    <A extends unknown[]>(intent: (...args: A) => BuiltinIntent) =>
+    async (...args: A): Promise<unknown> => {
+      try {
+        const built = intent(...args);
+        const { data } = await runBuiltin(store, source, built, pagination);
+        // A mock `delete` resolves to nothing (Core's wire shape is a 204 with a null body).
+        return built.op === "delete" || built.op === "deleteMany" ? undefined : data;
+      } catch (error) {
+        return translate(error);
       }
-    }
-    return { page, pageSize };
-  }
+    };
 
+  const getAllFn = run((query?: Record<string, unknown>) => ({ op: "getAll", query }));
   const builtins: Record<(typeof MOCK_BUILTINS)[number], (...args: never[]) => Promise<unknown>> = {
-    getAll: use((params?: PageParams) => {
-      const rows = store.list();
-      if (!options.pagination) {
-        if (params !== undefined)
-          throw fail("INVALID_PAGINATION", "pagination is not enabled; set pagination: true");
-        return rows;
-      }
-      const { page, pageSize } = resolvePage(params);
-      const lastPage = Math.max(1, Math.ceil(rows.length / pageSize));
-      if (page > lastPage)
-        throw fail("INVALID_PAGINATION", `page ${page} is out of range (last page is ${lastPage})`);
-      const start = (page - 1) * pageSize;
-      return {
-        data: rows.slice(start, start + pageSize),
-        total: rows.length,
-        page,
-        pageSize,
-        previous: page > 1 ? page - 1 : null,
-        next: page < lastPage ? page + 1 : null,
-      };
-    }),
-    getById: use((id: Id) => store.get(id)),
-    getBySlug: use((slug: Id) => store.getBy("slug", slug)),
-    getMany: use((ids: Id[]) => store.getMany(ids)),
-    getBy: use((field: string, value: Id) => store.getBy(field, value)),
-    findFirst: use((query?: Record<string, unknown>) => store.findFirst(query)),
-    search: use((query?: Record<string, unknown>) => store.search(query)),
-    exists: use((id: Id) => store.exists(id)),
-    count: use((query?: Record<string, unknown>) => store.count(query)),
-    create: use((input: unknown) => store.create(input)),
-    update: use((id: Id, input: unknown) => store.update(id, input)),
-    patch: use((id: Id, input: unknown) => store.patch(id, input)),
-    upsert: use((id: Id, input: unknown) => store.upsert(id, input)),
-    delete: use((id: Id) => store.delete(id)),
-    createMany: use((inputs: unknown[]) => store.createMany(inputs)),
-    deleteMany: use((ids: Id[]) => store.deleteMany(ids)),
+    // `slice` caps the list result (like Core); the store keeps every record.
+    getAll: async (query?: Record<string, unknown>) =>
+      applyResourceSliceToListResult(await getAllFn(query), options.slice),
+    getById: run((id: Id) => ({ op: "getById", id })),
+    getBySlug: run((slug: Id) => ({ op: "getBySlug", slug })),
+    getMany: run((ids: Id[]) => ({ op: "getMany", ids })),
+    getBy: run((field: string, value: Id) => ({ op: "getBy", field, value })),
+    findFirst: run((query?: Record<string, unknown>) => ({ op: "findFirst", query })),
+    search: run((query?: Record<string, unknown>) => ({ op: "search", query })),
+    exists: run((id: Id) => ({ op: "exists", id })),
+    count: run((query?: Record<string, unknown>) => ({ op: "count", query })),
+    create: run((body: unknown) => ({ op: "create", body })),
+    update: run((id: Id, body: unknown) => ({ op: "update", id, body })),
+    patch: run((id: Id, body: unknown) => ({ op: "patch", id, body })),
+    upsert: run((id: Id, body: unknown) => ({ op: "upsert", id, body })),
+    delete: run((id: Id) => ({ op: "delete", id })),
+    createMany: run((body: unknown[]) => ({ op: "createMany", body })),
+    deleteMany: run((body: Id[]) => ({ op: "deleteMany", body })),
   };
 
   type Row = Record<string, unknown>;

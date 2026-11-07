@@ -5,6 +5,30 @@ type Id = string | number;
 
 const clone = <T>(value: T): T => structuredClone(value);
 
+/** Own-property read: a filter or lookup never sees an inherited value. */
+const own = (row: Row, key: string): unknown => (Object.hasOwn(row, key) ? row[key] : undefined);
+
+/**
+ * Keys that would change an object's prototype or constructor chain. Mock input containing one
+ * (at any depth) is rejected, so a mutation can never alter inherited behavior.
+ */
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function findUnsafeKey(root: unknown): string | undefined {
+  const stack: unknown[] = [root];
+  const seen = new Set<unknown>();
+  while (stack.length > 0) {
+    const value = stack.pop();
+    if (value === null || typeof value !== "object" || seen.has(value)) continue;
+    seen.add(value);
+    for (const key of Object.keys(value)) {
+      if (UNSAFE_KEYS.has(key)) return key;
+      stack.push((value as Record<string, unknown>)[key]);
+    }
+  }
+  return undefined;
+}
+
 /** Exact-match filter used by list / findFirst / count. Reserved paging keys are ignored. */
 const RESERVED_QUERY_KEYS = new Set(["page", "pageSize", "cursor", "id", "id[]"]);
 
@@ -16,14 +40,14 @@ function filterEntries(query: Record<string, unknown> | undefined): [string, unk
 function matchesExact(row: Row, entries: [string, unknown][]): boolean {
   return entries.every(([key, value]) =>
     Array.isArray(value)
-      ? value.map(String).includes(String(row[key]))
-      : String(row[key]) === String(value),
+      ? value.map(String).includes(String(own(row, key)))
+      : String(own(row, key)) === String(value),
   );
 }
 
 function matchesContains(row: Row, entries: [string, unknown][]): boolean {
   return entries.every(([key, value]) =>
-    String(row[key] ?? "")
+    String(own(row, key) ?? "")
       .toLowerCase()
       .includes(String(value).toLowerCase()),
   );
@@ -38,7 +62,13 @@ export class MockStore {
   readonly idKey: string;
   private readonly source: MockSource;
   private initial: Row[] | undefined;
+  /**
+   * Working rows. They share row objects with `initial` until a row is replaced: every write
+   * builds a new row object, and nothing hands out a reference (reads clone). `liveRows()` is the
+   * one exception, so it first makes the working rows private (`shared = false`).
+   */
   private rows: Row[] = [];
+  private shared = true;
   private index = new Map<string, Row>();
   private loading: Promise<void> | undefined;
   private numericIds = true;
@@ -89,7 +119,8 @@ export class MockStore {
   }
 
   private applyInitial(): void {
-    this.rows = this.initial!.map(clone);
+    this.rows = this.initial!.slice();
+    this.shared = true;
     this.index = new Map(this.rows.map((row) => [String(row[this.idKey]), row]));
     this.numericIds = this.rows.every((row) => /^\d+$/.test(String(row[this.idKey])));
     this.numberTyped = this.rows.length === 0 || typeof this.rows[0]![this.idKey] === "number";
@@ -103,6 +134,11 @@ export class MockStore {
    * `reindex()` afterwards if ids were added, removed, or changed.
    */
   liveRows(): Row[] {
+    if (this.shared) {
+      this.rows = this.rows.map(clone);
+      this.shared = false;
+      this.reindex();
+    }
     return this.rows;
   }
 
@@ -136,8 +172,9 @@ export class MockStore {
     if (value === null || typeof value !== "object" || Array.isArray(value)) {
       throw this.fail("MOCK_INVALID_INPUT", `${what} must be a plain object`);
     }
+    let copy: Row;
     try {
-      return clone(value as Row);
+      copy = clone(value as Row);
     } catch (cause) {
       throw new MockError(
         "MOCK_INVALID_INPUT",
@@ -145,6 +182,11 @@ export class MockStore {
         { cause },
       );
     }
+    const unsafe = findUnsafeKey(copy);
+    if (unsafe !== undefined) {
+      throw this.fail("MOCK_INVALID_INPUT", `${what} must not contain the key "${unsafe}"`);
+    }
+    return copy;
   }
 
   private nextId(): Id {
@@ -190,16 +232,28 @@ export class MockStore {
 
   // ---- reads (each independent; none calls another public operation) ----
 
-  /** Exact-match filter over non-paging query keys; `id` values select those ids. */
-  list(query?: Record<string, unknown>): Row[] {
+  /**
+   * Matching rows by reference, for the engine only: callers must clone (`cloneRows`) whatever
+   * they return. Lets a paginated read copy one page instead of the whole dataset.
+   */
+  select(query?: Record<string, unknown>): readonly Row[] {
     const entries = filterEntries(query);
     const ids = query?.id ?? query?.["id[]"];
     let rows = this.rows;
     if (ids !== undefined) {
       const wanted = new Set((Array.isArray(ids) ? ids : [ids]).map(String));
-      rows = rows.filter((row) => wanted.has(String(row[this.idKey])));
+      rows = rows.filter((row) => wanted.has(String(own(row, this.idKey))));
     }
-    return (entries.length ? rows.filter((row) => matchesExact(row, entries)) : rows).map(clone);
+    return entries.length ? rows.filter((row) => matchesExact(row, entries)) : rows;
+  }
+
+  cloneRows(rows: readonly Row[]): Row[] {
+    return rows.map(clone);
+  }
+
+  /** Exact-match filter over non-paging query keys; `id` values select those ids. */
+  list(query?: Record<string, unknown>): Row[] {
+    return this.cloneRows(this.select(query));
   }
 
   get(id: unknown): Row {
@@ -226,9 +280,9 @@ export class MockStore {
     return this.index.has(this.key(id));
   }
 
-  getBy(field: string, value: unknown): Row {
-    const row = this.rows.find((r) => String(r[field]) === String(value));
-    if (!row) throw this.fail("MOCK_NOT_FOUND", `no record with ${field} "${String(value)}"`);
+  getBy(name: string, value: unknown): Row {
+    const row = this.rows.find((r) => String(own(r, name)) === String(value));
+    if (!row) throw this.fail("MOCK_NOT_FOUND", `no record with ${name} "${String(value)}"`);
     return clone(row);
   }
 
@@ -240,10 +294,13 @@ export class MockStore {
 
   /** Case-insensitive substring match on every given key. */
   search(query?: Record<string, unknown>): Row[] {
+    return this.cloneRows(this.selectContaining(query));
+  }
+
+  /** Substring matches by reference (see `select`). */
+  selectContaining(query?: Record<string, unknown>): readonly Row[] {
     const entries = filterEntries(query);
-    return (
-      entries.length ? this.rows.filter((row) => matchesContains(row, entries)) : this.rows
-    ).map(clone);
+    return entries.length ? this.rows.filter((row) => matchesContains(row, entries)) : this.rows;
   }
 
   count(query?: Record<string, unknown>): number {

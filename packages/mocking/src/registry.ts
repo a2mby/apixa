@@ -8,8 +8,9 @@ import type { Dataset, DatasetListItem, DatasetMeta } from "./types.js";
 export type ListDatasetsOptions = LoadDatasetOptions;
 
 /**
- * List local datasets under the datasets root (no network).
- * Walks domain folders; each leaf with `meta.json` is a dataset.
+ * List the datasets under the datasets root (no network). Walks domain folders; each leaf with
+ * `meta.json` is a dataset. The root is resolved as in `loadDataset`: an installed app passes
+ * `{ basePath }` (or sets `APIXA_DATASETS_DIR`); a missing root lists nothing.
  */
 export async function listDatasets(options: ListDatasetsOptions = {}): Promise<DatasetListItem[]> {
   const root = resolveDatasetsRoot(options.basePath);

@@ -29,13 +29,21 @@ export { computeBackoffMs, parseRetryAfter, isRetryableStatus } from "./request/
 /** Shared in-memory mock engine (used by Core mocked resources and `@apixa/mocking`). */
 export {
   MockStore,
+  runBuiltin,
   normalizeMockSource,
   MOCK_DATASETS,
   isMockDatasetId,
   listMockDatasetIds,
   registerMockDatasetLoader,
 } from "./mock/index.js";
-export type { MockSource, MockDatasetLoader } from "./mock/index.js";
+export type {
+  MockSource,
+  MockDatasetLoader,
+  BuiltinIntent,
+  MockResult,
+  PaginationMode,
+} from "./mock/index.js";
+export { applyResourceSliceToListResult } from "./utils/slice.js";
 
 /** Operation selection (defaults, groups, `readOnly` / `writeOnly`) shared with `@apixa/mocking`. */
 export { expandOperations, BUILTIN_CONVENTIONS } from "./operation/index.js";

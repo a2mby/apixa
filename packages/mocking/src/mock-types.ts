@@ -10,22 +10,24 @@ import type { MockSlice } from "./slice.js";
 type Id = string | number;
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
-export const DEFAULT_PAGE = 1;
-export const DEFAULT_PAGE_SIZE = 20;
+/** Paging keys of `getAll`. Every other key in the query filters rows (Core's contract). */
+export type PageParams = { page?: number; pageSize?: number; cursor?: number | string };
 
-export type PageParams = { page?: number; pageSize?: number };
-
-/** Envelope when a mock resource has `pagination: true`. `previous` / `next` are page numbers. */
+/** Envelope when a mock resource has `pagination: true` / `"page"` — identical to a Core mock. */
 export type Page<T> = {
   data: T[];
   total: number;
   page: number;
   pageSize: number;
-  /** Previous page number, or `null` on the first page. */
-  previous: number | null;
-  /** Next page number, or `null` on the last page. */
-  next: number | null;
 };
+
+/** Envelope for `pagination: "cursor"`. `nextCursor` is `null` on the last page. */
+export type CursorPage<T> = {
+  data: T[];
+  nextCursor: string | null;
+};
+
+export type PaginationConfig = boolean | "page" | "cursor";
 
 /** `create` / `update` input: the entity, with its id optional. */
 export type ResourceInput<T, IdKey extends keyof T> = Omit<T, IdKey> & Partial<Pick<T, IdKey>>;
@@ -115,12 +117,21 @@ export interface MockResourceConfig extends MockOperationSelection {
   /** Dataset id from the catalog (`datasets/manifest.json`). */
   type: DatasetId;
   /**
-   * Seed window: first N records, or half-open `{ start, end }` (Array.slice).
-   * Overshooting the dataset returns all records. A seed limit, not a growth cap.
+   * Caps the `getAll` list result: first N records, or half-open `{ start, end }` (Array.slice).
+   * Like a Core mock, the store keeps every record: `getById`, `count` and writes ignore it.
    */
   slice?: MockSlice;
-  /** `getAll()` returns `{ data, total, page, pageSize }` and accepts `{ page, pageSize }`. */
-  pagination?: boolean;
+  /**
+   * Starts the store with a window of the dataset (`{ limit, offset }`, like Core's `mock.seed`).
+   * Unlike `slice`, records outside the window do not exist for any operation.
+   */
+  seed?: { limit?: number; offset?: number };
+  /**
+   * `true` / `"page"`: `getAll()` returns `{ data, total, page, pageSize }` and accepts
+   * `{ page, pageSize }`. `"cursor"`: `{ data, nextCursor }` and `{ cursor, pageSize }`. Other
+   * query keys filter rows. An out-of-range page is an empty page, as in a Core mock.
+   */
+  pagination?: PaginationConfig;
   /**
    * Enable, disable, override or add operations: `true` keeps/enables a builtin, `false` removes
    * it, a function replaces it (or defines a custom operation).
@@ -156,7 +167,7 @@ export type MockApiConfig = Record<string, MockFlatResourceConfig>;
 
 /** Arguments of each builtin when a function overrides it (after the bound `ctx`). */
 type BuiltinArgs<N extends AllBuiltinOpName, T extends object, IdKey extends keyof T> = {
-  getAll: [params?: PageParams];
+  getAll: [query?: GetAllQuery<T>];
   getById: [id: Id];
   getBySlug: [slug: string];
   getMany: [ids: Id[]];
@@ -256,9 +267,13 @@ type ValidateResource<R> = R extends string
 // Returned client type
 // ---------------------------------------------------------------------------------------------
 
-type GetAllFn<T, Paginated> = [Paginated] extends [true]
-  ? (params?: PageParams) => Promise<Page<T>>
-  : () => Promise<T[]>;
+type GetAllQuery<T> = PageParams & Partial<T>;
+
+type GetAllFn<T, Paginated> = [Paginated] extends ["page"]
+  ? (query?: GetAllQuery<T>) => Promise<Page<T>>
+  : [Paginated] extends ["cursor"]
+    ? (query?: GetAllQuery<T>) => Promise<CursorPage<T>>
+    : (query?: Partial<T>) => Promise<T[]>;
 
 type BuiltinFn<
   N extends AllBuiltinOpName,
@@ -313,11 +328,11 @@ type ClientFn<
     : Callable<FnOnly<OpsOf<Config>[N]>>
   : BuiltinFn<N, T, IdKey, Paginated>;
 
-/** Only the literal `true` enables the page envelope; `false` / absent → plain list. */
-type PaginationOf<R> = R extends { readonly pagination: true }
-  ? true
-  : R extends { readonly pagination: false }
-    ? false
+/** Literal `true` / `"page"` → page envelope, `"cursor"` → cursor envelope, else a plain list. */
+type PaginationOf<R> = R extends { readonly pagination: true | "page" }
+  ? "page"
+  : R extends { readonly pagination: "cursor" }
+    ? "cursor"
     : undefined;
 
 /**
@@ -328,7 +343,7 @@ type PaginationOf<R> = R extends { readonly pagination: true }
 export type MockResource<
   T extends object,
   IdKey extends keyof T,
-  Paginated extends boolean | undefined = undefined,
+  Paginated extends "page" | "cursor" | undefined = undefined,
   Config = {},
 > = Simplify<
   {
@@ -366,7 +381,7 @@ export type MockApi<C> = {
       ? MockResource<
           EntityOf<Ty>,
           IdKeyOf<Ty>,
-          PaginationOf<R> extends true ? true : undefined,
+          PaginationOf<R>,
           EffectiveConfig<C extends { resources: unknown } ? C : {}, R>
         >
       : never

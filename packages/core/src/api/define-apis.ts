@@ -1,6 +1,8 @@
 import { ApiError, ConfigError } from "../errors/index.js";
 import type {
   ApisClient,
+  ApisHandlerCapture,
+  ApisHandlerOverlay,
   ApisInput,
   InferredApisInput,
   ValidateApisConfig,
@@ -34,12 +36,26 @@ function build(configs: unknown): unknown {
  */
 export function defineApis<Defs extends { [K in keyof Defs]: object }>(): <
   const Configs extends ApisInput<Defs>,
+  const M extends Record<string, Record<string, unknown>> = {},
+  const RP extends Record<string, Record<string, unknown>> = {},
+  const OP extends Record<string, Record<string, Record<string, unknown>>> = {},
 >(
-  configs: Configs & ValidateApisConfig<Defs, NoInfer<Configs>>,
+  configs: Configs &
+    ValidateApisConfig<Defs, NoInfer<Configs>> &
+    ApisHandlerCapture<M, RP, OP> &
+    ApisHandlerOverlay<Defs, M, RP, OP>,
 ) => ApisClient<Defs, Configs>;
 
-export function defineApis<const Configs extends InferredApisInput>(
-  configs: Configs & ValidateApisConfig<{}, NoInfer<Configs>>,
+export function defineApis<
+  const Configs extends InferredApisInput,
+  const M extends Record<string, Record<string, unknown>> = {},
+  const RP extends Record<string, Record<string, unknown>> = {},
+  const OP extends Record<string, Record<string, Record<string, unknown>>> = {},
+>(
+  configs: Configs &
+    ValidateApisConfig<{}, NoInfer<Configs>> &
+    ApisHandlerCapture<M, RP, OP> &
+    ApisHandlerOverlay<{}, M, RP, OP>,
 ): ApisClient<{}, Configs>;
 
 export function defineApis(configs?: unknown): unknown {
