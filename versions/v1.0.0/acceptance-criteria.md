@@ -28,4 +28,15 @@
 - [x] Opt-in idempotency keeps one key per call across Core retries, middleware replay, and
       TanStack retries; function operations reject the option.
 - [x] A Core-only consumer builds and runs without React or TanStack installed.
+- [x] A declarative custom operation on a mocked resource rejects with `MOCK_UNSUPPORTED` and never
+      runs a builtin or touches the store; mock writes reject prototype-changing keys.
+- [x] `@apixa/core` is a bounded peer dependency of `@apixa/mocking`; registration reaches the app's
+      Core even when Core is duplicated, and npm refuses an incompatible Core.
+- [x] `defineMockApi` and Core mocks return the same `getAll` results for filters, pages, cursors,
+      `slice` and reset; a paginated read copies only its page.
+- [x] One dataset can be imported on its own (`@apixa/mocking/datasets/<name>`) and loads only that
+      dataset in Node, Vite, esbuild and Next; `loadDataset` stays lazy.
+- [x] The tracked example typechecks inside `pnpm typecheck`, and CI runs the packed-consumer checks.
+- [x] A custom declarative operation can define its mocked behavior with an inline typed `mock`
+      handler; without one it stays `MOCK_UNSUPPORTED`, and a live resource ignores it.
 - [ ] Full v1 release requirements beyond this Query workstream are completed and published.

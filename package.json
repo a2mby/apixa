@@ -8,8 +8,11 @@
   "scripts": {
     "build": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/tanstack-query build",
     "dev": "pnpm --filter @apixa/core dev",
-    "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/mocking typecheck && pnpm --filter @apixa/tanstack-query typecheck && tsc --noEmit -p tests/tsconfig.json",
+    "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/mocking typecheck && pnpm --filter @apixa/tanstack-query typecheck && tsc --noEmit -p tests/tsconfig.json && pnpm typecheck:examples",
+    "typecheck:examples": "pnpm --filter @apixa/example-query-ssr-next typecheck",
     "test": "vitest run",
+    "verify:consumers": "node scripts/mocking-consumer.mjs && node scripts/verify-query-consumers.mjs",
+    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm verify:consumers",
     "format": "prettier --write .",
     "datasets:build": "node scripts/datasets/build-collection.mjs",
     "example": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/example-basic start",

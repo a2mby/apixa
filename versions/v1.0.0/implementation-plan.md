@@ -20,3 +20,9 @@
     mutation state, declarative optimistic layers, SSR prefetch helpers) and opt-in Core
     idempotency; then a hardening pass: deterministic race tests, a runtime matrix on the TanStack
     peer minimum, real-browser hydration, and packed/Core-only consumers.
+14. **A:** Mocking stabilization after the audit: no URL-guessed custom operations on mocks,
+    prototype-safe writes, Core as a peer dependency of Mocking, one `getAll` contract for Core mocks
+    and `defineMockApi`, page-only reads and copy-on-write rows, per-dataset import paths, packed
+    consumer checks in CI, and the tracked example inside `pnpm typecheck`.
+15. **A:** inline `mock` handlers for custom declarative operations (typed records, store view,
+    params, query, body, signal) inside Core's existing mock lifecycle.

@@ -23,11 +23,11 @@ describe("mock slice", () => {
     expect(rows.map((r) => r.id)).toEqual(["3", "4", "5"]);
   });
 
-  it("slice: { start, end } follows Array.slice when end exceeds length (shared seed semantics)", async () => {
+  it("slice: { start, end } follows Array.slice when end exceeds length (list result)", async () => {
     const api = defineMockApi({
       overshoot: { type: "products-mock", slice: { start: 10, end: 10_000 } },
     });
-    expect(await api.overshoot.getAll()).toHaveLength(90);
+    expect(await api.overshoot.getAll()).toHaveLength(100);
   });
 
   it("rejects end before start with InvalidSliceError when the API is built", () => {

@@ -63,6 +63,7 @@ export const OPERATION_KEYS = new Set([
   "requestMiddleware",
   "responseMiddleware",
   "transforms",
+  "mock",
 ]);
 
 const RUN_KEYS = new Set(["kind", "run"]);
@@ -332,6 +333,18 @@ function validateOperation(where: string, name: string, value: unknown): void {
     return;
   }
   assertKnownKeys(where, value, OPERATION_KEYS);
+  if (value.mock !== undefined) {
+    if (builtin) {
+      throw new ConfigError(
+        `${where}.mock: builtin "${name}" is simulated by Core; \`mock\` is for custom operations.`,
+      );
+    }
+    if (typeof value.mock !== "function") {
+      throw new ConfigError(
+        `${where}.mock must be a function ({ records, store, params, query, body, signal }) => result (got ${typeName(value.mock)}).`,
+      );
+    }
+  }
   if (value.method !== undefined && !METHODS.has(value.method as HttpMethod)) {
     throw new ConfigError(
       `${where}.method must be one of ${[...METHODS].join(", ")} (got ${JSON.stringify(value.method)}).`,

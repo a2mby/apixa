@@ -2,6 +2,73 @@
 
 ## Unreleased
 
+### Added — mock handlers for custom declarative operations
+
+- `@apixa/core` — a custom declarative operation accepts an optional `mock` handler,
+  `({ records, store, params, query, body, signal }) => result` (sync or async), that defines its
+  behavior on a **mocked** resource. It lives on the operation (no second registry), is typed from
+  the resource's mock records, the operation path, and `defineApi<Meta>()` body/query/response, and
+  is ignored on live resources. Without a handler a mocked custom operation still rejects with
+  `MOCK_UNSUPPORTED`; it is never guessed from its URL. `store` is a small copy-in/copy-out view of
+  the resource's own store (`get`, `exists`, `list`, `create`, `update`, `patch`, `delete`);
+  `records` is a lazy snapshot. New types `OperationMockHandler`, `OperationMockContext`,
+  `MockStoreHandle`. `mock` on a builtin or a `run` operation is a config error.
+- `defineApi<T>()` with metadata operations plus a context-sensitive handler no longer reports the
+  metadata operations as missing.
+- `defineApis` keeps each backend's mock record and path-parameter types in handlers. Operation
+  response metadata describes the raw handler result; Core applies response key transforms to the
+  public result, so handlers do not need casts for transformed keys.
+- A request aborted while an async mock provider is loading no longer starts its custom handler
+  after loading completes.
+
+### Fixed — Mocking stabilization for v1.0.0
+
+- `@apixa/core` — a declarative custom operation on a mocked resource (`{ kind, method, path }`) is
+  no longer guessed from its URL. `GET /stats` used to run `getById("stats")` and `DELETE /purge`
+  used to delete the record `purge`; both now reject with `MOCK_UNSUPPORTED` naming the operation,
+  and the store is untouched. Builtin overrides and function operations (`ctx.request`) are unchanged.
+- `@apixa/core` — mock writes reject the keys `__proto__`, `constructor` and `prototype` at any
+  depth (`MOCK_INVALID_INPUT`), and filters, `search`, `findFirst` and `getBy` read own properties
+  only. `patch` with `{"__proto__": …}` used to change the stored row's prototype.
+- `@apixa/mocking` — `@apixa/core` is now a **peer dependency** (`^0.1.0`) instead of a pinned
+  dependency, so a second Core copy is no longer installed. `register` also stores its loader in a
+  process-wide slot, so a duplicated Core still finds it.
+- `@apixa/mocking` — `defineMockApi().getAll` now runs Core's engine (`runBuiltin`): same filters,
+  paging and `slice` as a Core mock. See "Changed" for the behavior differences.
+- `@apixa/mocking/node` — documented and tested from the packed package: it needs a caller-supplied
+  root (`basePath` / `APIXA_DATASETS_DIR`); the not-found error says so.
+
+### Changed — behavior differences to migrate
+
+- `defineMockApi` `getAll(query)` takes **one flat object**: `page`/`pageSize`/`cursor` plus filter keys
+  (before: only `{ page, pageSize }`; any other key threw `INVALID_PAGINATION`). Filters match
+  flat keys exactly, arrays mean "any of".
+- `defineMockApi` pagination envelope is `{ data, total, page, pageSize }`: **`previous` and `next`
+  are removed**, and a page past the end is an **empty page** instead of `INVALID_PAGINATION`.
+  Passing paging keys without `pagination` is ignored instead of throwing.
+- `defineMockApi` `slice` now **caps the `getAll` list result** like a Core mock (`count`, `getById`
+  and writes still see every record, and new ids continue after the full dataset). The old
+  "start the store with a window" behavior is the new `seed: { limit?, offset? }` option.
+- `defineMockApi` `pagination` also accepts `"page"` and `"cursor"` (`true` still means `"page"`).
+- `defineMockApi` invalid paging values still use the `INVALID_PAGINATION` code.
+
+### Added — Mocking
+
+- `@apixa/mocking/datasets/<name>` for `users`, `products`, `companies`, `orders`, `posts` and
+  `comments`: one dataset per module, so a bundler (and native Node) loads only that dataset. The
+  barrel `@apixa/mocking/datasets` is unchanged; `loadDataset` is also exported from the root entry.
+- `@apixa/core` exports `runBuiltin`, `applyResourceSliceToListResult` and the `BuiltinIntent`,
+  `MockResult`, `PaginationMode` types for the shared mock engine.
+- Verification: `pnpm typecheck` includes the tracked example, `pnpm verify:consumers` runs the
+  packed-consumer checks, and `.github/workflows/ci.yml` runs build, typecheck, test and consumers.
+
+### Performance — Mocking
+
+- A paginated or filtered read copies only the returned page, not the whole dataset; working rows
+  share objects with the seed until a write replaces them. 100,000 inline records: paged `getAll`
+  169 ms → 0.04 ms, retained heap 73.3 → 41.3 MB. Named datasets: 0.28 → 0.17 MB per client.
+  `search` over 100,000 rows is about 1.6 ms slower (own-property reads).
+
 ### Added — TanStack Query DX refinement
 
 - `@apixa/core` — opt-in `idempotency` on write operations (`true` or `{ header, generate }`): one

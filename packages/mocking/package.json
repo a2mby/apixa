@@ -20,6 +20,30 @@
       "types": "./dist/datasets.d.ts",
       "import": "./dist/datasets.js"
     },
+    "./datasets/users": {
+      "types": "./dist/dataset-modules/users.d.ts",
+      "import": "./dist/dataset-modules/users.js"
+    },
+    "./datasets/products": {
+      "types": "./dist/dataset-modules/products.d.ts",
+      "import": "./dist/dataset-modules/products.js"
+    },
+    "./datasets/companies": {
+      "types": "./dist/dataset-modules/companies.d.ts",
+      "import": "./dist/dataset-modules/companies.js"
+    },
+    "./datasets/orders": {
+      "types": "./dist/dataset-modules/orders.d.ts",
+      "import": "./dist/dataset-modules/orders.js"
+    },
+    "./datasets/posts": {
+      "types": "./dist/dataset-modules/posts.d.ts",
+      "import": "./dist/dataset-modules/posts.js"
+    },
+    "./datasets/comments": {
+      "types": "./dist/dataset-modules/comments.d.ts",
+      "import": "./dist/dataset-modules/comments.js"
+    },
     "./node": {
       "types": "./dist/node.d.ts",
       "import": "./dist/node.js"
@@ -32,14 +56,15 @@
     "./dist/register.js"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/datasets.ts src/register.ts src/node.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts src/datasets.ts src/register.ts src/node.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts src/datasets.ts src/register.ts src/node.ts src/dataset-modules/users.ts src/dataset-modules/products.ts src/dataset-modules/companies.ts src/dataset-modules/orders.ts src/dataset-modules/posts.ts src/dataset-modules/comments.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/datasets.ts src/register.ts src/node.ts src/dataset-modules/users.ts src/dataset-modules/products.ts src/dataset-modules/companies.ts src/dataset-modules/orders.ts src/dataset-modules/posts.ts src/dataset-modules/comments.ts --format esm --dts --watch",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@apixa/core": "workspace:*"
+  "peerDependencies": {
+    "@apixa/core": "workspace:^"
   },
   "devDependencies": {
+    "@apixa/core": "workspace:*",
     "@types/node": "^22.13.10",
     "tsup": "^8.4.0",
     "typescript": "^5.8.2"

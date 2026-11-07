@@ -99,3 +99,8 @@ export type {
   RootTypes,
   RootTypesOf,
 } from "./inference.js";
+export type {
+  MockStoreHandle,
+  OperationMockContext,
+  OperationMockHandler,
+} from "./mock-handler.js";

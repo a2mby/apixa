@@ -8,6 +8,8 @@
       "@apixa/core": ["../packages/core/src/index.ts"],
       "@apixa/mocking": ["../packages/mocking/src/index.ts"],
       "@apixa/mocking/datasets": ["../packages/mocking/src/datasets.ts"],
+      "@apixa/mocking/datasets/*": ["../packages/mocking/src/dataset-modules/*.ts"],
+      "@apixa/mocking/register": ["../packages/mocking/src/register.ts"],
       "@apixa/mocking/node": ["../packages/mocking/src/node.ts"],
       "@apixa/tanstack-query": ["../packages/tanstack-query/src/index.ts"],
       "@apixa/tanstack-query/advanced": ["../packages/tanstack-query/src/advanced.ts"]

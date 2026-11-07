@@ -166,6 +166,9 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       hasBody,
       ...prepareLayers(where, [root, resourceLayer, declared]),
     };
+    if (declared.mock !== undefined) {
+      op.mockHandler = declared.mock as PreparedOperation["mockHandler"];
+    }
     if (declared.idempotency !== undefined && declared.idempotency !== false) {
       const config = declared.idempotency === true ? {} : declared.idempotency;
       op.idempotency = {
@@ -397,6 +400,7 @@ function functionOperation(
         query: init.query,
         body: init.body,
         hasBody: init.body !== undefined,
+        routed: true,
         options,
       }) as Promise<T>;
     },

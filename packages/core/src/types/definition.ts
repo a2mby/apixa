@@ -60,6 +60,14 @@ export interface OperationDefinition extends LayerOptions {
   path?: string;
   /** Override body presence. Default: `true` for POST / PUT / PATCH (and `deleteMany`). */
   hasBody?: boolean;
+  /**
+   * Custom operations only: what this operation does on a **mocked** resource, as
+   * `(context: OperationMockContext) => result` (see `OperationMockHandler`). Typed from the
+   * resource's mock records and the operation's path; `unknown` here so the typed overlay in
+   * `defineApi` can give the handler its parameter types. Without a handler a custom operation on a
+   * mocked resource rejects with `MOCK_UNSUPPORTED`; on a live resource the handler is ignored.
+   */
+  mock?: unknown;
 }
 
 /** A function operation with metadata — same execution as passing the function directly. */

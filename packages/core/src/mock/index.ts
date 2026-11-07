@@ -15,3 +15,4 @@ export {
   registerMockDatasetLoader,
   type MockDatasetLoader,
 } from "./datasets.js";
+export { runMockHandler, type MockHandlerContext, type MockStoreHandle } from "./handler.js";

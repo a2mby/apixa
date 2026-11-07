@@ -8,13 +8,31 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
-    alias: {
-      "@apixa/core": resolve(root, "packages/core/src/index.ts"),
-      "@apixa/mocking/node": resolve(root, "packages/mocking/src/node.ts"),
-      "@apixa/mocking/datasets": resolve(root, "packages/mocking/src/datasets.ts"),
-      "@apixa/mocking": resolve(root, "packages/mocking/src/index.ts"),
-      "@apixa/tanstack-query": resolve(root, "packages/tanstack-query/src/index.ts"),
-      "@apixa/tanstack-query/advanced": resolve(root, "packages/tanstack-query/src/advanced.ts"),
-    },
+    // Most specific first: aliases match by prefix, in order.
+    alias: [
+      {
+        find: /^@apixa\/mocking\/datasets\/(.+)$/,
+        replacement: resolve(root, "packages/mocking/src/dataset-modules/$1.ts"),
+      },
+      { find: "@apixa/core", replacement: resolve(root, "packages/core/src/index.ts") },
+      {
+        find: "@apixa/mocking/register",
+        replacement: resolve(root, "packages/mocking/src/register.ts"),
+      },
+      { find: "@apixa/mocking/node", replacement: resolve(root, "packages/mocking/src/node.ts") },
+      {
+        find: "@apixa/mocking/datasets",
+        replacement: resolve(root, "packages/mocking/src/datasets.ts"),
+      },
+      { find: "@apixa/mocking", replacement: resolve(root, "packages/mocking/src/index.ts") },
+      {
+        find: "@apixa/tanstack-query/advanced",
+        replacement: resolve(root, "packages/tanstack-query/src/advanced.ts"),
+      },
+      {
+        find: "@apixa/tanstack-query",
+        replacement: resolve(root, "packages/tanstack-query/src/index.ts"),
+      },
+    ],
   },
 });

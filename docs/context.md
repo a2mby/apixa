@@ -216,7 +216,7 @@ The intended responsibilities are:
 - `transport-fetch`: Fetch transport implementation, if separation proves useful.
 - `client`: Browser-specific configuration and behavior.
 - `server`: Server-specific configuration and behavior.
-- `mocking`: **Implemented (redesigned in #58)** — resource `mock` is a data source (`"<dataset-id>"`, inline records, a provider, or `{ data, idKey, seed }`) executed by Core's client-scoped engine; `@apixa/mocking` ships lazily loaded dataset records and `defineMockApi()` on the same engine. See ADR 003.
+- `mocking`: **Implemented (redesigned in #58)** — resource `mock` is a data source (`"<dataset-id>"`, inline records, a provider, or `{ data, idKey, seed }`) executed by Core's client-scoped engine; `@apixa/mocking` ships lazily loaded dataset records (one module per synthetic set under `@apixa/mocking/datasets/<name>`) and `defineMockApi()` on the same engine, with Core as its peer dependency. A declarative custom operation on a mock runs its own inline `mock` handler, or fails with `MOCK_UNSUPPORTED` when it has none; builtins and function operations are simulated by Core. See ADR 003.
 - `tanstack-query`: Optional TanStack Query integration (planned).
 - `openapi`: OpenAPI interoperability (planned).
 

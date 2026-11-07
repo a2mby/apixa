@@ -26,6 +26,10 @@
 - Opt-in Core `idempotency` on write operations (one key per call, reused by Core retries,
   middleware replay, and TanStack mutation retries). Off by default; the only Core behavior
   addition in this workstream.
+- Mocking stabilization: no URL-guessed custom operations on mocks, prototype-safe writes, Core as a
+  peer dependency of `@apixa/mocking`, one `getAll` contract for `defineApi` mocks and
+  `defineMockApi`, page-only reads, per-dataset import paths, and a verified packed-consumer and
+  example gate.
 
 ## Out
 

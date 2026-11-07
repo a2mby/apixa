@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@apixa/core": "workspace:*",
+    "@apixa/mocking": "workspace:*",
     "@apixa/tanstack-query": "workspace:*",
     "@tanstack/react-query": "^5.104.4",
     "next": "^15.5.4",

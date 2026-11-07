@@ -82,7 +82,7 @@ Context: `{ request, response?, attempt, meta }`.
 
 ## Plugin seams
 
-`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), install `@apixa/mocking` and import `@apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration.
+`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), install `@apixa/mocking` and import `@apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `@apixa/mocking` README.
 
 ## Errors
 

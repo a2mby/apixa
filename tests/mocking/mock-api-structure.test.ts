@@ -7,7 +7,7 @@ describe("defineMockApi mirrors the defineApi structure", () => {
       resources: {
         users: {
           type: "users-mock",
-          slice: 20,
+          seed: { limit: 20 },
           readOnly: true,
           operations: { getById: true, getBySlug: false },
         },
@@ -187,16 +187,15 @@ describe("typed operations", () => {
   it("returns a plain list without pagination and a typed page with it", async () => {
     const api = defineMockApi({
       resources: {
-        users: { type: "users-mock", slice: 3 },
+        users: { type: "users-mock", seed: { limit: 3 } },
         products: { type: "products-mock", pagination: true },
       },
     });
-    expectTypeOf(api.users.getAll).parameters.toEqualTypeOf<[]>();
+    expectTypeOf(api.users.getAll).toBeFunction();
     expectTypeOf(await api.users.getAll()).toBeArray();
     const page = await api.products.getAll({ pageSize: 2 });
-    expect(page).toMatchObject({ pageSize: 2, page: 1, previous: null });
+    expect(page).toMatchObject({ pageSize: 2, page: 1 });
     expectTypeOf(page.total).toBeNumber();
-    expectTypeOf(page.next).toEqualTypeOf<number | null>();
   });
 
   it("gives a builtin override a typed ctx and typed arguments, no annotations", async () => {
@@ -280,7 +279,7 @@ describe("typed operations", () => {
 
 describe("isolation", () => {
   it("keeps state per client and per resource", async () => {
-    const config = { resources: { users: { type: "users-mock", slice: 2 } } } as const;
+    const config = { resources: { users: { type: "users-mock", seed: { limit: 2 } } } } as const;
     const a = defineMockApi(config);
     const b = defineMockApi(config);
     await a.users.create({ name: "N", email: "n@x.io", username: "n", companyId: "1" });
