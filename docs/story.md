@@ -2,6 +2,11 @@
 
 Project log. Newest entry first.
 
+## 2026-11-09 — Remove the stale structure.txt snapshot
+
+Deleted `structure.txt`, a hand-kept directory tree from an older layout that nothing referenced.
+`docs/architecture.md` remains the single source map of the repository.
+
 ## 2026-11-08 — One npm package, private modular implementations
 
 The owner's final v1 decision supersedes the four-publication plan: only `apixa@1.0.0-rc.0`
