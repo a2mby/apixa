@@ -1,6 +1,12 @@
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
 import type { RetryOption } from "./retry.js";
-import type { ResponseType } from "./transport.js";
+import type { DataFormat } from "./definition.js";
+import type {
+  ApiResponse,
+  BinaryResponseType,
+  ResponseType,
+  ResponseTypeData,
+} from "./transport.js";
 import type { BuiltinConventionName } from "../operation/conventions.js";
 
 /** The original 5 CRUD builtins. */
@@ -27,6 +33,8 @@ export interface OperationFnRequestInit {
   params?: PathParams;
   query?: QueryParams;
   body?: unknown;
+  /** Body encoding; default JSON, or multipart automatically when the body holds `File` / `Blob`. */
+  dataFormat?: DataFormat;
   headers?: HeadersInitLike;
   timeout?: number;
   retry?: RetryOption;
@@ -42,6 +50,14 @@ export interface OperationFnRequestInit {
  * lifecycle as generated operations (headers, middleware, transforms, retry, errors, mocking).
  */
 export interface OperationFnContext {
+  /**
+   * A literal non-JSON `responseType` types the result (`"blob"` → `Blob`, `"arrayBuffer"` →
+   * `ArrayBuffer`, `"text"` → `string`, `"stream"` → `ReadableStream<Uint8Array> | null`), and
+   * `full: true` wraps it in `ApiResponse`. Otherwise name the type yourself: `request<User>(…)`.
+   */
+  request<RT extends BinaryResponseType, F extends boolean = false>(
+    init: OperationFnRequestInit & { responseType: RT; full?: F },
+  ): Promise<F extends true ? ApiResponse<ResponseTypeData<RT>> : ResponseTypeData<RT>>;
   request<T = unknown>(init: OperationFnRequestInit): Promise<T>;
   /** `resources` key and operation name. */
   readonly resource: string;

@@ -8,6 +8,9 @@
  * The handler runs only when the resource is mocked (`mock: …` on the resource). On a live resource
  * the operation is an ordinary HTTP request and the handler is never called.
  */
+import type { MockFilesHandle } from "../mock/handler.js";
+
+export type { MockFilesHandle };
 
 type Id = string | number;
 
@@ -50,6 +53,11 @@ export interface OperationMockContext<E extends object, Params, Query, Body> {
    * cannot be stopped and its writes are not rolled back: check `signal.aborted` before mutating.
    */
   readonly signal: AbortSignal;
+  /**
+   * Read-only view of the client's virtual file store: serve a previously uploaded file by its
+   * reference (`files.get(record.file).blob()`). A missing file is `MOCK_NOT_FOUND`.
+   */
+  readonly files: MockFilesHandle;
   readonly resource: string;
   readonly operation: string;
 }

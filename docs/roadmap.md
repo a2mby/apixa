@@ -101,7 +101,7 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Documents `pagination` / `readOnly` and mock-bridge extended routes (much of that surface already
   landed with v0.10.0 via shared files)
 
-## Current: v1.0.0 TanStack integration overhaul (in progress)
+## Release candidate: v1.0.0 TanStack integration overhaul
 
 **Spec:** [versions/v1.0.0/](../versions/v1.0.0/)
 
@@ -114,6 +114,49 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
+
+## Current: v1.2.0 — File Downloads & Binary Responses
+
+**Spec:** [versions/v1.2.0/](../versions/v1.2.0/)
+
+- Operation-level `responseType` (declarative operations; per call still wins) that **infers** the
+  result type: `Blob`, `ArrayBuffer`, `string`, `ReadableStream`; metadata `response` still wins
+- Download metadata through the existing `{ full: true }` `ApiResponse`, plus a pure
+  `parseContentDisposition` helper
+- Binary-safe pipeline: no JSON parsing, key transforms or builtin shaping; failed downloads keep a
+  readable `HttpError` body; truthful 204 values for explicit binary modes
+- Mock downloads read the v1.1.0 virtual file store from `mock` handlers (headers synthesized,
+  isolation and reset preserved)
+- Verified through React 18/19, packed npm consumers, Chromium, Node, Next SSR, Vercel Edge and
+  workerd. Implemented and verified (`pnpm verify`); owner sign-off open. One published `apixa` package.
+
+## Implemented, owner sign-off open: v1.1.0 — Advanced File Handling, first release
+
+**Spec:** [versions/v1.1.0/](../versions/v1.1.0/)
+
+- Resource-level `fileFields` (shorthand or `{ name }`), checked against the entity; reads keep
+  `string` / `string[]`, eligible writes accept `File | Blob`
+- JSON by default; multipart chosen automatically when a body holds binary values; operation
+  `dataFormat` override; documented bracket / repeated-name serialization
+- Minimal in-memory mock file storage (bytes separate from records, string references on reads)
+- Binary-safe pipeline, `SerializationError`, React type compatibility; no new packages
+- Implemented and verified (`pnpm verify`); sign-off and landing on `main` pending. One published `apixa` package.
+
+## Planned: Advanced File Handling (nine phases)
+
+Phases 1 is **v1.1.0** (with minimal mock storage pulled in by owner decision). The rest are roadmap
+headings only until each milestone starts. A dedicated React Hook Form integration is a separate
+optional milestone **after** file handling.
+
+1. File-field foundation, automatic serialization and minimal mock file storage — **v1.1.0**
+2. Extended CRUD/custom operations and advanced serialization
+3. Downloads and binary responses — **v1.2.0**
+4. Transfer progress, cancellation, streaming, and reliability
+5. Middleware, validation, file limits, and error handling
+6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store
+7. React/TanStack and form compatibility, browser/Node integration, and testing
+8. Large-file uploads, chunking, resumability, parallel transfers, and storage adapters
+9. File lifecycle management, cleanup policies, performance, documentation, and release hardening
 
 ## Later: Proposed backlog catalog (planning only)
 

@@ -38,6 +38,10 @@ export type {
   ResourceTypeOnlyKey,
   OperationTypeOnlyKey,
   QueryArrayFormat,
+  DataFormat,
+  FileFieldOptions,
+  FileFieldsConfig,
+  MultipartOptions,
 } from "./definition.js";
 
 export type { RetryConfig, RetryOption, ResolvedRetryConfig, RetryHookContext } from "./retry.js";
@@ -101,6 +105,7 @@ export type {
 } from "./inference.js";
 export type {
   MockStoreHandle,
+  MockFilesHandle,
   OperationMockContext,
   OperationMockHandler,
 } from "./mock-handler.js";

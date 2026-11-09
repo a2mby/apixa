@@ -47,15 +47,19 @@ Everything else (`MockStore`, `resetMock`, `registerMockDatasetLoader`, `createI
 
 ## Install matrix
 
-| Goal             | Install                                         |
-| ---------------- | ----------------------------------------------- |
-| Core and Mocking | `npm install apixa`                             |
-| React            | `npm install apixa react @tanstack/react-query` |
+| Goal             | Install                                   |
+| ---------------- | ----------------------------------------- |
+| Core and Mocking | `npm install apixa`                       |
+| React            | `npm install apixa @tanstack/react-query` |
 
-React (`^18.0.0 || ^19.0.0`) and TanStack Query (`^5.90.1`) are optional peers. Root/Core/Mocking
-work without them. Importing a React entry without its peers produces a native module-not-found
-error. Future framework integrations will use their own subpaths and optional peers; Vue and
-Angular are not implemented.
+Core-only consumers need only `npm install apixa`. `apixa/react` requires React (`^18.0.0 || ^19.0.0`,
+already present in a React app) and TanStack Query (`^5.90.1`) to be installed **in the consuming
+application**; both stay optional peers, so root/Core/Mocking work without them and npm does not
+install them automatically. Importing a React entry without its peers produces a native
+module-not-found error. Without TanStack Query the three hooks' results are typed
+`ApixaMissingPeer_Install_tanstack_react_query` (a compile error on first use that names the fix),
+never `any`; see the troubleshooting note in the root README. Future framework integrations will
+use their own subpaths and declare their own optional peers; Vue and Angular are not implemented.
 
 ## Runtime support
 
@@ -90,3 +94,35 @@ above are the platforms' own engines, not deployed services).
 - The export snapshot retains the 13 private module entries as compatibility references alongside
   the 14 public entries. No symbol list changed in this migration.
 - The unscoped `apixa` package belongs to the project maintainer. No npm organization scope is needed.
+
+## v1.2.0 additions (downloads and binary responses)
+
+New in `apixa` (root) and `apixa/core`; nothing existing changed.
+
+- Values: `parseContentDisposition` (pure, never throws).
+- Types: `ContentDisposition` (root, `/core`); `MockFilesHandle` (`/core`, the type of the new `files`
+  property of the `mock` handler context).
+- Config: declarative operation `responseType` (`"json" | "text" | "blob" | "arrayBuffer" | "stream"`);
+  a literal value types the result. Per-call `responseType` and `ctx.request({ responseType })` are typed
+  too (previously untyped).
+- Behavior, only for explicit non-JSON modes: a 204/205 returns `""` / empty `Blob` / empty
+  `ArrayBuffer` instead of `null`; an error response is parsed by content type instead of read as the
+  requested binary type; an unknown `responseType` throws `ConfigError` instead of acting as JSON; binary
+  results skip key transforms and JSON shaping. JSON behavior is unchanged.
+- Mocks: handlers receive `files`; mocked results are coerced to `responseType` with content headers;
+  mocked `stream` is `MOCK_UNSUPPORTED`.
+
+## v1.1.0 additions (file handling)
+
+New in `apixa` (root), `apixa/core` and `apixa/mocking` where noted; nothing existing changed.
+
+- Values: `SerializationError`, `mockFiles` (root, `/core`, and `mockFiles` also `/mocking`);
+  `MockFileStorage`, `isMockFileRef` (`/core`, `/mocking`).
+- Types: `FileFieldsConfig`, `FileFieldOptions`, `MultipartOptions`, `DataFormat`, `MockFileMeta`,
+  `MockStoredFile` (root, `/core`; the mock types also `/mocking`).
+- Config: resource `fileFields` and `multipart`; operation `dataFormat` and `multipart`;
+  `ctx.request({ dataFormat })`. New error code `SERIALIZATION`.
+- Behavior: a body containing `File` / `Blob` now becomes multipart instead of `{}`-corrupted JSON;
+  a caller-built `FormData` is sent without `Content-Type` so the boundary is generated. Bodies
+  without binary values are encoded exactly as before. Mocked writes carrying binary values store
+  them in the client's file store.

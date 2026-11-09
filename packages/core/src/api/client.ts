@@ -1,6 +1,6 @@
 import { ConfigError } from "../errors/index.js";
 import { parseBaseURL } from "../http/url.js";
-import type { MockStore } from "../mock/index.js";
+import { MockFileStorage, type MockStore } from "../mock/index.js";
 import type { ClientRuntime } from "../request/index.js";
 import { createFetchTransport } from "../transport/fetch.js";
 import type { LayerOptions } from "../types/definition.js";
@@ -8,8 +8,15 @@ import type { Transport } from "../types/transport.js";
 import { createResourceClient } from "./resource-client.js";
 import { validateResource, validateRoot } from "./validate.js";
 
-/** Mock stores per built client / resource client — scoped, garbage-collected with the client. */
-const stores = new WeakMap<object, readonly MockStore[]>();
+/** Mock state of one mocked resource: its records and the client's shared file store. */
+export interface MockEntry {
+  store: MockStore;
+  resource: string;
+  files: MockFileStorage;
+}
+
+/** Mock state per built client / resource client — scoped, garbage-collected with the client. */
+export const mockEntries = new WeakMap<object, readonly MockEntry[]>();
 
 /**
  * The single client-construction engine behind `defineApi()` and `defineApis()`. Validates
@@ -25,6 +32,7 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
     queryArrayFormat:
       (config.queryArrayFormat as ClientRuntime["queryArrayFormat"] | undefined) ?? "repeat",
     querySerializer: config.querySerializer as ClientRuntime["querySerializer"],
+    files: new MockFileStorage(),
   };
   const root: LayerOptions = {
     headers: config.headers as LayerOptions["headers"],
@@ -37,32 +45,45 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
   };
 
   const client: Record<string, Record<string, unknown>> = {};
-  const all: MockStore[] = [];
+  const all: MockEntry[] = [];
   for (const [name, definition] of Object.entries(config.resources)) {
     validateResource(name, definition);
     const built = createResourceClient(runtime, { name, definition, root });
     const resource = Object.freeze(built.client);
     if (built.store) {
-      stores.set(resource, [built.store]);
-      all.push(built.store);
+      const entry = { store: built.store, resource: name, files: runtime.files };
+      mockEntries.set(resource, [entry]);
+      all.push(entry);
     }
     client[name] = resource;
   }
   const frozen = Object.freeze(client);
-  stores.set(frozen, all);
+  mockEntries.set(frozen, all);
   return frozen;
 }
 
-/**
- * Reset mocked records to their seeded state. Pass one mocked resource (`api.users`) or a whole
- * client (`api`) to reset every mocked resource on it. Live resources are unaffected.
- */
-export function resetMockState(target: object): void {
-  const found = stores.get(target);
+function entriesOf(target: object, who: string): readonly MockEntry[] {
+  const found = mockEntries.get(target);
   if (!found || (found.length === 0 && !Object.isFrozen(target))) {
     throw new ConfigError(
-      "resetMock() expects a mocked resource (api.users) or a client created by defineApi().",
+      `${who} expects a mocked resource (api.users) or a client created by defineApi().`,
     );
   }
-  for (const store of found) store.reset();
+  return found;
+}
+
+/**
+ * Reset mocked records to their seeded state and drop the files their writes stored. Pass one
+ * mocked resource (`api.users`) or a whole client (`api`). Live resources are unaffected.
+ */
+export function resetMockState(target: object): void {
+  for (const { store, files, resource } of entriesOf(target, "resetMock()")) {
+    store.reset();
+    files.clear(resource);
+  }
+}
+
+/** The virtual file store behind a mocked resource or client (`undefined` when nothing is mocked). */
+export function mockFileStorage(target: object): MockFileStorage | undefined {
+  return entriesOf(target, "mockFiles()")[0]?.files;
 }
