@@ -252,6 +252,7 @@ export function normalizeIdentity(values: readonly unknown[], info: OperationInf
       retry: _retry,
       idempotencyKey: _idempotencyKey,
       onTransfer: _onTransfer,
+      maxResponseSize: _maxResponseSize,
       ...rest
     } = result[index] as Record<string, unknown>;
     result[index] = Object.keys(rest).length === 0 ? undefined : rest;

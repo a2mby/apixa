@@ -2,6 +2,7 @@ import { AbortError, NetworkError, TimeoutError } from "../errors/index.js";
 import type { Transport, TransportRequest, TransportResponse } from "../types/transport.js";
 import { countedStream, trustworthyTotal } from "../transfer/counting.js";
 import { detectTransferSupport } from "../transfer/support.js";
+import { checkResponseHead, responseTooLarge } from "../validation/response.js";
 import { readBody } from "./read-body.js";
 
 const isStream = (body: unknown): body is ReadableStream<Uint8Array> =>
@@ -129,43 +130,74 @@ export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport
 
       const responseType = input.responseType ?? "json";
       const report = input.onTransfer;
-      let source = response;
-      if (report) {
-        const total = trustworthyTotal(response.headers, response.status, input.method);
-        report({
-          phase: "start",
-          direction: "download",
-          loaded: 0,
-          ...(total !== undefined ? { total } : {}),
-        });
-        if (response.ok && response.body && response.status !== 204 && response.status !== 205) {
-          const counted = countedStream(response.body, {
-            onChunk: (loaded) =>
-              report({
-                phase: "progress",
-                direction: "download",
-                loaded,
-                ...(total !== undefined ? { total } : {}),
-              }),
-            onDone: (loaded) =>
-              report({
-                phase: "complete",
-                direction: "download",
-                loaded,
-                ...(total !== undefined ? { total } : {}),
-              }),
-          });
-          // Same bytes, same headers: the existing body reader decodes them exactly as before.
-          source = new Response(counted, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-          });
-        } else if (response.ok) {
-          report({ phase: "complete", direction: "download", loaded: 0 });
+      const limits = input.limits;
+      if (limits && response.ok) {
+        // Early reject from the response head (trustworthy Content-Length, declared Content-Type).
+        const head = checkResponseHead(response.headers, response.status, input.method, limits);
+        if (head) {
+          response.body?.cancel(head).catch(() => {});
+          throw head;
         }
       }
-      const body = await readBody(source, responseType);
+      // A stream result is bounded by the pipeline; every other type is buffered here, so count it.
+      const cap = response.ok && responseType !== "stream" ? limits?.maxResponseBytes : undefined;
+      let source = response;
+      const total = report
+        ? trustworthyTotal(response.headers, response.status, input.method)
+        : undefined;
+      const sized = total !== undefined ? { total } : {};
+      if (report) report({ phase: "start", direction: "download", loaded: 0, ...sized });
+      if (
+        response.ok &&
+        response.body &&
+        response.status !== 204 &&
+        response.status !== 205 &&
+        (report || cap !== undefined)
+      ) {
+        const counted = countedStream(response.body, {
+          onChunk: report
+            ? (loaded) => report({ phase: "progress", direction: "download", loaded, ...sized })
+            : undefined,
+          onDone: report
+            ? (loaded) => report({ phase: "complete", direction: "download", loaded, ...sized })
+            : undefined,
+          limit:
+            cap !== undefined
+              ? { bytes: cap, error: (seen) => responseTooLarge(cap, seen) }
+              : undefined,
+        });
+        // Same bytes, same headers: the existing body reader decodes them exactly as before.
+        source = new Response(counted, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        });
+      } else if (report && response.ok) {
+        report({ phase: "complete", direction: "download", loaded: 0 });
+      }
+      let body: unknown;
+      const errorCap = !response.ok ? limits?.maxResponseBytes : undefined;
+      if (errorCap !== undefined && response.body) {
+        // A failed response keeps its status and `HttpError`; only its body is bounded. Over the
+        // limit (declared or counted) the body is dropped (`data` is `null`), never buffered whole.
+        const declared = trustworthyTotal(response.headers, response.status, input.method);
+        if (declared !== undefined && declared > errorCap) {
+          response.body.cancel().catch(() => {});
+          body = null;
+        } else {
+          const overflow = new Error("error body over limit");
+          const bounded = new Response(
+            countedStream(response.body, { limit: { bytes: errorCap, error: () => overflow } }),
+            { status: response.status, statusText: response.statusText, headers: response.headers },
+          );
+          body = await readBody(bounded, responseType).catch((error: unknown) => {
+            if (error === overflow) return null;
+            throw error;
+          });
+        }
+      } else {
+        body = await readBody(source, responseType);
+      }
 
       return {
         status: response.status,

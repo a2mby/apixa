@@ -181,7 +181,7 @@ describe("fileFields type contract", () => {
       defineApi<AppApi>()({
         baseURL,
         // @ts-expect-error unknown advanced option
-        resources: { users: { path: "/users", fileFields: { avatar: { maxSize: 1 } } } },
+        resources: { users: { path: "/users", fileFields: { avatar: { bogus: 1 } } } },
       });
     () =>
       defineApi<AppApi>()({

@@ -18,10 +18,16 @@ import {
   type ResourceRuntime,
 } from "../request/index.js";
 import { convertKey } from "../transform/keys.js";
+import {
+  resolveFieldRules,
+  resolveResponseAccept,
+  type ResolvedFieldRules,
+} from "../validation/index.js";
 import type { OperationFn, OperationFnContext, OperationFnRequestInit } from "../types/builtins.js";
 import { validateMethodKind } from "./validate.js";
 import type {
   FileFieldOptions,
+  FileLimits,
   LayerOptions,
   MultipartOptions,
   OperationDefinition,
@@ -71,11 +77,21 @@ function prepareLayers(where: string, layers: Array<LayerOptions | undefined>) {
 }
 
 /** Public file-field names → wire names (request key transform), with optional verbatim aliases. */
+function stripUndefined<T extends object>(value: T | undefined): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(value ?? {}).filter(([, v]) => v !== undefined),
+  ) as Partial<T>;
+}
+
 function prepareFiles(
   def: Record<string, unknown>,
   declared: OperationDefinition | undefined,
   requestKeys: ReturnType<typeof prepareLayers>["requestKeys"],
-): Pick<PreparedOperation, "dataFormat" | "multipart" | "fileFields"> {
+  where?: string,
+): Pick<
+  PreparedOperation,
+  "dataFormat" | "multipart" | "fileFields" | "fileRules" | "maxResponseSize" | "responseAccept"
+> {
   const wire = (field: string) => (requestKeys ? convertKey(field, requestKeys) : field);
   const config = def.fileFields as readonly string[] | Record<string, FileFieldOptions> | undefined;
   const fields = config === undefined ? [] : Array.isArray(config) ? config : Object.keys(config);
@@ -95,10 +111,42 @@ function prepareFiles(
     aliases,
     jsonFields: new Set((merged.jsonFields ?? []).map(wire)),
   };
+  // Opt-in file rules: `undefined` unless something is configured, so unconfigured calls pay nothing.
+  const resourceConfig = (config !== undefined && !Array.isArray(config) ? config : {}) as Record<
+    string,
+    FileFieldOptions
+  >;
+  const overrides = declared?.fileFields ?? {};
+  for (const field of Object.keys(overrides)) {
+    if (!(field in resourceConfig) && !fields.includes(field)) {
+      throw new ConfigError(
+        `${where ?? "operation"}.fileFields.${field}: "${field}" is not declared in the resource's fileFields.`,
+      );
+    }
+  }
+  const resolved = new Map<string, ResolvedFieldRules>();
+  const partNames = new Map<string, string>();
+  for (const field of fields) {
+    const wireName = wire(field);
+    partNames.set(wireName, wireName);
+    const alias = aliases.get(wireName);
+    if (alias !== undefined) partNames.set(alias, wireName);
+    const rules = resolveFieldRules(wireName, [resourceConfig[field], overrides[field]]);
+    if (rules) resolved.set(wireName, rules);
+  }
+  const limits = {
+    ...(def.fileLimits as FileLimits | undefined),
+    ...stripUndefined(declared?.fileLimits),
+  };
+  const hasLimits = Object.values(limits).some((v) => v !== undefined);
+  const maxResponseSize = declared?.maxResponseSize;
   return {
     dataFormat: declared?.dataFormat,
     multipart,
     fileFields: fields.length > 0 ? fields.map(wire) : undefined,
+    fileRules: resolved.size > 0 || hasLimits ? { fields: resolved, partNames, limits } : undefined,
+    maxResponseSize,
+    responseAccept: resolveResponseAccept(declared?.responseAccept),
   };
 }
 
@@ -203,7 +251,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       hasBody,
       ...prepareLayers(where, [root, resourceLayer, declared]),
     };
-    Object.assign(op, prepareFiles(def, declared, op.requestKeys));
+    Object.assign(op, prepareFiles(def, declared, op.requestKeys, where));
     if (declared.responseType !== undefined) op.responseType = declared.responseType;
     if (declared.onTransfer !== undefined) op.onTransfer = declared.onTransfer;
     if (declared.mock !== undefined) {

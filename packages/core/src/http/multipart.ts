@@ -1,7 +1,7 @@
 import { SerializationError } from "../errors/index.js";
 import type { MultipartOptions } from "../types/definition.js";
 
-const MAX_DEPTH = 32;
+export const MAX_DEPTH = 32;
 
 /** Resolved per operation at construction; field names are already in wire (post-transform) form. */
 export interface MultipartRuntime {
@@ -18,13 +18,13 @@ export const DEFAULT_MULTIPART: MultipartRuntime = {
   jsonFields: new Set(),
 };
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (value === null || typeof value !== "object") return false;
   const proto = Object.getPrototypeOf(value);
   return proto === Object.prototype || proto === null;
 }
 
-const isBlob = (value: unknown): value is Blob =>
+export const isBlob = (value: unknown): value is Blob =>
   typeof Blob !== "undefined" && value instanceof Blob;
 
 /** True when a plain object / array (any depth, bounded) holds a `Blob` or `File`. */

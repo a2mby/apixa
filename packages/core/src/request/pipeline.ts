@@ -6,6 +6,8 @@ import {
   HttpError,
   NetworkError,
   TimeoutError,
+  ValidationError,
+  fileValidationError,
 } from "../errors/index.js";
 import {
   assertSameOrigin,
@@ -19,7 +21,15 @@ import {
   type BaseUrl,
   type MultipartRuntime,
 } from "../http/index.js";
-import { TransferChannel, bindStreamLifetime } from "../transfer/index.js";
+import { TransferChannel, bindStreamLifetime, countedStream } from "../transfer/index.js";
+import {
+  bodyByteSize,
+  checkResponseHead,
+  responseTooLarge,
+  streamLimit,
+  validateRequestFiles,
+  type ResolvedFileRules,
+} from "../validation/index.js";
 import {
   routeToIntent,
   runBuiltin,
@@ -110,6 +120,12 @@ export interface PreparedOperation {
    * mock file store and replaced by string references.
    */
   fileFields?: readonly string[];
+  /** Opt-in file rules (resolved at construction); absent unless configured. */
+  fileRules?: ResolvedFileRules;
+  /** Largest accepted response body in bytes; a per-call `maxResponseSize` wins. */
+  maxResponseSize?: number;
+  /** Accepted response `Content-Type`s, normalized. */
+  responseAccept?: readonly string[];
   /** Opt-in idempotency header for writes (resolved at construction). */
   idempotency?: { header: string; generate: () => string };
 }
@@ -313,6 +329,19 @@ export async function runOperation(
         `${resource.name}.${op.name}: responseType must be one of ${RESPONSE_TYPES.map((t) => JSON.stringify(t)).join(", ")} (got ${JSON.stringify(responseType)}).`,
       );
     }
+    if (options.maxResponseSize !== undefined) {
+      const n = options.maxResponseSize;
+      if (typeof n !== "number" || !Number.isSafeInteger(n) || n < 0) {
+        throw new ConfigError(
+          `${resource.name}.${op.name}: maxResponseSize must be a non-negative integer (got ${String(n)}).`,
+        );
+      }
+    }
+    const maxResponse = options.maxResponseSize ?? op.maxResponseSize;
+    const responseLimits =
+      maxResponse !== undefined || op.responseAccept
+        ? { maxResponseBytes: maxResponse, accept: op.responseAccept }
+        : undefined;
     const method = call.method ?? op.method;
     const pathTemplate = call.path ?? op.path;
     const path = interpolatePath(pathTemplate, call.params);
@@ -352,6 +381,31 @@ export async function runOperation(
     const hasBody = call.hasBody ?? op.hasBody;
     const wireBody =
       hasBody && op.requestKeys ? transformKeys(request.body, op.requestKeys) : request.body;
+
+    // One shared checkpoint for live and mocked calls, before serialization and execution: a
+    // rejected request makes no network call, no mock write and starts no transfer.
+    const limitState: { error?: ValidationError } = {};
+    let sendBody = hasBody ? wireBody : undefined;
+    if (op.fileRules && hasBody) {
+      const violations = validateRequestFiles(wireBody, op.fileRules);
+      if (violations.length > 0) throw fileValidationError(violations, { request });
+      if (typeof ReadableStream !== "undefined" && wireBody instanceof ReadableStream) {
+        const cap = streamLimit(op.fileRules);
+        if (cap) {
+          // Counted as it flows (pull-based, nothing buffered); over the limit it errors the body.
+          sendBody = countedStream(wireBody as ReadableStream<Uint8Array>, {
+            limit: {
+              bytes: cap.limit,
+              error: (seen) =>
+                (limitState.error = fileValidationError(
+                  [{ code: cap.code, path: "$", limit: cap.limit, actual: seen }],
+                  { request },
+                )),
+            },
+          });
+        }
+      }
+    }
 
     let status: number;
     let responseHeaders: Headers;
@@ -418,6 +472,8 @@ export async function runOperation(
       const finalized = await finalizeMockResponse(result.data, responseType);
       responseHeaders = finalized.headers;
       data = finalized.data;
+      const mockHead = checkResponseHead(responseHeaders, status, request.method, responseLimits);
+      if (mockHead) throw mockHead;
       const channel = nextChannel(session, 0);
       if (channel) {
         // Nothing crosses a wire on a mock: never invent bytes. Binary and text results have a real
@@ -439,17 +495,49 @@ export async function runOperation(
         client,
         call.dataFormat ? { ...op, dataFormat: call.dataFormat } : op,
         request,
-        hasBody ? wireBody : undefined,
+        sendBody,
         options,
         signal,
         call.allow404 === true,
         responseType,
         session,
+        responseLimits,
+        limitState,
       );
       status = response.status;
       responseHeaders = response.headers;
       raw = response.raw;
       data = response.body;
+      if (responseLimits && response.status >= 200 && response.status < 300) {
+        // The transport may have enforced these already; custom transports might not, so check the
+        // head and any fully read body here too (a stream is counted below).
+        const head = checkResponseHead(
+          response.headers,
+          response.status,
+          request.method,
+          responseLimits,
+        );
+        if (head) {
+          if (typeof ReadableStream !== "undefined" && data instanceof ReadableStream) {
+            (data as ReadableStream).cancel(head).catch(() => {});
+          }
+          throw head;
+        }
+        if (maxResponse !== undefined && responseType !== "stream" && responseType !== "json") {
+          const size = bodyByteSize(data);
+          if (size !== undefined && size > maxResponse) throw responseTooLarge(maxResponse, size);
+        }
+        if (
+          maxResponse !== undefined &&
+          responseType === "stream" &&
+          typeof ReadableStream !== "undefined" &&
+          data instanceof ReadableStream
+        ) {
+          data = countedStream(data as ReadableStream<Uint8Array>, {
+            limit: { bytes: maxResponse, error: (seen) => responseTooLarge(maxResponse, seen) },
+          });
+        }
+      }
       if (responseType === "stream" && response.status >= 200 && response.status < 300) {
         if (typeof ReadableStream !== "undefined" && data instanceof ReadableStream) {
           // The stream outlives this Promise: keep the call's signal and timeout bound to it until
@@ -588,6 +676,8 @@ async function sendWithRetry(
   allow404: boolean,
   responseType: ResponseType,
   session: TransferSession,
+  limits: { maxResponseBytes?: number; accept?: readonly string[] } | undefined,
+  limitState: { error?: ValidationError },
 ) {
   const retry =
     options.retry !== undefined ? resolveRetryConfig(options.retry, "options.retry") : op.retry;
@@ -611,6 +701,7 @@ async function sendWithRetry(
         body,
         signal,
         responseType,
+        ...(limits ? { limits } : {}),
         ...(channel ? { onTransfer: channel.sink } : {}),
       });
       channel?.finishRequest(body !== null && body !== undefined);
@@ -640,11 +731,12 @@ async function sendWithRetry(
         throw error;
       }
       failure =
-        error instanceof ApiError
+        limitState.error ??
+        (error instanceof ApiError
           ? error
           : new NetworkError(error instanceof Error ? error.message : "Network request failed", {
               cause: error,
-            });
+            }));
       failure.request ??= request;
       failure.attempt = attempt;
     }
@@ -663,6 +755,7 @@ async function sendWithRetry(
     const canRetry =
       retry !== undefined &&
       replayable &&
+      !(failure instanceof ValidationError) &&
       !signal.aborted &&
       decideRetry(retry, ctx, failure) &&
       (retryAfter === undefined || retryAfter <= retry.maxDelayMs);

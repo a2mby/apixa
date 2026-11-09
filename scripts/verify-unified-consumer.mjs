@@ -375,6 +375,41 @@ await assert.rejects(() => served.docs.download(stored.id), (e) => e.code === "M
   await new Promise((r) => server.close(r));
 }
 
+// v1.4.0 file validation through the packed package: rejected before any request, typed, safe.
+{
+  assert.equal(typeof root.ValidationError, "function");
+  let requests = 0;
+  const seen = [];
+  const rules = root.defineApi({
+    baseURL: "https://example.test",
+    transport: root.createFetchTransport(async (url, init) => {
+      requests++;
+      if (init.body instanceof ReadableStream) {
+        const reader = init.body.getReader();
+        try { while (!(await reader.read()).done) {} } catch (cause) { throw new TypeError("fetch failed", { cause }); }
+      }
+      return String(url).includes("/big") ? new Response(new Uint8Array(500), { headers: { "content-length": "500" } }) : new Response("{}", { headers: { "content-type": "application/json" } });
+    }),
+    resources: { pets: { path: "/pets", fileFields: { photo: { maxSize: 10, accept: ["image/*"], filename: "strict" } }, fileLimits: { maxBodySize: 20 }, operations: {
+      big: { kind: "read", method: "GET", path: "/big", responseType: "blob", maxResponseSize: 100 },
+      put: { kind: "write", method: "PUT", path: "/put" },
+    } } },
+  });
+  const secret = new File([new Uint8Array(50)], "marker-secret.exe", { type: "application/x-msdownload" });
+  const rejected = await rules.pets.create({ photo: secret }, { onTransfer: (e) => seen.push(e) }).catch((e) => e);
+  assert.ok(rejected instanceof root.ValidationError && rejected.code === "VALIDATION" && rejected.retryable === false, "typed ValidationError");
+  assert.deepEqual(rejected.violations.map((v) => v.code).sort(), ["FILE_TOO_LARGE", "TYPE_NOT_ALLOWED"], "violation codes");
+  assert.ok(!JSON.stringify(rejected.violations).includes("marker-secret") && !rejected.message.includes("marker-secret"), "no file name in the error");
+  assert.equal(requests, 0, "a rejected file makes no request");
+  assert.equal(seen.length, 0, "a rejected file emits no transfer event");
+  await rules.pets.create({ photo: new File([new Uint8Array(5)], "ok.png", { type: "image/png" }) });
+  assert.equal(requests, 1, "a valid file is sent");
+  const cut = await rules.pets.put(new ReadableStream({ start(c) { c.enqueue(new Uint8Array(15)); c.enqueue(new Uint8Array(15)); c.close(); } })).catch((e) => e);
+  assert.ok(cut instanceof root.ValidationError && cut.violations[0].code === "BODY_TOO_LARGE", "stream limit surfaces ValidationError");
+  const big = await rules.pets.big().catch((e) => e);
+  assert.ok(big instanceof root.ValidationError && big.violations[0].code === "RESPONSE_TOO_LARGE", "response limit via Content-Length");
+}
+
 // React is an optional peer: the React entries fail clearly, and only when imported.
 for (const entry of ["apixa/react", "apixa/react/advanced"]) {
   const error = await import(entry).then(() => null, (e) => e);
@@ -992,7 +1027,7 @@ export default async function Page() {
   const live = defineApi({
     baseURL: "https://example.test",
     transport: createFetchTransport(async () => new Response("rsc-bytes", { headers: { "content-type": "text/plain", "content-disposition": 'attachment; filename="live.txt"' } })),
-    resources: { docs: { path: "/docs", operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } },
+    resources: { docs: { path: "/docs", fileFields: { photo: { maxSize: 10, accept: ["image/*"] } }, fileLimits: { maxFiles: 5 }, operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob", maxResponseSize: 1000 } } } },
   });
   const events = [];
   const res = await live.docs.file("1", { full: true, onTransfer: (e) => events.push(e.direction + ":" + e.phase + ":" + e.loaded) });

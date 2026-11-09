@@ -54,7 +54,7 @@ const files = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
 `;
 
 /** Core only: no React, no TanStack anywhere in the project. */
-export const CORE_ONLY = `import { defineApi, detectTransferSupport, parseContentDisposition, type ApiError, type TransferEvent, type TransferSupport } from "apixa";
+export const CORE_ONLY = `import { defineApi, detectTransferSupport, parseContentDisposition, type ApiError, type TransferEvent, type TransferSupport, type FileViolation, type FileViolationCode, ValidationError } from "apixa";
 import { defineApi as defineCore } from "apixa/core";
 import { defineMockApi } from "apixa/mocking";
 ${HELPERS}${API}${DOWNLOAD_API}
@@ -110,6 +110,29 @@ export async function main() {
   type _t7 = Assert<Equal<typeof watchedEntity, User>>;
   const support = detectTransferSupport();
   type _t8 = Assert<Equal<typeof support, TransferSupport>>;
+
+  // v1.4.0: file rules, limits and typed violations from packed declarations.
+  const rules = defineApi<{ pets: { path: "/pets"; entity: { id: string; photo?: string | null } } }>()({
+    baseURL: "https://example.test",
+    resources: {
+      pets: {
+        path: "/pets",
+        fileFields: { photo: { maxSize: 5, accept: ["image/*", ".heic"], unknownType: "allow", filename: "strict" } },
+        fileLimits: { maxTotalSize: 10, maxFiles: 2 },
+        operations: { export: { kind: "read", method: "GET", path: "/export", responseType: "blob", maxResponseSize: 100 } },
+      },
+    },
+  });
+  const exported = await rules.pets.export({ maxResponseSize: 5 });
+  type _v1 = Assert<Equal<typeof exported, Blob>>;
+  try {
+    await rules.pets.create({ photo: new File([], "a.png") });
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      type _v2 = Assert<Equal<typeof error.violations, readonly FileViolation[]>>;
+      type _v3 = Assert<Equal<FileViolation["code"], FileViolationCode>>;
+    }
+  }
 }
 `;
 

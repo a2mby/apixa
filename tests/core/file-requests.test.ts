@@ -301,7 +301,7 @@ describe("configuration validation", () => {
     ["duplicate fields", { fileFields: ["a", "a"] }],
     ["non-string field", { fileFields: [1] }],
     ["unsafe field", { fileFields: ["__proto__"] }],
-    ["unknown field option", { fileFields: { a: { maxSize: 1 } } }],
+    ["unknown field option", { fileFields: { a: { bogus: 1 } } }],
     ["empty alias", { fileFields: { a: { name: "" } } }],
     ["unknown multipart option", { multipart: { nope: 1 } }],
     ["bad nulls", { multipart: { nulls: "zero" } }],

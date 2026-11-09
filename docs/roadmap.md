@@ -115,7 +115,21 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
 
-## Current: v1.3.0 — File Transfer Progress, Streaming & Reliability
+## Current: v1.4.0 — File Validation, Middleware & Safety
+
+**Spec:** [versions/v1.4.0/](../versions/v1.4.0/) (implemented and verified; owner sign-off open)
+
+- Opt-in file rules on the existing `fileFields` options: per-file and total size, file count, MIME
+  `accept`/`reject`, extensions, filename checks; operation-level overrides, one documented precedence
+- One validation step in the existing pipeline (after request middleware, before serialization,
+  transport and mock execution); no new hooks, no new package, no schema dependency
+- Safe, typed `ValidationError` (`violations` with codes and paths, never contents or names)
+- Streams and downloads bounded by pull-based counting (no unbounded buffering, backpressure kept);
+  `maxResponseSize` for binary responses
+- Mock/live parity; a rejected mocked write leaves the virtual file store untouched
+- Explicit trust boundary: client validation is developer experience; the backend must re-validate
+
+## Implemented, owner sign-off open: v1.3.0 — File Transfer Progress, Streaming & Reliability
 
 **Spec:** [versions/v1.3.0/](../versions/v1.3.0/) (implemented and verified; owner sign-off open)
 
@@ -166,7 +180,7 @@ optional milestone **after** file handling.
 2. Extended CRUD/custom operations and advanced serialization
 3. Downloads and binary responses — **v1.2.0**
 4. Transfer progress, cancellation, streaming, and reliability — **v1.3.0**
-5. Middleware, validation, file limits, and error handling
+5. Middleware, validation, file limits, and error handling — **v1.4.0**
 6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store
 7. React/TanStack and form compatibility, browser/Node integration, and testing
 8. Large-file uploads, chunking, resumability, parallel transfers, and storage adapters

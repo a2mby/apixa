@@ -204,6 +204,42 @@ resolved; cancelling the stream ends the request. Retry rules are unchanged: a `
 request body is never retried. Mocked calls report the real size of binary/text results and
 `unsupported` for JSON and request bodies.
 
+## File validation (opt-in)
+
+Rules are declared next to `fileFields`; nothing is checked unless you configure it:
+
+```ts
+resources: {
+  pets: {
+    path: "/pets",
+    fileFields: {
+      photo: { maxSize: 5 * 1024 * 1024, accept: ["image/*", ".heic"], noExtension: "reject" },
+      docs: { max: 3, minSize: 1, reject: [".exe", ".bat"], filename: "strict" },
+    },
+    fileLimits: { maxTotalSize: 20 * 1024 * 1024, maxFiles: 4 }, // operations override key-wise
+    operations: {
+      export: { kind: "read", method: "GET", path: "/export", responseType: "blob", maxResponseSize: 50 * 1024 * 1024 },
+    },
+  },
+}
+```
+
+An invalid file rejects **before any request** (and before a mocked write) with the existing
+`ValidationError`: `error.violations` lists `{ code, path, limit?, actual?, rule? }` (`FILE_TOO_LARGE`,
+`TOO_MANY_FILES`, `TYPE_NOT_ALLOWED`, `EXTENSION_NOT_ALLOWED`, `UNSAFE_FILENAME`, `RESPONSE_TOO_LARGE`, …), never
+contents or file names. Precedence: operation `fileFields[field]` / `fileLimits` override the resource's key by key (a
+defined value, including `0`, wins). `accept`/`reject` take MIME types, wildcards and `.ext` entries (case-insensitive);
+an allow-list rejects a file with no declared type unless `unknownType: "allow"`. `min` applies only when the field is
+present. A raw `Blob` / buffer / string / `ReadableStream` body is bounded by `maxBodySize` / `maxTotalSize`; a stream is
+counted as it flows (never buffered or read to validate), and a cut-off stream errors with `ValidationError`.
+`maxResponseSize` (per operation or call) rejects early from a trustworthy `Content-Length` and otherwise counts bytes
+while reading (blob, arrayBuffer, text, json and stream), without breaking cancellation, timeouts or backpressure;
+`responseAccept` checks the declared `Content-Type`. A failed response keeps its status and `HttpError`; an oversized error body is dropped (`data` is `null`) rather than buffered. A `ValidationError` is never retried.
+
+**This is not security.** Client-side rules give fast local feedback and save wasted uploads. `File.type` and `File.name`
+are chosen by whoever built the `File`, an extension does not prove content, nothing is sniffed, and a limit hit mid-stream
+cannot undo bytes already sent. Your backend must validate everything again.
+
 ## Errors
 
 `ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT` | `SERIALIZATION` (an unencodable body, such as binary values under `dataFormat: "json"`).  

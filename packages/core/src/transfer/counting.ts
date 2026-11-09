@@ -2,6 +2,12 @@
 export interface CountHooks {
   onChunk?(loaded: number): void;
   onDone?(loaded: number): void;
+  /**
+   * A byte limit. A chunk that would take the count past it is dropped: the stream errors with
+   * `error(loaded)` (the count including that chunk) and the source is cancelled. Nothing is
+   * buffered, so memory stays bounded by one chunk.
+   */
+  limit?: { bytes: number; error(seen: number): Error };
 }
 
 function safe(fn: (() => void) | undefined): void {
@@ -37,6 +43,12 @@ export function countedStream(
           return;
         }
         loaded += value.byteLength;
+        if (hooks.limit && loaded > hooks.limit.bytes) {
+          const error = hooks.limit.error(loaded);
+          controller.error(error);
+          reader.cancel(error).catch(() => {});
+          return;
+        }
         controller.enqueue(value);
         safe(() => hooks.onChunk?.(loaded));
       },

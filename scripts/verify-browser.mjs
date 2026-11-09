@@ -277,6 +277,7 @@ async function exercise(mode, port) {
 async function verifyTransfers() {
   const dist = join(example, "node_modules/apixa/dist");
   const uploads = [];
+  let posts = 0;
   const server = createServer((req, res) => {
     const url = new URL(req.url, "http://x");
     if (url.pathname.startsWith("/apixa/")) {
@@ -314,6 +315,7 @@ async function verifyTransfers() {
       res.write(Buffer.alloc(8, 1));
       return;
     }
+    if (req.method === "POST") posts++;
     if (req.method !== "PUT") return void res.writeHead(204).end();
     const chunks = [];
     req.on("data", (c) => chunks.push(c));
@@ -395,6 +397,51 @@ async function verifyTransfers() {
         () => "no error",
         (e) => e.name,
       );
+      // v1.4.0: rules reject locally (no request), limits bound responses and streams.
+      const guarded = m.defineApi({
+        baseURL: `${origin}/api`,
+        resources: {
+          docs: {
+            path: "/docs",
+            fileFields: { photo: { maxSize: 10, accept: ["image/*"] } },
+            operations: {
+              file: {
+                kind: "read",
+                method: "GET",
+                path: "/file",
+                responseType: "blob",
+                maxResponseSize: 1000,
+              },
+              feed: {
+                kind: "read",
+                method: "GET",
+                path: "/feed",
+                responseType: "stream",
+                maxResponseSize: 4,
+              },
+            },
+          },
+        },
+      });
+      const bad = await guarded.docs
+        .create({
+          photo: new File([new Uint8Array(50)], "a.exe", { type: "application/x-msdownload" }),
+        })
+        .catch((e) => e);
+      const tooBig = await guarded.docs.file().catch((e) => e);
+      const limitedFeed = (await guarded.docs.feed()).getReader();
+      const feedError = await (async () => {
+        for (;;) {
+          const r = await limitedFeed.read();
+          if (r.done) return "done";
+        }
+      })().catch((e) => e.name + ":" + e.violations?.[0]?.code);
+      result.validation = {
+        name: bad.name,
+        codes: bad.violations?.map((v) => v.code).sort(),
+        response: tooBig.violations?.[0]?.code,
+        feedError,
+      };
       return result;
     }, origin);
     const progress = out.download.events.filter(([p]) => p === "progress");
@@ -437,8 +484,25 @@ async function verifyTransfers() {
     assert.deepEqual(out.abortDuring.events.slice(-1), ["abort"], "abort event ends the download");
     assert.equal(out.streamAbort, "AbortError", "stream abort after the call resolved");
     assert.equal(out.streamTimeout, "TimeoutError", "stream timeout after the call resolved");
+    assert.equal(out.validation.name, "ValidationError", "browser file rule rejects locally");
+    assert.deepEqual(
+      out.validation.codes,
+      ["FILE_TOO_LARGE", "TYPE_NOT_ALLOWED"],
+      "browser violation codes",
+    );
+    assert.equal(posts, 0, "a rejected file never reached the server");
+    assert.equal(
+      out.validation.response,
+      "RESPONSE_TOO_LARGE",
+      "browser response limit from Content-Length",
+    );
+    assert.equal(
+      out.validation.feedError,
+      "ValidationError:RESPONSE_TOO_LARGE",
+      "browser stream response limit",
+    );
     note(
-      `Browser transfers (Chromium): download progress with total, Blob upload ${out.support.uploadProgress ? "observed" : "reported unsupported"} and sent byte-exact, stream upload ${out.streamUpload.ok ? "counted" : "refused honestly (" + out.streamUpload.name + ")"}, abort and stream ownership; support ${JSON.stringify(out.support)}`,
+      `Browser transfers (Chromium): download progress with total, Blob upload ${out.support.uploadProgress ? "observed" : "reported unsupported"} and sent byte-exact, stream upload ${out.streamUpload.ok ? "counted" : "refused honestly (" + out.streamUpload.name + ")"}, abort and stream ownership, local file-rule rejection with no request, response and stream limits; support ${JSON.stringify(out.support)}`,
     );
   } finally {
     await browser.close();
