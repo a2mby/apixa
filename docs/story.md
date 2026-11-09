@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-09 — v1.4.0 file validation, middleware and safety implemented
+
+Implemented [v1.4.0](../versions/v1.4.0/). Opt-in file rules (size, count, MIME, extension, strict filenames) now sit on `fileFields` options with request-level `fileLimits` and per-operation overrides, and `maxResponseSize` / `responseAccept` bound binary responses. One checkpoint after request middleware, shared by live and mocked calls, rejects with the existing `ValidationError` (typed `violations`, no names or contents) before any request, mock write or transfer event; request streams and responses (an oversized failed-response body too, keeping its `HttpError` status) are bounded by the counting stream without buffering. `pnpm verify` passes (111 files / 1224 tests, 62/62 packed type consumers, Chromium, Edge, workerd); owner sign-off and a React 18 runtime hook test remain open.
+
+## 2026-11-09 — v1.4.0 kickoff: file validation, middleware and safety
+
+Created the [v1.4.0](../versions/v1.4.0/) contract (Advanced File Handling, phase 5); no production code. The audit of the v1.3.0 tree found no file limits anywhere, `ValidationError` unused for files, no pre-send checkpoint shared by live and mocked calls, unbounded stream and download reads, and client-controlled MIME/extension data. The plan adds opt-in rules to `fileFields`, one validation step in the existing pipeline, bounded counting for streams and responses, and an explicit statement that client validation is not security.
+
 ## 2026-11-09 — v1.3.0 file transfer progress, streaming and reliability implemented
 
 Implemented [v1.3.0](../versions/v1.3.0/). An opt-in, typed `onTransfer` observer (call option or operation default) reports upload and download start / progress / complete / error / abort with the retry attempt, trustworthy totals only, and an explicit `unsupported` where the runtime cannot observe a transfer (workerd and browsers for sized uploads; browsers need HTTP/2 for stream bodies). The batch also fixed a stream that escaped its call's signal and timeout, sent stream request bodies without `duplex`, and made inline call-option callbacks contextually typed. No new package; `pnpm verify` passes. Owner sign-off and React 18 runtime transfer coverage remain open.

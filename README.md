@@ -58,6 +58,8 @@ operation and the result is typed (`Blob`, …); use `{ full: true }` for status
 Transfer progress is opt-in: pass `onTransfer` on any call for typed start / progress / complete /
 error / abort events with retry attempts, honest totals, and `unsupported` where the runtime cannot
 observe a transfer ([details](packages/core/README.md#transfer-progress-streaming-and-cancellation)).
+File rules are opt-in too: size, count, MIME, extension and response limits next to `fileFields` reject locally with a
+typed `ValidationError` before any request — developer experience, not security ([details](packages/core/README.md#file-validation-opt-in)).
 
 ```ts
 import { defineApi, defineApis, defineMockApi } from "apixa";

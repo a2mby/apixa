@@ -151,6 +151,39 @@ replayed); each attempt starts a new event sequence at `loaded: 0`, and an `erro
 whether a retry follows (`willRetry`). `ApiError.transfer` carries direction and bytes for a failure
 during an observed transfer.
 
+## File validation and safety (v1.4.0, implemented)
+
+Opt-in rules live where files are already declared: `FileFieldOptions` (`minSize`, `maxSize`, `min`,
+`max`, `accept`, `reject`, `unknownType`, `noExtension`, `filename`) and `fileLimits`
+(`maxTotalSize`, `maxFiles`, `maxBodySize`) on the resource, overridable key-wise per operation
+(`fileFields` for declared fields, `fileLimits`); `maxResponseSize` / `responseAccept` belong to
+operations (a per-call `maxResponseSize` wins). `prepareFiles` resolves them once into
+`PreparedOperation.fileRules`, which is `undefined` unless something is configured, so unconfigured
+calls do no work. There is no per-call opt-out.
+
+One checkpoint in `runOperation` (`validation/`), after request middleware and key transforms and
+before serialization, the transport and mock execution, runs `validateRequestFiles` over the wire
+body: a bounded, cycle-safe walk reading metadata only (`size`, `type`, `name`, never bytes). The
+mock branch passes through the same step, so a rejected request makes no transport call, no mock
+write and no transfer event, and is thrown as the existing `ValidationError` with typed
+`violations` (`code`, `path`, `limit`, `actual`, `rule`; no file names or contents). Field rules
+apply to files in declared fields (and caller `FormData` parts, by alias); raw `Blob` / buffer /
+string / stream bodies are governed by `maxBodySize` / `maxTotalSize` only.
+
+Streams and responses are bounded by the v1.3.0 counting stream, which gained a byte `limit`
+(pull-based, no buffering): a request stream is wrapped by the pipeline (the original error is kept
+and surfaced instead of fetch's generic failure), buffered response types are counted in the fetch
+transport (`TransportRequest.limits`) after an early reject from a trustworthy `Content-Length` or
+declared `Content-Type`, and a `stream` result is counted in the pipeline before stream-lifetime
+binding. The pipeline re-checks heads and fully read bodies for custom transports. A failed (non-2xx) response
+keeps its status and `HttpError`, but its body is bounded by the same limit (the fetch transport drops an
+oversized error body, `data` is `null`, instead of buffering it; custom transports are not bounded). A `ValidationError` is never retried.
+
+Trust boundary. These checks are developer experience, not security. `File.type` and `File.name`
+are chosen by whoever built the `File`, an extension does not prove content, and no content sniffing
+happens. The backend must validate again. A limit hit mid-stream is best effort: bytes up to the
+limit may already have been sent or received.
+
 ## File handling (v1.1.0, implemented)
 
 Files travel inside the existing operations; there is no separate upload client.

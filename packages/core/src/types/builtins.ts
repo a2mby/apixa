@@ -40,6 +40,8 @@ export interface OperationFnRequestInit {
   timeout?: number;
   retry?: RetryOption;
   responseType?: ResponseType;
+  /** Largest accepted response body in bytes for this request. */
+  maxResponseSize?: number;
   /** Opt in to transfer lifecycle events for this request. */
   onTransfer?: TransferObserver;
   meta?: Record<string, unknown>;

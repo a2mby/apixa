@@ -11,6 +11,7 @@ import type {
 } from "../types/middleware.js";
 import type { TransformsConfig } from "../types/transform.js";
 import { assertResourceSlice } from "../utils/slice.js";
+import { assertLimits, assertRules, normalizeAcceptEntry } from "../validation/rules.js";
 
 /**
  * Construction-time validation. Everything TypeScript cannot prove (dynamic spreads, untyped
@@ -50,6 +51,7 @@ export const RESOURCE_KEYS = new Set([
   "pagination",
   "slice",
   "fileFields",
+  "fileLimits",
   "multipart",
 ]);
 
@@ -71,6 +73,10 @@ export const OPERATION_KEYS = new Set([
   "multipart",
   "responseType",
   "onTransfer",
+  "fileFields",
+  "fileLimits",
+  "maxResponseSize",
+  "responseAccept",
 ]);
 
 const RUN_KEYS = new Set(["kind", "run"]);
@@ -291,6 +297,7 @@ export function validateResource(
     }
   }
   validateFileFields(where, value.fileFields);
+  validateFileLimits(where, value.fileLimits);
   validateMultipart(where, value.multipart);
   validateLayer(where, value);
   if (value.operations !== undefined) {
@@ -404,10 +411,74 @@ function validateOperation(where: string, name: string, value: unknown): void {
     }
   }
   validateMultipart(where, value.multipart);
+  validateOperationFileConfig(where, value);
   validateLayer(where, value);
 }
 
-const FILE_FIELD_KEYS = new Set(["name"]);
+const FILE_RULE_KEYS = [
+  "minSize",
+  "maxSize",
+  "min",
+  "max",
+  "accept",
+  "reject",
+  "unknownType",
+  "noExtension",
+  "filename",
+];
+const FILE_FIELD_KEYS = new Set(["name", ...FILE_RULE_KEYS]);
+const FILE_LIMIT_KEYS = new Set(["maxTotalSize", "maxFiles", "maxBodySize"]);
+
+function validateFileLimits(where: string, value: unknown): void {
+  if (value === undefined) return;
+  const at = `${where}.fileLimits`;
+  if (!isPlainObject(value)) {
+    throw new ConfigError(
+      `${at} must be { maxTotalSize?, maxFiles?, maxBodySize? } (got ${typeName(value)}).`,
+    );
+  }
+  assertKnownKeys(at, value, FILE_LIMIT_KEYS);
+  assertLimits(at, value);
+}
+
+/** Operation-level `fileFields` (rule overrides), `fileLimits`, `maxResponseSize`, `responseAccept`. */
+function validateOperationFileConfig(where: string, value: Record<string, unknown>): void {
+  validateFileLimits(where, value.fileLimits);
+  if (value.maxResponseSize !== undefined) {
+    const n = value.maxResponseSize;
+    if (typeof n !== "number" || !Number.isSafeInteger(n) || n < 0) {
+      throw new ConfigError(
+        `${where}.maxResponseSize must be a non-negative integer (got ${String(n)}).`,
+      );
+    }
+  }
+  if (value.responseAccept !== undefined) {
+    const list = value.responseAccept;
+    if (!Array.isArray(list) || list.length === 0) {
+      throw new ConfigError(`${where}.responseAccept must be a non-empty array of MIME types.`);
+    }
+    list.forEach((entry, i) => {
+      const normalized = normalizeAcceptEntry(`${where}.responseAccept[${i}]`, entry);
+      if (normalized.startsWith(".")) {
+        throw new ConfigError(
+          `${where}.responseAccept[${i}] must be a MIME type or wildcard, not an extension.`,
+        );
+      }
+    });
+  }
+  if (value.fileFields === undefined) return;
+  const at = `${where}.fileFields`;
+  if (!isPlainObject(value.fileFields)) {
+    throw new ConfigError(
+      `${at} must be an object of file rule overrides like { photo: { maxSize } } (got ${typeName(value.fileFields)}).`,
+    );
+  }
+  for (const [field, rules] of Object.entries(value.fileFields)) {
+    if (!isPlainObject(rules)) throw new ConfigError(`${at}.${field} must be a rules object.`);
+    assertKnownKeys(`${at}.${field}`, rules, new Set(FILE_RULE_KEYS));
+    assertRules(`${at}.${field}`, rules);
+  }
+}
 const MULTIPART_KEYS = new Set(["jsonFields", "nulls", "arrays"]);
 const UNSAFE_FIELD_NAMES = new Set(["__proto__", "constructor", "prototype"]);
 
@@ -431,6 +502,7 @@ function validateFileFields(where: string, value: unknown): void {
       if (options.name !== undefined && (typeof options.name !== "string" || options.name === "")) {
         throw new ConfigError(`${at}.${field}.name must be a non-empty string.`);
       }
+      assertRules(`${at}.${field}`, options);
     }
   } else {
     throw new ConfigError(

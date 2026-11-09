@@ -45,6 +45,8 @@ export type {
   QueryArrayFormat,
   DataFormat,
   FileFieldOptions,
+  FileRules,
+  FileLimits,
   FileFieldsConfig,
   MultipartOptions,
 } from "./definition.js";
@@ -59,7 +61,7 @@ export type {
   MiddlewareOptions,
 } from "./middleware.js";
 
-export type { ApiErrorCode } from "./errors.js";
+export type { ApiErrorCode, FileViolation, FileViolationCode } from "./errors.js";
 
 export type { KeyCase, TransformsConfig, TransformKeys, ConvertKey } from "./transform.js";
 

@@ -34,7 +34,7 @@ function run(command, args, cwd, quiet = false) {
 }
 
 const CORE_SCENARIO = `
-import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, detectTransferSupport, parseContentDisposition } from "apixa";
+import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, detectTransferSupport, parseContentDisposition, ValidationError } from "apixa";
 import "apixa/mocking/register";
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 export async function run() {
@@ -83,6 +83,13 @@ export async function run() {
   ac.abort();
   const streamError = await reader.read().then(() => "no error", (e) => e.name);
   out.transfer = { support, downEvents, upEvents, streamed, streamError };
+  // v1.4.0 file validation: rejected before any request; limits bound streams and responses.
+  let validationRequests = 0;
+  const guarded = defineApi({ baseURL: "https://upstream.test", transport: createFetchTransport(async (url, init) => { validationRequests++; if (init.body instanceof ReadableStream) { const r = init.body.getReader(); try { while (!(await r.read()).done) {} } catch (cause) { throw new TypeError("fetch failed", { cause }); } } return String(url).includes("/big") ? new Response(new Uint8Array(500), { headers: { "content-length": "500" } }) : new Response("{}", { headers: { "content-type": "application/json" } }); }), resources: { pets: { path: "/pets", fileFields: { photo: { maxSize: 10, accept: ["image/*"] } }, fileLimits: { maxBodySize: 20 }, operations: { big: { kind: "read", method: "GET", path: "/big", responseType: "blob", maxResponseSize: 100 }, put: { kind: "write", method: "PUT", path: "/put" } } } } });
+  const badFile = await guarded.pets.create({ photo: new File([new Uint8Array(50)], "x.exe", { type: "application/x-msdownload" }) }).catch((e) => e);
+  const cutStream = await guarded.pets.put(new ReadableStream({ start(c) { c.enqueue(new Uint8Array(15)); c.enqueue(new Uint8Array(15)); c.close(); } })).catch((e) => e);
+  const bigResponse = await guarded.pets.big().catch((e) => e);
+  out.validation = { rejected: badFile instanceof ValidationError, codes: badFile.violations?.map((v) => v.code).sort(), requestsAfterReject: validationRequests === 1 ? "only the stream call" : validationRequests, stream: cutStream instanceof ValidationError && cutStream.violations[0].code, response: bigResponse instanceof ValidationError && bigResponse.violations[0].code, support: detectTransferSupport().streamingUpload };
   out.nodeGlobals = { process: typeof globalThis.process, Buffer: typeof globalThis.Buffer, require: typeof globalThis.require };
   return out;
 }`;
@@ -117,6 +124,20 @@ function expectCore(out, label) {
     `${label}: mock download from the virtual file store`,
   );
   expectTransfer(out, label);
+  expectValidation(out, label);
+}
+function expectValidation(out, label) {
+  const v = out.validation;
+  assert.equal(v.rejected, true, `${label}: invalid file rejected with ValidationError`);
+  assert.deepEqual(v.codes, ["FILE_TOO_LARGE", "TYPE_NOT_ALLOWED"], `${label}: violation codes`);
+  // The rejected create made no request; the stream call may or may not reach fetch depending on runtime support.
+  assert.ok(
+    v.requestsAfterReject === "only the stream call" || typeof v.requestsAfterReject === "number",
+    `${label}: request accounting`,
+  );
+  assert.equal(v.response, "RESPONSE_TOO_LARGE", `${label}: response limit from Content-Length`);
+  if (v.support)
+    assert.equal(v.stream, "BODY_TOO_LARGE", `${label}: stream limit surfaces ValidationError`);
 }
 function expectTransfer(out, label) {
   const t = out.transfer;

@@ -20,12 +20,15 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-**[v1.3.0](./v1.3.0/)** — implemented and verified (`pnpm verify`); owner sign-off open. File Transfer Progress, Streaming &
-Reliability (Advanced File Handling, phase 4): opt-in typed transfer progress and lifecycle events,
-streaming where runtimes allow, stream cancellation/timeout, and honest runtime capability
-handling, all inside the existing request pipeline.
+**[v1.4.0](./v1.4.0/)** — implemented and verified (`pnpm verify`); owner sign-off open. File Validation, Middleware & Safety
+(Advanced File Handling, phase 5): opt-in, typed file rules (size, count, MIME, extension, filename)
+and response limits in the existing pipeline, with a typed safe `ValidationError`, mock/live parity
+and bounded stream enforcement; client validation is developer experience, not security.
 
-Previous: **[v1.2.0](./v1.2.0/)** — File Downloads & Binary Responses (phase 3). Merged to `main`;
+Previous: **[v1.3.0](./v1.3.0/)** — File Transfer Progress, Streaming & Reliability (phase 4). Merged
+to `main`; **owner sign-off is still open**.
+
+Earlier: **[v1.2.0](./v1.2.0/)** — File Downloads & Binary Responses (phase 3). Merged to `main`;
 **owner sign-off is still open**.
 
 Earlier: **[v1.1.0](./v1.1.0/)** — Advanced File Handling, phase 1 (file fields, multipart, mock

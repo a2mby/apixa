@@ -127,6 +127,11 @@ export interface TransportRequest {
   signal?: AbortSignal;
   responseType?: ResponseType;
   /**
+   * Opt-in response limits (`maxResponseSize`, `responseAccept`). A transport may enforce them while
+   * reading; the pipeline checks again, so one that ignores them still gets a consistent result.
+   */
+  limits?: { maxResponseBytes?: number; accept?: readonly string[] };
+  /**
    * Present only when the caller opted into transfer events. A transport may report byte-level
    * `start` / `progress` / `complete` (or `unsupported`) per direction; one that ignores this field
    * still works, and the pipeline reports the direction as unsupported.
@@ -156,6 +161,8 @@ export type RequestOptions<TQuery = QueryParams> = {
   timeout?: number;
   retry?: number | RetryConfig | false;
   responseType?: ResponseType;
+  /** Largest accepted response body in bytes for this call; wins over the operation's. */
+  maxResponseSize?: number;
   /**
    * Opt in to transfer lifecycle events (upload and download progress, retry attempts, abort and
    * failure). Without it nothing is wrapped or observed. Overrides the operation's `onTransfer`.

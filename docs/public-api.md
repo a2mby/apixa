@@ -95,6 +95,22 @@ above are the platforms' own engines, not deployed services).
   the 14 public entries. No symbol list changed in this migration.
 - The unscoped `apixa` package belongs to the project maintainer. No npm organization scope is needed.
 
+## v1.4.0 additions (file validation and safety)
+
+New in `apixa` (root) and `apixa/core`; nothing existing changed.
+
+- Types: `FileRules`, `FileLimits`, `FileViolation`, `FileViolationCode`. `FileFieldOptions` now extends
+  `FileRules` (additive).
+- Config: rules on `fileFields` options; resource and operation `fileLimits`; operation `fileFields`
+  (rule overrides), `maxResponseSize`, `responseAccept`; per-call and `ctx.request` `maxResponseSize`;
+  optional `TransportRequest.limits`.
+- Errors: `ValidationError.violations` (empty for the existing path-parameter errors); file failures use
+  `code: "VALIDATION"`, `retryable: false`.
+- Behavior: nothing happens unless configured. A rejected request makes no network call and no mock write.
+  `maxResponseSize` is not part of query keys. The validator's `maxSize`-style option names are now valid
+  `fileFields` options (they were rejected as unknown before).
+- Not included: content sniffing, per-call bypass, new hooks, new packages.
+
 ## v1.3.0 additions (transfer progress and streaming)
 
 New in `apixa` (root) and `apixa/core`; nothing existing changed.

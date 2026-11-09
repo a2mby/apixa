@@ -52,8 +52,52 @@ export type IdempotencyOption =
  */
 export type DataFormat = "json" | "multipart";
 
+/**
+ * Opt-in client-side rules for the files of one field. They give fast, local feedback and avoid
+ * wasted uploads; they are **not** security: `File.type` and `File.name` are chosen by whoever built
+ * the `File`, extensions do not prove content, and the backend must validate everything again.
+ * Only metadata (`size`, `type`, `name`) is read, never file bytes.
+ */
+export interface FileRules {
+  /** Smallest allowed size in bytes per file (`1` refuses empty files). */
+  minSize?: number;
+  /** Largest allowed size in bytes per file. */
+  maxSize?: number;
+  /** Fewest files of this field. Checked only when the field is present (not `undefined`/`null`). */
+  min?: number;
+  /** Most files of this field. */
+  max?: number;
+  /**
+   * Allow-list, like an `<input accept>`: MIME types (`"application/pdf"`), wildcards (`"image/*"`)
+   * and extensions (`".png"`, `".tar.gz"`). A file passes when any entry matches the declared type
+   * or the extension. Case-insensitive; MIME parameters are ignored.
+   */
+  accept?: readonly string[];
+  /** Deny-list in the same syntax; wins over `accept`. */
+  reject?: readonly string[];
+  /**
+   * A file with no declared type. Default: `"reject"` when `accept` is set (an allow-list refuses
+   * what it cannot identify), otherwise nothing to decide.
+   */
+  unknownType?: "allow" | "reject";
+  /** A file name without an extension. Default `"allow"`. */
+  noExtension?: "allow" | "reject";
+  /** `"strict"` flags unsafe names: separators, control characters, reserved or overlong names, hidden double extensions. */
+  filename?: "strict";
+}
+
+/** Request-level limits across all files (and raw bodies) of one call. */
+export interface FileLimits {
+  /** Sum of all file sizes (and of a raw `Blob` / buffer / stream body) in bytes. */
+  maxTotalSize?: number;
+  /** Total number of files in the request. */
+  maxFiles?: number;
+  /** Size of a raw `Blob`, buffer, string or `ReadableStream` body that is not a file field. */
+  maxBodySize?: number;
+}
+
 /** Options of one file field (advanced `fileFields` form). */
-export interface FileFieldOptions {
+export interface FileFieldOptions extends FileRules {
   /** Wire part name, used verbatim (bypasses request key transforms). Default: the field name. */
   name?: string;
 }
@@ -92,6 +136,24 @@ export interface OperationDefinition extends LayerOptions {
   dataFormat?: DataFormat;
   /** Multipart encoding overrides for this operation (merged over the resource's). */
   multipart?: MultipartOptions;
+  /**
+   * File rule overrides for fields the resource declares in `fileFields` (merged key-wise over the
+   * resource's rules; a defined value, including `0`, wins).
+   */
+  fileFields?: Record<string, FileRules>;
+  /** Request-level file limits for this operation (merged key-wise over the resource's). */
+  fileLimits?: FileLimits;
+  /**
+   * Largest accepted response body in bytes. Rejected early from a trustworthy `Content-Length`
+   * and otherwise counted while reading (nothing is buffered beyond the limit). A per-call
+   * `maxResponseSize` wins. A failed (non-2xx) response keeps its `HttpError`; an oversized error body is dropped (`data: null`).
+   */
+  maxResponseSize?: number;
+  /**
+   * Accepted response `Content-Type`s (MIME patterns like `"application/pdf"` / `"image/*"`). The
+   * header is declared by the server and is not proof of content.
+   */
+  responseAccept?: readonly string[];
   /**
    * Writes only. One key per logical call, reused across Core retries and an error-middleware
    * replay. Pass `idempotencyKey` in the call options to supply (and reuse) your own key.
@@ -160,6 +222,8 @@ export interface ResourceDefinition extends LayerOptions {
   fileFields?: FileFieldsConfig;
   /** Multipart encoding overrides for every operation of this resource. */
   multipart?: MultipartOptions;
+  /** Request-level file limits for every operation of this resource (operations override key-wise). */
+  fileLimits?: FileLimits;
   /** Data source for client-scoped Mocking. A mocked resource never touches the network. */
   mock?: MockOption;
   /**

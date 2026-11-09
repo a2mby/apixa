@@ -26,3 +26,33 @@ export type ApiErrorCode =
   | "MOCK_UNSUPPORTED"
   /** Loading mock data (dataset, provider) failed. The next call retries the load. */
   | "MOCK_LOAD";
+
+/** Stable codes of a {@link FileViolation}. */
+export type FileViolationCode =
+  | "FILE_TOO_LARGE"
+  | "FILE_TOO_SMALL"
+  | "TOO_MANY_FILES"
+  | "TOO_FEW_FILES"
+  | "TOTAL_TOO_LARGE"
+  | "BODY_TOO_LARGE"
+  | "TYPE_NOT_ALLOWED"
+  | "EXTENSION_NOT_ALLOWED"
+  | "UNSAFE_FILENAME"
+  | "RESPONSE_TOO_LARGE"
+  | "RESPONSE_TYPE_NOT_ALLOWED";
+
+/**
+ * One broken file rule. It names a location and numbers only: never file contents, and not file
+ * names (`path` is built from body keys and array indices, like `$.gallery[2]`).
+ */
+export interface FileViolation {
+  code: FileViolationCode;
+  /** Location in the request body (`$` for the whole body or response). */
+  path: string;
+  /** The configured limit, when the rule is numeric. */
+  limit?: number;
+  /** The observed value (for a cut-off stream: bytes seen when it was stopped, at least `limit + 1`). */
+  actual?: number;
+  /** Which sub-rule failed, for example `"separator"` or `"double-extension"` for `UNSAFE_FILENAME`. */
+  rule?: string;
+}
