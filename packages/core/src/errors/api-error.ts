@@ -9,6 +9,11 @@ export class ApiError extends Error {
   response?: ApiResponse<unknown>;
   retryable: boolean;
   attempt?: number;
+  /**
+   * Set when the call opted into `onTransfer` and a started transfer ended with this error: the
+   * direction and the bytes observed so far.
+   */
+  transfer?: { direction: "upload" | "download"; loaded: number; total?: number };
   override cause?: unknown;
 
   constructor(

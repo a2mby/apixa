@@ -251,6 +251,7 @@ export function normalizeIdentity(values: readonly unknown[], info: OperationInf
       timeout: _timeout,
       retry: _retry,
       idempotencyKey: _idempotencyKey,
+      onTransfer: _onTransfer,
       ...rest
     } = result[index] as Record<string, unknown>;
     result[index] = Object.keys(rest).length === 0 ? undefined : rest;

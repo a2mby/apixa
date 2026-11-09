@@ -34,7 +34,7 @@ function run(command, args, cwd, quiet = false) {
 }
 
 const CORE_SCENARIO = `
-import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, parseContentDisposition } from "apixa";
+import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, detectTransferSupport, parseContentDisposition } from "apixa";
 import "apixa/mocking/register";
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 export async function run() {
@@ -66,6 +66,23 @@ export async function run() {
   const mockedDownload = defineApi({ baseURL: "https://edge.test", resources: { docs: { path: "/docs", fileFields: ["file"], mock: [{ id: "1", name: "Seed", file: null }], operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "arrayBuffer", mock: ({ params, store, files }) => files.get(store.get(params.id).file).bytes() } } } } });
   const uploaded = await mockedDownload.docs.create({ id: "2", name: "Up", file: new File([pdf], "u.pdf", { type: "application/pdf" }) });
   out.mockDownload = Array.from(new Uint8Array(await mockedDownload.docs.file(uploaded.id)));
+  // v1.3.0 transfer events: honest per-runtime behavior, never faked.
+  const support = detectTransferSupport();
+  const downEvents = [];
+  await downloader.docs.file("1", { onTransfer: (e) => downEvents.push(e.direction + ":" + e.phase + ":" + (e.loaded ?? "-")) });
+  const putter = defineApi({ baseURL: "https://upstream.test", transport: createFetchTransport(async (url, init) => { if (init.body instanceof ReadableStream) { const r = init.body.getReader(); while (!(await r.read()).done) {} } return new Response("ok"); }), resources: { docs: { path: "/docs", operations: { put: { kind: "write", method: "PUT", path: "/p", responseType: "text" } } } } });
+  const upEvents = [];
+  await putter.docs.put(new Blob([pdf]), { onTransfer: (e) => { if (e.direction === "upload") upEvents.push(e.phase + ":" + (e.loaded ?? "-") + ":" + (e.total ?? "-")); } });
+  const streamed = [];
+  await putter.docs.put(new ReadableStream({ start(c) { c.enqueue(pdf); c.close(); } }), { onTransfer: (e) => { if (e.direction === "upload") streamed.push(e.phase + ":" + (e.loaded ?? "-")); } }).catch((e) => streamed.push("rejected:" + e.name));
+  const hang = defineApi({ baseURL: "https://upstream.test", transport: createFetchTransport(async (url, init) => new Response(new ReadableStream({ start(c) { c.enqueue(pdf); init.signal.addEventListener("abort", () => c.error(init.signal.reason)); } }))), resources: { docs: { path: "/docs", operations: { feed: { kind: "read", method: "GET", path: "/feed", responseType: "stream" } } } } });
+  const ac = new AbortController();
+  const feed = await hang.docs.feed({ signal: ac.signal });
+  const reader = feed.getReader();
+  await reader.read();
+  ac.abort();
+  const streamError = await reader.read().then(() => "no error", (e) => e.name);
+  out.transfer = { support, downEvents, upEvents, streamed, streamError };
   out.nodeGlobals = { process: typeof globalThis.process, Buffer: typeof globalThis.Buffer, require: typeof globalThis.require };
   return out;
 }`;
@@ -99,6 +116,44 @@ function expectCore(out, label) {
     [37, 80, 68, 70, 0, 255],
     `${label}: mock download from the virtual file store`,
   );
+  expectTransfer(out, label);
+}
+function expectTransfer(out, label) {
+  const t = out.transfer;
+  console.log(`${label}: transfer support ${JSON.stringify(t.support)}`);
+  assert.deepEqual(
+    t.downEvents,
+    ["download:start:0", "download:progress:6", "download:complete:6"],
+    `${label}: download progress`,
+  );
+  assert.equal(
+    t.streamError,
+    "AbortError",
+    `${label}: a stream stays cancellable after the call resolved`,
+  );
+  // Upload is observed only where the runtime can keep the wire form; otherwise it says so.
+  if (t.support.uploadProgress) {
+    assert.deepEqual(
+      t.upEvents,
+      ["start:0:6", "progress:6:6", "complete:6:6"],
+      `${label}: upload progress when supported`,
+    );
+  } else {
+    assert.deepEqual(t.upEvents, ["unsupported:-:-"], `${label}: upload honestly unsupported`);
+  }
+  if (t.support.streamingUpload) {
+    assert.deepEqual(
+      t.streamed,
+      ["start:0", "progress:6", "complete:6"],
+      `${label}: streamed upload counted`,
+    );
+  } else {
+    assert.deepEqual(
+      t.streamed,
+      ["unsupported:-"],
+      `${label}: streamed upload honestly unsupported`,
+    );
+  }
 }
 function expectAdvanced(out, label) {
   assert.deepEqual(

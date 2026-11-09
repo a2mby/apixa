@@ -61,6 +61,64 @@ export interface ApiResponse<T> {
   raw?: Response;
 }
 
+/** Which body a transfer event describes: the request body or the response body. */
+export type TransferDirection = "upload" | "download";
+
+interface TransferEventBase {
+  direction: TransferDirection;
+  /** Zero-based attempt number; every retry starts a new attempt with `loaded` back at 0. */
+  attempt: number;
+  /**
+   * Bytes of the body observed so far in this attempt. Upload: bytes the runtime pulled from the
+   * request body to hand to the network stack (never a server acknowledgment). Download: bytes
+   * read from the response body, after content decoding.
+   */
+  loaded: number;
+  /**
+   * Total body size, only when it is trustworthy: a known Blob/File/buffer size for uploads, a
+   * finite `Content-Length` on an uncompressed response for downloads. Never estimated.
+   */
+  total?: number;
+}
+
+/**
+ * One transfer lifecycle event, delivered to `onTransfer`. Per direction and attempt the order is
+ * `start`, `progress`*, then `complete`, `error` or `abort`; `unsupported` replaces the whole
+ * sequence when the runtime or transport cannot observe that direction (nothing is faked).
+ * `complete` means the body was fully consumed, not that a server processed it.
+ */
+export type TransferEvent =
+  | (TransferEventBase & { phase: "start" | "progress" | "complete" })
+  | (TransferEventBase & {
+      phase: "error";
+      error: Error;
+      /** True when the retry policy will start another attempt. */
+      willRetry: boolean;
+    })
+  | (TransferEventBase & { phase: "abort"; reason?: unknown })
+  | {
+      phase: "unsupported";
+      direction: TransferDirection;
+      attempt: number;
+      /** Why this direction is not observable here. */
+      reason: string;
+    };
+
+export type TransferPhase = TransferEvent["phase"];
+
+/** Called synchronously for each {@link TransferEvent}. Errors thrown here are ignored. */
+export type TransferObserver = (event: TransferEvent) => void | Promise<void>;
+
+/** Event shape a transport reports; the pipeline adds the attempt number and terminal events. */
+export type TransportTransferEvent =
+  | {
+      phase: "start" | "progress" | "complete";
+      direction: TransferDirection;
+      loaded: number;
+      total?: number;
+    }
+  | { phase: "unsupported"; direction: TransferDirection; reason: string };
+
 export interface TransportRequest {
   url: string;
   method: HttpMethod;
@@ -68,6 +126,12 @@ export interface TransportRequest {
   body?: BodyInit | null;
   signal?: AbortSignal;
   responseType?: ResponseType;
+  /**
+   * Present only when the caller opted into transfer events. A transport may report byte-level
+   * `start` / `progress` / `complete` (or `unsupported`) per direction; one that ignores this field
+   * still works, and the pipeline reports the direction as unsupported.
+   */
+  onTransfer?: (event: TransportTransferEvent) => void;
 }
 
 export interface TransportResponse {
@@ -92,6 +156,11 @@ export type RequestOptions<TQuery = QueryParams> = {
   timeout?: number;
   retry?: number | RetryConfig | false;
   responseType?: ResponseType;
+  /**
+   * Opt in to transfer lifecycle events (upload and download progress, retry attempts, abort and
+   * failure). Without it nothing is wrapped or observed. Overrides the operation's `onTransfer`.
+   */
+  onTransfer?: TransferObserver;
   meta?: Record<string, unknown>;
   /** When true, resolve to `ApiResponse<T>` instead of unwrapped `T`. */
   full?: boolean;

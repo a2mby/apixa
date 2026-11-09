@@ -20,14 +20,16 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-**[v1.2.0](./v1.2.0/)** — in progress. File Downloads & Binary Responses (Advanced File Handling,
-phase 3): typed `Blob` / `ArrayBuffer` / text responses from existing operations, download
-metadata, and mock downloads from the virtual file store. Implemented and verified; owner
-sign-off is open.
+**[v1.3.0](./v1.3.0/)** — implemented and verified (`pnpm verify`); owner sign-off open. File Transfer Progress, Streaming &
+Reliability (Advanced File Handling, phase 4): opt-in typed transfer progress and lifecycle events,
+streaming where runtimes allow, stream cancellation/timeout, and honest runtime capability
+handling, all inside the existing request pipeline.
 
-Previous: **[v1.1.0](./v1.1.0/)** — Advanced File Handling, phase 1 (file fields, multipart, mock
-file store). Implemented and verified; **owner sign-off is still open** and its work is not yet
-committed to `main`. v1.2.0 builds on it.
+Previous: **[v1.2.0](./v1.2.0/)** — File Downloads & Binary Responses (phase 3). Merged to `main`;
+**owner sign-off is still open**.
+
+Earlier: **[v1.1.0](./v1.1.0/)** — Advanced File Handling, phase 1 (file fields, multipart, mock
+file store). Merged to `main`; **owner sign-off is still open**.
 
 Earlier: **[v1.0.0](./v1.0.0/)** — release candidate only (`apixa@1.0.0-rc.0` is published; v1.0.0
 is **not** declared stable). Its folder stays as the contract for that line.

@@ -24,6 +24,9 @@ Install `npm install apixa @tanstack/react-query` (TanStack Query >=5.90.1 withi
 > **Troubleshooting:** if `@tanstack/react-query` is missing or not resolvable from `node_modules/apixa`, `useResourceQuery` and `useResource` (and `useResourceMutation`) lose their inferred types. Apixa types the result as `ApixaMissingPeer_Install_tanstack_react_query`, so reading `.data` is a compile error; install the package and it goes away. With `skipLibCheck: false` TypeScript also reports TS2307 inside `node_modules/apixa`; `skipLibCheck: true` hides that message.
 > Wrap the app in `ApixaProvider`, or keep using TanStack's own `QueryClientProvider`: the hooks work under either, and there is exactly one cache, TanStack's.
 
+Transfer events work through the hooks as plain call options: `useResourceQuery(api.files, { queryKey, operation: "download", args: [id, { onTransfer }] })`.
+`onTransfer` is not part of the query key (like `signal`), so changing the callback never refetches.
+
 ### `ApixaProvider` and `QueryClient`
 
 ```tsx

@@ -165,6 +165,45 @@ and (for a `File`) `Content-Disposition`. Mocked `responseType: "stream"` is `MO
 React hooks resolve unwrapped payloads (`full` is not available there): use the direct client for
 headers. A `Blob` is not serializable, so it cannot cross a server/client or dehydration boundary.
 
+## Transfer progress, streaming and cancellation
+
+`onTransfer` is optional and typed everywhere a call takes options. Without it nothing is wrapped:
+
+```ts
+const blob = await api.reports.download("1", {
+  signal,
+  onTransfer(event) {
+    if (event.phase === "unsupported") return console.log(event.direction, event.reason);
+    // event.direction: "upload" | "download"; event.attempt: 0-based retry attempt
+    // event.loaded: bytes so far; event.total: number | undefined (never estimated)
+    if (event.phase === "progress" && event.total) setPercent((event.loaded / event.total) * 100);
+    if (event.phase === "error") console.log(event.error, event.willRetry);
+  },
+});
+```
+
+Per direction and attempt: `start`, `progress`\*, then `complete`, `error` or `abort` (a timeout is an
+`error` with `TimeoutError`; a caller cancel is `abort`). A retry starts a new sequence at `loaded: 0`.
+`complete` means the body was fully consumed, not that a server processed it. Upload `loaded` is the
+bytes handed to the network stack, never an acknowledgment.
+
+What is observable depends on the runtime; Apixa reports `unsupported` instead of faking it
+(`detectTransferSupport()` tells you in advance):
+
+| Case                                           | Node / Vercel Edge | Chromium                                     | workerd       |
+| ---------------------------------------------- | ------------------ | -------------------------------------------- | ------------- |
+| Download progress (all `responseType`s)        | yes                | yes                                          | yes           |
+| Upload of `Blob` / `File` / `FormData` / bytes | yes                | `unsupported` (Content-Length cannot be set) | `unsupported` |
+| Upload of a `ReadableStream` body              | yes (chunked)      | needs HTTP/2+ (else a `NetworkError`)        | `unsupported` |
+
+Observation never changes the wire: Blob and multipart bodies keep their `Content-Length` and
+boundary, and a runtime that cannot guarantee that sends the body untouched. A download `total` is
+only a finite `Content-Length` on an uncompressed response. A `responseType: "stream"` result stays
+cancellable: aborting `signal`, or the call `timeout`, errors the stream even after the Promise
+resolved; cancelling the stream ends the request. Retry rules are unchanged: a `ReadableStream`
+request body is never retried. Mocked calls report the real size of binary/text results and
+`unsupported` for JSON and request bodies.
+
 ## Errors
 
 `ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT` | `SERIALIZATION` (an unencodable body, such as binary values under `dataFormat: "json"`).  

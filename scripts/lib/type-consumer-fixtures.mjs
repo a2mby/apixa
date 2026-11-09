@@ -54,7 +54,7 @@ const files = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
 `;
 
 /** Core only: no React, no TanStack anywhere in the project. */
-export const CORE_ONLY = `import { defineApi, parseContentDisposition, type ApiError } from "apixa";
+export const CORE_ONLY = `import { defineApi, detectTransferSupport, parseContentDisposition, type ApiError, type TransferEvent, type TransferSupport } from "apixa";
 import { defineApi as defineCore } from "apixa/core";
 import { defineMockApi } from "apixa/mocking";
 ${HELPERS}${API}${DOWNLOAD_API}
@@ -91,6 +91,25 @@ export async function main() {
   type _d11 = Assert<NotAny<typeof blob>>;
   const disposition = parseContentDisposition(full.headers);
   type _d12 = Assert<Equal<typeof disposition.filename, string | undefined>>;
+
+  // v1.3.0: typed transfer events (inline callbacks are contextually typed from packed declarations).
+  const watched = await files.docs.download("1", {
+    onTransfer: (event) => {
+      type _t1 = Assert<Equal<typeof event, TransferEvent>>;
+      type _t2 = Assert<NotAny<typeof event>>;
+      if (event.phase === "progress") {
+        type _t3 = Assert<Equal<typeof event.loaded, number>>;
+        type _t4 = Assert<Equal<typeof event.total, number | undefined>>;
+      }
+    },
+  });
+  type _t5 = Assert<Equal<typeof watched, Blob>>;
+  const watchedFull = await files.docs.download("1", { full: true, onTransfer: () => {} });
+  type _t6 = Assert<Equal<(typeof watchedFull)["data"], Blob>>;
+  const watchedEntity = await api.users.getById("1", { onTransfer: () => {} });
+  type _t7 = Assert<Equal<typeof watchedEntity, User>>;
+  const support = detectTransferSupport();
+  type _t8 = Assert<Equal<typeof support, TransferSupport>>;
 }
 `;
 
@@ -120,6 +139,21 @@ export function App() {
       return rows.length;
     },
   });
+  const watched = useResourceQuery(files.docs, {
+    queryKey: ["file"],
+    operation: "download",
+    args: [
+      "1",
+      {
+        onTransfer: (event) => {
+          type _tx1 = Assert<NotAny<typeof event>>;
+          type _tx2 = Assert<Equal<typeof event.direction, "upload" | "download">>;
+        },
+      },
+    ],
+  });
+  type _tx3 = Assert<NotAny<typeof watched>>;
+  type _tx4 = Assert<Equal<(typeof watched)["data"], Blob | undefined>>;
   const one = useResourceQuery(api.users, { queryKey: ["one"], operation: "getById", args: ["1"] });
   type _o1 = Assert<NotAny<typeof one>>;
   type _o2 = Assert<Equal<(typeof one)["data"], User | undefined>>;

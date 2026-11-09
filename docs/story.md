@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-09 — v1.3.0 file transfer progress, streaming and reliability implemented
+
+Implemented [v1.3.0](../versions/v1.3.0/). An opt-in, typed `onTransfer` observer (call option or operation default) reports upload and download start / progress / complete / error / abort with the retry attempt, trustworthy totals only, and an explicit `unsupported` where the runtime cannot observe a transfer (workerd and browsers for sized uploads; browsers need HTTP/2 for stream bodies). The batch also fixed a stream that escaped its call's signal and timeout, sent stream request bodies without `duplex`, and made inline call-option callbacks contextually typed. No new package; `pnpm verify` passes. Owner sign-off and React 18 runtime transfer coverage remain open.
+
+## 2026-11-09 — v1.3.0 kickoff: file transfer progress, streaming and reliability
+
+Created the [v1.3.0](../versions/v1.3.0/) contract (Advanced File Handling, phase 4); no production code. The audit of the v1.1.0/v1.2.0 tree found no progress seam in `Transport`, a streamed response that escapes the caller signal and timeout once the operation resolves (`cleanup()` runs in `finally`), stream request bodies sent without `duplex`, and no classification of interrupted transfers. The plan locks an opt-in `onTransfer` design in a Batch 0 spike and promises honesty: no fabricated totals, percentages or acknowledgments.
+
 ## 2026-11-09 — React peer guard and npm type-consumer matrix land
 
 The hook peer guard (`RequireTanStackQuery`), the packed-tarball type-consumer verification (`scripts/verify-type-consumers.mjs`, now part of `pnpm verify:consumers`) and the optional-peer install docs shipped as their own change, separate from the v1.1.0/v1.2.0 file-handling work. Missing `@tanstack/react-query` now yields a named error type instead of `any`.

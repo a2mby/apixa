@@ -16,6 +16,11 @@ export type {
   Transport,
   RequestOptions,
   ResponseType,
+  TransferDirection,
+  TransferEvent,
+  TransferPhase,
+  TransferObserver,
+  TransportTransferEvent,
 } from "./transport.js";
 
 export type {

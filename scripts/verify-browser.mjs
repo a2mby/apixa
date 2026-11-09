@@ -7,6 +7,7 @@
 // `npx playwright-core install chromium`.
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
+import { createServer } from "node:http";
 import {
   cpSync,
   existsSync,
@@ -269,6 +270,183 @@ async function exercise(mode, port) {
   }
 }
 
+// v1.3.0: transfer events in real Chromium, against the packed `apixa` served as plain ESM and a
+// loopback API. Chromium cannot set Content-Length on a request, so Blob uploads must be reported
+// `unsupported` (never faked) while still reaching the server byte-exact; downloads and stream
+// ownership are fully observable.
+async function verifyTransfers() {
+  const dist = join(example, "node_modules/apixa/dist");
+  const uploads = [];
+  const server = createServer((req, res) => {
+    const url = new URL(req.url, "http://x");
+    if (url.pathname.startsWith("/apixa/")) {
+      const file = join(dist, url.pathname.slice("/apixa/".length));
+      if (!file.startsWith(dist) || !existsSync(file)) return void res.writeHead(404).end();
+      res.writeHead(200, { "content-type": "text/javascript" });
+      return void res.end(readFileSync(file));
+    }
+    if (url.pathname === "/page")
+      return void res
+        .writeHead(200, { "content-type": "text/html" })
+        .end("<!doctype html><title>t</title>");
+    if (url.pathname === "/api/docs/file") {
+      res.writeHead(200, { "content-type": "application/octet-stream", "content-length": "30000" });
+      let sent = 0;
+      const tick = () => {
+        if (res.destroyed) return;
+        if (sent >= 30000) return void res.end();
+        res.write(Buffer.alloc(5000, 3));
+        sent += 5000;
+        setTimeout(tick, 15);
+      };
+      return void tick();
+    }
+    if (url.pathname === "/api/docs/slow") {
+      res.writeHead(200, {
+        "content-type": "application/octet-stream",
+        "content-length": "1000000",
+      });
+      res.write(Buffer.alloc(1000, 1));
+      return; // stall: the body never finishes
+    }
+    if (url.pathname === "/api/docs/feed") {
+      res.writeHead(200, { "content-type": "application/octet-stream" });
+      res.write(Buffer.alloc(8, 1));
+      return;
+    }
+    if (req.method !== "PUT") return void res.writeHead(204).end();
+    const chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", () => {
+      uploads.push({
+        length: req.headers["content-length"],
+        encoding: req.headers["transfer-encoding"],
+        bytes: Buffer.concat(chunks).length,
+      });
+      res.writeHead(200, { "content-type": "application/json" }).end("{}");
+    });
+  });
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const browser = await chromium.launch({ executablePath, headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(`${origin}/page`);
+    const out = await page.evaluate(async (origin) => {
+      const m = await import(`${origin}/apixa/index.js`);
+      const api = m.defineApi({
+        baseURL: `${origin}/api`,
+        resources: {
+          docs: {
+            path: "/docs",
+            operations: {
+              file: { kind: "read", method: "GET", path: "/file", responseType: "blob" },
+              slow: { kind: "read", method: "GET", path: "/slow", responseType: "blob" },
+              feed: { kind: "read", method: "GET", path: "/feed", responseType: "stream" },
+              put: { kind: "write", method: "PUT", path: "/put", responseType: "text" },
+            },
+          },
+        },
+      });
+      const result = { support: m.detectTransferSupport() };
+      const down = [];
+      const blob = await api.docs.file({
+        onTransfer: (e) => down.push([e.phase, e.loaded ?? null, e.total ?? null]),
+      });
+      result.download = { size: blob.size, events: down };
+      const up = [];
+      await api.docs.put(new Blob([new Uint8Array(70000)]), {
+        onTransfer: (e) => e.direction === "upload" && up.push(e.phase),
+      });
+      result.blobUpload = up;
+      const sUp = [];
+      result.streamUpload = await api.docs
+        .put(
+          new ReadableStream({
+            start(c) {
+              c.enqueue(new Uint8Array(30));
+              c.close();
+            },
+          }),
+          { onTransfer: (e) => e.direction === "upload" && sUp.push(e.phase) },
+        )
+        .then(
+          () => ({ ok: true, events: sUp }),
+          (e) => ({ ok: false, name: e.name, events: sUp }),
+        );
+      const ac = new AbortController();
+      const abortEvents = [];
+      const pending = api.docs
+        .slow({ signal: ac.signal, onTransfer: (e) => abortEvents.push(e.phase) })
+        .catch((e) => e.name);
+      setTimeout(() => ac.abort(), 150);
+      result.abortDuring = { error: await pending, events: abortEvents };
+      const ac2 = new AbortController();
+      const reader = (await api.docs.feed({ signal: ac2.signal })).getReader();
+      await reader.read();
+      ac2.abort();
+      result.streamAbort = await reader.read().then(
+        () => "no error",
+        (e) => e.name,
+      );
+      const reader2 = (await api.docs.feed({ timeout: 100 })).getReader();
+      await reader2.read();
+      result.streamTimeout = await reader2.read().then(
+        () => "no error",
+        (e) => e.name,
+      );
+      return result;
+    }, origin);
+    const progress = out.download.events.filter(([p]) => p === "progress");
+    assert.equal(out.download.size, 30000, "browser download is byte-complete");
+    assert.deepEqual(
+      [out.download.events[0], out.download.events.at(-1)],
+      [
+        ["start", 0, 30000],
+        ["complete", 30000, 30000],
+      ],
+      "browser download start and complete with the Content-Length total",
+    );
+    assert.ok(
+      progress.length > 1 &&
+        progress.every(([, loaded], i) => i === 0 || loaded > progress[i - 1][1]),
+      "browser download progress is incremental and monotonic",
+    );
+    if (out.support.uploadProgress)
+      assert.equal(out.blobUpload.at(-1), "complete", "Blob upload observed where supported");
+    else
+      assert.deepEqual(
+        out.blobUpload,
+        ["unsupported"],
+        "Blob upload honestly unsupported in the browser",
+      );
+    assert.equal(
+      uploads[0].length,
+      "70000",
+      "the Blob reached the server with its Content-Length, unchanged by observation",
+    );
+    assert.equal(uploads[0].bytes, 70000);
+    if (out.streamUpload.ok)
+      assert.equal(out.streamUpload.events.at(-1), "complete", "streamed upload counted");
+    else
+      assert.ok(
+        out.streamUpload.name === "NetworkError" && out.streamUpload.events.at(-1) === "error",
+        `a refused stream upload is an error, never a fake completion (${JSON.stringify(out.streamUpload)})`,
+      );
+    assert.equal(out.abortDuring.error, "AbortError", "abort during a download");
+    assert.deepEqual(out.abortDuring.events.slice(-1), ["abort"], "abort event ends the download");
+    assert.equal(out.streamAbort, "AbortError", "stream abort after the call resolved");
+    assert.equal(out.streamTimeout, "TimeoutError", "stream timeout after the call resolved");
+    note(
+      `Browser transfers (Chromium): download progress with total, Blob upload ${out.support.uploadProgress ? "observed" : "reported unsupported"} and sent byte-exact, stream upload ${out.streamUpload.ok ? "counted" : "refused honestly (" + out.streamUpload.name + ")"}, abort and stream ownership; support ${JSON.stringify(out.support)}`,
+    );
+  } finally {
+    await browser.close();
+    server.closeAllConnections?.();
+    await new Promise((r) => server.close(r));
+  }
+}
+
 try {
   const packs = join(temporary, "packs");
   mkdirSync(packs);
@@ -332,6 +510,7 @@ try {
 
   await exercise("start", 3421);
   await exercise("dev", 3422);
+  await verifyTransfers();
   console.log(`\nbrowser verification ok (${results.length} checks)`);
 } finally {
   rmSync(temporary, { recursive: true, force: true });

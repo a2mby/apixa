@@ -11,6 +11,7 @@
 // Nothing is published. Temporary projects are removed at the end.
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
+import { createServer } from "node:http";
 import {
   existsSync,
   mkdirSync,
@@ -222,6 +223,7 @@ try {
     consumer,
     "runtime.mjs",
     `import assert from "node:assert/strict";
+import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import * as root from "apixa";
 import * as coreFacade from "apixa/core";
@@ -315,6 +317,63 @@ assert.deepEqual(new Uint8Array(await mockRes.data.arrayBuffer()), bytes, "mock 
 assert.equal(root.parseContentDisposition(mockRes.headers).filename, "up.bin", "mock Content-Disposition");
 root.mockFiles(served).clear();
 await assert.rejects(() => served.docs.download(stored.id), (e) => e.code === "MOCK_NOT_FOUND", "reset removes the bytes");
+
+// v1.3.0 transfer events through the packed package, over a real loopback socket.
+{
+  assert.equal(typeof root.detectTransferSupport, "function");
+  const received = [];
+  const server = createServer((req, res) => {
+    const chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", () => {
+      received.push({ length: req.headers["content-length"], encoding: req.headers["transfer-encoding"], type: req.headers["content-type"], body: Buffer.concat(chunks) });
+      if (req.url.includes("/feed")) {
+        res.writeHead(200, { "content-type": "application/octet-stream" });
+        res.write(Buffer.alloc(8, 1)); // then stall: the stream must stay abortable
+        return;
+      }
+      const payload = Buffer.alloc(40_000, 7);
+      res.writeHead(200, { "content-type": "application/octet-stream", "content-length": String(payload.length) });
+      res.end(payload);
+    });
+  });
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  const base = "http://127.0.0.1:" + server.address().port;
+  const net = root.defineApi({
+    baseURL: base,
+    resources: { docs: { path: "/docs", operations: {
+      file: { kind: "read", method: "GET", path: "/file", responseType: "blob" },
+      feed: { kind: "read", method: "GET", path: "/feed", responseType: "stream" },
+      put: { kind: "write", method: "PUT", path: "/put", responseType: "blob" },
+    } } },
+  });
+  const events = [];
+  const watched = await net.docs.put(new Blob([Buffer.alloc(70_000, 5)], { type: "application/octet-stream" }), { onTransfer: (e) => events.push(e) });
+  assert.equal(watched.size, 40_000, "observed upload still returns the download");
+  const up = events.filter((e) => e.direction === "upload");
+  const down = events.filter((e) => e.direction === "download");
+  assert.deepEqual([up[0].phase, up.at(-1).phase, up.at(-1).loaded, up.at(-1).total], ["start", "complete", 70_000, 70_000], "upload progress with a known total");
+  assert.deepEqual([down[0].total, down.at(-1).phase, down.at(-1).loaded], [40_000, "complete", 40_000], "download progress with Content-Length");
+  assert.equal(received.at(-1).length, "70000", "Content-Length survives observation");
+  assert.equal(received.at(-1).encoding, undefined, "no chunked re-encoding");
+  assert.equal(received.at(-1).body.length, 70_000, "upload bytes reach the server intact");
+  const chunked = [];
+  await net.docs.put(new ReadableStream({ start(c) { c.enqueue(new Uint8Array(30)); c.close(); } }), { onTransfer: (e) => e.direction === "upload" && chunked.push(e.phase) });
+  assert.equal(received.at(-1).encoding, "chunked", "a stream body is sent chunked (duplex half)");
+  assert.deepEqual(chunked.at(-1), "complete");
+  const ac = new AbortController();
+  const stream = await net.docs.feed({ signal: ac.signal });
+  const reader = stream.getReader();
+  assert.equal((await reader.read()).value.length, 8);
+  ac.abort();
+  await assert.rejects(() => reader.read(), (e) => e instanceof root.AbortError, "a stream stays cancellable after the call resolved");
+  const stalled = await net.docs.feed({ timeout: 80 });
+  const r2 = stalled.getReader();
+  await r2.read();
+  await assert.rejects(() => r2.read(), (e) => e instanceof root.TimeoutError, "the call timeout applies to a stalled stream");
+  server.closeAllConnections?.();
+  await new Promise((r) => server.close(r));
+}
 
 // React is an optional peer: the React entries fail clearly, and only when imported.
 for (const entry of ["apixa/react", "apixa/react/advanced"]) {
@@ -935,7 +994,8 @@ export default async function Page() {
     transport: createFetchTransport(async () => new Response("rsc-bytes", { headers: { "content-type": "text/plain", "content-disposition": 'attachment; filename="live.txt"' } })),
     resources: { docs: { path: "/docs", operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } },
   });
-  const res = await live.docs.file("1", { full: true });
+  const events = [];
+  const res = await live.docs.file("1", { full: true, onTransfer: (e) => events.push(e.direction + ":" + e.phase + ":" + e.loaded) });
   const mocked = defineApi({
     baseURL: "https://example.test",
     resources: { docs: { path: "/docs", fileFields: ["file"], mock: [{ id: "1", name: "Seed", file: null }], operations: {
@@ -944,7 +1004,7 @@ export default async function Page() {
   });
   const doc = await mocked.docs.create({ id: "2", name: "Up", file: new File(["mock-bytes"], "m.txt", { type: "text/plain" }) });
   const buffer = await mocked.docs.file(doc.id);
-  return <p>{["live", res.data.size, parseContentDisposition(res.headers).filename, await res.data.text(), "mock", buffer.byteLength, new TextDecoder().decode(buffer)].join("|")}</p>;
+  return <p>{["live", res.data.size, parseContentDisposition(res.headers).filename, await res.data.text(), "mock", buffer.byteLength, new TextDecoder().decode(buffer), events.join("~")].join("|")}</p>;
 }
 `,
       );
@@ -1008,7 +1068,7 @@ export default async function Page() {
           );
           assert.match(
             await get(port, "/download"),
-            /live\|9\|live\.txt\|rsc-bytes\|mock\|10\|mock-bytes/,
+            /live\|9\|live\.txt\|rsc-bytes\|mock\|10\|mock-bytes\|download:start:0~download:progress:9~download:complete:9/,
             `${mode}: Server Component downloads a Blob (live Response and mock)`,
           );
           const pages = await Promise.all(

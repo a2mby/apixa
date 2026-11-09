@@ -70,6 +70,7 @@ export const OPERATION_KEYS = new Set([
   "dataFormat",
   "multipart",
   "responseType",
+  "onTransfer",
 ]);
 
 const RUN_KEYS = new Set(["kind", "run"]);
@@ -377,6 +378,11 @@ function validateOperation(where: string, name: string, value: unknown): void {
     value.idempotency,
     builtin ? BUILTIN_CONVENTIONS[name].access : (value.kind as "read" | "write"),
   );
+  if (value.onTransfer !== undefined && typeof value.onTransfer !== "function") {
+    throw new ConfigError(
+      `${where}.onTransfer must be a function (got ${typeName(value.onTransfer)}).`,
+    );
+  }
   if (value.responseType !== undefined && !isResponseType(value.responseType)) {
     throw new ConfigError(
       `${where}.responseType must be one of ${RESPONSE_TYPES.map((t) => JSON.stringify(t)).join(", ")} (got ${

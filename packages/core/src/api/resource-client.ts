@@ -205,6 +205,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
     };
     Object.assign(op, prepareFiles(def, declared, op.requestKeys));
     if (declared.responseType !== undefined) op.responseType = declared.responseType;
+    if (declared.onTransfer !== undefined) op.onTransfer = declared.onTransfer;
     if (declared.mock !== undefined) {
       op.mockHandler = declared.mock as PreparedOperation["mockHandler"];
     }
@@ -418,6 +419,7 @@ function functionOperation(
         timeout: init.timeout,
         retry: init.retry,
         responseType: init.responseType,
+        onTransfer: init.onTransfer,
         meta: init.meta,
         full: init.full,
       };
