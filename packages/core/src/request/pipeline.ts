@@ -19,6 +19,7 @@ import {
   type BaseUrl,
   type MultipartRuntime,
 } from "../http/index.js";
+import { TransferChannel, bindStreamLifetime } from "../transfer/index.js";
 import {
   routeToIntent,
   runBuiltin,
@@ -47,6 +48,7 @@ import type {
   ApiResponse,
   RequestOptions,
   ResponseType,
+  TransferObserver,
   Transport,
 } from "../types/transport.js";
 import { isResponseType, RESPONSE_TYPES } from "../transport/read-body.js";
@@ -97,6 +99,8 @@ export interface PreparedOperation {
   mockHandler?: (context: MockHandlerContext) => unknown;
   /** How the response body is read; absent → JSON. A per-call `responseType` option wins. */
   responseType?: ResponseType;
+  /** Default transfer observer; a per-call `onTransfer` option wins. */
+  onTransfer?: TransferObserver;
   /** Body encoding override; absent → JSON, or multipart automatically for binary values. */
   dataFormat?: DataFormat;
   /** Multipart encoding rules, with field names already in wire form. */
@@ -159,6 +163,27 @@ function transformQuery(
 ): QueryParams | undefined {
   if (!query || !to) return query;
   return transformKeys(query, to) as QueryParams;
+}
+
+/** Transfer-event state for one logical call: one channel per attempt, only when observed. */
+interface TransferSession {
+  observer: TransferObserver | undefined;
+  current?: TransferChannel;
+}
+
+function nextChannel(session: TransferSession, attempt: number): TransferChannel | undefined {
+  if (!session.observer) return undefined;
+  session.current = new TransferChannel(session.observer, attempt);
+  return session.current;
+}
+
+/** End a started transfer because the call's signal fired: a timeout is an error, a cancel an abort. */
+function failFromSignal(channel: TransferChannel | undefined, signal: AbortSignal): void {
+  if (!channel) return;
+  const reason = signal.reason;
+  if (reason instanceof TimeoutError)
+    channel.fail({ kind: "error", error: reason, willRetry: false });
+  else channel.fail({ kind: "abort", reason });
 }
 
 /** One controller per logical call: overall timeout + caller signal, cleaned up in `finally`. */
@@ -269,7 +294,14 @@ export async function runOperation(
   const options = call.options ?? {};
   const responseType = options.responseType ?? op.responseType ?? "json";
   const timeout = options.timeout ?? op.timeout;
+  const observer = options.onTransfer ?? op.onTransfer;
+  if (observer !== undefined && typeof observer !== "function") {
+    throw new ConfigError(`${resource.name}.${op.name}: onTransfer must be a function.`);
+  }
+  const session: TransferSession = { observer };
   const { signal, timedOut, cleanup } = createCallSignal(timeout, options.signal);
+  let ownsCleanup = false;
+  let boundStream: ReadableStream<Uint8Array> | undefined;
   const mocked = resource.mock !== undefined;
   let request: ApiRequest | undefined;
   let idempotencyKey = call.idempotencyKey;
@@ -386,6 +418,21 @@ export async function runOperation(
       const finalized = await finalizeMockResponse(result.data, responseType);
       responseHeaders = finalized.headers;
       data = finalized.data;
+      const channel = nextChannel(session, 0);
+      if (channel) {
+        // Nothing crosses a wire on a mock: never invent bytes. Binary and text results have a real
+        // size; a mocked JSON value has no wire size, so it is reported as unsupported.
+        if (hasBody) channel.unsupported("upload", "mocked resource: no request body is sent");
+        const length = finalized.headers.get("content-length");
+        if (length !== null && /^\d+$/.test(length)) {
+          const size = Number(length);
+          channel.sink({ phase: "start", direction: "download", loaded: 0, total: size });
+          channel.sink({ phase: "progress", direction: "download", loaded: size, total: size });
+          channel.sink({ phase: "complete", direction: "download", loaded: size, total: size });
+        } else {
+          channel.unsupported("download", "mocked response has no wire size");
+        }
+      }
     } else {
       assertSameOrigin(request.url, origin!);
       const response = await sendWithRetry(
@@ -397,11 +444,43 @@ export async function runOperation(
         signal,
         call.allow404 === true,
         responseType,
+        session,
       );
       status = response.status;
       responseHeaders = response.headers;
       raw = response.raw;
       data = response.body;
+      if (responseType === "stream" && response.status >= 200 && response.status < 300) {
+        if (typeof ReadableStream !== "undefined" && data instanceof ReadableStream) {
+          // The stream outlives this Promise: keep the call's signal and timeout bound to it until
+          // it is consumed, fails or is cancelled, and release them only then.
+          ownsCleanup = true;
+          const channel = session.current;
+          data = boundStream = bindStreamLifetime(data as ReadableStream<Uint8Array>, {
+            signal,
+            abortError: () => classify(signal.reason, signal, timedOut(), request),
+            settled(outcome) {
+              try {
+                if (outcome.kind === "complete") channel?.completeDownload();
+                else if (outcome.kind === "cancel")
+                  channel?.fail({ kind: "abort", reason: outcome.reason });
+                else if (outcome.kind === "abort") failFromSignal(channel, signal);
+                else
+                  channel?.fail({
+                    kind: "error",
+                    error:
+                      outcome.error instanceof Error
+                        ? outcome.error
+                        : new NetworkError("Response stream failed", { cause: outcome.error }),
+                    willRetry: false,
+                  });
+              } finally {
+                cleanup();
+              }
+            },
+          });
+        }
+      }
       // Binary bodies are never key-transformed or shaped as JSON (`allow404` shaping is
       // status-only, so it still applies).
       if (op.responseKeys && responseType === "json") data = transformKeys(data, op.responseKeys);
@@ -421,6 +500,9 @@ export async function runOperation(
     }
     return options.full ? response : response.data;
   } catch (thrown) {
+    // A stream already handed to this call is released if the call then fails (for example a
+    // response middleware throws): cancelling it ends the connection and runs the cleanup.
+    boundStream?.cancel(thrown).catch(() => {});
     let error = classify(thrown, signal, timedOut(), request);
     const replay = call.replayed
       ? undefined
@@ -435,7 +517,7 @@ export async function runOperation(
     }
     throw error;
   } finally {
-    cleanup();
+    if (!ownsCleanup) cleanup();
   }
 }
 
@@ -505,6 +587,7 @@ async function sendWithRetry(
   signal: AbortSignal,
   allow404: boolean,
   responseType: ResponseType,
+  session: TransferSession,
 ) {
   const retry =
     options.retry !== undefined ? resolveRetryConfig(options.retry, "options.retry") : op.retry;
@@ -519,6 +602,7 @@ async function sendWithRetry(
     throwIfAborted(signal);
     let failure: ApiError;
     let failedResponse: ApiResponse<unknown> | undefined;
+    const channel = nextChannel(session, attempt);
     try {
       const response = await client.transport.request({
         url: request.url,
@@ -527,7 +611,9 @@ async function sendWithRetry(
         body,
         signal,
         responseType,
+        ...(channel ? { onTransfer: channel.sink } : {}),
       });
+      channel?.finishRequest(body !== null && body !== undefined);
       if (
         (response.status >= 200 && response.status < 300) ||
         (allow404 && response.status === 404)
@@ -549,7 +635,10 @@ async function sendWithRetry(
         attempt,
       });
     } catch (error) {
-      if (signal.aborted) throw error;
+      if (signal.aborted) {
+        failFromSignal(channel, signal);
+        throw error;
+      }
       failure =
         error instanceof ApiError
           ? error
@@ -578,6 +667,7 @@ async function sendWithRetry(
       decideRetry(retry, ctx, failure) &&
       (retryAfter === undefined || retryAfter <= retry.maxDelayMs);
     failure.retryable = canRetry;
+    channel?.fail({ kind: "error", error: failure, willRetry: canRetry });
     if (!canRetry) throw failure;
 
     await retry!.onRetry?.(ctx);

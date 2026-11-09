@@ -115,7 +115,21 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
 
-## Current: v1.2.0 — File Downloads & Binary Responses
+## Current: v1.3.0 — File Transfer Progress, Streaming & Reliability
+
+**Spec:** [versions/v1.3.0/](../versions/v1.3.0/) (implemented and verified; owner sign-off open)
+
+- One opt-in, typed `onTransfer` event mechanism (start, progress, complete, error, abort, with
+  retry `attempt`) on `RequestOptions` and operations; no second client or package
+- Download progress for every `responseType`; `total` only from trustworthy `Content-Length`
+- Upload progress only where the runtime can observe bytes; otherwise an honest "unsupported"
+  signal, never a fabricated percentage
+- Streaming bodies with backpressure; a `stream` result stays cancellable and time-limited after the
+  operation resolves; interrupted transfers classified consistently; retry rules unchanged
+- Typed through builtins, custom operations, `ctx.request()` and hooks; verified through React
+  18/19, packed npm consumers, Chromium, Node, Next, Vercel Edge and workerd
+
+## Implemented, owner sign-off open: v1.2.0 — File Downloads & Binary Responses
 
 **Spec:** [versions/v1.2.0/](../versions/v1.2.0/)
 
@@ -151,7 +165,7 @@ optional milestone **after** file handling.
 1. File-field foundation, automatic serialization and minimal mock file storage — **v1.1.0**
 2. Extended CRUD/custom operations and advanced serialization
 3. Downloads and binary responses — **v1.2.0**
-4. Transfer progress, cancellation, streaming, and reliability
+4. Transfer progress, cancellation, streaming, and reliability — **v1.3.0**
 5. Middleware, validation, file limits, and error handling
 6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store
 7. React/TanStack and form compatibility, browser/Node integration, and testing

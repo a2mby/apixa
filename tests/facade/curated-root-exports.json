@@ -21,6 +21,7 @@
   "defineApi",
   "defineApis",
   "defineMockApi",
+  "detectTransferSupport",
   "getOperationMetadata",
   "isApiError",
   "isHttpError",

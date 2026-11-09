@@ -3,7 +3,7 @@ import type { HeadersSource, HttpMethod, QueryParams } from "./http.js";
 import type { MiddlewareOptions } from "./middleware.js";
 import type { MockDatasetId } from "./mock-datasets.js";
 import type { RetryOption } from "./retry.js";
-import type { ResponseType } from "./transport.js";
+import type { ResponseType, TransferObserver } from "./transport.js";
 import type { TransformsConfig } from "./transform.js";
 import type { Transport } from "./transport.js";
 
@@ -86,6 +86,8 @@ export interface OperationDefinition extends LayerOptions {
    * A per-call `responseType` option wins over this one.
    */
   responseType?: ResponseType;
+  /** Default transfer observer for this operation; a per-call `onTransfer` option wins. */
+  onTransfer?: TransferObserver;
   /** Writes only. Body encoding for this operation; see {@link DataFormat}. */
   dataFormat?: DataFormat;
   /** Multipart encoding overrides for this operation (merged over the resource's). */

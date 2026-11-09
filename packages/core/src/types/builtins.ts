@@ -6,6 +6,7 @@ import type {
   BinaryResponseType,
   ResponseType,
   ResponseTypeData,
+  TransferObserver,
 } from "./transport.js";
 import type { BuiltinConventionName } from "../operation/conventions.js";
 
@@ -39,6 +40,8 @@ export interface OperationFnRequestInit {
   timeout?: number;
   retry?: RetryOption;
   responseType?: ResponseType;
+  /** Opt in to transfer lifecycle events for this request. */
+  onTransfer?: TransferObserver;
   meta?: Record<string, unknown>;
   /** When true, resolve to `ApiResponse<T>` instead of unwrapped `T`. */
   full?: boolean;

@@ -95,6 +95,21 @@ above are the platforms' own engines, not deployed services).
   the 14 public entries. No symbol list changed in this migration.
 - The unscoped `apixa` package belongs to the project maintainer. No npm organization scope is needed.
 
+## v1.3.0 additions (transfer progress and streaming)
+
+New in `apixa` (root) and `apixa/core`; nothing existing changed.
+
+- Values: `detectTransferSupport` (feature probes only).
+- Types: `TransferEvent`, `TransferObserver`, `TransferDirection`, `TransferPhase`, `TransferSupport`,
+  `TransportTransferEvent`.
+- Config: `onTransfer` on per-call `RequestOptions`, declarative operations and `ctx.request({ ... })`;
+  optional `TransportRequest.onTransfer` for transports; optional `ApiError.transfer`.
+- Behavior: without `onTransfer` nothing is wrapped. A `responseType: "stream"` result now keeps the
+  call's signal and timeout until it is consumed (previously they were released when the Promise
+  resolved). `ReadableStream` request bodies are sent with `duplex: "half"` (previously rejected by
+  fetch). Inline callbacks in call options are now contextually typed (`getById("1", { onTransfer: (e) => ... })`).
+- Not part of query keys in `useResourceQuery` / `useResource`.
+
 ## v1.2.0 additions (downloads and binary responses)
 
 New in `apixa` (root) and `apixa/core`; nothing existing changed.

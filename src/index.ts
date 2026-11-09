@@ -10,7 +10,7 @@ export { defineMockApi, MockApiError, InvalidSliceError } from "@apixa/mocking";
 export { mockFiles } from "@apixa/core";
 
 // Download metadata.
-export { parseContentDisposition } from "@apixa/core";
+export { parseContentDisposition, detectTransferSupport } from "@apixa/core";
 
 // Errors.
 export {
@@ -89,6 +89,12 @@ export type {
   RequestConfig,
   RequestOptions,
   ResponseType,
+  TransferDirection,
+  TransferEvent,
+  TransferObserver,
+  TransferPhase,
+  TransferSupport,
+  TransportTransferEvent,
   RetryConfig,
   RetryOption,
   RequestMiddleware,

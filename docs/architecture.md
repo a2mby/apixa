@@ -119,6 +119,38 @@ operations read the v1.1.0 `MockFileStorage` through a read-only `files` handle,
 `finalizeMockResponse` (`mock/files.ts`) coerces results to `responseType` and synthesizes the
 content headers. No new package, transport interface or download client.
 
+## Transfer progress, streaming and reliability (v1.3.0, implemented)
+
+One opt-in `onTransfer` observer (call option, or an operation default; the call wins) rides the
+existing pipeline; nothing is wrapped without it. `request/pipeline.ts` creates one `TransferChannel`
+(`transfer/channel.ts`) per attempt and hands its `sink` to the transport as the optional
+`TransportRequest.onTransfer`. The fetch transport reports bytes it actually moves: request bodies
+are counted by a pull-based `countedStream` (`transfer/counting.ts`, `highWaterMark: 0`, so
+backpressure and cancellation reach the source) and response bodies are counted before the existing
+`readBody` decodes them, so observed and unobserved results are byte-equal. The channel enforces the
+contract: per direction `start`, `progress`\*, then exactly one of `complete` / `error` / `abort`,
+or a single `unsupported`. A custom transport that ignores `onTransfer` still works and is
+reported `unsupported`; mocks report real sizes only (binary/text) and never invent bytes.
+
+Honesty rules. Upload `loaded` counts bytes pulled from the request body for the network stack,
+never server acknowledgment. A sized body (`Blob`, `File`, buffers, strings, `FormData`) is observed
+only when the runtime lets Apixa keep the original `Content-Length` and `Content-Type`
+(`detectTransferSupport().uploadProgress`, from feature probes); browsers forbid setting
+`Content-Length`, so there those uploads are sent untouched and reported `unsupported`. A caller
+`ReadableStream` is counted wherever streaming bodies exist (`duplex: "half"` is now always set);
+browsers need HTTP/2 or newer for it and refuse otherwise (an `error`, never a fake completion).
+Download `total` is a finite `Content-Length` on an uncompressed, non-empty response; otherwise
+absent, and dropped if the body outgrows it. No `XMLHttpRequest` fallback (a second execution path,
+absent in Node and Edge).
+
+Stream ownership. A `responseType: "stream"` result is bound to its call (`transfer/stream.ts`):
+the caller signal and overall timeout stay in force until the stream ends, fails or is cancelled,
+and cleanup happens then, not when the operation Promise resolves. Abort errors the stream with
+`AbortError`, a timeout with `TimeoutError`. Retries are unchanged (a request stream is never
+replayed); each attempt starts a new event sequence at `loaded: 0`, and an `error` event says
+whether a retry follows (`willRetry`). `ApiError.transfer` carries direction and bytes for a failure
+during an observed transfer.
+
 ## File handling (v1.1.0, implemented)
 
 Files travel inside the existing operations; there is no separate upload client.
@@ -188,6 +220,7 @@ policies are planned (phase 6), not implemented.
 | Key transforms       | `transform/` | Runtime converters (types in `types/transform.ts`)                                   |
 | URL / headers / body | `http/`      | Base URL parsing, origin checks, header providers, query, JSON/multipart body        |
 | Fetch transport      | `transport/` | Default transport                                                                    |
+| Transfer events      | `transfer/`  | Capability probe, counting streams, per-attempt event channel, stream ownership      |
 | Errors               | `errors/`    | `ApiError` + HTTP/Network/Timeout/Abort/Config/Security/Transform/Serialization/Mock |
 | Types                | `types/`     | Definition, inference (runtime-authoritative), transforms, datasets                  |
 

@@ -24,6 +24,10 @@ export type { ApiErrorCode, MockErrorCode } from "./errors/index.js";
 
 export { createFetchTransport } from "./transport/index.js";
 
+/** Transfer events: capability probe for opt-in progress (feature detection only). */
+export { detectTransferSupport } from "./transfer/index.js";
+export type { TransferSupport } from "./transfer/index.js";
+
 /** Download metadata: parses a `Content-Disposition` header (pure; never throws). */
 export { parseContentDisposition } from "./http/index.js";
 export type { ContentDisposition } from "./http/index.js";

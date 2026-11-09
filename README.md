@@ -55,6 +55,9 @@ Downloads are ordinary operations: declare `responseType: "blob"` (or `"arrayBuf
 operation and the result is typed (`Blob`, …); use `{ full: true }` for status and headers and
 `parseContentDisposition(headers).filename` for the file name. See the
 [Core README](packages/core/README.md#file-downloads-and-binary-responses).
+Transfer progress is opt-in: pass `onTransfer` on any call for typed start / progress / complete /
+error / abort events with retry attempts, honest totals, and `unsupported` where the runtime cannot
+observe a transfer ([details](packages/core/README.md#transfer-progress-streaming-and-cancellation)).
 
 ```ts
 import { defineApi, defineApis, defineMockApi } from "apixa";
