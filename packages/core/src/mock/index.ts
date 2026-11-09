@@ -15,4 +15,17 @@ export {
   registerMockDatasetLoader,
   type MockDatasetLoader,
 } from "./datasets.js";
-export { runMockHandler, type MockHandlerContext, type MockStoreHandle } from "./handler.js";
+export {
+  runMockHandler,
+  type MockFilesHandle,
+  type MockHandlerContext,
+  type MockStoreHandle,
+} from "./handler.js";
+export {
+  MockFileStorage,
+  isMockFileRef,
+  finalizeMockResponse,
+  type MockFileMeta,
+  type MockStoredFile,
+} from "./files.js";
+export { runMockWithFiles } from "./files-exec.js";

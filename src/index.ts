@@ -6,6 +6,12 @@
 export { defineApi, defineApis } from "@apixa/core";
 export { defineMockApi, MockApiError, InvalidSliceError } from "@apixa/mocking";
 
+// Mock file storage (virtual files behind mocked resources).
+export { mockFiles } from "@apixa/core";
+
+// Download metadata.
+export { parseContentDisposition } from "@apixa/core";
+
 // Errors.
 export {
   ApiError,
@@ -18,6 +24,7 @@ export {
   ConfigError,
   SecurityError,
   TransformError,
+  SerializationError,
   MockError,
   isApiError,
   isHttpError,
@@ -55,6 +62,13 @@ export type {
   ResourceClient,
   ApixaClient,
   MockedResource,
+  FileFieldsConfig,
+  ContentDisposition,
+  FileFieldOptions,
+  MultipartOptions,
+  DataFormat,
+  MockFileMeta,
+  MockStoredFile,
   OperationKindsOf,
   EntityOf,
   IdOf,

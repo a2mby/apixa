@@ -90,9 +90,84 @@ Context: `{ request, response?, attempt, meta }`.
 
 `ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), install `apixa/mocking` and import `apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `apixa/mocking` README.
 
+## File uploads
+
+Declare which entity fields hold files; writes then accept native `File` / `Blob` values and Core
+sends `multipart/form-data` automatically (JSON stays the default when there are no files):
+
+```ts
+const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
+  baseURL: "https://api.example.com",
+  resources: {
+    users: { path: "/users", fileFields: ["avatar", "documents"] },
+  },
+});
+
+await api.users.create({ name: "Ada", avatar: file, documents: [a, b] }); // multipart
+await api.users.update("1", { name: "Ada L." }); // no binary values → JSON
+const user = await api.users.getById("1"); // user.avatar: string
+```
+
+Use `fileFields: { avatar: { name: "profile_image" } }` for a different part name,
+`multipart: { jsonFields, nulls, arrays }` for encoding overrides, and `dataFormat: "json" |
+"multipart"` on an operation for backend quirks. Nested objects use `a[b]`, scalar arrays `tags[]`,
+file lists repeat the field name. See `docs/architecture.md` ("File handling") for every rule.
+Mocked resources keep uploaded bytes in a virtual file store: `mockFiles(api).list()`. A `FileList`
+from an `<input>` must be converted first (`Array.from(input.files)`).
+
+## File downloads and binary responses
+
+A download is an ordinary operation. `responseType` (`"json"` default, `"text"`, `"blob"`,
+`"arrayBuffer"`, `"stream"`) is declared on the operation and types the result; a per-call
+`responseType` wins, and `{ full: true }` gives the `ApiResponse` with `status` and `headers`:
+
+```ts
+const api = defineApi<{ reports: { path: "/reports"; entity: Report } }>()({
+  baseURL: "https://api.example.com",
+  resources: {
+    reports: {
+      path: "/reports",
+      operations: {
+        download: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" },
+      },
+    },
+  },
+});
+
+const blob = await api.reports.download("1"); // Blob
+const res = await api.reports.download("1", { full: true }); // ApiResponse<Blob>
+parseContentDisposition(res.headers).filename; // string | undefined (never assumed)
+res.headers.get("content-type"); // content type / length are plain headers
+await api.reports.getById("1", { responseType: "arrayBuffer" }); // ArrayBuffer
+```
+
+Result types: `text` → `string`, `blob` → `Blob`, `arrayBuffer` → `ArrayBuffer`, `stream` →
+`ReadableStream<Uint8Array> | null`. Metadata `response` in `defineApi<T>()` wins over the inferred
+type; function operations use `ctx.request({ path, responseType: "blob" })` (also typed). Rules:
+an unknown `responseType` is a `ConfigError`; binary data is never JSON-parsed, key-transformed or
+shaped (`getAll` `slice`, `toArray`); a failed download is an `HttpError` whose `data` is the parsed
+JSON/text body; an empty 204/205 gives `""` / an empty `Blob` / an empty `ArrayBuffer` for explicit
+text/binary modes (`null` for JSON and `stream`). Abort and timeout cover the body read, and retries
+never read a binary body that was not successful.
+
+Mocked resources serve uploaded files from the virtual store, through a declarative operation:
+
+```ts
+download: {
+  kind: "read", method: "GET", path: "/:id/file", responseType: "blob",
+  mock: ({ params, store, files }) => files.get(store.get(params.id).photo).blob(),
+},
+```
+
+`files` is a read-only view (`has`, `meta`, `get`, `list`; a missing file is `MOCK_NOT_FOUND`). The
+result is coerced to `responseType` and the mock response carries `Content-Type`, `Content-Length`
+and (for a `File`) `Content-Disposition`. Mocked `responseType: "stream"` is `MOCK_UNSUPPORTED`.
+React hooks resolve unwrapped payloads (`full` is not available there): use the direct client for
+headers. A `Blob` is not serializable, so it cannot cross a server/client or dehydration boundary.
+
 ## Errors
 
-`ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT`.  
+`ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT` | `SERIALIZATION` (an unencodable body, such as binary values under `dataFormat: "json"`).  
 `ApiError` has `code`, `retryable`, `attempt`. Guards: `isApiError`, `isHttpError`, `isTimeoutError`.
 
 ## Notes

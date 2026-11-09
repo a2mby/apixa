@@ -2,10 +2,83 @@
 
 Project log. Newest entry first.
 
+## 2026-11-09 — v1.2.0 file downloads and binary responses implemented
+
+Implemented [v1.2.0](../versions/v1.2.0/). Operations can declare `responseType`, and a literal
+`responseType` (operation or call, also through `ctx.request`) now types the result as `Blob`,
+`ArrayBuffer`, `string` or `ReadableStream`, with `defineApi<T>()` metadata still winning. Failed
+downloads read their error body by content type, explicit text/binary 204s give typed empty values,
+unknown `responseType` values throw `ConfigError`, and binary data skips key transforms and JSON
+shaping. `parseContentDisposition` reads filenames; mocked operations read the v1.1.0 file store
+through a read-only `files` handle and return coerced bodies with content headers. Abort, timeout
+and retry behavior needed no change and is now covered by tests. Verified with the full gate (979
+tests, 62 npm type-consumer checks, Chromium, Next SSR, Vercel Edge, workerd). Owner sign-off
+open. A stray `apixa` self-dependency in the root `package.json` (and lockfile) broke the
+architecture test and was removed.
+
+## 2026-11-09 — v1.2.0 kickoff: file downloads and binary responses
+
+Started [v1.2.0](../versions/v1.2.0/), phase 3 of Advanced File Handling. The audit found that
+`responseType` (`blob`, `arrayBuffer`, `text`, `stream`) and `{ full: true }` already work per call
+but are untyped, cannot be declared on an operation, read failed downloads as blobs, return `null`
+for 204 whatever the type, and have no tests; mocks cannot serve uploaded files and nothing parses
+`Content-Disposition`. The contract adds operation-level `responseType` with type inference,
+truthful error and empty bodies, `parseContentDisposition`, and mock downloads from the existing
+v1.1.0 store, with no new package and no separate download client. Contract only: v1.1.0 stays
+implemented with owner sign-off open, and its work is not yet committed to `main`.
+
 ## 2026-11-09 — Remove the stale structure.txt snapshot
 
 Deleted `structure.txt`, a hand-kept directory tree from an older layout that nothing referenced.
 `docs/architecture.md` remains the single source map of the repository.
+
+## 2026-11-09 — v1.1.0 release blocker: hooks typed `any` without TanStack
+
+A real npm consumer of `1.0.0-rc.0` saw `useResource` / `useResourceQuery` return `any`
+(`useResourceMutation` stayed typed). Cause: `@tanstack/react-query` is an optional peer, npm does
+not install optional peers, and an unresolved import in declarations is an error type that makes
+`any & UseQueryResult<…>` `any`. pnpm workspaces always had it, so every check passed. Fix: every
+hook overload returns `RequireTanStackQuery<…>` (`packages/react/src/peer.ts`), which becomes a
+named `ApixaMissingPeer_Install_tanstack_react_query` interface when TanStack does not resolve.
+New `scripts/verify-type-consumers.mjs` installs the packed tarball with npm outside the workspace
+and checks core-only, React 18/19 with and without TanStack, three TypeScript versions, two module
+resolution modes, and skipLibCheck on/off. Documented limit: `skipLibCheck: true` hides the
+unresolved-module error itself. Recorded in [v1.1.0](../versions/v1.1.0/).
+
+## 2026-11-08 — v1.1.0 file handling implemented
+
+Implemented [v1.1.0](../versions/v1.1.0/) after the owner expanded and finalized its scope. Core now
+chooses JSON or multipart per request (multipart automatically when a body holds `File` / `Blob`;
+`dataFormat` overrides; binary is never JSON-stringified), with a documented bracket / repeated-name
+encoding, aliases, JSON-encoded fields, `SerializationError`, and `Content-Type` removal so the
+transport sets the boundary. `fileFields` is entity-checked and derives `File | Blob` inputs for
+`create` / `update` / `patch` / `upsert` / `createMany`. Mocked resources store uploaded bytes in a
+per-client virtual file store (`mockFiles`) with string references in records, replacement and
+cleanup, and all-or-nothing writes. The earlier plan to defer mock storage to a later phase was
+reversed by the owner; advanced storage (disks, fixtures, lifecycle) stays planned. Full
+`pnpm verify` passed (925 tests, packed consumers, Chromium, Vercel Edge, workerd). Nothing was
+committed, pushed, published or version-bumped.
+
+## 2026-11-08 — v1.1.0 audit and `fileFields` type contract
+
+Audited Core before coding: `serializeBody` already passes `FormData`/`Blob` through but would
+`JSON.stringify` a plain body holding a `File` into `{}`, `transformKeys` already leaves `File`/`Blob`
+untouched, middleware sees the public body before serialization, and `FormData` is replayable across
+retries. Added the type-level contract only: `fileFields` (array or `{ name }` object, checked against
+the entity), derived `File | Blob` inputs for `create`/`update`/`patch`/`upsert`, and an
+operation `dataFormat` (write operations only). Reads are unchanged. There is no runtime yet, so
+`validate.ts` still rejects `fileFields` loudly. Design decisions are recorded in the v1.1.0
+implementation plan; six remain open. Nothing was exported, committed, pushed or published.
+
+## 2026-11-08 — Start v1.1.0: file-field foundation (Phase 1 of 9)
+
+Kicked off [v1.1.0](../versions/v1.1.0/) — Advanced File Handling, Phase 1. The contract covers
+resource-level `fileFields`, entity-checked names, derived `File | Blob` write inputs with `string` /
+`string[]` reads, automatic multipart, an operation `dataFormat` override, and binary-safe
+serialization/middleware. The nine-phase file roadmap is recorded in `docs/roadmap.md`; only this
+folder was created. `v1.0.0` was checked first: only `apixa@1.0.0-rc.0` is published and there are
+no tags, so it is not treated as stable and its folder is untouched. Eleven design decisions (D1–D11)
+are open in the implementation plan. No library code, version bump, commit, push or publish.
 
 ## 2026-11-08 — One npm package, private modular implementations
 

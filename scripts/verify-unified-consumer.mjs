@@ -263,6 +263,59 @@ const mockApi = root.defineMockApi({ resources: { users: { type: "users-mock", r
 assert.ok((await mockApi.users.getAll()).length > 0, "defineMockApi from the root");
 assert.ok((await mocking.loadDataset("users-mock")).length > 0);
 
+// File handling: automatic multipart, the SerializationError, and the virtual file store.
+assert.equal(typeof root.SerializationError, "function");
+assert.equal(root.mockFiles, mocking.mockFiles, "mockFiles is one canonical function");
+const sent = [];
+const uploads = root.defineApi({
+  baseURL: "https://example.test",
+  transport: { request: async (input) => { sent.push(input); return { status: 200, headers: new Headers(), raw: new Response(null), body: { id: "1" } }; } },
+  resources: { users: { path: "/users", fileFields: ["avatar"] } },
+});
+await uploads.users.create({ name: "Ada", avatar: new File(["x"], "a.txt") });
+assert.ok(sent[0].body instanceof FormData && !sent[0].headers.has("content-type"), "automatic multipart");
+const jsonOnly = root.defineApi({
+  baseURL: "https://example.test",
+  transport: { request: async () => ({ status: 200, headers: new Headers(), raw: new Response(null), body: {} }) },
+  resources: { u: { path: "/u", operations: { create: { dataFormat: "json" } } } },
+});
+await assert.rejects(() => jsonOnly.u.create({ f: new File(["x"], "f") }), (e) => e instanceof root.SerializationError, "binary under dataFormat json");
+const filed = root.defineApi({ baseURL: "https://example.test", resources: { pets: { path: "/pets", mock: [{ id: "1", name: "Rex" }], fileFields: ["photo"] } } });
+const pet = await filed.pets.create({ id: "2", name: "Mia", photo: new File(["bytes"], "p.png") });
+assert.equal(root.mockFiles(filed).get(pet.photo).text(), "bytes", "mock file store");
+
+// Binary downloads: operation-level responseType, metadata, error bodies, mock downloads.
+assert.equal(typeof root.parseContentDisposition, "function");
+const bytes = new Uint8Array([0, 255, 128, 10]);
+const fetchStub = async (url) =>
+  String(url).includes("/missing/")
+    ? new Response('{"message":"gone"}', { status: 404, headers: { "content-type": "application/json" } })
+    : new Response(bytes, { headers: { "content-type": "application/pdf", "content-disposition": "attachment; filename*=UTF-8''r%C3%A9sum%C3%A9.pdf" } });
+const downloads = root.defineApi({
+  baseURL: "https://example.test",
+  transport: root.createFetchTransport(fetchStub),
+  resources: { docs: { path: "/docs", operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } },
+});
+const full = await downloads.docs.file("1", { full: true });
+assert.ok(full.data instanceof Blob && full.data.type === "application/pdf", "operation-level responseType yields a Blob");
+assert.deepEqual(new Uint8Array(await full.data.arrayBuffer()), bytes, "byte-exact download");
+assert.equal(root.parseContentDisposition(full.headers).filename, "résumé.pdf", "Content-Disposition filename*");
+assert.ok((await downloads.docs.getById("1", { responseType: "arrayBuffer" })) instanceof ArrayBuffer, "per-call responseType");
+const gone = await downloads.docs.file("missing").catch((e) => e);
+assert.ok(gone instanceof root.HttpError && gone.status === 404 && gone.data.message === "gone", "failed download keeps a readable body");
+const served = root.defineApi({
+  baseURL: "https://example.test",
+  resources: { docs: { path: "/docs", mock: [{ id: "1", name: "Doc", file: null }], fileFields: ["file"], operations: {
+    download: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob", mock: ({ params, store, files }) => files.get(store.get(params.id).file).blob() },
+  } } },
+});
+const stored = await served.docs.create({ id: "2", name: "Up", file: new File([bytes], "up.bin", { type: "application/octet-stream" }) });
+const mockRes = await served.docs.download(stored.id, { full: true });
+assert.deepEqual(new Uint8Array(await mockRes.data.arrayBuffer()), bytes, "mock download serves the uploaded bytes");
+assert.equal(root.parseContentDisposition(mockRes.headers).filename, "up.bin", "mock Content-Disposition");
+root.mockFiles(served).clear();
+await assert.rejects(() => served.docs.download(stored.id), (e) => e.code === "MOCK_NOT_FOUND", "reset removes the bytes");
+
 // React is an optional peer: the React entries fail clearly, and only when imported.
 for (const entry of ["apixa/react", "apixa/react/advanced"]) {
   const error = await import(entry).then(() => null, (e) => e);
@@ -868,6 +921,33 @@ export default async function Page() {
         "app/who/who.jsx",
         '"use client";\nimport { defineApi } from "apixa";\nimport { useResourceQuery } from "apixa/react";\nconst api = defineApi({ baseURL: "https://example.test", transport: { request: async () => { throw new Error("must not refetch"); } }, resources: { users: { path: "/users" } } });\nexport default function Who() { const query = useResourceQuery(api.users, { queryKey: ["who"] }); return <p>{(query.data ?? []).map((u) => u.name).join(",") || "empty"}</p>; }\n',
       );
+      // Binary downloads on the server: a Server Component reads a Blob (a live `fetch` Response
+      // and a mocked file). Blobs are not serializable across the RSC boundary, so only plain
+      // values (size, filename, text) are rendered.
+      write(
+        dir,
+        "app/download/page.jsx",
+        `import { createFetchTransport, defineApi, parseContentDisposition } from "apixa";
+export const dynamic = "force-dynamic";
+export default async function Page() {
+  const live = defineApi({
+    baseURL: "https://example.test",
+    transport: createFetchTransport(async () => new Response("rsc-bytes", { headers: { "content-type": "text/plain", "content-disposition": 'attachment; filename="live.txt"' } })),
+    resources: { docs: { path: "/docs", operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } },
+  });
+  const res = await live.docs.file("1", { full: true });
+  const mocked = defineApi({
+    baseURL: "https://example.test",
+    resources: { docs: { path: "/docs", fileFields: ["file"], mock: [{ id: "1", name: "Seed", file: null }], operations: {
+      file: { kind: "read", method: "GET", path: "/:id/file", responseType: "arrayBuffer", mock: ({ params, store, files }) => files.get(store.get(params.id).file).bytes() },
+    } } },
+  });
+  const doc = await mocked.docs.create({ id: "2", name: "Up", file: new File(["mock-bytes"], "m.txt", { type: "text/plain" }) });
+  const buffer = await mocked.docs.file(doc.id);
+  return <p>{["live", res.data.size, parseContentDisposition(res.headers).filename, await res.data.text(), "mock", buffer.byteLength, new TextDecoder().decode(buffer)].join("|")}</p>;
+}
+`,
+      );
       write(dir, "next.config.mjs", "export default {};\n");
       write(
         dir,
@@ -925,6 +1005,11 @@ export default async function Page() {
             twice - after,
             1,
             `${mode}: a second request refetches on its own request-scoped client`,
+          );
+          assert.match(
+            await get(port, "/download"),
+            /live\|9\|live\.txt\|rsc-bytes\|mock\|10\|mock-bytes/,
+            `${mode}: Server Component downloads a Blob (live Response and mock)`,
           );
           const pages = await Promise.all(
             ["alice", "bob", "alice", "carol", "bob"].map((user) =>

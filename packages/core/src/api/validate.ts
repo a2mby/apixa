@@ -1,6 +1,7 @@
 import { ConfigError } from "../errors/index.js";
 import { BUILTIN_CONVENTIONS, isBuiltinName } from "../operation/conventions.js";
 import { resolveRetryConfig } from "../request/retry.js";
+import { isResponseType, RESPONSE_TYPES } from "../transport/read-body.js";
 import { isKeyCase, KEY_CASES } from "../transform/keys.js";
 import type { HttpMethod } from "../types/http.js";
 import type {
@@ -48,6 +49,8 @@ export const RESOURCE_KEYS = new Set([
   "mock",
   "pagination",
   "slice",
+  "fileFields",
+  "multipart",
 ]);
 
 export const OPERATION_KEYS = new Set([
@@ -64,6 +67,9 @@ export const OPERATION_KEYS = new Set([
   "responseMiddleware",
   "transforms",
   "mock",
+  "dataFormat",
+  "multipart",
+  "responseType",
 ]);
 
 const RUN_KEYS = new Set(["kind", "run"]);
@@ -283,6 +289,8 @@ export function validateResource(
       throw new ConfigError((cause as Error).message, { cause });
     }
   }
+  validateFileFields(where, value.fileFields);
+  validateMultipart(where, value.multipart);
   validateLayer(where, value);
   if (value.operations !== undefined) {
     if (!isPlainObject(value.operations))
@@ -369,7 +377,99 @@ function validateOperation(where: string, name: string, value: unknown): void {
     value.idempotency,
     builtin ? BUILTIN_CONVENTIONS[name].access : (value.kind as "read" | "write"),
   );
+  if (value.responseType !== undefined && !isResponseType(value.responseType)) {
+    throw new ConfigError(
+      `${where}.responseType must be one of ${RESPONSE_TYPES.map((t) => JSON.stringify(t)).join(", ")} (got ${
+        typeof value.responseType === "string"
+          ? JSON.stringify(value.responseType)
+          : typeName(value.responseType)
+      }).`,
+    );
+  }
+  if (value.dataFormat !== undefined) {
+    if (value.dataFormat !== "json" && value.dataFormat !== "multipart") {
+      throw new ConfigError(
+        `${where}.dataFormat must be "json" or "multipart" (got ${JSON.stringify(value.dataFormat)}).`,
+      );
+    }
+    const kind = builtin ? BUILTIN_CONVENTIONS[name].access : value.kind;
+    if (kind !== "write") {
+      throw new ConfigError(`${where}.dataFormat: only write operations have a body to encode.`);
+    }
+  }
+  validateMultipart(where, value.multipart);
   validateLayer(where, value);
+}
+
+const FILE_FIELD_KEYS = new Set(["name"]);
+const MULTIPART_KEYS = new Set(["jsonFields", "nulls", "arrays"]);
+const UNSAFE_FIELD_NAMES = new Set(["__proto__", "constructor", "prototype"]);
+
+function validateFileFields(where: string, value: unknown): void {
+  if (value === undefined) return;
+  const at = `${where}.fileFields`;
+  const names: string[] = [];
+  if (Array.isArray(value)) {
+    names.push(...(value as unknown[]).map((n) => (typeof n === "string" ? n : "")));
+    if (names.some((n) => n === "")) {
+      throw new ConfigError(`${at} must list non-empty field names (strings).`);
+    }
+  } else if (isPlainObject(value)) {
+    for (const [field, options] of Object.entries(value)) {
+      names.push(field);
+      if (options === undefined) continue;
+      if (!isPlainObject(options)) {
+        throw new ConfigError(`${at}.${field} must be an options object like { name: "..." }.`);
+      }
+      assertKnownKeys(`${at}.${field}`, options, FILE_FIELD_KEYS);
+      if (options.name !== undefined && (typeof options.name !== "string" || options.name === "")) {
+        throw new ConfigError(`${at}.${field}.name must be a non-empty string.`);
+      }
+    }
+  } else {
+    throw new ConfigError(
+      `${at} must be an array of field names or an object like { avatar: { name } } (got ${typeName(value)}).`,
+    );
+  }
+  if (names.length === 0) throw new ConfigError(`${at} must declare at least one field.`);
+  if (new Set(names).size !== names.length) {
+    throw new ConfigError(`${at} lists a field more than once.`);
+  }
+  const unsafe = names.find((n) => UNSAFE_FIELD_NAMES.has(n));
+  if (unsafe !== undefined) throw new ConfigError(`${at} must not contain "${unsafe}".`);
+}
+
+function validateMultipart(where: string, value: unknown): void {
+  if (value === undefined) return;
+  const at = `${where}.multipart`;
+  if (!isPlainObject(value)) {
+    throw new ConfigError(
+      `${at} must be { jsonFields?, nulls?, arrays? } (got ${typeName(value)}).`,
+    );
+  }
+  assertKnownKeys(at, value, MULTIPART_KEYS);
+  if (
+    value.jsonFields !== undefined &&
+    (!Array.isArray(value.jsonFields) ||
+      value.jsonFields.some((f) => typeof f !== "string" || f === ""))
+  ) {
+    throw new ConfigError(`${at}.jsonFields must be an array of non-empty field names.`);
+  }
+  if (value.nulls !== undefined && value.nulls !== "empty" && value.nulls !== "omit") {
+    throw new ConfigError(
+      `${at}.nulls must be "empty" or "omit" (got ${JSON.stringify(value.nulls)}).`,
+    );
+  }
+  if (
+    value.arrays !== undefined &&
+    value.arrays !== "brackets" &&
+    value.arrays !== "indices" &&
+    value.arrays !== "repeat"
+  ) {
+    throw new ConfigError(
+      `${at}.arrays must be "brackets", "indices" or "repeat" (got ${JSON.stringify(value.arrays)}).`,
+    );
+  }
 }
 
 const IDEMPOTENCY_KEYS = new Set(["header", "generate"]);

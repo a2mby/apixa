@@ -1,7 +1,8 @@
-import { AbortError } from "../errors/index.js";
+import { AbortError, MockError } from "../errors/index.js";
 import type { MockStore } from "./store.js";
 import type { Row } from "./source.js";
 import type { MockResult } from "./execute.js";
+import type { MockFileMeta, MockFileStorage, MockStoredFile } from "./files.js";
 
 /**
  * What a custom operation's `mock` handler receives. Typed precisely in `types/mock-handler.ts`;
@@ -14,8 +15,19 @@ export interface MockHandlerContext {
   readonly query: Record<string, unknown>;
   readonly body: unknown;
   readonly signal: AbortSignal;
+  /** Read-only view of the client's virtual file store (see `mockFiles(api)`). */
+  readonly files: MockFilesHandle;
   readonly resource: string;
   readonly operation: string;
+}
+
+/** What a handler may do with the client's virtual files: read them. A missing file is `MOCK_NOT_FOUND`. */
+export interface MockFilesHandle {
+  /** Whether a reference (`mock-file://…`) or file id is stored. */
+  has(ref: string): boolean;
+  meta(ref: string): MockFileMeta;
+  get(ref: string): MockStoredFile;
+  list(filter?: { resource?: string; field?: string }): MockFileMeta[];
 }
 
 type Id = string | number;
@@ -44,6 +56,25 @@ function createStoreHandle(store: MockStore): MockStoreHandle {
   return Object.freeze(handle);
 }
 
+function createFilesHandle(storage: MockFileStorage): MockFilesHandle {
+  const missing = (ref: string) =>
+    new MockError(
+      "MOCK_NOT_FOUND",
+      `Mock file ${JSON.stringify(ref)} is not in the virtual file store.`,
+    );
+  const handle: MockFilesHandle = {
+    has: (ref) => storage.has(ref),
+    meta: (ref) => storage.meta(ref) ?? raise(missing(ref)),
+    get: (ref) => storage.get(ref) ?? raise(missing(ref)),
+    list: (filter) => storage.list(filter),
+  };
+  return Object.freeze(handle);
+}
+
+function raise(error: Error): never {
+  throw error;
+}
+
 export interface HandlerCall {
   resource: string;
   operation: string;
@@ -52,6 +83,7 @@ export interface HandlerCall {
   query: Record<string, unknown> | undefined;
   body: unknown;
   signal: AbortSignal;
+  files: MockFileStorage;
 }
 
 /**
@@ -78,6 +110,7 @@ export async function runMockHandler(
     query: { ...(call.query ?? {}) },
     body: call.body,
     signal: call.signal,
+    files: createFilesHandle(call.files),
     resource: call.resource,
     operation: call.operation,
   };

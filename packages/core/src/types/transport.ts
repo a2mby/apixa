@@ -3,6 +3,22 @@ import type { RetryConfig } from "./retry.js";
 
 export type ResponseType = "json" | "text" | "blob" | "arrayBuffer" | "stream";
 
+/** Every {@link ResponseType} that is not parsed as JSON. */
+export type BinaryResponseType = Exclude<ResponseType, "json">;
+
+/**
+ * The value an operation resolves to for a non-JSON `responseType`. `stream` is `null` for an
+ * empty (204/205) response. JSON is not listed: its type comes from the operation's entity or
+ * `response` metadata, as before.
+ */
+export type ResponseTypeData<RT extends BinaryResponseType> = RT extends "text"
+  ? string
+  : RT extends "blob"
+    ? Blob
+    : RT extends "arrayBuffer"
+      ? ArrayBuffer
+      : ReadableStream<Uint8Array> | null;
+
 /**
  * One logical request as request/response/error middleware sees it. Created once per call
  * (retries reuse it), so middleware runs once per call, not once per attempt.

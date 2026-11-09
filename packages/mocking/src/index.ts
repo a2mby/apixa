@@ -10,6 +10,9 @@
  */
 
 export { defineMockApi } from "./mock-api.js";
+/** The virtual file store of mocked Core resources (see `mockFiles(api)`). */
+export { mockFiles, isMockFileRef, MockFileStorage } from "@apixa/core";
+export type { MockFileMeta, MockStoredFile } from "@apixa/core";
 export type {
   MockApi,
   MockApiConfig,

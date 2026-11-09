@@ -75,13 +75,14 @@ Every call then runs through `request/pipeline.ts`:
 3. Run request middleware (root → resource → operation; `middleware.onRequest` before
    `requestMiddleware[]`).
 4. Apply request key transforms. Query keys convert when the URL is built; body keys convert
-   at serialization.
+   at serialization. Values are never rewritten, so `File` / `Blob` pass through untouched.
 5. For HTTP only, check the final URL against the API origin after middleware. Any other
    origin is a `SecurityError`, and nothing is sent.
 6. Execute. For HTTP, transport attempts run with retry, exponential backoff with jitter, and
    `Retry-After`. Middleware does not re-run on retries. For a mocked resource, the resolved
    builtin runs against its `MockStore`, or `ctx.request()` is routed by method and relative
-   path. No transport is involved.
+   path. No transport is involved. Writes carrying `File` / `Blob` values first move them into
+   the client's virtual file store (see "File handling"); records keep string references.
 7. Apply response key transforms and operation shaping (`exists`, `getMany`, `findFirst`,
    `slice`).
 8. Run response middleware.
@@ -92,19 +93,103 @@ retries and backoff, and is reported as `TimeoutError`, never as `AbortError`. O
 middleware runs (root → resource → operation). A handler that throws replaces the error; one
 that returns a value other than `undefined` recovers the call.
 
+## React peer guard (v1.1.0, implemented)
+
+`@tanstack/react-query` is an optional peer of the single package. An unresolved import is an
+error type that behaves as `any`, and `any & X` is `any`, so hook results built on TanStack's
+`UseQueryResult` would silently lose every type. `packages/react/src/peer.ts` probes
+`unknown extends QueryClient` and every hook overload returns `RequireTanStackQuery<Result>`:
+the real result when TanStack resolves, otherwise a named error interface. Verified by
+`scripts/verify-type-consumers.mjs` (npm, packed tarball, outside the workspace). Limit: under
+`skipLibCheck: true` TypeScript cannot report the unresolved module itself; the guard type is the
+detectable failure. `ApixaProvider`, `QueryClient` and the hydration components extend/take
+TanStack types and are not guarded (they need the package at runtime anyway).
+
+## Downloads and binary responses (v1.2.0, implemented)
+
+`responseType` already reached the Fetch transport per call; v1.2.0 completes it inside the same
+operation system. A declarative operation can declare `responseType` (precedence: call option >
+operation > JSON); `pipeline.ts` validates it, passes it to the transport and, for non-JSON types,
+skips key transforms and JSON shaping (`fromHttp`, `slice`). `transport/read-body.ts` reads a
+successful body as requested but always reads an error body by content type, and returns typed
+empty values for 204/205. Types: `ResponseTypeData` plus `ApplyResponseType` (runtime literal,
+beneath `defineApi<T>()` metadata) and `CallData` (per call, `ctx.request` overloads).
+Metadata is the existing `ApiResponse`; `http/content-disposition.ts` is a pure parser. Mock
+operations read the v1.1.0 `MockFileStorage` through a read-only `files` handle, and
+`finalizeMockResponse` (`mock/files.ts`) coerces results to `responseType` and synthesizes the
+content headers. No new package, transport interface or download client.
+
+## File handling (v1.1.0, implemented)
+
+Files travel inside the existing operations; there is no separate upload client.
+
+**Declaring file fields.** `fileFields: ["avatar", "documents"]` or
+`fileFields: { avatar: { name: "profile_image" } }` on a resource. Names are checked against the
+entity (compile time) and must be `string` / `string[]` fields (nullable allowed). Reads keep
+those types. Eligible writes (`create`, `update`, `patch`, `upsert`, `createMany`) accept
+`File | Blob` and `readonly (File | Blob)[]` for them, preserving optionality and `null`. Explicit
+body types and `dataFormat: "json"` keep the entity types; custom operations are not rewritten.
+A stored `string` is not accepted as a file input — omit the key to keep the file.
+
+**Choosing the format** (at serialization, after middleware and key transforms):
+
+1. Caller-built `FormData` / `Blob` / string / buffers / streams are sent as is; for `FormData`
+   Core removes `Content-Type` so the transport generates the boundary.
+2. Plain objects and arrays: JSON by default; multipart automatically when the body contains a
+   `File` / `Blob` anywhere; `dataFormat: "multipart"` always encodes.
+3. `dataFormat: "json"` with binary values throws `SerializationError`. Binary values are never
+   JSON-stringified. `dataFormat` exists on write operations only; `ctx.request({ dataFormat })`
+   offers the same override to function operations.
+
+**Multipart encoding** (`http/multipart.ts`):
+
+| Value                                                           | Wire                                                              |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- |
+| string, number, boolean, bigint                                 | text part (`String(value)`)                                       |
+| `Date`                                                          | ISO-8601 text                                                     |
+| `File` / `Blob`                                                 | file part; name, type, bytes kept (a bare `Blob` is `blob`)       |
+| `undefined`                                                     | omitted                                                           |
+| `null`                                                          | empty text part; `multipart.nulls: "omit"` drops it               |
+| nested object                                                   | `parent[child]`, recursively                                      |
+| array of scalars                                                | `key[]`; `multipart.arrays` → `"indices"` (`key[0]`) / `"repeat"` |
+| array of objects                                                | `key[0][field]`                                                   |
+| array of files                                                  | repeated `key` (or alias)                                         |
+| top-level array body (`createMany`)                             | `items[0][field]`                                                 |
+| `multipart.jsonFields` entry                                    | one part with `JSON.stringify(value)`                             |
+| function, symbol, class instance, `FileList`, cycle, depth > 32 | `SerializationError` with the path only                           |
+
+`fileFields[name].name` aliases a top-level part name verbatim; `multipart` (resource, overridable
+per operation) holds `jsonFields`, `nulls` and `arrays`. Aliases and `jsonFields` use public field
+names and follow the request key transform. Serialization runs once per logical call: the built
+`FormData` is reused by every retry attempt, `ReadableStream` bodies are never retried, and the
+caller's object is never mutated. Convert a `FileList` explicitly (`Array.from(input.files)`) before
+passing it; Core takes native `File` values only, so form libraries such as React Hook Form work
+without an adapter.
+
+**Mock file storage** (`mock/files.ts`, `mock/files-exec.ts`). Each client has one in-memory
+`MockFileStorage`. A mocked write on a resource with `fileFields` stages the files (bytes are
+copied; ids are UUIDs; references look like `mock-file://<id>/<name>`), stores string references in
+the record, then removes files no longer referenced (replacement, `update` dropping a field,
+`delete`, `deleteMany`). Any failure removes the staged files and leaves records untouched. A
+`Blob` in an undeclared or nested field is a `MockError` (`MOCK_INVALID_INPUT`). `mockFiles(api)`
+(also `apixa/mocking`) lists, retrieves (`blob()` / `bytes()` / `text()` return fresh copies),
+deletes and clears files; `resetMock` restores records and drops the files. No object URLs are ever
+created. Custom declarative `mock` handlers receive the raw body. Disks, fixtures and lifecycle
+policies are planned (phase 6), not implemented.
+
 ## Source map (`packages/core`)
 
-| Responsibility       | Home         | Notes                                                                  |
-| -------------------- | ------------ | ---------------------------------------------------------------------- |
-| Client construction  | `api/`       | `defineApi`, `defineApis`, `resetMock`, validation, resource builder   |
-| Operation selection  | `operation/` | Builtin conventions, precedence (`expand.ts`), argument parsing        |
-| Execution lifecycle  | `request/`   | `pipeline.ts` (single lifecycle), `retry.ts`                           |
-| Mock engine          | `mock/`      | `MockStore`, data sources, builtin/route executors, dataset metadata   |
-| Key transforms       | `transform/` | Runtime converters (types in `types/transform.ts`)                     |
-| URL / headers / body | `http/`      | Base URL parsing, origin checks, header providers, query, body         |
-| Fetch transport      | `transport/` | Default transport                                                      |
-| Errors               | `errors/`    | `ApiError` + HTTP/Network/Timeout/Abort/Config/Security/Transform/Mock |
-| Types                | `types/`     | Definition, inference (runtime-authoritative), transforms, datasets    |
+| Responsibility       | Home         | Notes                                                                                |
+| -------------------- | ------------ | ------------------------------------------------------------------------------------ |
+| Client construction  | `api/`       | `defineApi`, `defineApis`, `resetMock`, validation, resource builder                 |
+| Operation selection  | `operation/` | Builtin conventions, precedence (`expand.ts`), argument parsing                      |
+| Execution lifecycle  | `request/`   | `pipeline.ts` (single lifecycle), `retry.ts`                                         |
+| Mock engine          | `mock/`      | `MockStore`, data sources, executors, dataset metadata, file store                   |
+| Key transforms       | `transform/` | Runtime converters (types in `types/transform.ts`)                                   |
+| URL / headers / body | `http/`      | Base URL parsing, origin checks, header providers, query, JSON/multipart body        |
+| Fetch transport      | `transport/` | Default transport                                                                    |
+| Errors               | `errors/`    | `ApiError` + HTTP/Network/Timeout/Abort/Config/Security/Transform/Serialization/Mock |
+| Types                | `types/`     | Definition, inference (runtime-authoritative), transforms, datasets                  |
 
 ## Architecture contract (v1.0.0)
 

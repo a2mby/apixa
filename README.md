@@ -24,10 +24,37 @@ Apixa publishes one npm package: `apixa` (`1.0.0-rc.0`, ESM, Node.js 22+). The R
 locally and has not been published. After release, install it with:
 
 ```sh
+# Core, Mocking and the root entry: this is all you need
 npm install apixa
-# React applications also install the optional peers:
-npm install apixa react @tanstack/react-query
+
+# React applications: add TanStack Query (React 18 or 19 is already in your app)
+npm install apixa @tanstack/react-query
 ```
+
+Framework integrations are **optional peer dependencies**, so `npm install apixa` never pulls in a
+framework you do not use:
+
+| You import                                   | You must also have installed                                  |
+| -------------------------------------------- | ------------------------------------------------------------- |
+| `apixa`, `apixa/core`, `apixa/mocking*`      | nothing                                                       |
+| `apixa/react`, `apixa/react/advanced`        | `react` (^18 or ^19) and `@tanstack/react-query` (^5.90.1)    |
+| future framework subpaths (e.g. `apixa/vue`) | that framework's own peers, documented when the subpath ships |
+
+npm does not install optional peers for you. `apixa/react` uses the copies in _your_ application;
+Apixa does not bundle them.
+
+**Troubleshooting: React hooks lose their types.** If `@tanstack/react-query` is missing (or not
+resolvable from `node_modules/apixa`, for example in some monorepo layouts), `useResource`,
+`useResourceQuery` and `useResourceMutation` cannot infer their results. Apixa types them as
+`ApixaMissingPeer_Install_tanstack_react_query`, so the first property you read (`users.data`) is
+a compile error. Fix it with `npm install @tanstack/react-query`. `skipLibCheck: true` hides
+TypeScript's own "Cannot find module" error inside `node_modules`; `skipLibCheck: false` shows it
+(TS2307). At runtime the missing package is a module-not-found error when `apixa/react` loads.
+
+Downloads are ordinary operations: declare `responseType: "blob"` (or `"arrayBuffer"`, `"text"`) on an
+operation and the result is typed (`Blob`, …); use `{ full: true }` for status and headers and
+`parseContentDisposition(headers).filename` for the file name. See the
+[Core README](packages/core/README.md#file-downloads-and-binary-responses).
 
 ```ts
 import { defineApi, defineApis, defineMockApi } from "apixa";
@@ -52,9 +79,10 @@ import { QueryClient as ServerQueryClient, dehydrate } from "apixa/react/advance
 
 Framework subpaths keep integrations isolated. Root, Core and Mocking imports require neither
 React nor TanStack Query. React and TanStack Query are optional peers, left external to the
-library build; install them only when using `apixa/react`. Missing peers produce the loader's
-module-not-found error when a React entry is imported. Future `apixa/vue` and `apixa/angular`
-subpaths are planned, not implemented.
+library build; install them only when using `apixa/react` (see the install table above). Missing
+peers produce the loader's module-not-found error when a React entry is imported. Future
+`apixa/vue` and `apixa/angular` subpaths are planned, not implemented; each will declare its own
+optional peers the same way.
 
 Core, Mocking, React and shared integration helpers remain private workspace modules. Their
 canonical code is compiled into one distribution with shared runtime chunks. No scoped package

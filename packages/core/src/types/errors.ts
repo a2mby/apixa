@@ -14,6 +14,8 @@ export type ApiErrorCode =
   | "SECURITY"
   /** Key transformation failed (for example two keys collapse into one). */
   | "TRANSFORM"
+  /** A request body could not be encoded (unsupported value, or binary under `dataFormat: "json"`). */
+  | "SERIALIZATION"
   /** Mock record missing (`status: 404`). */
   | "MOCK_NOT_FOUND"
   /** Mock record id already exists (`status: 409`). */

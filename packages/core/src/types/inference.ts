@@ -1,6 +1,7 @@
 import type { AllBuiltinOpName, OperationFnContext } from "./builtins.js";
 import type {
   ApiRootConfig,
+  FileFieldOptions,
   OperationDefinition,
   OperationRunDefinition,
   ResourceDefinition,
@@ -8,7 +9,13 @@ import type {
 import type { PathParams, QueryParams } from "./http.js";
 import type { MockDatasetCatalog, MockDatasetId } from "./mock-datasets.js";
 import type { KeyCase, TransformKeys } from "./transform.js";
-import type { ApiResponse, RequestOptions } from "./transport.js";
+import type {
+  ApiResponse,
+  BinaryResponseType,
+  RequestOptions,
+  ResponseType,
+  ResponseTypeData,
+} from "./transport.js";
 import type { OPERATION_METADATA, OperationMetadata } from "../api/metadata.js";
 
 export type { BuiltinOpName, ExtendedBuiltinOpName, AllBuiltinOpName } from "./builtins.js";
@@ -190,6 +197,55 @@ type UpdateOf<R, Meta, Root extends RootTypes> =
       : unknown
     : unknown;
 
+// ---------------------------------------------------------------------------------------------
+// File fields: reads keep the entity's `string` / `string[]`; eligible write inputs swap those
+// fields for native `File | Blob` values. Names refer to the public entity (post response keys).
+// ---------------------------------------------------------------------------------------------
+
+type FileInput = File | Blob;
+
+/** Declared file-field names of a resource config; `never` when absent or not a literal. */
+type FileNamesOf<R> = R extends { fileFields: infer F }
+  ? F extends readonly (infer N)[]
+    ? Extract<N, string>
+    : F extends object
+      ? Extract<keyof F, string>
+      : never
+  : never;
+
+/** File fields that apply to builtin `Name`: none when that operation forces `dataFormat: "json"`. */
+type FileNamesFor<R, Name extends string> = [FileNamesOf<R>] extends [never]
+  ? never
+  : string extends FileNamesOf<R>
+    ? never
+    : Name extends keyof ResourceOpsOf<R>
+      ? ResourceOpsOf<R>[Name] extends { dataFormat: "json" }
+        ? never
+        : FileNamesOf<R>
+      : FileNamesOf<R>;
+
+/** `string` → file, `string[]` → file array; `null` / `undefined` stay. */
+type FileInputOf<V> = V extends string
+  ? FileInput
+  : V extends readonly string[]
+    ? readonly FileInput[]
+    : V;
+
+type WithFileInputs<Body, Names extends string> = [Names] extends [never]
+  ? Body
+  : Known<Body> extends true
+    ? Simplify<{ [K in keyof Body]: K extends Names ? FileInputOf<Body[K]> : Body[K] }>
+    : Body;
+
+/** Entity keys whose type can hold a file reference (`string`, `string[]`, optionally nullable). */
+type FileFieldCandidates<E> = {
+  [K in keyof E & string]-?: [NonNullable<E[K]>] extends [never]
+    ? never
+    : [NonNullable<E[K]>] extends [string | readonly string[]]
+      ? K
+      : never;
+}[keyof E & string];
+
 /** `getAll` element list: metadata `list`, else entity array. */
 export type ListOf<R, Meta = {}, Root extends RootTypes = RootTypes> = Meta extends {
   list: infer L;
@@ -242,17 +298,33 @@ type DefaultFilter<R, Meta, Root extends RootTypes> =
 type EntityBuiltinOps<R, Meta, Root extends RootTypes> = {
   getAll: { path: ""; response: PaginatedListOf<R, Meta, Root>; query: PaginationQueryOf<R, Meta> };
   getById: { path: "/:id"; response: EntityOf<R, Meta, Root> };
-  create: { path: ""; body: CreateOf<R, Meta, Root>; response: EntityOf<R, Meta, Root> };
-  update: { path: "/:id"; body: UpdateOf<R, Meta, Root>; response: EntityOf<R, Meta, Root> };
+  create: {
+    path: "";
+    body: WithFileInputs<CreateOf<R, Meta, Root>, FileNamesFor<R, "create">>;
+    response: EntityOf<R, Meta, Root>;
+  };
+  update: {
+    path: "/:id";
+    body: WithFileInputs<UpdateOf<R, Meta, Root>, FileNamesFor<R, "update">>;
+    response: EntityOf<R, Meta, Root>;
+  };
   delete: { path: "/:id"; response: void };
   getBySlug: { path: "/slug/:slug"; response: EntityOf<R, Meta, Root> };
-  patch: { path: "/:id"; body: UpdateOf<R, Meta, Root>; response: EntityOf<R, Meta, Root> };
-  upsert: { path: "/:id"; body: UpdateOf<R, Meta, Root>; response: EntityOf<R, Meta, Root> };
+  patch: {
+    path: "/:id";
+    body: WithFileInputs<UpdateOf<R, Meta, Root>, FileNamesFor<R, "patch">>;
+    response: EntityOf<R, Meta, Root>;
+  };
+  upsert: {
+    path: "/:id";
+    body: WithFileInputs<UpdateOf<R, Meta, Root>, FileNamesFor<R, "upsert">>;
+    response: EntityOf<R, Meta, Root>;
+  };
   count: { path: "/count"; response: number; query: QueryOf<Meta> };
   search: { path: "/search"; response: ListOf<R, Meta, Root>; query: FilterOf<R, Meta, Root> };
   createMany: {
     path: "/bulk";
-    body: CreateOf<R, Meta, Root>[];
+    body: WithFileInputs<CreateOf<R, Meta, Root>, FileNamesFor<R, "createMany">>[];
     response: EntityOf<R, Meta, Root>[];
   };
   deleteMany: { path: "/bulk"; body: IdOf<R, Meta, Root>[]; response: void };
@@ -323,6 +395,25 @@ type PathParamsOf<Path extends string> = [PathParamName<Path>] extends [never]
   : { [K in PathParamName<Path>]: string | number };
 
 type InferResponse<Op> = Op extends { response: infer R } ? R : unknown;
+
+/**
+ * A literal non-JSON `responseType` on the runtime operation sets its `response` type. Applied
+ * after the runtime override and before `defineApi<T>()` metadata, so explicit metadata wins. A
+ * widened `ResponseType` (not a literal) leaves the type alone.
+ */
+type ApplyResponseType<Op> = Op extends { responseType: infer RT extends BinaryResponseType }
+  ? [ResponseType] extends [RT]
+    ? Op
+    : Omit<Op, "response"> & { response: ResponseTypeData<RT> }
+  : Op;
+
+/** Data type for one call: a literal non-JSON per-call `responseType` replaces `Data`. */
+type CallData<Data, O> = O extends { responseType: infer RT extends ResponseType }
+  ? [ResponseType] extends [RT]
+    ? Data
+    : DataFor<Data, RT>
+  : Data;
+type DataFor<Data, RT> = RT extends BinaryResponseType ? ResponseTypeData<RT> : Data;
 type InferQuery<Op> = Op extends { query: infer Q } ? Q : QueryParams;
 type DefaultMethod<Name extends string> = Name extends keyof Conventions
   ? Conventions[Name]["method"]
@@ -340,8 +431,8 @@ type InferBody<Op> = Op extends { body: infer B } ? B : unknown;
 export type CallResult<Data, O> = [O] extends [undefined]
   ? Data
   : O extends { full: true }
-    ? ApiResponse<Data>
-    : Data;
+    ? ApiResponse<CallData<Data, O>>
+    : CallData<Data, O>;
 
 type BuildOperationFn<
   Arity extends 0 | 1 | 2,
@@ -522,9 +613,11 @@ export type MaybeOpName<R> = {
 }[AllBuiltinOpName];
 
 type EffectiveOpDef<Name extends AllBuiltinOpName, R, Meta, Root extends RootTypes> = ApplyPayload<
-  MergeOp<
-    EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
-    Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+  ApplyResponseType<
+    MergeOp<
+      EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
+      Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+    >
   >,
   Meta,
   Name,
@@ -593,7 +686,7 @@ type CustomClientFn<R, Meta, Root extends RootTypes, Name extends CustomOpName<R
       WithOpTransforms<R, ResourceOpsOf<R>[Name]>,
       Extract<Name, string>,
       ApplyPayload<
-        ResourceOpsOf<R>[Name],
+        ApplyResponseType<ResourceOpsOf<R>[Name]>,
         Meta,
         Extract<Name, string>,
         WithOpTransforms<R, ResourceOpsOf<R>[Name]>,
@@ -723,6 +816,12 @@ type ValidateIdempotency<Name, Op> = Op extends { idempotency: infer I }
       : { idempotency: ConfigTypeError<`idempotency is only for write operations`> }
   : unknown;
 
+type ValidateDataFormat<Name, Op> = Op extends { dataFormat: unknown }
+  ? [EffectiveKind<Name, Op>] extends ["write"]
+    ? unknown
+    : { dataFormat: ConfigTypeError<`dataFormat is only for write operations`> }
+  : unknown;
+
 type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
   ? Name extends AllBuiltinOpName
     ? unknown
@@ -759,6 +858,7 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
             : unknown) &
           ValidateMethodKind<Name, Op> &
           ValidateIdempotency<Name, Op> &
+          ValidateDataFormat<Name, Op> &
           (Name extends AllBuiltinOpName
             ? unknown
             : (Op extends { method: string }
@@ -811,7 +911,23 @@ type MockMatchesMeta<M, Meta> = Meta extends { entity: infer E }
       : unknown
   : unknown;
 
-type ValidateResource<R, Meta> = Exact<R, ResourceDefinition> &
+/**
+ * `fileFields` against the public entity. Array form: each name must be a file-capable entity key
+ * (also gives autocomplete). Object form: same keys, options checked exactly. An entity that is not
+ * known (no metadata / untyped mock) cannot be checked.
+ */
+type ValidateFileFields<F, E> =
+  Known<E> extends true
+    ? F extends readonly unknown[]
+      ? readonly FileFieldCandidates<E>[]
+      : {
+          [K in keyof F]: K extends FileFieldCandidates<E>
+            ? Exact<F[K], FileFieldOptions> & FileFieldOptions
+            : ConfigTypeError<`"${K & string}" is not a string or string[] field of the entity`>;
+        }
+    : unknown;
+
+type ValidateResource<R, Meta, Root extends RootTypes> = Exact<R, ResourceDefinition> &
   (R extends { readOnly: true; writeOnly: true }
     ? { writeOnly: ConfigTypeError<"readOnly and writeOnly cannot both be true"> }
     : unknown) &
@@ -833,6 +949,9 @@ type ValidateResource<R, Meta> = Exact<R, ResourceDefinition> &
           };
         }) &
   (R extends { mock: infer M } ? { mock: ValidateMock<M, Meta> } : unknown) &
+  (R extends { fileFields: infer F }
+    ? { fileFields: ValidateFileFields<F, EntityOf<R, Meta, Root>> }
+    : unknown) &
   (R extends { transforms: infer T }
     ? { transforms: Exact<T, { request: unknown; response: unknown }> }
     : unknown);
@@ -842,7 +961,11 @@ export type ValidateConfig<Meta, Config> = Exact<Config, ApiRootConfig> &
   (Config extends { resources: infer Res }
     ? {
         resources: {
-          [K in keyof Res]: ValidateResource<Res[K], K extends keyof Meta ? Meta[K] : {}>;
+          [K in keyof Res]: ValidateResource<
+            Res[K],
+            K extends keyof Meta ? Meta[K] : {},
+            RootTypesOf<Config>
+          >;
         };
       }
     : unknown) &

@@ -1,6 +1,7 @@
 import { ConfigError } from "../errors/index.js";
 import { extractPathParamNames, joinPath } from "../http/path.js";
 import { MockStore, normalizeMockSource, type BuiltinIntent } from "../mock/index.js";
+import { DEFAULT_MULTIPART, type MultipartRuntime } from "../http/multipart.js";
 import {
   BUILTIN_CONVENTIONS,
   expandOperations,
@@ -20,7 +21,9 @@ import { convertKey } from "../transform/keys.js";
 import type { OperationFn, OperationFnContext, OperationFnRequestInit } from "../types/builtins.js";
 import { validateMethodKind } from "./validate.js";
 import type {
+  FileFieldOptions,
   LayerOptions,
+  MultipartOptions,
   OperationDefinition,
   OperationRunDefinition,
 } from "../types/definition.js";
@@ -32,6 +35,7 @@ import {
 import type { HeadersSource, PathParams, QueryParams } from "../types/http.js";
 import type { RetryOption } from "../types/retry.js";
 import type { RequestOptions } from "../types/transport.js";
+import { randomUUID } from "../utils/uuid.js";
 import { applyResourceSliceToListResult, type ResourceSlice } from "../utils/slice.js";
 
 type Fn = (...args: unknown[]) => Promise<unknown>;
@@ -63,6 +67,38 @@ function prepareLayers(where: string, layers: Array<LayerOptions | undefined>) {
     onError: present.flatMap((l) => (l.middleware?.onError ? [l.middleware.onError] : [])),
     requestKeys: pick(...present.map((l) => l.transforms?.request?.keys)),
     responseKeys: pick(...present.map((l) => l.transforms?.response?.keys)),
+  };
+}
+
+/** Public file-field names → wire names (request key transform), with optional verbatim aliases. */
+function prepareFiles(
+  def: Record<string, unknown>,
+  declared: OperationDefinition | undefined,
+  requestKeys: ReturnType<typeof prepareLayers>["requestKeys"],
+): Pick<PreparedOperation, "dataFormat" | "multipart" | "fileFields"> {
+  const wire = (field: string) => (requestKeys ? convertKey(field, requestKeys) : field);
+  const config = def.fileFields as readonly string[] | Record<string, FileFieldOptions> | undefined;
+  const fields = config === undefined ? [] : Array.isArray(config) ? config : Object.keys(config);
+  const aliases = new Map<string, string>();
+  if (config !== undefined && !Array.isArray(config)) {
+    for (const [field, options] of Object.entries(config as Record<string, FileFieldOptions>)) {
+      if (options?.name !== undefined) aliases.set(wire(field), options.name);
+    }
+  }
+  const layers = [def.multipart, declared?.multipart] as Array<MultipartOptions | undefined>;
+  const merged = { ...layers[0], ...layers[1] };
+  const multipart: MultipartRuntime = {
+    options: {
+      nulls: merged.nulls ?? DEFAULT_MULTIPART.options.nulls,
+      arrays: merged.arrays ?? DEFAULT_MULTIPART.options.arrays,
+    },
+    aliases,
+    jsonFields: new Set((merged.jsonFields ?? []).map(wire)),
+  };
+  return {
+    dataFormat: declared?.dataFormat,
+    multipart,
+    fileFields: fields.length > 0 ? fields.map(wire) : undefined,
   };
 }
 
@@ -105,7 +141,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   };
   if (def.mock !== undefined) {
     const source = normalizeMockSource(name, def.mock);
-    runtime.mock = { source, store: new MockStore(source) };
+    runtime.mock = { source, store: new MockStore(source), files: client.files };
   }
   const slice = def.slice as ResourceSlice | undefined;
   const resourceParamNames = extractPathParamNames(resourcePath);
@@ -141,6 +177,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
         fn,
         convention?.access ?? (definition as OperationRunDefinition).kind!,
         prepareLayers(where, [root, resourceLayer]),
+        def,
       );
       metadata[opName] = Object.freeze({
         kind: convention?.access ?? (definition as OperationRunDefinition).kind!,
@@ -166,6 +203,8 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       hasBody,
       ...prepareLayers(where, [root, resourceLayer, declared]),
     };
+    Object.assign(op, prepareFiles(def, declared, op.requestKeys));
+    if (declared.responseType !== undefined) op.responseType = declared.responseType;
     if (declared.mock !== undefined) {
       op.mockHandler = declared.mock as PreparedOperation["mockHandler"];
     }
@@ -205,19 +244,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   return { client: out, store: runtime.mock?.store };
 }
 
-/** `crypto.randomUUID()` (browsers, Node 19+), else a v4 UUID from `getRandomValues`. */
-function defaultIdempotencyKey(): string {
-  const webCrypto = (globalThis as { crypto?: Crypto }).crypto;
-  if (typeof webCrypto?.randomUUID === "function") return webCrypto.randomUUID();
-  if (typeof webCrypto?.getRandomValues !== "function") {
-    throw new ConfigError("idempotency: no Web Crypto in this runtime; pass idempotency.generate.");
-  }
-  const bytes = webCrypto.getRandomValues(new Uint8Array(16));
-  bytes[6] = (bytes[6]! & 0x0f) | 0x40;
-  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
-  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
+const defaultIdempotencyKey = () => randomUUID();
 
 function isRunDefinition(value: unknown): value is OperationRunDefinition {
   return isRecord(value) && typeof value.run === "function";
@@ -368,6 +395,7 @@ function functionOperation(
   fn: OperationFn,
   kind: "read" | "write",
   layers: ReturnType<typeof prepareLayers>,
+  def: Record<string, unknown>,
 ): Fn {
   const base: PreparedOperation = {
     name: opName,
@@ -376,6 +404,7 @@ function functionOperation(
     relativePath: "",
     hasBody: false,
     ...layers,
+    ...prepareFiles(def, undefined, layers.requestKeys),
   };
   const ctx: OperationFnContext = {
     resource: runtime.name,
@@ -399,6 +428,7 @@ function functionOperation(
         params: init.params,
         query: init.query,
         body: init.body,
+        dataFormat: init.dataFormat,
         hasBody: init.body !== undefined,
         routed: true,
         options,

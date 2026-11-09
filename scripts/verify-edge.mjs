@@ -34,7 +34,7 @@ function run(command, args, cwd, quiet = false) {
 }
 
 const CORE_SCENARIO = `
-import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi } from "apixa";
+import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, parseContentDisposition } from "apixa";
 import "apixa/mocking/register";
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 export async function run() {
@@ -59,6 +59,13 @@ export async function run() {
   setTimeout(() => controller.abort(), 10);
   const aborted = await pending;
   out.aborted = aborted instanceof ApiError && !(aborted instanceof HttpError);
+  const pdf = new Uint8Array([37, 80, 68, 70, 0, 255]);
+  const downloader = defineApi({ baseURL: "https://upstream.test", transport: createFetchTransport(async () => new Response(pdf, { headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="r.pdf"' } })), resources: { docs: { path: "/docs", operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } } });
+  const download = await downloader.docs.file("1", { full: true });
+  out.download = { isBlob: download.data instanceof Blob, type: download.data.type, bytes: Array.from(new Uint8Array(await download.data.arrayBuffer())), filename: parseContentDisposition(download.headers).filename };
+  const mockedDownload = defineApi({ baseURL: "https://edge.test", resources: { docs: { path: "/docs", fileFields: ["file"], mock: [{ id: "1", name: "Seed", file: null }], operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "arrayBuffer", mock: ({ params, store, files }) => files.get(store.get(params.id).file).bytes() } } } } });
+  const uploaded = await mockedDownload.docs.create({ id: "2", name: "Up", file: new File([pdf], "u.pdf", { type: "application/pdf" }) });
+  out.mockDownload = Array.from(new Uint8Array(await mockedDownload.docs.file(uploaded.id)));
   out.nodeGlobals = { process: typeof globalThis.process, Buffer: typeof globalThis.Buffer, require: typeof globalThis.require };
   return out;
 }`;
@@ -82,6 +89,16 @@ function expectCore(out, label) {
   assert.match(out.live.url, /^https:\/\/upstream\.test\/users/, `${label}: fetch URL`);
   assert.equal(out.httpError, true, `${label}: HttpError identity and status`);
   assert.equal(out.aborted, true, `${label}: cancellation surfaces as an ApiError`);
+  assert.deepEqual(
+    out.download,
+    { isBlob: true, type: "application/pdf", bytes: [37, 80, 68, 70, 0, 255], filename: "r.pdf" },
+    `${label}: binary download, byte-exact with metadata`,
+  );
+  assert.deepEqual(
+    out.mockDownload,
+    [37, 80, 68, 70, 0, 255],
+    `${label}: mock download from the virtual file store`,
+  );
 }
 function expectAdvanced(out, label) {
   assert.deepEqual(

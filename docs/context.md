@@ -1,6 +1,6 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** [v1.0.0](../versions/v1.0.0/) in progress — Query integration workstream. Last shipped: [v0.11.0](../versions/v0.11.0/).
+> **Current milestone:** [v1.2.0](../versions/v1.2.0/) implemented, owner sign-off open — File Downloads & Binary Responses (Advanced File Handling, phase 3). Previous: [v1.1.0](../versions/v1.1.0/) (file fields and uploads; implemented, owner sign-off open). Last shipped: [v0.11.0](../versions/v0.11.0/); [v1.0.0](../versions/v1.0.0/) is a published release candidate (`1.0.0-rc.0`), not yet stable.
 > Previous: [v0.10.0](../versions/v0.10.0/) (Fully customizable resource operations, 11 always-on builtins); [v0.9.0](../versions/v0.9.0/) (Flatten Core mock syntax); [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`); [v0.7.0](../versions/v0.7.0/); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 

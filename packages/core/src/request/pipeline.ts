@@ -11,17 +11,22 @@ import {
   assertSameOrigin,
   buildQueryString,
   buildUrl,
+  containsBinary,
   interpolatePath,
   requestOrigin,
   resolveHeaders,
   serializeBody,
   type BaseUrl,
+  type MultipartRuntime,
 } from "../http/index.js";
 import {
   routeToIntent,
   runBuiltin,
   runMockHandler,
+  finalizeMockResponse,
+  runMockWithFiles,
   type BuiltinIntent,
+  type MockFileStorage,
   type MockHandlerContext,
   type MockResult,
   type MockSource,
@@ -29,7 +34,7 @@ import {
   type PaginationMode,
 } from "../mock/index.js";
 import { transformKeys, type KeyCase } from "../transform/keys.js";
-import type { QueryArrayFormat } from "../types/definition.js";
+import type { DataFormat, QueryArrayFormat } from "../types/definition.js";
 import type { HeadersSource, HttpMethod, PathParams, QueryParams } from "../types/http.js";
 import type {
   ErrorMiddleware,
@@ -37,7 +42,14 @@ import type {
   ResponseMiddleware,
 } from "../types/middleware.js";
 import type { ResolvedRetryConfig } from "../types/retry.js";
-import type { ApiRequest, ApiResponse, RequestOptions, Transport } from "../types/transport.js";
+import type {
+  ApiRequest,
+  ApiResponse,
+  RequestOptions,
+  ResponseType,
+  Transport,
+} from "../types/transport.js";
+import { isResponseType, RESPONSE_TYPES } from "../transport/read-body.js";
 import {
   computeBackoffMs,
   decideRetry,
@@ -52,13 +64,15 @@ export interface ClientRuntime {
   transport: Transport;
   queryArrayFormat: QueryArrayFormat;
   querySerializer?: (query: QueryParams) => string;
+  /** Virtual file store shared by this client's mocked resources. */
+  files: MockFileStorage;
 }
 
 /** Resource-wide state, fixed at construction (mock store state is the only mutable part). */
 export interface ResourceRuntime {
   name: string;
   path: string;
-  mock?: { store: MockStore; source: MockSource };
+  mock?: { store: MockStore; source: MockSource; files: MockFileStorage };
   pagination?: PaginationMode;
 }
 
@@ -81,6 +95,17 @@ export interface PreparedOperation {
   responseKeys?: KeyCase;
   /** Custom declarative operation: how it behaves on a mocked resource (absent → unsupported). */
   mockHandler?: (context: MockHandlerContext) => unknown;
+  /** How the response body is read; absent → JSON. A per-call `responseType` option wins. */
+  responseType?: ResponseType;
+  /** Body encoding override; absent → JSON, or multipart automatically for binary values. */
+  dataFormat?: DataFormat;
+  /** Multipart encoding rules, with field names already in wire form. */
+  multipart?: MultipartRuntime;
+  /**
+   * Mocked resources only: file-field wire names. Their `File` / `Blob` values are moved into the
+   * mock file store and replaced by string references.
+   */
+  fileFields?: readonly string[];
   /** Opt-in idempotency header for writes (resolved at construction). */
   idempotency?: { header: string; generate: () => string };
 }
@@ -107,6 +132,8 @@ export interface CallInput {
   intent?: (wire: { query?: Record<string, unknown>; body?: unknown }) => BuiltinIntent;
   /** The call came from `ctx.request()` inside a function operation: mocks route it by method + path. */
   routed?: boolean;
+  /** Body encoding for this call (from `ctx.request`); overrides the operation's. */
+  dataFormat?: DataFormat;
   /** Treat an HTTP 404 as a successful response for `fromHttp` to interpret (used by `exists`). */
   allow404?: boolean;
   /**
@@ -240,6 +267,7 @@ export async function runOperation(
   call: CallInput,
 ): Promise<unknown> {
   const options = call.options ?? {};
+  const responseType = options.responseType ?? op.responseType ?? "json";
   const timeout = options.timeout ?? op.timeout;
   const { signal, timedOut, cleanup } = createCallSignal(timeout, options.signal);
   const mocked = resource.mock !== undefined;
@@ -248,6 +276,11 @@ export async function runOperation(
 
   try {
     throwIfAborted(signal);
+    if (!isResponseType(responseType)) {
+      throw new ConfigError(
+        `${resource.name}.${op.name}: responseType must be one of ${RESPONSE_TYPES.map((t) => JSON.stringify(t)).join(", ")} (got ${JSON.stringify(responseType)}).`,
+      );
+    }
     const method = call.method ?? op.method;
     const pathTemplate = call.path ?? op.path;
     const path = interpolatePath(pathTemplate, call.params);
@@ -296,7 +329,13 @@ export async function runOperation(
     if (resource.mock) {
       // Mocked resources execute the resolved operation against the store. They never reach a
       // transport, whatever the URL looks like after middleware.
-      const { store, source } = resource.mock;
+      const { store, source, files } = resource.mock;
+      if (responseType === "stream") {
+        throw new MockError(
+          "MOCK_UNSUPPORTED",
+          `${source.label}: ${resource.name}.${op.name} cannot use responseType "stream" on a mocked resource; use "blob", "arrayBuffer", "text" or "json".`,
+        );
+      }
       const wire = {
         query: request.query as Record<string, unknown> | undefined,
         body: hasBody ? wireBody : undefined,
@@ -321,38 +360,58 @@ export async function runOperation(
           query: wire.query,
           body: wire.body,
           signal,
+          files,
         });
       } else {
         const intent = call.intent
           ? call.intent(wire)
           : routeToIntent(request.method, relative, wire.query, wire.body, source.label);
-        result = await runBuiltin(store, source, intent, resource.pagination);
+        result =
+          op.fileFields?.length || containsBinary(intent.body)
+            ? await runMockWithFiles(
+                store,
+                source,
+                intent,
+                resource.pagination,
+                files,
+                op.fileFields ?? [],
+                { resource: resource.name, signal },
+              )
+            : await runBuiltin(store, source, intent, resource.pagination);
       }
       throwIfAborted(signal);
       status = result.status;
-      responseHeaders = new Headers();
-      data = result.data;
+      // Mocked and live resources return the same type: coerce to `responseType` and give the
+      // response the headers a real one would carry (content type, length, disposition).
+      const finalized = await finalizeMockResponse(result.data, responseType);
+      responseHeaders = finalized.headers;
+      data = finalized.data;
     } else {
       assertSameOrigin(request.url, origin!);
       const response = await sendWithRetry(
         client,
-        op,
+        call.dataFormat ? { ...op, dataFormat: call.dataFormat } : op,
         request,
         hasBody ? wireBody : undefined,
         options,
         signal,
         call.allow404 === true,
+        responseType,
       );
       status = response.status;
       responseHeaders = response.headers;
       raw = response.raw;
       data = response.body;
-      if (op.responseKeys) data = transformKeys(data, op.responseKeys);
-      if (call.fromHttp) data = call.fromHttp(data, status);
+      // Binary bodies are never key-transformed or shaped as JSON (`allow404` shaping is
+      // status-only, so it still applies).
+      if (op.responseKeys && responseType === "json") data = transformKeys(data, op.responseKeys);
+      if (call.fromHttp && (responseType === "json" || call.allow404))
+        data = call.fromHttp(data, status);
     }
 
-    if (resource.mock && op.responseKeys) data = transformKeys(data, op.responseKeys);
-    if (call.shape) data = call.shape(data);
+    if (resource.mock && op.responseKeys && responseType === "json")
+      data = transformKeys(data, op.responseKeys);
+    if (call.shape && responseType === "json") data = call.shape(data);
 
     let response: ApiResponse<unknown> = { data, status, headers: responseHeaders, request, raw };
     for (const hook of op.onResponse) {
@@ -445,11 +504,15 @@ async function sendWithRetry(
   options: RequestOptions,
   signal: AbortSignal,
   allow404: boolean,
+  responseType: ResponseType,
 ) {
   const retry =
     options.retry !== undefined ? resolveRetryConfig(options.retry, "options.retry") : op.retry;
   const headers = new Headers(request.headers);
-  const body = serializeBody(wireBody, headers);
+  const body = serializeBody(wireBody, headers, {
+    dataFormat: op.dataFormat,
+    multipart: op.multipart,
+  });
   const replayable = isReplayable(body);
 
   for (let attempt = 0; ; attempt++) {
@@ -463,7 +526,7 @@ async function sendWithRetry(
         headers,
         body,
         signal,
-        responseType: options.responseType,
+        responseType,
       });
       if (
         (response.status >= 200 && response.status < 300) ||

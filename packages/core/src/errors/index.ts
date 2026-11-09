@@ -7,6 +7,7 @@ export { TimeoutError } from "./timeout-error.js";
 export { AbortError } from "./abort-error.js";
 export { ConfigError } from "./config-error.js";
 export { SecurityError } from "./security-error.js";
+export { SerializationError } from "./serialization-error.js";
 export { TransformError } from "./transform-error.js";
 export { MockError, type MockErrorCode } from "./mock-error.js";
 export { isApiError, isHttpError, isTimeoutError, isMockError } from "./guards.js";

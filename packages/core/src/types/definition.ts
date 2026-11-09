@@ -3,6 +3,7 @@ import type { HeadersSource, HttpMethod, QueryParams } from "./http.js";
 import type { MiddlewareOptions } from "./middleware.js";
 import type { MockDatasetId } from "./mock-datasets.js";
 import type { RetryOption } from "./retry.js";
+import type { ResponseType } from "./transport.js";
 import type { TransformsConfig } from "./transform.js";
 import type { Transport } from "./transport.js";
 
@@ -44,8 +45,51 @@ export type IdempotencyOption =
       generate?: () => string;
     };
 
+/**
+ * How a plain-object / array body is encoded. Default: JSON, or multipart automatically when the
+ * body contains `File` / `Blob` values. `"json"` with binary values throws `SerializationError`.
+ * A caller-built `FormData` / `Blob` / string body is always sent as is.
+ */
+export type DataFormat = "json" | "multipart";
+
+/** Options of one file field (advanced `fileFields` form). */
+export interface FileFieldOptions {
+  /** Wire part name, used verbatim (bypasses request key transforms). Default: the field name. */
+  name?: string;
+}
+
+/**
+ * Entity fields that hold files: names only, or names with options. Names are checked against the
+ * resource entity; a file field's read type stays `string` / `string[]`.
+ */
+export type FileFieldsConfig = readonly string[] | Record<string, FileFieldOptions>;
+
+/** Multipart encoding overrides (resource level, overridable per operation). */
+export interface MultipartOptions {
+  /** Top-level body fields sent as a single JSON-encoded part instead of bracket notation. */
+  jsonFields?: readonly string[];
+  /** `null` values: `"empty"` (default) sends an empty-string part, `"omit"` drops the field. */
+  nulls?: "empty" | "omit";
+  /**
+   * Arrays of scalars: `"brackets"` (default, `key[]`), `"indices"` (`key[0]`) or `"repeat"` (`key`).
+   * Arrays of files always repeat the field name; arrays of objects always use indices.
+   */
+  arrays?: "brackets" | "indices" | "repeat";
+}
+
 export interface OperationDefinition extends LayerOptions {
   method?: HttpMethod;
+  /**
+   * How this operation's response body is read: `"blob"`, `"arrayBuffer"`, `"text"`, `"stream"` or
+   * the default `"json"`. A literal value types the result (`Blob`, `ArrayBuffer`, `string`,
+   * `ReadableStream<Uint8Array> | null`) unless `defineApi<T>()` metadata declares a `response`.
+   * A per-call `responseType` option wins over this one.
+   */
+  responseType?: ResponseType;
+  /** Writes only. Body encoding for this operation; see {@link DataFormat}. */
+  dataFormat?: DataFormat;
+  /** Multipart encoding overrides for this operation (merged over the resource's). */
+  multipart?: MultipartOptions;
   /**
    * Writes only. One key per logical call, reused across Core retries and an error-middleware
    * replay. Pass `idempotencyKey` in the call options to supply (and reuse) your own key.
@@ -110,6 +154,10 @@ export interface ResourceDefinition extends LayerOptions {
   writeOnly?: boolean;
   operationGroups?: Partial<Record<OperationGroupName, boolean>>;
   operations?: OperationsBag<OperationValue>;
+  /** Entity fields that hold files: typed `File | Blob` inputs on eligible writes. */
+  fileFields?: FileFieldsConfig;
+  /** Multipart encoding overrides for every operation of this resource. */
+  multipart?: MultipartOptions;
   /** Data source for client-scoped Mocking. A mocked resource never touches the network. */
   mock?: MockOption;
   /**
