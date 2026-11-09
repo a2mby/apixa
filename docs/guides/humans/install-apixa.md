@@ -6,18 +6,24 @@ The prepared RC is `apixa@1.0.0-rc.0`; it has not yet been published. Once avail
 npm install apixa
 ```
 
-Use `defineApi`, `defineApis` and `defineMockApi` from `apixa`. The complete Core API is at
+Core-only projects need nothing else. Use `defineApi`, `defineApis` and `defineMockApi` from `apixa`. The complete Core API is at
 `apixa/core`. Core and Mocking do not require any framework dependency.
 
-For React 18 or 19:
+For React 18 or 19 (your app already has `react`; add TanStack Query):
 
 ```sh
-npm install apixa react @tanstack/react-query
+npm install apixa @tanstack/react-query
 ```
 
-Use hooks and `ApixaProvider` from `apixa/react`. React and TanStack Query v5 (>=5.90.1) are
-optional peers and are not bundled into Apixa. Framework subpaths isolate dependencies so the
-framework-independent root stays usable on its own. Vue and Angular integrations are planned only.
+Use hooks and `ApixaProvider` from `apixa/react`. `apixa/react` requires React and TanStack Query v5
+(>=5.90.1) to be installed in your application. Both are optional peers of `apixa`: they are not
+bundled, and npm does not install optional peers automatically. Framework subpaths isolate
+dependencies so the framework-independent root stays usable on its own. Vue and Angular
+integrations are planned only; each future subpath will list its own optional peers here.
+
+Troubleshooting: if `@tanstack/react-query` is missing, `useResourceQuery` and `useResource` lose
+their TypeScript inference (their results are typed `ApixaMissingPeer_Install_tanstack_react_query`,
+so `.data` is a compile error). Run `npm install @tanstack/react-query`.
 
 For server prefetch, construct a new `QueryClient` per request from `apixa/react/advanced`, then use
 `prefetchResourceQuery` and `dehydrate`. Pass that state to `ApixaHydrationBoundary` from

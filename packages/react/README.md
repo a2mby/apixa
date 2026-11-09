@@ -1,6 +1,6 @@
 # `apixa/react`
 
-Implementation: private workspace module `@apixa/react`. Public installation: `npm install apixa` plus `react @tanstack/react-query`.
+Implementation: private workspace module `@apixa/react`. Public installation: `npm install apixa @tanstack/react-query` (React 18 or 19 comes from your app).
 
 Three hooks map Apixa resource clients onto TanStack Query v5:
 
@@ -19,7 +19,10 @@ Apixa adds resource identity (hierarchical keys), operation selection, exact Cor
 types, and signal binding. TanStack still owns observers, caching, deduplication, retries,
 scheduling, polling, state transitions, Suspense, and hydration — Apixa adds no cache or scheduler.
 
-Install `apixa react @tanstack/react-query` (TanStack Query >=5.90.1 within v5, React 18 or 19). Wrap the app in `ApixaProvider`, or keep using TanStack's own `QueryClientProvider`: the hooks work under either, and there is exactly one cache, TanStack's.
+Install `npm install apixa @tanstack/react-query` (TanStack Query >=5.90.1 within v5, React 18 or 19). `apixa/react` requires React and TanStack Query to be installed in your application: both are optional peers of `apixa` (Core-only projects need just `npm install apixa`), and npm does not install optional peers for you.
+
+> **Troubleshooting:** if `@tanstack/react-query` is missing or not resolvable from `node_modules/apixa`, `useResourceQuery` and `useResource` (and `useResourceMutation`) lose their inferred types. Apixa types the result as `ApixaMissingPeer_Install_tanstack_react_query`, so reading `.data` is a compile error; install the package and it goes away. With `skipLibCheck: false` TypeScript also reports TS2307 inside `node_modules/apixa`; `skipLibCheck: true` hides that message.
+> Wrap the app in `ApixaProvider`, or keep using TanStack's own `QueryClientProvider`: the hooks work under either, and there is exactly one cache, TanStack's.
 
 ### `ApixaProvider` and `QueryClient`
 

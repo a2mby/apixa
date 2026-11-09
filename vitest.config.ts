@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+    maxWorkers: 2,
     // Most specific first: aliases match by prefix, in order.
     alias: [
       // The `apixa` facade: source entry per public subpath (anchored so `@apixa/*` is unaffected).
