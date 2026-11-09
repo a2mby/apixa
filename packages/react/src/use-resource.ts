@@ -12,6 +12,7 @@ import type {
   ResourceInfiniteQueryOptions,
 } from "./query-options.js";
 import { composeResult } from "./compose.js";
+import type { RequireTanStackQuery } from "./peer.js";
 import type {
   ResourceMutationOperations,
   UseResourceMutationOptions,
@@ -123,7 +124,7 @@ export function useResource<
   options: Omit<UseResourceOptions<R, never, M>, "query"> & {
     query: WithoutShared<ResourceInfiniteQueryOptions<R, N, TPageParam, Selected>>;
   },
-): ResourceInfiniteResult<R, N, TPageParam, Selected, M>;
+): RequireTanStackQuery<ResourceInfiniteResult<R, N, TPageParam, Selected, M>>;
 export function useResource<
   R extends object,
   const N extends QueryOperationName<R>,
@@ -136,7 +137,7 @@ export function useResource<
       operation: N;
     } & DefinedData<OperationReturn<R, N>>;
   },
-): ResourceResult<R, Selected, M, true, true, OperationReturn<R, N>>;
+): RequireTanStackQuery<ResourceResult<R, Selected, M, true, true, OperationReturn<R, N>>>;
 export function useResource<
   R extends object,
   const N extends QueryOperationName<R>,
@@ -147,7 +148,7 @@ export function useResource<
   options: Omit<UseResourceOptions<R, Selected, M>, "query"> & {
     query: WithoutShared<ExplicitResourceQueryOptions<R, NoInfer<N>, Selected>> & { operation: N };
   },
-): ResourceResult<R, Selected, M, true, false, OperationReturn<R, N>>;
+): RequireTanStackQuery<ResourceResult<R, Selected, M, true, false, OperationReturn<R, N>>>;
 export function useResource<
   R extends { getAll: AsyncFn },
   Selected = DefaultData<R>,
@@ -158,7 +159,7 @@ export function useResource<
     query: WithoutShared<UseResourceQueryOptions<R, Selected>> &
       DefinedData<OperationReturn<ListResource<R>, "getAll">>;
   },
-): ResourceResult<R, Selected, M, true, true>;
+): RequireTanStackQuery<ResourceResult<R, Selected, M, true, true>>;
 export function useResource<R extends object, Selected = DefaultData<R>, M extends object = {}>(
   resource: R,
   options: UseResourceOptions<R, Selected, M> &
@@ -171,7 +172,7 @@ export function useResource<R extends object, Selected = DefaultData<R>, M exten
           ? {}
           : { query: WithoutShared<UseResourceQueryOptions<R, Selected>> }
         : {}),
-): ResourceResult<R, Selected, M>;
+): RequireTanStackQuery<ResourceResult<R, Selected, M>>;
 export function useResource(resource: object, options: RuntimeResourceOptions): unknown {
   const { queryKey, scope } = options;
   const query = (

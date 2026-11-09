@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { composeResult } from "./compose.js";
+import type { RequireTanStackQuery } from "./peer.js";
 import { createResourceKeys } from "./keys.js";
 import {
   ResourceMutationStore,
@@ -36,7 +37,7 @@ export type { UseResourceMutationOptions } from "./mutation-types.js";
 export function useResourceMutation<R extends object, M extends object = {}>(
   resource: R,
   options: UseResourceMutationOptions<R, M>,
-): ResourceMutationResult<R, M>;
+): RequireTanStackQuery<ResourceMutationResult<R, M>>;
 export function useResourceMutation(
   resource: object,
   options: RuntimeResourceMutationOptions,

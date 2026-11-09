@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-11-09 — React peer guard and npm type-consumer matrix land
+
+The hook peer guard (`RequireTanStackQuery`), the packed-tarball type-consumer verification (`scripts/verify-type-consumers.mjs`, now part of `pnpm verify:consumers`) and the optional-peer install docs shipped as their own change, separate from the v1.1.0/v1.2.0 file-handling work. Missing `@tanstack/react-query` now yields a named error type instead of `any`.
+
 ## 2026-11-09 — v1.2.0 file downloads and binary responses implemented
 
 Implemented [v1.2.0](../versions/v1.2.0/). Operations can declare `responseType`, and a literal

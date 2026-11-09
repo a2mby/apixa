@@ -19,6 +19,7 @@ import {
 } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { composeResult } from "./compose.js";
+import type { RequireTanStackQuery } from "./peer.js";
 import { createResourceKeys } from "./keys.js";
 import { describeOperations } from "@apixa/internal-shared";
 import {
@@ -155,20 +156,20 @@ export function useResourceQuery<
 >(
   resource: R,
   options: ResourceInfiniteQueryOptions<R, N, TPageParam, Selected>,
-): ResourceInfiniteQueryResult<R, N, TPageParam, Selected>;
+): RequireTanStackQuery<ResourceInfiniteQueryResult<R, N, TPageParam, Selected>>;
 export function useResourceQuery<R extends object>(
   resource: R,
   options: "getAll" extends CallableOperationName<R> | OptionalOperationName<R>
     ? never
     : OperationOnlyQueryOptions,
-): ResourceOperationsQueryResult<R>;
+): RequireTanStackQuery<ResourceOperationsQueryResult<R>>;
 export function useResourceQuery<
   R extends object,
   Selected = OperationReturn<ListResource<R>, "getAll">,
 >(
   resource: R,
   options: "getAll" extends OptionalOperationName<R> ? UseResourceQueryOptions<R, Selected> : never,
-): ResourceOperationsQueryResult<R>;
+): RequireTanStackQuery<ResourceOperationsQueryResult<R>>;
 export function useResourceQuery<
   R extends object,
   const N extends QueryOperationName<R>,
@@ -177,7 +178,7 @@ export function useResourceQuery<
   resource: R,
   options: { operation: N } & ExplicitResourceQueryOptions<R, NoInfer<N>, Selected> &
     DefinedData<OperationReturn<R, N>>,
-): ResourceQueryResult<R, N, Selected, true>;
+): RequireTanStackQuery<ResourceQueryResult<R, N, Selected, true>>;
 export function useResourceQuery<
   R extends object,
   const N extends QueryOperationName<R>,
@@ -185,7 +186,7 @@ export function useResourceQuery<
 >(
   resource: R,
   options: { operation: N } & ExplicitResourceQueryOptions<R, NoInfer<N>, Selected>,
-): ResourceQueryResult<R, N, Selected>;
+): RequireTanStackQuery<ResourceQueryResult<R, N, Selected>>;
 export function useResourceQuery<
   R extends { getAll: AsyncFn },
   Selected = OperationReturn<ListResource<R>, "getAll">,
@@ -193,14 +194,14 @@ export function useResourceQuery<
   resource: R,
   options: UseResourceQueryOptions<R, Selected> &
     DefinedData<OperationReturn<ListResource<R>, "getAll">>,
-): ResourceQueryResult<R, "getAll" & keyof R, Selected, true>;
+): RequireTanStackQuery<ResourceQueryResult<R, "getAll" & keyof R, Selected, true>>;
 export function useResourceQuery<
   R extends { getAll: AsyncFn },
   Selected = OperationReturn<ListResource<R>, "getAll">,
 >(
   resource: R,
   options: UseResourceQueryOptions<R, Selected>,
-): ResourceQueryResult<R, "getAll" & keyof R, Selected>;
+): RequireTanStackQuery<ResourceQueryResult<R, "getAll" & keyof R, Selected>>;
 export function useResourceQuery(resource: object, options: RuntimeOptions): unknown {
   const state = useResourceQueryState(resource, options);
   return state.observed
