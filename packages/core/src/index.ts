@@ -45,6 +45,9 @@ export {
   listMockDatasetIds,
   registerMockDatasetLoader,
 } from "./mock/index.js";
+export { mockFileFixture, mockFixtureRef } from "./mock/fixtures.js";
+export type { MockFileFixture, MockFileFixtures, MockFixtureRef } from "./mock/fixtures.js";
+export type { MockStorageOptions, MockFileFilter } from "./mock/files.js";
 export { MockFileStorage, isMockFileRef } from "./mock/index.js";
 export type {
   MockFileMeta,

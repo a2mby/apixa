@@ -157,3 +157,31 @@ New in `apixa` (root), `apixa/core` and `apixa/mocking` where noted; nothing exi
   a caller-built `FormData` is sent without `Content-Type` so the boundary is generated. Bodies
   without binary values are encoded exactly as before. Mocked writes carrying binary values store
   them in the client's file store.
+
+## v1.5.0 additions (advanced mock file storage)
+
+Additions belong to `apixa/core` and `apixa/mocking`; the curated root exports are unchanged.
+
+- Values: `mockFileFixture(content, { name, type?, lastModified? })`, `mockFixtureRef(key)`.
+- Types: `MockFileFixture`, `MockFileFixtures`, `MockFixtureRef`, `MockStorageOptions`, `MockFileFilter`.
+- `MockFileStorage` accepts optional storage defaults; `put` accepts optional disk/directory/naming/
+  ID generation and explicit name/lastModified metadata. Existing calls remain valid. `list` and
+  `MockFilesHandle.list` add `disk` and segment-aware `path` filters.
+- Existing `MockFileMeta` gains optional `disk`, `path`, `originalName` fields. Every normalized entry
+  includes disk/path. UUID refs and all previous metadata/retrieval methods remain compatible.
+- Resource `mock: { data, idKey?, seed?, storage?, fixtures? }` supports strict explicit fixture
+  resolution. Reads infer ordinary strings; builtin File/Blob write signatures remain unchanged.
+- `defineMockApi` resources accept `storage`, `fixtures`, `fileFields`, `fileLimits`. They retain
+  catalog entity inference and existing string inputs while accepting File/Blob on declared fields.
+  Custom callback contexts gain read-only `files`. Clients/resources now work with existing
+  `mockFiles`/`resetMock` and preserve their established `MockApiError` surface.
+- Managed handler writes are transactional, including `defineMockApi` mutable rows; throw, abort,
+  timeout and reset before commit discard changes. Completed handler handles reject late writes.
+  This intentionally strengthens earlier immediate-write semantics. External user effects and
+  post-commit response middleware remain outside rollback. Shared refs survive automatic cleanup
+  until their final managed owner/pin is removed. Explicit delete/clear remain destructive.
+- Engine coordination members on the existing `MockStore` are marked `@internal`; they are used by
+  the client engine and are not a supported public transaction product. No driver API is exported.
+
+See [Core usage](../packages/core/README.md#advanced-mock-file-storage) and the
+[architecture lifecycle contract](./architecture.md).

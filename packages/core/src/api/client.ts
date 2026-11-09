@@ -63,7 +63,8 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
 }
 
 function entriesOf(target: object, who: string): readonly MockEntry[] {
-  const found = mockEntries.get(target);
+  const alias = (target as Record<symbol, object>)[Symbol.for("@apixa/mock-target")];
+  const found = mockEntries.get(alias ?? target);
   if (!found || (found.length === 0 && !Object.isFrozen(target))) {
     throw new ConfigError(
       `${who} expects a mocked resource (api.users) or a client created by defineApi().`,
@@ -79,7 +80,8 @@ function entriesOf(target: object, who: string): readonly MockEntry[] {
 export function resetMockState(target: object): void {
   for (const { store, files, resource } of entriesOf(target, "resetMock()")) {
     store.reset();
-    files.clear(resource);
+    // The store coordinates reference-aware cleanup through its file lifecycle hook.
+    if (!store.resetFiles) files.clear(resource);
   }
 }
 

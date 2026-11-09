@@ -1,3 +1,5 @@
+import type { MockStorageOptions } from "../mock/files.js";
+import type { MockFileFixtures } from "../mock/fixtures.js";
 import type { AllBuiltinOpName, OperationFn } from "./builtins.js";
 import type { HeadersSource, HttpMethod, QueryParams } from "./http.js";
 import type { MiddlewareOptions } from "./middleware.js";
@@ -199,6 +201,8 @@ export type MockOption =
   | MockData
   | {
       data: MockData;
+      storage?: MockStorageOptions;
+      fixtures?: MockFileFixtures;
       /** Identity field. Default `"id"` (datasets use their catalog identity). */
       idKey?: string;
       /** How many initial records enter the store (not a cap — creates can grow it). */

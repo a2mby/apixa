@@ -3,7 +3,41 @@ import { validateRecords, type MockSource, type Row } from "./source.js";
 
 type Id = string | number;
 
-const clone = <T>(value: T): T => structuredClone(value);
+const clone = <T>(value: T): T => {
+  const copied = structuredClone(value);
+  // Node structuredClone(File) loses its name and becomes Blob. Preserve immutable file metadata
+  // while retaining the native clone semantics for every other record value (cycles included).
+  const seen = new WeakSet<object>();
+  const restore = (source: unknown, target: unknown): unknown => {
+    if (typeof File !== "undefined" && source instanceof File && target instanceof Blob)
+      return new File([target], source.name, {
+        type: source.type,
+        lastModified: source.lastModified,
+      });
+    if (
+      !source ||
+      !target ||
+      typeof source !== "object" ||
+      typeof target !== "object" ||
+      seen.has(source)
+    )
+      return target;
+    seen.add(source);
+    if (
+      Array.isArray(source) ||
+      Object.getPrototypeOf(source) === Object.prototype ||
+      Object.getPrototypeOf(source) === null
+    ) {
+      for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(source))) {
+        if (!descriptor.enumerable || !("value" in descriptor)) continue;
+        const replacement = (target as Row)[key];
+        (target as Row)[key] = restore(descriptor.value, replacement);
+      }
+    }
+    return target;
+  };
+  return restore(value, copied) as T;
+};
 
 /** Own-property read: a filter or lookup never sees an inherited value. */
 const own = (row: Row, key: string): unknown => (Object.hasOwn(row, key) ? row[key] : undefined);
@@ -75,6 +109,54 @@ export class MockStore {
   private numberTyped = true;
   /** Monotonic id counter: generated ids are never reused, even after deletes. */
   private counter = 0;
+  /** @internal Invalidate asynchronous work synchronously on reset. */
+  generation = 0;
+  private queue: Promise<unknown> = Promise.resolve();
+  private seedSnapshot?: Row[];
+  /** @internal Installed by the existing file engine, not a second dataset loader. */
+  initializeFiles?: (rows: Row[]) => Promise<{ rows: Row[]; commit(): void; discard(): void }>;
+  /** @internal */
+  resetFiles?: () => void;
+
+  /** @internal Serialize managed operations without locking other resources. */
+  async exclusive<T>(work: () => Promise<T>): Promise<T> {
+    const generation = this.generation;
+    const previous = this.queue;
+    let release!: () => void;
+    this.queue = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      if (generation !== this.generation)
+        throw this.fail("MOCK_INVALID_INPUT", "mock state was reset before execution");
+      return await work();
+    } finally {
+      release();
+    }
+  }
+
+  /** @internal Copy record indexes, not binary data; writes replace rows. */
+  fork(): MockStore {
+    const draft = new MockStore(this.source);
+    draft.initial = this.initial;
+    draft.rows = this.rows.slice();
+    draft.index = new Map(this.index);
+    draft.numericIds = this.numericIds;
+    draft.numberTyped = this.numberTyped;
+    draft.counter = this.counter;
+    draft.generation = this.generation;
+    return draft;
+  }
+  /** @internal Publish one completed draft synchronously. */
+  adopt(draft: MockStore): void {
+    if (this.generation !== draft.generation)
+      throw this.fail("MOCK_INVALID_INPUT", "mock state was reset before commit");
+    this.rows = draft.rows;
+    this.index = draft.index;
+    this.counter = draft.counter;
+    this.shared = true;
+  }
 
   constructor(source: MockSource) {
     this.source = source;
@@ -86,35 +168,70 @@ export class MockStore {
   }
 
   /** Load + validate + seed once. Concurrent first calls share one load; a failure is retried next call. */
-  ready(): Promise<void> {
+  ready(signal?: AbortSignal): Promise<void> {
     if (this.initial) return Promise.resolve();
-    this.loading ??= (async () => {
-      let records: readonly unknown[];
-      try {
-        records = await this.source.load();
-        validateRecords(this.source.label, records, this.idKey);
-      } catch (cause) {
-        if (cause instanceof MockError) throw cause;
-        const detail = cause instanceof Error ? cause.message : String(cause);
-        throw new MockError(
-          "MOCK_LOAD",
-          `${this.source.label}: failed to load mock data — ${detail}`,
-          { cause },
-        );
+    const generation = this.generation;
+    const loading =
+      this.loading ??
+      (async () => {
+        let prepared: Awaited<ReturnType<NonNullable<MockStore["initializeFiles"]>>> | undefined;
+        try {
+          let seeded = this.seedSnapshot;
+          if (!seeded) {
+            const records = await this.source.load();
+            validateRecords(this.source.label, records, this.idKey);
+            const { limit, offset = 0 } = this.source.seed ?? {};
+            seeded = records.slice(
+              offset,
+              limit === undefined ? undefined : offset + limit,
+            ) as Row[];
+            seeded = this.source.immutable ? seeded : seeded.map(clone);
+          }
+          if (signal?.aborted) throw signal.reason;
+          if (generation !== this.generation)
+            throw this.fail("MOCK_INVALID_INPUT", "mock state was reset during initialization");
+          if (this.initializeFiles) prepared = await this.initializeFiles(seeded);
+          if (signal?.aborted) throw signal.reason;
+          if (generation !== this.generation)
+            throw this.fail("MOCK_INVALID_INPUT", "mock state was reset during initialization");
+          this.seedSnapshot = seeded;
+          const initial = prepared?.rows ?? seeded;
+          // Build indexes before publishing file state; all failure-prone preparation is complete.
+          const index = new Map(initial.map((row) => [String(row[this.idKey]), row]));
+          prepared?.commit();
+          this.initial = initial;
+          this.applyInitial();
+          this.index = index;
+        } catch (cause) {
+          prepared?.discard();
+          if (signal?.aborted) throw signal.reason;
+          if (
+            cause instanceof MockError ||
+            (cause instanceof Error && "code" in cause && cause.code === "VALIDATION")
+          )
+            throw cause;
+          const detail = cause instanceof Error ? cause.message : String(cause);
+          throw new MockError(
+            "MOCK_LOAD",
+            `${this.source.label}: failed to load mock data — ${detail}`,
+            { cause },
+          );
+        }
+      })();
+    this.loading = loading;
+    const onAbort = () => {
+      if (!this.initial && this.loading === loading) {
+        this.loading = undefined;
+        this.resetFiles?.();
       }
-      const { limit, offset = 0 } = this.source.seed ?? {};
-      const seeded = records.slice(
-        offset,
-        limit === undefined ? undefined : offset + limit,
-      ) as Row[];
-      // The source is never mutated. Inline arrays and providers can change under us, so keep a
-      // private snapshot for reset. A built-in dataset is an immutable module-cached array, so
-      // its (shallow) seeded slice is the reset source: only the working rows are cloned.
-      this.initial = this.source.immutable ? seeded : seeded.map(clone);
-      this.applyInitial();
-    })().finally(() => {
-      this.loading = undefined;
-    });
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    void loading
+      .finally(() => {
+        signal?.removeEventListener("abort", onAbort);
+        if (this.loading === loading) this.loading = undefined;
+      })
+      .catch(() => undefined);
     return this.loading;
   }
 
@@ -148,7 +265,15 @@ export class MockStore {
 
   /** Back to the seeded state. A store that never loaded stays unloaded (next call seeds it). */
   reset(): void {
-    if (this.initial) this.applyInitial();
+    this.generation++;
+    this.loading = undefined;
+    this.queue = Promise.resolve();
+    this.resetFiles?.();
+    if (this.initializeFiles) {
+      this.initial = undefined;
+      this.rows = [];
+      this.index.clear();
+    } else if (this.initial) this.applyInitial();
   }
 
   private key(id: unknown): string {
@@ -330,7 +455,11 @@ export class MockStore {
       }
       keys.add(key);
     }
-    return rows.map((row) => clone(this.insert(row)));
+    // Allocate and validate the complete batch on a draft before publishing any row or counter.
+    const draft = this.fork();
+    const result = rows.map((row) => clone(draft.insert(row)));
+    this.adopt(draft);
+    return result;
   }
 
   update(id: unknown, body: unknown): Row {

@@ -46,3 +46,12 @@ export type {
   DatasetResourceHint,
   DatasetSchema,
 } from "./types.js";
+
+export { mockFileFixture, mockFixtureRef } from "@apixa/core";
+export type {
+  MockFileFixture,
+  MockFileFixtures,
+  MockFixtureRef,
+  MockStorageOptions,
+  MockFileFilter,
+} from "@apixa/core";

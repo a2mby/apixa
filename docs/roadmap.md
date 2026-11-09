@@ -115,7 +115,19 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
 
-## Current: v1.4.0 — File Validation, Middleware & Safety
+## Current: v1.5.0 — Advanced Mock File Storage
+
+**Spec:** [versions/v1.5.0/](../versions/v1.5.0/) (completed and verified (`pnpm verify`); owner sign-off recorded 2026-11-09)
+
+- Extend the existing per-client in-memory mock store; no-config behavior and UUID refs remain
+- Optional logical disks, safe virtual paths and configurable naming; metadata/listing on existing handles
+- Lazy runtime-neutral fixtures connected to datasets, with bytes separate from records
+- Ownership-aware replacement/deletion/reset and atomic managed file/record commits
+- Preserve uploads, downloads, validation, transfer events, typing and browser/Node/SSR/Edge support
+- Driver interfaces, real storage providers and broad lifecycle policy engines remain deferred
+- Batch 0 decisions are locked: explicit fixture markers, strict opt-in refs and transactional managed handlers
+
+## Implemented, owner sign-off open: v1.4.0 — File Validation, Middleware & Safety
 
 **Spec:** [versions/v1.4.0/](../versions/v1.4.0/) (implemented and verified; owner sign-off open)
 
@@ -172,8 +184,9 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 
 ## Planned: Advanced File Handling (nine phases)
 
-Phases 1 is **v1.1.0** (with minimal mock storage pulled in by owner decision). The rest are roadmap
-headings only until each milestone starts. A dedicated React Hook Form integration is a separate
+Phase 1 is **v1.1.0** (with minimal mock storage pulled in by owner decision). Phases 3–5 have
+implemented milestones; phase 6 is **v1.5.0 (completed and owner-approved)**. Unassigned phases remain roadmap
+headings until each milestone starts. A dedicated React Hook Form integration is a separate
 optional milestone **after** file handling.
 
 1. File-field foundation, automatic serialization and minimal mock file storage — **v1.1.0**
@@ -181,7 +194,7 @@ optional milestone **after** file handling.
 3. Downloads and binary responses — **v1.2.0**
 4. Transfer progress, cancellation, streaming, and reliability — **v1.3.0**
 5. Middleware, validation, file limits, and error handling — **v1.4.0**
-6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store
+6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store — **v1.5.0** (completed and owner-approved)
 7. React/TanStack and form compatibility, browser/Node integration, and testing
 8. Large-file uploads, chunking, resumability, parallel transfers, and storage adapters
 9. File lifecycle management, cleanup policies, performance, documentation, and release hardening

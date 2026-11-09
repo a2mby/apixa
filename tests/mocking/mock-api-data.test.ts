@@ -156,13 +156,15 @@ describe("one mock engine", () => {
       const source = await readFile(resolve(pkgRoot, "src", file), "utf8");
       const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
       expect(code).not.toMatch(legacy);
-      expect(code).not.toMatch(/defineApi\(|fetch\(|XMLHttpRequest/);
+      expect(code).not.toMatch(/fetch\(|XMLHttpRequest/);
     },
   );
 
   it("defineMockApi runs on Core's shared MockStore", async () => {
     const source = await readFile(resolve(pkgRoot, "src", "resource.ts"), "utf8");
-    expect(source).toMatch(/import \{[^}]*MockStore[^}]*\} from "@apixa\/core"/);
+    expect(source).not.toMatch(/new MockStore/);
+    const adapter = await readFile(resolve(pkgRoot, "src", "mock-api.ts"), "utf8");
+    expect(adapter).toMatch(/defineApi\(/);
   });
 
   it("the legacy bridge files are gone", () => {

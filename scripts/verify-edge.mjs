@@ -1,3 +1,4 @@
+import { MOCK_STORAGE_SCENARIO } from "./lib/mock-storage-scenario.mjs";
 // Edge-runtime verification of the PACKED facade, executed in two real edge runtimes:
 //   - Cloudflare Workers: the `workerd` binary (the open-source Workers runtime), no nodejs_compat;
 //   - Vercel Edge Runtime: the `edge-runtime` package that Vercel uses for Edge Functions/Middleware.
@@ -36,6 +37,8 @@ function run(command, args, cwd, quiet = false) {
 const CORE_SCENARIO = `
 import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, detectTransferSupport, parseContentDisposition, ValidationError } from "apixa";
 import "apixa/mocking/register";
+import * as storage from "apixa/core";
+${MOCK_STORAGE_SCENARIO}
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 export async function run() {
   const out = {};
@@ -91,6 +94,7 @@ export async function run() {
   const bigResponse = await guarded.pets.big().catch((e) => e);
   out.validation = { rejected: badFile instanceof ValidationError, codes: badFile.violations?.map((v) => v.code).sort(), requestsAfterReject: validationRequests === 1 ? "only the stream call" : validationRequests, stream: cutStream instanceof ValidationError && cutStream.violations[0].code, response: bigResponse instanceof ValidationError && bigResponse.violations[0].code, support: detectTransferSupport().streamingUpload };
   out.nodeGlobals = { process: typeof globalThis.process, Buffer: typeof globalThis.Buffer, require: typeof globalThis.require };
+  out.storage = await mockStorageScenario(storage);
   return out;
 }`;
 const ADVANCED_SCENARIO = `
@@ -105,6 +109,7 @@ export async function run() {
 }`;
 
 function expectCore(out, label) {
+  assert.equal(out.storage, "seed:next:seed", `${label}: virtual fixture storage lifecycle`);
   assert.deepEqual(out.inline, ["Ada"], `${label}: inline mock`);
   assert.equal(out.afterCreate, 2, `${label}: mock create`);
   assert.equal(out.named, true, `${label}: named dataset loads after registration`);

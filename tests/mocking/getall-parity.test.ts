@@ -101,7 +101,9 @@ describe("getAll: defineMockApi follows the Core mocked contract", () => {
     expect(await core.count()).toBe(99);
     expect(await mock.count()).toBe(99);
     resetMock(core);
-    // defineMockApi has no reset handle: a new instance starts from the seed.
+    // Adapter reset now resolves the same client-scoped lifecycle as Core.
+    resetMock(mock);
+    expect(await mock.count()).toBe(100);
     expect(await core.count()).toBe(100);
     expect(await defineMockApi({ users: "users-mock" }).users.count()).toBe(100);
   });
@@ -110,7 +112,11 @@ describe("getAll: defineMockApi follows the Core mocked contract", () => {
     const source = await import("node:fs/promises").then((fs) =>
       fs.readFile(new URL("../../packages/mocking/src/resource.ts", import.meta.url), "utf8"),
     );
-    expect(source).toMatch(/runBuiltin/);
+    const client = await import("node:fs/promises").then((fs) =>
+      fs.readFile(new URL("../../packages/mocking/src/mock-api.ts", import.meta.url), "utf8"),
+    );
+    expect(client).toMatch(/defineApi\(/);
+    expect(source).not.toMatch(/new MockStore/);
     expect(source).not.toMatch(/Math\.ceil|lastPage|pageSize \*/);
   });
 });

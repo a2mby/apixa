@@ -132,7 +132,7 @@ is built. Handlers do not depend on any builtin being enabled (`defaultOperation
 | `store`                 | `get(id)`, `exists(id)`, `list(query?)`, `create`, `update` (replace), `patch`, `delete(id)`. Copies in and out; the same engine as the builtins, so duplicate ids, missing records and unsafe keys (`__proto__`, `constructor`, `prototype`) fail the same way. |
 | `params`                | Path parameters (typed from the path, resource path included): `params.id`.                                                                                                                                                                                      |
 | `query`, `body`         | What the mock engine sees: after request middleware and request key transforms, exactly like a builtin. Typed from `defineApi<Meta>()` operation `query` / `body`, otherwise `Record<string, unknown>` / `unknown`.                                              |
-| `signal`                | Aborts on cancellation or timeout. The call rejects at once; a handler already running cannot be stopped and its writes are not rolled back, so check `signal.aborted` before mutating.                                                                          |
+| `signal`                | Aborts on cancellation or timeout. The call rejects at once; a handler may continue, but its managed draft is discarded and late writes reject. External user side effects are outside rollback.                                                                 |
 | `resource`, `operation` | Names, for messages.                                                                                                                                                                                                                                             |
 
 Return any value; it flows through response key transforms and response middleware like a builtin's
@@ -300,3 +300,38 @@ returns `[]`. Browser-safe, bundled records come from `apixa/mocking/datasets`.
 `createMockTransport()` and `createSelectiveMockTransport` are gone, and so are `apixa/mocking/data`
 and `apixa/mocking/data/<id>`. Use `defineMockApi()`, `mock: "<dataset-id>"`, or
 `apixa/mocking/datasets/<name>`.
+
+## Organized files and fixtures
+
+`mockFileFixture`, `mockFixtureRef`, `MockFileStorage` and `mockFiles` are also available from
+`apixa/mocking`. See the [Core storage guide](../core/README.md#advanced-mock-file-storage) for
+fixture-backed inline/providers/named datasets, disks, paths, naming and lifecycle semantics.
+
+Standalone `defineMockApi` uses the same Core file store and supports optional `fileFields`,
+`fileLimits`, `fixtures` and `storage` on its resource objects. Existing catalog and operation
+selection syntax remains unchanged:
+
+```ts
+import { defineMockApi, mockFiles } from "apixa/mocking";
+import { resetMock } from "apixa/core";
+const api = defineMockApi({
+  resources: {
+    users: {
+      type: "users-mock",
+      fileFields: ["email"],
+      storage: { disk: "test-files" },
+    },
+  },
+});
+// A backend can use any string field as a file reference; email is an existing catalog field here.
+const user = await api.users.patch("1", { email: new Blob(["fixture"], { type: "text/plain" }) });
+mockFiles(api).get(user.email)?.text();
+resetMock(api.users);
+```
+
+Callback contexts add read-only `files`. `ctx.defaults` and mutable `ctx.rows()` now operate on a
+private draft; only successful callbacks publish managed record/file changes. A failure discards
+them. This improves the previous immediate-write behavior without promising rollback of arbitrary
+external effects. Errors retain the established `MockApiError` mapping; validation keeps the shared
+`ValidationError`. `mockFiles(api)` and `resetMock(api)` work for the adapter client and resources,
+with independent state for each client. The adapter needs no new engine, transport or dependency.

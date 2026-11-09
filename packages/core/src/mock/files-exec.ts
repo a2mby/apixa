@@ -1,6 +1,6 @@
 import { MockError } from "../errors/index.js";
 import { containsBinary } from "../http/multipart.js";
-import { MockFileStorage, isMockFileRef } from "./files.js";
+import { MockFileStorage } from "./files.js";
 import { runBuiltin, type BuiltinIntent, type MockResult, type PaginationMode } from "./execute.js";
 import type { MockSource, Row } from "./source.js";
 import type { MockStore } from "./store.js";
@@ -12,25 +12,11 @@ function isRow(value: unknown): value is Row {
   return value !== null && typeof value === "object" && !Array.isArray(value) && !isBlob(value);
 }
 
-function refsOf(row: unknown, fields: ReadonlySet<string>): string[] {
-  if (!isRow(row)) return [];
-  const refs: string[] = [];
-  for (const field of fields) {
-    const value = row[field];
-    for (const item of Array.isArray(value) ? value : [value]) {
-      if (isMockFileRef(item)) refs.push(item);
-    }
-  }
-  return refs;
-}
-
 const WRITES = new Set(["create", "createMany", "update", "patch", "upsert"]);
 
 /**
- * Run a mocked builtin whose body may carry files. New files are staged in the file store and
- * replaced by string references in the record; once the record write succeeds, files that are no
- * longer referenced (replaced, dropped by `update`, deleted records) are removed. If anything
- * fails, every staged file is removed and records are untouched.
+ * Convert one builtin body on the engine's private record/file drafts. The enclosing managed
+ * transaction owns publication, reference cleanup and rollback (including reserved virtual paths).
  */
 export async function runMockWithFiles(
   store: MockStore,
@@ -46,14 +32,12 @@ export async function runMockWithFiles(
   if (!(WRITES.has(intent.op) || isDelete)) return runBuiltin(store, source, intent, pagination);
 
   await store.ready();
-  const staged: string[] = [];
   const fail = (message: string) =>
     new MockError("MOCK_INVALID_INPUT", `${source.label}: ${message}`);
 
   const stageValue = async (field: string, value: unknown): Promise<unknown> => {
     if (isBlob(value)) {
-      const meta = await files.put(value, { resource: call.resource, field });
-      staged.push(meta.id);
+      const meta = await files.put(value, { resource: call.resource, field, ...source.storage });
       return meta.ref;
     }
     if (Array.isArray(value) && value.some(isBlob)) {
@@ -83,35 +67,15 @@ export async function runMockWithFiles(
     return next;
   };
 
-  try {
-    let body = intent.body;
-    if (intent.op === "createMany" && Array.isArray(body)) {
-      const rows: unknown[] = [];
-      for (const item of body) rows.push(await stageRow(item));
-      body = rows;
-    } else if (WRITES.has(intent.op)) {
-      body = await stageRow(body);
-    }
-
-    // Records about to be replaced or removed (best effort: the write below reports bad ids).
-    let before: Row[] = [];
-    try {
-      if (intent.op === "deleteMany") before = store.getMany(intent.body);
-      else if (intent.id !== undefined && store.exists(intent.id)) before = [store.get(intent.id)];
-    } catch {
-      before = [];
-    }
-
-    if (call.signal.aborted) throw call.signal.reason;
-    const result = await runBuiltin(store, source, { ...intent, body }, pagination);
-
-    const kept = new Set(isDelete ? [] : refsOf(result.data, fields));
-    for (const row of before) {
-      for (const ref of refsOf(row, fields)) if (!kept.has(ref)) files.delete(ref);
-    }
-    return result;
-  } catch (error) {
-    for (const id of staged) files.delete(id);
-    throw error;
+  let body = intent.body;
+  if (intent.op === "createMany" && Array.isArray(body)) {
+    const rows: unknown[] = [];
+    for (const item of body) rows.push(await stageRow(item));
+    body = rows;
+  } else if (WRITES.has(intent.op)) {
+    body = await stageRow(body);
   }
+
+  if (call.signal.aborted) throw call.signal.reason;
+  return await runBuiltin(store, source, { ...intent, body }, pagination);
 }

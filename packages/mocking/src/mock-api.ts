@@ -1,4 +1,9 @@
-import { BUILTIN_CONVENTIONS, expandOperations, type OperationGroupName } from "@apixa/core";
+import {
+  defineApi,
+  BUILTIN_CONVENTIONS,
+  expandOperations,
+  type OperationGroupName,
+} from "@apixa/core";
 import { isDatasetId, listDatasetIds, type DatasetId } from "./catalog.js";
 import { MockApiError } from "./errors.js";
 import { createResource } from "./resource.js";
@@ -26,7 +31,18 @@ export type {
 
 const SELECTION_KEYS = ["defaultOperations", "readOnly", "writeOnly", "operationGroups"] as const;
 const ROOT_OPTIONS = ["resources", ...SELECTION_KEYS];
-const RESOURCE_OPTIONS = ["type", "slice", "seed", "pagination", "operations", ...SELECTION_KEYS];
+const RESOURCE_OPTIONS = [
+  "type",
+  "slice",
+  "seed",
+  "pagination",
+  "operations",
+  "storage",
+  "fixtures",
+  "fileFields",
+  "fileLimits",
+  ...SELECTION_KEYS,
+];
 const GROUPS: readonly OperationGroupName[] = ["read", "write", "many", "extended"];
 const EXPECTED_SHAPE =
   'defineMockApi() expects { resources: { users: { type: "users-mock" } } } (or the shorthand { users: "users-mock" }).';
@@ -245,14 +261,18 @@ export function defineMockApi(config: unknown): unknown {
     throw new MockApiError("INVALID_CONFIG", "defineMockApi() needs at least one resource.");
   }
 
-  const api: Record<string, unknown> = {};
+  const adapters: Record<string, ReturnType<typeof createResource>> = {};
   for (const [name, input] of entries) {
     const resource = typeof input === "string" ? { type: input } : input;
     assertResource(name, resource);
     const raw = resource as unknown as Record<string, unknown>;
     const settings = mergeSettings(root, pickSettings(raw));
-    api[name] = createResource(name, resource.type as DatasetId, {
+    adapters[name] = createResource(name, resource.type as DatasetId, {
       slice: resource.slice,
+      storage: resource.storage,
+      fixtures: resource.fixtures,
+      fileFields: resource.fileFields,
+      fileLimits: resource.fileLimits,
       seed: resource.seed,
       pagination: resource.pagination,
       operations: expandOperations(
@@ -261,5 +281,19 @@ export function defineMockApi(config: unknown): unknown {
       ),
     });
   }
+  const definitions = Object.fromEntries(
+    Object.entries(adapters).map(([key, adapter]) => [key, adapter.definition]),
+  );
+  const core = defineApi({
+    baseURL: "https://mock.apixa.invalid",
+    resources: definitions,
+  } as never) as unknown as Record<
+    string,
+    Record<string, (...args: unknown[]) => Promise<unknown>>
+  >;
+  const api = Object.fromEntries(
+    Object.entries(adapters).map(([key, adapter]) => [key, adapter.wrap(core[key]!)]),
+  );
+  Object.defineProperty(api, Symbol.for("@apixa/mock-target"), { value: core });
   return api;
 }
