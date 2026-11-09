@@ -1,3 +1,4 @@
+import { attachMockFiles } from "../mock/transaction.js";
 import { ConfigError } from "../errors/index.js";
 import { extractPathParamNames, joinPath } from "../http/path.js";
 import { MockStore, normalizeMockSource, type BuiltinIntent } from "../mock/index.js";
@@ -190,6 +191,19 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   if (def.mock !== undefined) {
     const source = normalizeMockSource(name, def.mock);
     runtime.mock = { source, store: new MockStore(source), files: client.files };
+    const seedFiles = prepareFiles(
+      def,
+      undefined,
+      prepareLayers(name, [root, resourceLayer]).requestKeys,
+    );
+    attachMockFiles(
+      runtime.mock.store,
+      source,
+      client.files,
+      name,
+      seedFiles.fileFields ?? [],
+      seedFiles.fileRules,
+    );
   }
   const slice = def.slice as ResourceSlice | undefined;
   const resourceParamNames = extractPathParamNames(resourcePath);

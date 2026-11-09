@@ -1,3 +1,13 @@
+import type {
+  ApixaClient,
+  MockedResource,
+  MockFileFixtures,
+  MockStorageOptions,
+  FileFieldsConfig,
+  FileLimits,
+  MockFilesHandle,
+  FileFieldOptions,
+} from "@apixa/core";
 import type { AllBuiltinOpName, KnownOpName, MaybeOpName, OperationGroupName } from "@apixa/core";
 import type { DatasetId, EntityOf, IdKeyOf } from "./catalog.js";
 import type { MockApiErrorCode, MockApiError } from "./errors.js";
@@ -52,6 +62,7 @@ export type MockResourceDefaults<T extends object = Record<string, unknown>> = {
 /** What a mock operation function receives as its first argument. */
 export interface MockOperationContext<T extends object = Record<string, unknown>> {
   idKey: string;
+  readonly files: MockFilesHandle;
   /** Live, mutable rows — read or write directly for a custom operation. */
   rows(): Promise<T[]>;
   fail(code: MockApiErrorCode, message: string): MockApiError;
@@ -114,6 +125,10 @@ export interface MockOperationSelection {
 export type MockOperations = Partial<Record<AllBuiltinOpName, unknown>> & Record<string, unknown>;
 
 export interface MockResourceConfig extends MockOperationSelection {
+  storage?: MockStorageOptions;
+  fixtures?: MockFileFixtures;
+  fileFields?: FileFieldsConfig;
+  fileLimits?: FileLimits;
   /** Dataset id from the catalog (`datasets/manifest.json`). */
   type: DatasetId;
   /**
@@ -212,9 +227,15 @@ type Exact<T, Shape> = {
   [K in Exclude<keyof T, keyof Shape>]: never;
 };
 
+type FileKeys<E> = {
+  [K in keyof E & string]-?: NonNullable<E[K]> extends string | readonly string[] ? K : never;
+}[keyof E & string];
+type AdapterFileFields<E> = readonly FileKeys<E>[] | Partial<Record<FileKeys<E>, FileFieldOptions>>;
+
 /** Per-resource typed view, keyed by the dataset id inferred from `type` (see `TypedResources`). */
 type TypedResource<Ty extends DatasetId> = {
   type: Ty;
+  fileFields?: AdapterFileFields<EntityOf<Ty>>;
   operations?: TypedOperations<EntityOf<Ty>, IdKeyOf<Ty>>;
 };
 
@@ -250,6 +271,13 @@ export type ValidateMockRoot<C> = C extends { resources: infer Res }
 type ValidateResource<R> = R extends string
   ? unknown
   : Exact<R, MockResourceConfig> &
+      (R extends { type: infer Ty extends DatasetId; fileFields: infer F }
+        ? F extends readonly string[]
+          ? F[number] extends FileKeys<EntityOf<Ty>>
+            ? unknown
+            : { fileFields: never }
+          : Exact<F, Record<FileKeys<EntityOf<Ty>>, unknown>>
+        : unknown) &
       (R extends { readOnly: true; writeOnly: true } ? { writeOnly: never } : unknown) &
       (R extends { operations: infer Ops }
         ? {
@@ -280,6 +308,7 @@ type BuiltinFn<
   T extends object,
   IdKey extends keyof T,
   Paginated,
+  Input extends object = T,
 > = N extends "getAll"
   ? GetAllFn<T, Paginated>
   : {
@@ -291,12 +320,12 @@ type BuiltinFn<
       search: (query?: Partial<T>) => Promise<T[]>;
       exists: (id: Id) => Promise<boolean>;
       count: (query?: Partial<T>) => Promise<number>;
-      create: (input: ResourceInput<T, IdKey>) => Promise<T>;
-      update: (id: Id, input: ResourceInput<T, IdKey>) => Promise<T>;
-      patch: (id: Id, partial: Partial<T>) => Promise<T>;
-      upsert: (id: Id, input: ResourceInput<T, IdKey>) => Promise<T>;
+      create: (input: ResourceInput<Input, IdKey & keyof Input>) => Promise<T>;
+      update: (id: Id, input: ResourceInput<Input, IdKey & keyof Input>) => Promise<T>;
+      patch: (id: Id, partial: Partial<Input>) => Promise<T>;
+      upsert: (id: Id, input: ResourceInput<Input, IdKey & keyof Input>) => Promise<T>;
       delete: (id: Id) => Promise<void>;
-      createMany: (inputs: ResourceInput<T, IdKey>[]) => Promise<T[]>;
+      createMany: (inputs: ResourceInput<Input, IdKey & keyof Input>[]) => Promise<T[]>;
       deleteMany: (ids: Id[]) => Promise<void>;
     }[Exclude<N, "getAll">];
 
@@ -316,6 +345,19 @@ type Callable<F> = F extends (ctx: never, ...args: infer A) => infer Ret
 
 type CustomNames<R> = Exclude<keyof OpsOf<R>, AllBuiltinOpName>;
 
+type FileNames<C> = C extends { fileFields: infer F }
+  ? F extends readonly string[]
+    ? F[number]
+    : keyof F
+  : never;
+type FileBody<T, C> = {
+  [K in keyof T]: K extends FileNames<C>
+    ? T[K] extends readonly string[]
+      ? T[K] | readonly (File | Blob)[]
+      : T[K] | File | Blob
+    : T[K];
+};
+
 type ClientFn<
   N extends AllBuiltinOpName,
   Config,
@@ -324,9 +366,9 @@ type ClientFn<
   Paginated,
 > = N extends keyof OpsOf<Config>
   ? [FnOnly<OpsOf<Config>[N]>] extends [never]
-    ? BuiltinFn<N, T, IdKey, Paginated>
+    ? BuiltinFn<N, T, IdKey, Paginated, FileBody<T, Config>>
     : Callable<FnOnly<OpsOf<Config>[N]>>
-  : BuiltinFn<N, T, IdKey, Paginated>;
+  : BuiltinFn<N, T, IdKey, Paginated, FileBody<T, Config>>;
 
 /** Literal `true` / `"page"` → page envelope, `"cursor"` → cursor envelope, else a plain list. */
 type PaginationOf<R> = R extends { readonly pagination: true | "page" }
@@ -346,7 +388,7 @@ export type MockResource<
   Paginated extends "page" | "cursor" | undefined = undefined,
   Config = {},
 > = Simplify<
-  {
+  MockedResource & {
     [N in KnownOpName<Config>]: ClientFn<N, Config, T, IdKey, Paginated>;
   } & {
     [N in MaybeOpName<Config>]?: ClientFn<N, Config, T, IdKey, Paginated>;
@@ -375,7 +417,7 @@ export type EffectiveConfig<Root, R> = Omit<RootSelection<Root>, keyof R | "oper
 type ResourcesIn<C> = C extends { resources: infer Res } ? Res : C;
 type ResolvedResource<R> = R extends string ? { readonly type: R } : R;
 
-export type MockApi<C> = {
+export type MockApi<C> = ApixaClient & {
   [K in keyof ResourcesIn<C>]: ResolvedResource<ResourcesIn<C>[K]> extends infer R
     ? R extends { type: infer Ty extends DatasetId }
       ? MockResource<

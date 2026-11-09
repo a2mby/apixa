@@ -88,7 +88,7 @@ Context: `{ request, response?, attempt, meta }`.
 
 ## Plugin seams
 
-`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), install `apixa/mocking` and import `apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `apixa/mocking` README.
+`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), use `apixa/mocking` and import `apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `apixa/mocking` README.
 
 ## File uploads
 
@@ -249,3 +249,67 @@ cannot undo bytes already sent. Your backend must validate everything again.
 
 - Operations return native `Promise<T>` (unwrap) unless `full: true`.
 - No React / Next / TanStack Query in Core.
+
+## Advanced mock file storage
+
+Existing mocked uploads need no configuration. Optional organization and fixtures extend the same
+per-client virtual store:
+
+```ts
+import { defineApi, mockFiles, resetMock, mockFileFixture, mockFixtureRef } from "apixa/core";
+
+const api = defineApi({
+  baseURL: "https://example.test",
+  resources: {
+    docs: {
+      path: "/docs",
+      fileFields: ["file"],
+      mock: {
+        data: [{ id: 1, file: mockFixtureRef("readme") }],
+        fixtures: { readme: mockFileFixture("hello", { name: "readme.txt", type: "text/plain" }) },
+        storage: { disk: "documents", directory: "guides", naming: "unique" },
+      },
+    },
+  },
+});
+const seeded = await api.docs.getById(1); // seeded.file: string
+mockFiles(api).get(seeded.file)?.text(); // "hello"
+await api.docs.patch(1, { file: new File(["updated"], "guide.txt", { type: "text/plain" }) });
+mockFiles(api).list({ disk: "documents", path: "guides" });
+resetMock(api); // invalidates pending work immediately; fixtures rehydrate on next awaited read
+```
+
+A fixture accepts text, Uint8Array or Blob and an explicit name, optional MIME type and lastModified
+(default 0). A registry value may be an async factory returning a descriptor. Only fixtures referenced
+by selected seed records load, one at a time; multiple occurrences share one stored fixture within
+that resource. An explicit `{ $apixaFixture: "key" }` marker can also be stored in JSON. Ordinary
+strings never become fixture tokens. An unresolved marker fails initialization atomically. With a
+registry configured, missing UUID refs also fail; without it, legacy seed strings stay unchanged.
+Dataset providers and named datasets use this same machinery; bytes never enter dataset records.
+
+`storage` also accepts `naming: "original"` (default) or a callback receiving
+`{ id, name, type, resource, field }` and returning one safe filename segment. `generateId` must return
+a unique UUID, allowing deterministic tests. Naming changes the stored name/ref suffix, not UUID
+identity. Metadata retains `originalName` when renamed. Without a directory, paths use an ID directory
+so identical original names coexist. With an explicit directory, same-disk/path collisions reject
+without overwrite. Disks default to `default`; paths are relative, case-sensitive, use `/` and reject
+traversal, absolute/drive/UNC paths, encoded traversal/separators, controls and schemes. A disk is a
+logical grouping within the client's store. `mockFiles(resource)` continues to inspect that whole
+client store. Filters match path segments (`a` includes `a/b`, not `ab`), in insertion order, without
+reading bytes. A lookup still uses a UUID ref or bare ID, never a virtual path.
+
+Managed replacement/deletion releases refs; it deletes bytes only after the last record/resource
+owner and fixture pin is gone. Fixture pins retain the seed for reset. Public low-level `put` is
+manually owned until delete/clear/resource reset. Explicit `delete`/`clear` may leave stale record
+refs: low-level get/meta return undefined and handler get/meta throws `MOCK_NOT_FOUND`. Reset repairs
+fixture baselines lazily, so synchronous storage reads can be empty until the next resource call.
+UUID generators are not rewound on reset; a rehydrated fixture may have a new ref. Reads return
+defensive byte copies; listing and ordinary record reads never duplicate stored binary data.
+
+Managed calls commit records/files/ownership together after configured mock response checks.
+Custom handlers see their draft writes and receive their original raw body. Throw, abort, timeout or
+reset before commit discards managed changes; late calls to a finished handler handle reject.
+External side effects and response middleware after commit cannot be rolled back. Mock operations
+never use the network; fixture setup has no transfer events. Upload observation remains unsupported
+and sized mock downloads report actual bytes. No File constructor is required for fixture setup;
+Blob plus explicit metadata works in Node, browsers, SSR and Edge. No driver/provider dependency.

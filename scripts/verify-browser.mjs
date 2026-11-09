@@ -1,3 +1,4 @@
+import { MOCK_STORAGE_SCENARIO } from "./lib/mock-storage-scenario.mjs";
 // Real-browser verification of server rendering, hydration and client behavior, against the
 // tracked Next.js example (`examples/query-ssr-next`) in production (`next start`) and development
 // (`next dev`) mode. Run after `pnpm build`.
@@ -280,6 +281,10 @@ async function verifyTransfers() {
   let posts = 0;
   const server = createServer((req, res) => {
     const url = new URL(req.url, "http://x");
+    if (url.pathname === "/storage-scenario.js") {
+      res.writeHead(200, { "content-type": "text/javascript" });
+      return void res.end(MOCK_STORAGE_SCENARIO + "\nexport { mockStorageScenario }; ");
+    }
     if (url.pathname.startsWith("/apixa/")) {
       const file = join(dist, url.pathname.slice("/apixa/".length));
       if (!file.startsWith(dist) || !existsSync(file)) return void res.writeHead(404).end();
@@ -336,6 +341,9 @@ async function verifyTransfers() {
     await page.goto(`${origin}/page`);
     const out = await page.evaluate(async (origin) => {
       const m = await import(`${origin}/apixa/index.js`);
+      const storage = await import(`${origin}/apixa/core.js`);
+      const { mockStorageScenario } = await import(`${origin}/storage-scenario.js`);
+      const storageResult = await mockStorageScenario(storage);
       const api = m.defineApi({
         baseURL: `${origin}/api`,
         resources: {
@@ -350,7 +358,7 @@ async function verifyTransfers() {
           },
         },
       });
-      const result = { support: m.detectTransferSupport() };
+      const result = { support: m.detectTransferSupport(), storage: storageResult };
       const down = [];
       const blob = await api.docs.file({
         onTransfer: (e) => down.push([e.phase, e.loaded ?? null, e.total ?? null]),
@@ -444,6 +452,7 @@ async function verifyTransfers() {
       };
       return result;
     }, origin);
+    assert.equal(out.storage, "seed:next:seed", "Chromium virtual fixture storage lifecycle");
     const progress = out.download.events.filter(([p]) => p === "progress");
     assert.equal(out.download.size, 30000, "browser download is byte-complete");
     assert.deepEqual(

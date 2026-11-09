@@ -50,7 +50,7 @@ export interface OperationMockContext<E extends object, Params, Query, Body> {
   readonly body: Body;
   /**
    * Aborts on cancellation or timeout. The call rejects at once, but a handler already running
-   * cannot be stopped and its writes are not rolled back: check `signal.aborted` before mutating.
+   * may keep running. Managed writes are rolled back/revoked; external user side effects are not.
    */
   readonly signal: AbortSignal;
   /**

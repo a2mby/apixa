@@ -1,12 +1,14 @@
 /** @vitest-environment jsdom */
 import { ValidationError, defineApi, type FileViolation } from "@apixa/core";
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, expectTypeOf, it } from "vitest";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
 import { useResource } from "../../packages/react/src/use-resource.js";
 import { useResourceMutation } from "../../packages/react/src/use-resource-mutation.js";
 import { useResourceQuery } from "../../packages/react/src/use-resource-query.js";
 import { createFetchTransport } from "../../packages/core/src/transport/fetch.js";
 import { newClient, wrap } from "../helpers/query.js";
+
+afterEach(cleanup);
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type Pet = { id: string; name: string; photo?: string | null };
@@ -108,9 +110,12 @@ describe("file validation through the React hooks", () => {
 
   it("useResource stays fully typed with rules configured", () => {
     const { api } = makeApi();
-    const { result } = renderHook(() => useResource(api.pets, { queryKey: ["pets"] }), {
-      wrapper: wrap(newClient()),
-    });
+    const { result } = renderHook(
+      () => useResource(api.pets, { queryKey: ["pets"], query: { enabled: false } }),
+      {
+        wrapper: wrap(newClient()),
+      },
+    );
     expectTypeOf<IsAny<typeof result.current>>().toEqualTypeOf<false>();
   });
 });

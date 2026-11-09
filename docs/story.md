@@ -2,6 +2,42 @@
 
 Project log. Newest entry first.
 
+## 2026-11-09 — v1.5.0 advanced mock file storage completed and approved
+
+Completed v1.5.0: optional disks, safe paths and naming, lazy dataset fixtures, shared-reference cleanup and atomic managed writes extend the existing client-scoped mock store, with `defineMockApi` on the same Core pipeline. The owner signed off the milestone after `pnpm verify` passed (117 files / 1,279 tests, 62/62 packed type consumers, Chromium, Next SSR, Vercel Edge and workerd); issue #99 carries the change through squash merge. Earlier milestone sign-offs and coverage gaps remain open; no package versions are bumped, nothing is published and v1.6.0 is not started.
+
+## 2026-11-09 — v1.5.0 advanced mock file storage implemented and verified
+
+Implemented [v1.5.0](../versions/v1.5.0/) on [issue #99](https://github.com/a2mby/apixa/issues/99).
+The existing client-scoped store now supports optional disks/paths/naming, explicit typed fixture
+markers and lazy dataset fixtures, metadata filters, shared-reference ownership and fixture pins.
+Managed record/file changes commit together after configured mock response checks; failures and
+cancellation before commit roll back, reset invalidates pending generations, and finished handlers
+reject late writes. External effects and response middleware after commit remain outside rollback.
+`defineMockApi` now adapts to the existing Core mocked-client pipeline, preserving its calling
+conventions and error mapping while sharing storage and reset behavior. No new engine, package,
+dependency or storage driver. `pnpm verify` passes (117 test files / 1,279 tests, 62/62 packed type consumers, Chromium/Next SSR, Vercel Edge and workerd); owner sign-off remains pending.
+
+The tracked shared runtime scenario exercises fixture seed → upload/replace → download → reset in
+Node, Chromium, Next SSR (dev/production), Vercel Edge and workerd. No ignored local Next file is
+claimed as delivered source. Previous owner sign-offs, React 18 runtime hook gaps and v1.4.0's local
+Next scenario evidence remain outstanding; `1.0.0-rc.0` is not declared stable.
+
+## 2026-11-09 — v1.5.0 kickoff: advanced mock file storage
+
+Created the [v1.5.0 contract](../versions/v1.5.0/) after auditing the existing Core store,
+`mockFiles` and handler handles, dataset loading, upload cleanup, downloads, validation and transfer
+tests. The store already has UUID refs, metadata, resource/field listing and basic reset/rollback;
+fixtures, disks/paths/naming and ownership/concurrency guarantees need extension. The contract
+recommends one optional disk dimension, paths in metadata, unchanged refs, lazy per-resource fixtures
+and coordinated managed commits. Storage drivers are deferred. Handler transaction semantics and
+fixture-token/seed/ownership compatibility need explicit decisions before implementation.
+
+Stage 1 only: no production code, dependency/package-version changes, future version folders,
+commit, push or publish. v1.4.0 is merged and verified, not declared shipped: owner sign-off,
+React 18 runtime hook coverage and delivered/browser evidence for its local Next validation scenario
+remain open. Earlier owner sign-offs and the v1.0.0 release-candidate status remain unchanged.
+
 ## 2026-11-09 — v1.4.0 file validation, middleware and safety implemented
 
 Implemented [v1.4.0](../versions/v1.4.0/). Opt-in file rules (size, count, MIME, extension, strict filenames) now sit on `fileFields` options with request-level `fileLimits` and per-operation overrides, and `maxResponseSize` / `responseAccept` bound binary responses. One checkpoint after request middleware, shared by live and mocked calls, rejects with the existing `ValidationError` (typed `violations`, no names or contents) before any request, mock write or transfer event; request streams and responses (an oversized failed-response body too, keeping its `HttpError` status) are bounded by the counting stream without buffering. `pnpm verify` passes (111 files / 1224 tests, 62/62 packed type consumers, Chromium, Edge, workerd); owner sign-off and a React 18 runtime hook test remain open.

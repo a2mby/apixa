@@ -310,6 +310,14 @@ versions/
 
 Planned later packages (not created yet): `transport-fetch`, `client`, `server`, `openapi`.
 
+## Virtual mock files
+
+Mocked file uploads use client-scoped in-memory storage by default. Optional disks, safe virtual
+paths, naming and lazy dataset fixtures extend that same store; UUID references stay compatible.
+See [advanced mock file storage](packages/core/README.md#advanced-mock-file-storage) for the
+implemented API, ownership, reset and atomic managed-handler boundaries. No storage driver or
+filesystem dependency is required.
+
 ## Documentation
 
 | Doc                                            | Purpose                                              |
@@ -318,13 +326,13 @@ Planned later packages (not created yet): `transport-fetch`, `client`, `server`,
 | [docs/architecture.md](./docs/architecture.md) | Core shape and request flow                          |
 | [docs/roadmap.md](./docs/roadmap.md)           | Milestones and future phases                         |
 | [docs/conventions.md](./docs/conventions.md)   | How we build and document                            |
-| [versions/v1.0.0/](./versions/v1.0.0/)         | **Active coding contract** (scope, plan, acceptance) |
+| [versions/v1.5.0/](./versions/v1.5.0/)         | **Active coding contract** (scope, plan, acceptance) |
 
 ## Project Status
 
-Apixa is in early development. Last shipped: **v0.11.0**. The v1.0.0 TanStack Query workstream is in progress. Core exposes `defineApi()` with default-first CRUD, reliability, re-callable middleware, and extension seams. Mocking augments Core for resource mocks.
+Apixa is in early development. Last shipped: **v0.11.0**; `1.0.0-rc.0` remains a release candidate, not stable. The active v1.5.0 milestone adds advanced mock file storage on the existing Core engine. Implementation is complete, `pnpm verify` passes, and the owner approved v1.5.0 on 2026-11-09. Previous milestone sign-offs and coverage gaps remain tracked in [versions/README.md](./versions/README.md).
 
-See [versions/v1.0.0/acceptance-criteria.md](./versions/v1.0.0/acceptance-criteria.md) for the active milestone checklist.
+See [versions/v1.5.0/acceptance-criteria.md](./versions/v1.5.0/acceptance-criteria.md) for the active milestone checklist.
 
 ## Author
 

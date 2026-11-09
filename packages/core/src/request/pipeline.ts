@@ -1,3 +1,4 @@
+import { runManagedMock } from "../mock/transaction.js";
 import {
   AbortError,
   ApiError,
@@ -415,6 +416,7 @@ export async function runOperation(
     if (resource.mock) {
       // Mocked resources execute the resolved operation against the store. They never reach a
       // transport, whatever the URL looks like after middleware.
+      const mockRequest = request;
       const { store, source, files } = resource.mock;
       if (responseType === "stream") {
         throw new MockError(
@@ -427,59 +429,94 @@ export async function runOperation(
         body: hasBody ? wireBody : undefined,
       };
       const relative = interpolatePath(call.relativePath ?? op.relativePath, call.params);
-      let result: MockResult;
-      if (!call.intent && !call.routed) {
-        // A custom declarative operation: only its own `mock` handler may run. Never guessed from
-        // the URL, never sent to a transport.
-        if (!op.mockHandler) {
-          throw new MockError(
-            "MOCK_UNSUPPORTED",
-            `${source.label}: custom operation "${resource.name}.${op.name}" (${request.method} ${relative || "/"}) has no mock behavior. ` +
-              `Add a \`mock\` handler to the operation, or implement it as a function operation ({ kind, run }) that uses ctx.request().`,
+      const managed = await runManagedMock(
+        store,
+        source,
+        files,
+        resource.name,
+        op.fileFields ?? [],
+        signal,
+        async (store, files) => {
+          let result: MockResult;
+          if (!call.intent && !call.routed) {
+            // A custom declarative operation: only its own `mock` handler may run. Never guessed from
+            // the URL, never sent to a transport.
+            if (!op.mockHandler) {
+              throw new MockError(
+                "MOCK_UNSUPPORTED",
+                `${source.label}: custom operation "${resource.name}.${op.name}" (${mockRequest.method} ${relative || "/"}) has no mock behavior. ` +
+                  `Add a \`mock\` handler to the operation, or implement it as a function operation ({ kind, run }) that uses ctx.request().`,
+              );
+            }
+            result = await runMockHandler(op.mockHandler, store, {
+              resource: resource.name,
+              operation: op.name,
+              method: mockRequest.method,
+              params: { ...(call.params ?? {}) },
+              query: wire.query,
+              body: wire.body,
+              signal,
+              files,
+            });
+          } else {
+            const intent = call.intent
+              ? call.intent(wire)
+              : routeToIntent(mockRequest.method, relative, wire.query, wire.body, source.label);
+            result =
+              op.fileFields?.length || containsBinary(intent.body)
+                ? await runMockWithFiles(
+                    store,
+                    source,
+                    intent,
+                    resource.pagination,
+                    files,
+                    op.fileFields ?? [],
+                    { resource: resource.name, signal },
+                  )
+                : await runBuiltin(store, source, intent, resource.pagination);
+          }
+          return result;
+        },
+        async (result) => {
+          throwIfAborted(signal);
+          const status = result.status;
+          // Mocked and live resources return the same type: coerce to `responseType` and give the
+          // response the headers a real one would carry (content type, length, disposition).
+          const finalized = await finalizeMockResponse(result.data, responseType);
+          const responseHeaders = finalized.headers;
+          const data = finalized.data;
+          const mockHead = checkResponseHead(
+            responseHeaders,
+            status,
+            mockRequest.method,
+            responseLimits,
           );
-        }
-        result = await runMockHandler(op.mockHandler, store, {
-          resource: resource.name,
-          operation: op.name,
-          method: request.method,
-          params: { ...(call.params ?? {}) },
-          query: wire.query,
-          body: wire.body,
-          signal,
-          files,
-        });
-      } else {
-        const intent = call.intent
-          ? call.intent(wire)
-          : routeToIntent(request.method, relative, wire.query, wire.body, source.label);
-        result =
-          op.fileFields?.length || containsBinary(intent.body)
-            ? await runMockWithFiles(
-                store,
-                source,
-                intent,
-                resource.pagination,
-                files,
-                op.fileFields ?? [],
-                { resource: resource.name, signal },
-              )
-            : await runBuiltin(store, source, intent, resource.pagination);
-      }
-      throwIfAborted(signal);
-      status = result.status;
-      // Mocked and live resources return the same type: coerce to `responseType` and give the
-      // response the headers a real one would carry (content type, length, disposition).
-      const finalized = await finalizeMockResponse(result.data, responseType);
-      responseHeaders = finalized.headers;
-      data = finalized.data;
-      const mockHead = checkResponseHead(responseHeaders, status, request.method, responseLimits);
-      if (mockHead) throw mockHead;
+          if (mockHead) throw mockHead;
+          return { status, responseHeaders, data };
+        },
+        op.fileRules,
+        !op.mockHandler &&
+          [
+            "getAll",
+            "getById",
+            "getBySlug",
+            "getMany",
+            "getBy",
+            "findFirst",
+            "search",
+            "exists",
+            "count",
+          ].includes(op.name),
+      );
+      status = managed.status;
+      responseHeaders = managed.responseHeaders;
+      data = managed.data;
       const channel = nextChannel(session, 0);
       if (channel) {
         // Nothing crosses a wire on a mock: never invent bytes. Binary and text results have a real
         // size; a mocked JSON value has no wire size, so it is reported as unsupported.
         if (hasBody) channel.unsupported("upload", "mocked resource: no request body is sent");
-        const length = finalized.headers.get("content-length");
+        const length = responseHeaders.get("content-length");
         if (length !== null && /^\d+$/.test(length)) {
           const size = Number(length);
           channel.sink({ phase: "start", direction: "download", loaded: 0, total: size });

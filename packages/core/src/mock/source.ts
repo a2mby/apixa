@@ -1,3 +1,6 @@
+import type { MockStorageOptions } from "./files.js";
+import { validateStorageOptions } from "./files.js";
+import { validateFixture, type MockFileFixtures } from "./fixtures.js";
 import { ConfigError } from "../errors/index.js";
 import {
   isMockDatasetId,
@@ -20,9 +23,11 @@ export interface MockSource {
    * the store may keep references to it as its reset source instead of a private cloned snapshot.
    */
   immutable?: boolean;
+  storage?: MockStorageOptions;
+  fixtures?: MockFileFixtures;
 }
 
-const MOCK_OBJECT_KEYS = new Set(["data", "idKey", "seed"]);
+const MOCK_OBJECT_KEYS = new Set(["data", "idKey", "seed", "storage", "fixtures"]);
 const SEED_KEYS = new Set(["limit", "offset"]);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -39,6 +44,7 @@ export function normalizeMockSource(resource: string, value: unknown): MockSourc
   let data: unknown = value;
   let idKey: string | undefined;
   let seed: MockSource["seed"];
+  const extras: Pick<MockSource, "storage" | "fixtures"> = {};
 
   if (isPlainObject(value)) {
     for (const key of Object.keys(value)) {
@@ -58,6 +64,19 @@ export function normalizeMockSource(resource: string, value: unknown): MockSourc
       idKey = value.idKey;
     }
     if (value.seed !== undefined) seed = normalizeSeed(label, value.seed);
+    if (value.storage !== undefined) {
+      validateStorageOptions(value.storage as MockStorageOptions);
+      extras.storage = { ...(value.storage as MockStorageOptions) };
+    }
+    if (value.fixtures !== undefined) {
+      if (!isPlainObject(value.fixtures) || Array.isArray(value.fixtures))
+        throw new ConfigError(`${label}.fixtures must be a registry object.`);
+      for (const [key, fixture] of Object.entries(value.fixtures)) {
+        if (!key) throw new ConfigError(`${label}.fixtures keys must be non-empty.`);
+        if (typeof fixture !== "function") validateFixture(fixture);
+      }
+      extras.fixtures = value.fixtures as MockFileFixtures;
+    }
   }
 
   if (typeof data === "string") {
@@ -73,19 +92,27 @@ export function normalizeMockSource(resource: string, value: unknown): MockSourc
         `${label}.idKey "${idKey}" does not match dataset "${id}" (uses "${datasetIdKey}").`,
       );
     }
-    return { label, idKey: datasetIdKey, load: () => loadNamedDataset(id), seed, immutable: true };
+    return {
+      ...extras,
+      label,
+      idKey: datasetIdKey,
+      load: () => loadNamedDataset(id),
+      seed,
+      immutable: true,
+    };
   }
 
   if (Array.isArray(data)) {
     const records = data as readonly unknown[];
     const key = idKey ?? "id";
     validateRecords(label, records, key);
-    return { label, idKey: key, load: () => records, seed };
+    return { ...extras, label, idKey: key, load: () => records, seed };
   }
 
   if (typeof data === "function") {
     const provider = data as () => unknown;
     return {
+      ...extras,
       label,
       idKey: idKey ?? "id",
       seed,

@@ -88,8 +88,12 @@ function checkFile(file: FoundFile, rules: ResolvedFieldRules, out: FileViolatio
  * Evaluate a request body against resolved rules. Reads metadata only. Returns every violation
  * (the caller caps the list); an empty array means nothing configured was broken.
  */
-export function validateRequestFiles(body: unknown, rules: ResolvedFileRules): FileViolation[] {
-  const found = collectFiles(body, rules.partNames);
+export function validateRequestFiles(
+  body: unknown,
+  rules: ResolvedFileRules,
+  metadata?: ReadonlyMap<Blob, { name: string; size: number; type: string }>,
+): FileViolation[] {
+  const found = collectFiles(body, rules.partNames, metadata);
   const out: FileViolation[] = [];
   const byField = new Map<string, FoundFile[]>();
   for (const file of found.files) {

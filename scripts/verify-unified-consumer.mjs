@@ -1,3 +1,4 @@
+import { MOCK_STORAGE_SCENARIO } from "./lib/mock-storage-scenario.mjs";
 // Packed-consumer verification for the single published `apixa` distribution.
 //
 // Every package is packed exactly as npm would publish it and installed into clean projects:
@@ -232,6 +233,8 @@ import "apixa/mocking/register";
 import * as datasetsFacade from "apixa/mocking/datasets";
 import * as usersFacade from "apixa/mocking/datasets/users";
 import * as nodeFacade from "apixa/mocking/node";
+${MOCK_STORAGE_SCENARIO}
+assert.equal(await mockStorageScenario(coreFacade), "seed:next:seed", "Node packed virtual storage lifecycle");
 const core = coreFacade;
 const mocking = mockingFacade;
 const datasets = datasetsFacade;
@@ -1022,8 +1025,11 @@ export default async function Page() {
         dir,
         "app/download/page.jsx",
         `import { createFetchTransport, defineApi, parseContentDisposition } from "apixa";
+import * as storage from "apixa/core";
+${MOCK_STORAGE_SCENARIO}
 export const dynamic = "force-dynamic";
 export default async function Page() {
+  if (await mockStorageScenario(storage) !== "seed:next:seed") throw Error("SSR virtual storage lifecycle");
   const live = defineApi({
     baseURL: "https://example.test",
     transport: createFetchTransport(async () => new Response("rsc-bytes", { headers: { "content-type": "text/plain", "content-disposition": 'attachment; filename="live.txt"' } })),

@@ -231,16 +231,53 @@ caller's object is never mutated. Convert a `FileList` explicitly (`Array.from(i
 passing it; Core takes native `File` values only, so form libraries such as React Hook Form work
 without an adapter.
 
-**Mock file storage** (`mock/files.ts`, `mock/files-exec.ts`). Each client has one in-memory
-`MockFileStorage`. A mocked write on a resource with `fileFields` stages the files (bytes are
-copied; ids are UUIDs; references look like `mock-file://<id>/<name>`), stores string references in
-the record, then removes files no longer referenced (replacement, `update` dropping a field,
-`delete`, `deleteMany`). Any failure removes the staged files and leaves records untouched. A
-`Blob` in an undeclared or nested field is a `MockError` (`MOCK_INVALID_INPUT`). `mockFiles(api)`
-(also `apixa/mocking`) lists, retrieves (`blob()` / `bytes()` / `text()` return fresh copies),
-deletes and clears files; `resetMock` restores records and drops the files. No object URLs are ever
-created. Custom declarative `mock` handlers receive the raw body. Disks, fixtures and lifecycle
-policies are planned (phase 6), not implemented.
+**Mock file storage** (`mock/files.ts`, `mock/files-exec.ts`, `mock/transaction.ts`). Each client
+has one in-memory `MockFileStorage`. UUID refs remain `mock-file://<id>/<encoded-name>`; IDs, not
+paths or suffixes, resolve bytes. Defaults preserve original filenames and use an ID directory in
+metadata to avoid path collisions. Optional `mock.storage` resource defaults (`disk`, `directory`,
+`naming`, `generateId`) organize the same store. Paths use `/`, preserve case/Unicode and reject
+absolute paths, traversal, encoded traversal/separators, schemes and controls. A logical disk is
+organization, not an access-control boundary. Metadata adds optional `disk`, `path`, `originalName`
+for structural compatibility; normalized entries always include disk/path. Listing is a linear,
+metadata-only filter by resource, field, disk and segment-aware path prefix.
+
+`mockFileFixture` creates a runtime-neutral descriptor; `mockFixtureRef(key)` is an explicit
+`{ $apixaFixture: key }` seed marker, never an ordinary string. The resource's optional `mock.fixtures`
+registry resolves only selected seed records' declared file fields, sequentially and single-flight.
+Exposed records contain ordinary refs. Unknown markers/keys fail initialization; a configured
+registry also rejects missing local UUID refs. Legacy sources without a registry keep arbitrary
+reference strings. Fixture rules reuse the existing validator with stored metadata (no byte copies
+for validation, including without a File constructor). Cached catalog records are never mutated.
+
+Managed writes serialize per resource and use copy-on-write record drafts plus private file staging.
+Commit publishes bytes, records and ownership together after mock result preparation/response-limit
+checks. Failed bulk writes, byte reads, naming, validation, abort, timeout or reset before commit
+publish nothing. Handlers keep raw bodies and read their own draft writes; successful handler file
+values become refs. A handler throw discards its writes and a completed/aborted handle rejects late
+writes. This strengthens the earlier immediate-write/no-rollback handler semantics. User-defined
+external effects and response middleware **after commit** are outside rollback. Ordinary builtin
+reads use the existing record indexes without copying transaction indexes or scanning every row.
+
+Automatic cleanup tracks each resource's committed refs and fixture baseline pins. Removing one
+record/reference preserves bytes still owned by another record/resource; last-owner removal releases
+managed files. Public `put` entries remain manually owned until explicit deletion/clear/reset.
+`resetMock` synchronously invalidates pending generations, releases transient ownership and preserves
+another resource's active refs; seed files rehydrate lazily on the next awaited operation. A reset
+may generate new UUID refs; injected generator state is caller-owned and is not rewound. Direct
+`mockFiles` reads remain synchronous, so files can be absent between reset and rehydration. Explicit
+`delete`/`clear` remain destructive tools and can leave stale record refs; they never rewrite records.
+Low-level missing reads return undefined/false; handler get/meta throws `MOCK_NOT_FOUND`.
+
+`defineMockApi` adapts its established calling conventions to the existing Core mocked-client
+pipeline and `MockApiError` mapping. Its mutable `rows()` callbacks now operate on private copies
+reconciled on successful completion, with no rollback claim for external effects. A non-enumerable
+internal target link lets `mockFiles`/`resetMock` resolve adapter wrappers without a public registry
+or new transaction API. Core has no dependency on Mocking. All bytes stay client-owned: staging
+shares immutable committed byte buffers and releases its snapshots/reservations at settlement.
+`get().bytes()/blob()` still return defensive copies; record reads/listing never copy stored bytes.
+No object URLs, storage drivers, Node filesystem requirements or provider dependencies are added.
+Fixtures emit no transfer events during setup; operation events and validation retain v1.3.0/v1.4.0
+semantics, including unsupported mock uploads and stream responses.
 
 ## Source map (`packages/core`)
 

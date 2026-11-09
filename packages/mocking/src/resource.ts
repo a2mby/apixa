@@ -1,12 +1,4 @@
-import {
-  applyResourceSliceToListResult,
-  MockError,
-  MockStore,
-  runBuiltin,
-  type BuiltinIntent,
-  type MockSource,
-  type PaginationMode,
-} from "@apixa/core";
+import { MockError, ValidationError, type MockSource, type PaginationMode } from "@apixa/core";
 import { catalog, type DatasetId } from "./catalog.js";
 import { MockApiError, type MockApiErrorCode } from "./errors.js";
 import type { MockSlice } from "./slice.js";
@@ -38,12 +30,17 @@ const CODES: Record<string, MockApiErrorCode> = {
 
 /** Keep `defineMockApi`'s documented `MockApiError` surface over Core's shared engine. */
 function translate(error: unknown): never {
+  if (error instanceof ValidationError && error.violations.length === 0)
+    throw new MockApiError("INVALID_INPUT", error.message);
   if (error instanceof MockError) {
     const code =
       error.code === "MOCK_INVALID_INPUT" && PAGING_MESSAGE.test(error.message)
         ? "INVALID_PAGINATION"
         : (CODES[error.code] ?? "INVALID_INPUT");
-    const translated = new MockApiError(code, error.message);
+    const translated = new MockApiError(
+      code,
+      error.message.replace(/^resources\.(.+)\.mock:/, 'Mock resource "$1":'),
+    );
     (translated as { cause?: unknown }).cause = error;
     throw translated;
   }
@@ -56,115 +53,127 @@ export type ResourceOptions = {
   seed?: MockSource["seed"];
   pagination?: boolean | PaginationMode;
   operations: Record<string, unknown>;
+  storage?: import("@apixa/core").MockStorageOptions;
+  fixtures?: import("@apixa/core").MockFileFixtures;
+  fileFields?: import("@apixa/core").FileFieldsConfig;
+  fileLimits?: import("@apixa/core").FileLimits;
 };
 
 /** Paging keys are config of the call, not filters; everything else in the query filters rows. */
 const PAGING_MESSAGE = /: (page|pageSize|cursor) must be/;
 
-/** One resource: Core's `MockStore` and `runBuiltin` (the shared engine) plus calling conventions. */
+/** Adapt calling conventions to Core's existing mocked-client engine. */
 export function createResource(name: string, type: DatasetId, options: ResourceOptions) {
-  const label = `Mock resource "${name}"`;
-  const entry = catalog[type] as {
-    idKey: string;
-    load: () => Promise<{ default: readonly unknown[] }>;
-  };
-  const source: MockSource = {
-    label,
-    idKey: entry.idKey,
-    load: async () => (await entry.load()).default,
-    // Catalog datasets are module-cached and never mutated: no private snapshot needed.
-    seed: options.seed,
-    immutable: true,
-  };
-  const store = new MockStore(source);
-  const pagination: PaginationMode | undefined =
-    options.pagination === true ? "page" : options.pagination || undefined;
-  const fail = (code: MockApiErrorCode, message: string) =>
-    new MockApiError(code, `${label}: ${message}`);
-
-  /** Run against the loaded store; engine errors surface as `MockApiError`. */
-  const use =
-    <A extends unknown[], R>(fn: (...args: A) => R) =>
-    async (...args: A): Promise<Awaited<R>> => {
-      try {
-        await store.ready();
-        return await fn(...args);
-      } catch (error) {
-        return translate(error);
-      }
-    };
-
-  /** A builtin runs through Core's `runBuiltin`: the same code as a Core mocked resource. */
-  const run =
-    <A extends unknown[]>(intent: (...args: A) => BuiltinIntent) =>
-    async (...args: A): Promise<unknown> => {
-      try {
-        const built = intent(...args);
-        const { data } = await runBuiltin(store, source, built, pagination);
-        // A mock `delete` resolves to nothing (Core's wire shape is a 204 with a null body).
-        return built.op === "delete" || built.op === "deleteMany" ? undefined : data;
-      } catch (error) {
-        return translate(error);
-      }
-    };
-
-  const getAllFn = run((query?: Record<string, unknown>) => ({ op: "getAll", query }));
-  const builtins: Record<(typeof MOCK_BUILTINS)[number], (...args: never[]) => Promise<unknown>> = {
-    // `slice` caps the list result (like Core); the store keeps every record.
-    getAll: async (query?: Record<string, unknown>) =>
-      applyResourceSliceToListResult(await getAllFn(query), options.slice),
-    getById: run((id: Id) => ({ op: "getById", id })),
-    getBySlug: run((slug: Id) => ({ op: "getBySlug", slug })),
-    getMany: run((ids: Id[]) => ({ op: "getMany", ids })),
-    getBy: run((field: string, value: Id) => ({ op: "getBy", field, value })),
-    findFirst: run((query?: Record<string, unknown>) => ({ op: "findFirst", query })),
-    search: run((query?: Record<string, unknown>) => ({ op: "search", query })),
-    exists: run((id: Id) => ({ op: "exists", id })),
-    count: run((query?: Record<string, unknown>) => ({ op: "count", query })),
-    create: run((body: unknown) => ({ op: "create", body })),
-    update: run((id: Id, body: unknown) => ({ op: "update", id, body })),
-    patch: run((id: Id, body: unknown) => ({ op: "patch", id, body })),
-    upsert: run((id: Id, body: unknown) => ({ op: "upsert", id, body })),
-    delete: run((id: Id) => ({ op: "delete", id })),
-    createMany: run((body: unknown[]) => ({ op: "createMany", body })),
-    deleteMany: run((body: Id[]) => ({ op: "deleteMany", body })),
-  };
-
-  type Row = Record<string, unknown>;
-  const ctx: MockOperationContext<Row> = {
-    idKey: entry.idKey,
-    rows: async () => {
-      await store.ready().catch(translate);
-      return store.liveRows();
-    },
-    fail,
-    defaults: {
-      getAll: use(() => store.list()),
-      getById: use((id: Id) => store.get(id)),
-      create: use((input: unknown) => store.create(input)),
-      update: use((id: Id, input: unknown) => store.update(id, input)),
-      patch: use((id: Id, input: unknown) => store.patch(id, input)),
-      delete: use((id: Id) => store.delete(id)),
-    },
-  };
-
-  const custom =
-    (fn: MockOperationFn<Row>) =>
-    async (...args: unknown[]) => {
-      try {
-        return await fn(ctx, ...args);
-      } finally {
-        store.reindex();
-      }
-    };
-
-  const resource: Record<string, (...args: never[]) => Promise<unknown>> = {};
-  for (const [opName, definition] of Object.entries(options.operations)) {
-    if (typeof definition === "function") {
-      resource[opName] = custom(definition as MockOperationFn<Row>);
-    } else if ((MOCK_BUILTINS as readonly string[]).includes(opName)) {
-      resource[opName] = builtins[opName as (typeof MOCK_BUILTINS)[number]];
+  const entry = catalog[type];
+  const operations: Record<string, unknown> = {};
+  const names = new Map<string, string>();
+  for (const [op, choice] of Object.entries(options.operations)) {
+    if (typeof choice !== "function") {
+      operations[op] = true;
+      names.set(op, op);
+      continue;
     }
+    const internal = `adapter_${op}`;
+    names.set(op, internal);
+    operations[internal] = {
+      kind: "write",
+      method: "POST",
+      path: `/__adapter/${op}`,
+      mock: async ({
+        store,
+        files,
+        body,
+      }: import("@apixa/core").OperationMockContext<
+        Record<string, unknown>,
+        unknown,
+        unknown,
+        unknown
+      >) => {
+        type Row = Record<string, unknown>;
+        let rows: Row[] | undefined;
+        const flush = () => {
+          if (!rows) return;
+          for (const row of store.list()) store.delete(row[entry.idKey] as Id);
+          for (const row of rows) store.create(row);
+        };
+        const invoke = async <T>(fn: () => T): Promise<T> => {
+          try {
+            flush();
+            const result = fn();
+            if (rows) rows.splice(0, rows.length, ...store.list());
+            return result;
+          } catch (error) {
+            return translate(error);
+          }
+        };
+        const ctx: MockOperationContext<Row> = {
+          idKey: entry.idKey,
+          files,
+          rows: async () => (rows ??= store.list()),
+          fail: (code, message) => new MockApiError(code, `Mock resource "${name}": ${message}`),
+          defaults: {
+            getAll: () => invoke(() => store.list()),
+            getById: (id) => invoke(() => store.get(id)),
+            create: (input) => invoke(() => store.create(input as Row)),
+            update: (id, input) => invoke(() => store.update(id, input as Row)),
+            patch: (id, input) => invoke(() => store.patch(id, input as Row)),
+            delete: (id) => invoke(() => store.delete(id)),
+          },
+        };
+        const args = (body as { args: unknown[] }).args;
+        const result = await (choice as MockOperationFn<Row>)(ctx, ...args);
+        flush();
+        return result;
+      },
+    };
   }
-  return resource;
+  return {
+    definition: {
+      path: `/${encodeURIComponent(name)}`,
+      mock: {
+        data: async () => (await entry.load()).default,
+        idKey: entry.idKey,
+        seed: options.seed,
+        storage: options.storage,
+        fixtures: options.fixtures,
+      },
+      fileFields: options.fileFields,
+      fileLimits: options.fileLimits,
+      pagination: options.pagination === true ? "page" : options.pagination || undefined,
+      slice: options.slice,
+      defaultOperations: false,
+      operations,
+    },
+    wrap(core: Record<string, (...args: unknown[]) => Promise<unknown>>) {
+      const resource: Record<string | symbol, unknown> = {};
+      Object.defineProperty(resource, Symbol.for("@apixa/mock-target"), { value: core });
+      for (const [op, internal] of names)
+        resource[op] = async (...args: unknown[]) => {
+          try {
+            if (
+              internal === op &&
+              ["getById", "delete", "update", "patch", "upsert", "exists"].includes(op)
+            ) {
+              const id = args[0];
+              if ((typeof id !== "string" && typeof id !== "number") || id === "")
+                throw new MockApiError(
+                  "INVALID_INPUT",
+                  `Mock resource "${name}": invalid ${entry.idKey} ${JSON.stringify(id) ?? String(id)} (expected a non-empty string or number)`,
+                );
+            }
+            const forwarded =
+              internal !== op
+                ? [{ args }]
+                : ["getAll", "count", "search"].includes(op)
+                  ? [{ query: args[0] }]
+                  : args;
+            const result = await core[internal]!(...forwarded);
+            return (op === "delete" || op === "deleteMany") && internal === op ? undefined : result;
+          } catch (error) {
+            return translate(error);
+          }
+        };
+      return resource;
+    },
+  };
 }

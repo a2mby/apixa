@@ -2,7 +2,7 @@ import { AbortError, MockError } from "../errors/index.js";
 import type { MockStore } from "./store.js";
 import type { Row } from "./source.js";
 import type { MockResult } from "./execute.js";
-import type { MockFileMeta, MockFileStorage, MockStoredFile } from "./files.js";
+import type { MockFileFilter, MockFileMeta, MockFileStorage, MockStoredFile } from "./files.js";
 
 /**
  * What a custom operation's `mock` handler receives. Typed precisely in `types/mock-handler.ts`;
@@ -27,7 +27,7 @@ export interface MockFilesHandle {
   has(ref: string): boolean;
   meta(ref: string): MockFileMeta;
   get(ref: string): MockStoredFile;
-  list(filter?: { resource?: string; field?: string }): MockFileMeta[];
+  list(filter?: MockFileFilter): MockFileMeta[];
 }
 
 type Id = string | number;
@@ -90,8 +90,8 @@ export interface HandlerCall {
  * Run a custom declarative operation's `mock` handler against the resource's store.
  *
  * Cancellation: the call rejects as soon as the signal aborts, but a handler that has already
- * started keeps running (JavaScript cannot stop it) and its writes are not rolled back. It
- * receives `signal` so it can check `signal.aborted` before it mutates.
+ * started may keep running. Its draft is discarded and late managed writes are rejected. External
+ * user side effects are outside the managed transaction.
  */
 export async function runMockHandler(
   handler: (context: MockHandlerContext) => unknown,
@@ -100,7 +100,21 @@ export async function runMockHandler(
 ): Promise<MockResult> {
   await store.ready();
   if (call.signal.aborted) throw call.signal.reason ?? new AbortError();
-  const handle = createStoreHandle(store);
+  let active = true;
+  const rawHandle = createStoreHandle(store);
+  const handle = Object.freeze(
+    Object.fromEntries(
+      Object.entries(rawHandle).map(([key, fn]) => [
+        key,
+        (...args: unknown[]) => {
+          if (!active)
+            throw new MockError("MOCK_INVALID_INPUT", "Mock handler transaction has finished.");
+          if (call.signal.aborted) throw call.signal.reason ?? new AbortError();
+          return (fn as (...args: unknown[]) => unknown)(...args);
+        },
+      ]),
+    ),
+  ) as unknown as MockStoreHandle;
   const context: MockHandlerContext = {
     get records() {
       return store.list();
@@ -115,7 +129,12 @@ export async function runMockHandler(
     operation: call.operation,
   };
   const pending = Promise.resolve().then(() => handler(context));
-  const data = await raceAbort(pending, call.signal);
+  let data: unknown;
+  try {
+    data = await raceAbort(pending, call.signal);
+  } finally {
+    active = false;
+  }
   const noContent = call.method === "DELETE" && (data === undefined || data === null);
   return { status: noContent ? 204 : 200, data: noContent ? null : data };
 }

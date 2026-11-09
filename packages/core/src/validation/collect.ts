@@ -36,7 +36,11 @@ const utf8Size = (text: string) => new TextEncoder().encode(text).byteLength;
  * bounded depth (cycles are safe); caller-built `FormData` is read by entry; a raw `Blob`, buffer,
  * string or stream is described as a raw body. JSON-like values contribute nothing.
  */
-export function collectFiles(body: unknown, partNames: ReadonlyMap<string, string>): Collected {
+export function collectFiles(
+  body: unknown,
+  partNames: ReadonlyMap<string, string>,
+  metadata?: ReadonlyMap<Blob, { name: string; size: number; type: string }>,
+): Collected {
   const out: Collected = { files: [], present: new Set(), stream: false };
   if (body === undefined || body === null) return out;
 
@@ -80,7 +84,7 @@ export function collectFiles(body: unknown, partNames: ReadonlyMap<string, strin
   const seen = new Set<object>();
   const walk = (node: unknown, path: string, field: string | undefined, depth: number): void => {
     if (isBlob(node)) {
-      out.files.push({ path, field: field ?? "", ...describe(node) });
+      out.files.push({ path, field: field ?? "", ...(metadata?.get(node) ?? describe(node)) });
       return;
     }
     if (node === null || typeof node !== "object" || depth > MAX_DEPTH || seen.has(node)) return;

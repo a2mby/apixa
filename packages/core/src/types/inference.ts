@@ -1,3 +1,4 @@
+import type { ResolveMockFixtures } from "../mock/fixtures.js";
 import type { AllBuiltinOpName, OperationFnContext } from "./builtins.js";
 import type {
   ApiRootConfig,
@@ -103,9 +104,9 @@ export type MockEntityOf<M> =
     ? D extends MockDatasetId
       ? MockDatasetCatalog[D]["entity"]
       : D extends readonly unknown[]
-        ? ElementOf<D>
+        ? ResolveMockFixtures<ElementOf<D>>
         : D extends (...args: never[]) => infer Ret
-          ? ElementOf<Awaited<Ret>>
+          ? ResolveMockFixtures<ElementOf<Awaited<Ret>>>
           : unknown
     : unknown;
 
@@ -887,7 +888,10 @@ type MissingCustomOps<Meta, R> = Meta extends { operations: infer M }
   : never;
 
 type ValidateMock<M, Meta> = M extends { data: infer D }
-  ? Exact<M, { data: unknown; idKey: unknown; seed: unknown }> &
+  ? Exact<
+      M,
+      { data: unknown; idKey: unknown; seed: unknown; storage: unknown; fixtures: unknown }
+    > &
       (M extends { seed: infer S }
         ? { seed: Exact<S, { limit: unknown; offset: unknown }> }
         : unknown) &

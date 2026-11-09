@@ -53,11 +53,28 @@ const files = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
 });
 `;
 
+const STORAGE_API = `
+const fixture = mockFileFixture("bytes", { name: "seed.txt", type: "text/plain" });
+const seeded = defineCore({ baseURL: "https://example.test", resources: { docs: { path: "/docs", fileFields: ["file"], mock: {
+  data: [{ id: 1, file: mockFixtureRef("seed") }], fixtures: { seed: fixture }, storage: { disk: "test", directory: "docs", naming: "unique" },
+} } } });
+async function storageTypes() {
+  const row = await seeded.docs.getById(1);
+  type _ref = Assert<Equal<typeof row.file, string>>;
+  const file = mockFiles(seeded).get(row.file);
+  type _meta = Assert<Equal<NonNullable<typeof file>["meta"]["disk"], string | undefined>>;
+  await seeded.docs.patch(1, { file: new Blob(["next"]) });
+  const listed = mockFiles(seeded).list({ disk: "test", path: "docs" });
+  type _list = Assert<NotAny<typeof listed[number]>>;
+}
+void storageTypes;
+`;
+
 /** Core only: no React, no TanStack anywhere in the project. */
 export const CORE_ONLY = `import { defineApi, detectTransferSupport, parseContentDisposition, type ApiError, type TransferEvent, type TransferSupport, type FileViolation, type FileViolationCode, ValidationError } from "apixa";
-import { defineApi as defineCore } from "apixa/core";
+import { defineApi as defineCore, mockFileFixture, mockFixtureRef, mockFiles } from "apixa/core";
 import { defineMockApi } from "apixa/mocking";
-${HELPERS}${API}${DOWNLOAD_API}
+${HELPERS}${API}${DOWNLOAD_API}${STORAGE_API}
 const core = defineCore({ baseURL: "https://example.test", resources: { u: { path: "/u" } } });
 void core;
 void defineMockApi;

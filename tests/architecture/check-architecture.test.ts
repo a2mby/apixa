@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import {
   appendFileSync,
   cpSync,
@@ -28,12 +28,18 @@ function checkout(): string {
   return dir;
 }
 
-function run(dir: string) {
-  const result = spawnSync("node", [script], {
-    env: { ...process.env, APIXA_ARCH_ROOT: dir },
-    encoding: "utf8",
+/** Async on purpose: a blocking spawn starves the worker's RPC and times out on a loaded runner. */
+function run(dir: string): Promise<{ status: number | null; output: string }> {
+  return new Promise((resolveRun, reject) => {
+    const child = spawn("node", [script], {
+      env: { ...process.env, APIXA_ARCH_ROOT: dir },
+    });
+    let output = "";
+    child.stdout.setEncoding("utf8").on("data", (chunk: string) => (output += chunk));
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => (output += chunk));
+    child.on("error", reject);
+    child.on("close", (status) => resolveRun({ status, output }));
   });
-  return { status: result.status, output: `${result.stdout}${result.stderr}` };
 }
 
 const append = (dir: string, file: string, text: string) => appendFileSync(join(dir, file), text);
@@ -183,9 +189,10 @@ const violations: [string, string, (dir: string) => void][] = [
   ],
 ];
 
-describe("architecture checker", () => {
-  it("passes on an unmodified checkout", () => {
-    const { status, output } = run(checkout());
+// Each case copies the build and runs the checker in a child process; a loaded runner needs headroom.
+describe("architecture checker", { timeout: 60_000 }, () => {
+  it("passes on an unmodified checkout", async () => {
+    const { status, output } = await run(checkout());
     expect(output).toContain("Architecture check passed");
     expect(status).toBe(0);
   });
@@ -193,11 +200,11 @@ describe("architecture checker", () => {
   // Mutations of built output need `pnpm build` first; `pnpm verify` always builds before testing.
   const built =
     existsSync(join(repo, "dist/index.js")) && existsSync(join(repo, "packages/react/dist"));
-  it.for(violations)("rejects: %s", ([, rule, mutate], { skip }) => {
+  it.for(violations)("rejects: %s", async ([, rule, mutate], { skip }) => {
     if (!built && /dist\//.test(mutate.toString())) skip();
     const dir = checkout();
     mutate(dir);
-    const { status, output } = run(dir);
+    const { status, output } = await run(dir);
     expect(status, output).toBe(1);
     expect(output).toContain(`[${rule}]`);
   });
