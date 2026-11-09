@@ -130,7 +130,9 @@ describe("onTransfer through the React hooks", () => {
         },
       });
     });
-    expect(out).toBeInstanceOf(Blob);
+    // Node's Response and jsdom can expose different Blob constructors: check the shape, not the class.
+    expect(out?.size).toBe(body.byteLength);
+    expect(out?.type).toBe("application/octet-stream");
     expect(events.filter((e) => e.direction === "upload").at(-1)).toMatchObject({
       phase: "complete",
       loaded: 5,
