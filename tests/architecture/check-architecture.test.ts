@@ -189,7 +189,8 @@ const violations: [string, string, (dir: string) => void][] = [
   ],
 ];
 
-describe("architecture checker", () => {
+// Each case copies the build and runs the checker in a child process; a loaded runner needs headroom.
+describe("architecture checker", { timeout: 60_000 }, () => {
   it("passes on an unmodified checkout", async () => {
     const { status, output } = await run(checkout());
     expect(output).toContain("Architecture check passed");
