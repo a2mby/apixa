@@ -20,12 +20,16 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-**[v1.5.0](./v1.5.0/)** — Advanced Mock File Storage (Advanced File Handling, phase 6).
-Completed and verified (`pnpm verify`); owner sign-off recorded 2026-11-09. Extend the existing client-scoped in-memory engine
-with optional disks/paths/naming, fixtures and dataset integration, metadata/listing and consistent
-ownership, reset and atomic managed writes. No storage drivers or new packages.
+**[v1.6.0](./v1.6.0/)** — Advanced Framework & Consumer Integration (Advanced File Handling, phase 7).
+Implemented and verified (`pnpm verify`); owner sign-off open. Proved (and fix only what the audit proves) that the file system
+works through the existing React/TanStack hooks and Next.js: runtime hook coverage on React 18 and 19
+against the packed package, transfer/cancellation/error/mock/SSR behavior, and a tracked example. No new
+hooks, packages or dependencies unless the owner approves a proven need.
 
-Previous: **[v1.4.0](./v1.4.0/)** — File Validation, Middleware & Safety (phase 5).
+Previous: **[v1.5.0](./v1.5.0/)** — Advanced Mock File Storage (phase 6). Completed and verified
+(`pnpm verify`); owner sign-off recorded 2026-11-09.
+
+Earlier: **[v1.4.0](./v1.4.0/)** — File Validation, Middleware & Safety (phase 5).
 Merged and verified (`pnpm verify`); **owner sign-off remains open**, alongside React 18 runtime
 hook coverage and the Next validation scenario's delivered/browser evidence. Not declared shipped.
 

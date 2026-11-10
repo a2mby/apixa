@@ -194,6 +194,19 @@ export function App() {
   });
   type _tx3 = Assert<NotAny<typeof watched>>;
   type _tx4 = Assert<Equal<(typeof watched)["data"], Blob | undefined>>;
+  // v1.6.0: files through the hooks keep full inference.
+  const fileApi = defineApi<{ docs: { path: "/docs"; entity: { id: string; name: string; photo?: string | null } } }>()({
+    baseURL: "https://example.test",
+    resources: { docs: { path: "/docs", fileFields: { photo: { maxSize: 5, accept: ["image/*"] } }, operations: { download: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } },
+  });
+  const fileWrites = useResourceMutation(fileApi.docs, { queryKey: ["docs"] });
+  type _fw1 = Assert<NoAnyMembers<typeof fileWrites>>;
+  const uploading = fileWrites.create({ name: "x", photo: new File([], "a.png") }, { onTransfer: (event) => { type _fw2 = Assert<NotAny<typeof event>>; } });
+  type _fw3 = Assert<Equal<Awaited<typeof uploading>, { id: string; name: string; photo?: string | null }>>;
+  const fileResource = useResource(fileApi.docs, { queryKey: ["docs"] });
+  type _fw4 = Assert<NotAny<typeof fileResource>>;
+  type _fw5 = Assert<Equal<Awaited<ReturnType<(typeof fileResource)["download"]>>, Blob>>;
+  type _fw6 = Assert<Equal<(typeof fileResource)["states"]["create"]["error"], Error | null>>;
   const one = useResourceQuery(api.users, { queryKey: ["one"], operation: "getById", args: ["1"] });
   type _o1 = Assert<NotAny<typeof one>>;
   type _o2 = Assert<Equal<(typeof one)["data"], User | undefined>>;

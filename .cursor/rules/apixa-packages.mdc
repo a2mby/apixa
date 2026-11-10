@@ -24,6 +24,6 @@ Reuse folders under `packages/core/src/` (`api/`, `operation/`, `request/`, `htt
 
 ## Examples and tests
 
-- Only maintain **`examples/next`** (see `apixa-examples` rule). Do not edit other `examples/*`.
+- Only maintain the Next examples, **`examples/query-ssr-next`** (tracked) and the local `examples/next` (see `apixa-examples` rule). Do not edit other `examples/*`.
 - Tests under root `tests/` (e.g. `tests/core/`); use injectable/fake `Transport`.
 - No flaky live-network as the primary suite.

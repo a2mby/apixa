@@ -74,7 +74,7 @@ docs/           # living: context, architecture, roadmap, conventions, decisions
 versions/       # frozen milestones only — never empty future stubs
 packages/       # private core, mocking, react, internal/shared implementations
 src/            # facade for the only published npm package: apixa
-examples/next/  # only maintained example; do not edit other examples/*
+examples/query-ssr-next/  # tracked, verified Next example (examples/next is the local playground); do not edit other examples/*
 tests/
 ```
 
@@ -148,11 +148,12 @@ Also keep `versions/README.md` pointing at the **active** version.
 
 # Examples — Next only
 
-The maintained playground is **`examples/next`**. Do not create, edit, delete, or “sync” other example apps unless the user explicitly names that framework.
+The maintained Next.js apps are **`examples/query-ssr-next`** (tracked and driven by `pnpm verify`: this is where scenarios that must stay maintained live) and the local, untracked playground **`examples/next`** (ignored by git). Do not create, edit, delete, or “sync” other example apps unless the user explicitly names that framework.
 
 ## Allowed
 
-- `examples/next/**` (and its README when documenting Next usage)
+- `examples/query-ssr-next/**` (tracked; its README when documenting Next usage)
+- `examples/next/**` (local playground; not committed)
 - Root docs / README that _mention_ examples in general
 
 ## Do not touch
@@ -171,8 +172,8 @@ examples/vue/src/api.ts
 examples/react-vite/src/api.ts
 
 # ✅ GOOD — Next only
-examples/next/lib/api.ts
-examples/next/components/...
+examples/query-ssr-next/lib/api.ts
+examples/query-ssr-next/app/files/...
 ```
 
 If an API change needs a usage sample and Next is not enough, update Core tests / README first. Only open another example when the user asks for that example by name.
@@ -221,7 +222,7 @@ Reuse folders under `packages/core/src/` (`api/`, `operation/`, `request/`, `htt
 
 ## Examples and tests
 
-- Only maintain **`examples/next`** (see `apixa-examples` rule). Do not edit other `examples/*`.
+- Only maintain the Next examples, **`examples/query-ssr-next`** (tracked) and the local `examples/next` (see `apixa-examples` rule). Do not edit other `examples/*`.
 - Tests under root `tests/` (e.g. `tests/core/`); use injectable/fake `Transport`.
 - No flaky live-network as the primary suite.
 

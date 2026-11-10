@@ -261,8 +261,123 @@ async function exercise(mode, port) {
       `${mode}: one visitor's mutation reached another's server render`,
     );
 
+    // 10. File scenario (v1.6.0): rules reject locally, progress is counted, cancel ends the transfer.
+    const filesPage = await context.newPage();
+    const fileProblems = [];
+    filesPage.on("pageerror", (error) => fileProblems.push(`pageerror: ${error.message}`));
+    filesPage.on("console", (m) => {
+      if (m.type() === "error" || HYDRATION_PROBLEM.test(m.text()))
+        fileProblems.push(`${m.type()}: ${m.text()}`);
+    });
+    const filesResponse = await filesPage.goto(`${base}/files`, { waitUntil: "domcontentloaded" });
+    const filesHtml = await filesResponse.text();
+    assert.match(
+      filesHtml.replace(/<!-- -->/g, ""),
+      /server downloaded 10000 bytes/,
+      `${mode}: the Server Component read the binary itself`,
+    );
+    assert.ok(
+      filesHtml.includes("report.bin"),
+      `${mode}: the serializable list was prefetched and hydrated`,
+    );
+    await filesPage.waitForFunction(() =>
+      document.querySelector('[data-testid="support"]')?.textContent?.includes("streamingUpload"),
+    );
+    const requestsOf = () => filesPage.evaluate(() => window.__apixaRequests);
+    const status = () => filesPage.getByTestId("status").textContent();
+    const events = () => filesPage.getByTestId("events").textContent();
+    const upload = (name, mimeType, size) =>
+      filesPage
+        .getByTestId("file")
+        .setInputFiles({ name, mimeType, buffer: Buffer.alloc(size, 1) });
+    await filesPage.evaluate(() => (window.__apixaRequests = []));
+
+    await upload("big.png", "image/png", 4096);
+    await filesPage.getByTestId("upload").click();
+    await filesPage.waitForFunction(() =>
+      document
+        .querySelector('[data-testid="status"]')
+        .textContent.startsWith("upload: ValidationError"),
+    );
+    assert.match(
+      await status(),
+      /FILE_TOO_LARGE/,
+      `${mode}: oversized file rejected with typed violations`,
+    );
+    await upload("note.txt", "text/plain", 10);
+    await filesPage.getByTestId("upload").click();
+    await filesPage.waitForFunction(() =>
+      document.querySelector('[data-testid="status"]').textContent.includes("TYPE_NOT_ALLOWED"),
+    );
+    assert.deepEqual(await requestsOf(), [], `${mode}: rejected files sent no request`);
+
+    await upload("ok.png", "image/png", 512);
+    await filesPage.getByTestId("upload").click();
+    await filesPage.waitForFunction(() =>
+      document.querySelector('[data-testid="status"]').textContent.startsWith("upload: done"),
+    );
+    assert.equal(
+      (await requestsOf()).filter((r) => r.startsWith("POST")).length,
+      1,
+      `${mode}: the accepted file was sent once`,
+    );
+
+    await filesPage.getByTestId("send-stream").click();
+    await filesPage.waitForFunction(() =>
+      document.querySelector('[data-testid="status"]').textContent.startsWith("send: done"),
+    );
+    assert.match(
+      await events(),
+      /upload:complete:2000/,
+      `${mode}: a streamed upload is counted byte for byte`,
+    );
+
+    await filesPage.getByTestId("download").click();
+    await filesPage.waitForFunction(
+      () =>
+        document.querySelector('[data-testid="status"]').textContent ===
+        "download: done 10000 bytes",
+      null,
+      { timeout: 15_000 },
+    );
+    const downloadEvents = await events();
+    assert.match(
+      downloadEvents,
+      /download:start:0\/10000/,
+      `${mode}: download starts with the trustworthy total`,
+    );
+    assert.match(
+      downloadEvents,
+      /download:progress:[2468]000\/10000/,
+      `${mode}: download progress is incremental`,
+    );
+    assert.match(downloadEvents, /download:complete:10000\/10000/, `${mode}: download completes`);
+
+    await filesPage.getByTestId("download").click();
+    await filesPage.waitForTimeout(100);
+    await filesPage.getByTestId("cancel").click();
+    await filesPage
+      .waitForFunction(
+        () => document.querySelector('[data-testid="status"]').textContent.includes("AbortError"),
+        null,
+        { timeout: 10_000 },
+      )
+      .catch(async (error) => {
+        throw new Error(`${error.message}; status=${await status()}; events=${await events()}`);
+      });
+    assert.doesNotMatch(
+      await events(),
+      /download:complete/,
+      `${mode}: a cancelled download never completes`,
+    );
+    assert.deepEqual(
+      fileProblems,
+      [],
+      `${mode}: /files console problems:\n${fileProblems.join("\n")}`,
+    );
+
     note(
-      `Browser (${mode}): SSR HTML, hydration without warnings or requests, shared cache, mutation + invalidation, cached read, infinite query, ApixaProvider stability, native provider, request isolation passed`,
+      `Browser (${mode}): SSR HTML, hydration without warnings or requests, shared cache, mutation + invalidation, cached read, infinite query, ApixaProvider stability, native provider, request isolation, file scenario (rules, progress, cancel) passed`,
     );
   } finally {
     await browser.close();

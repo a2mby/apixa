@@ -115,7 +115,18 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
 
-## Current: v1.5.0 — Advanced Mock File Storage
+## Current: v1.6.0 — Advanced Framework & Consumer Integration
+
+**Spec:** [versions/v1.6.0/](../versions/v1.6.0/) (implemented and verified; owner sign-off open)
+
+- Hook-level runtime coverage of uploads, downloads, progress, cancellation, errors, mocks and
+  invalidation through `useResourceQuery`, `useResourceMutation` and `useResource`
+- React 18 **and** 19 runtime verification against the packed package (closes the gap recorded since v1.3.0)
+- Next.js SSR/hydration rules for Blob, File and stream values; fixes only for audit-proven defects
+- A tracked, Chromium-driven Next example for upload, download, progress, cancellation and validation
+- No new hooks, packages or dependencies unless the owner approves a proven need
+
+## Completed: v1.5.0 — Advanced Mock File Storage
 
 **Spec:** [versions/v1.5.0/](../versions/v1.5.0/) (completed and verified (`pnpm verify`); owner sign-off recorded 2026-11-09)
 
@@ -195,7 +206,7 @@ optional milestone **after** file handling.
 4. Transfer progress, cancellation, streaming, and reliability — **v1.3.0**
 5. Middleware, validation, file limits, and error handling — **v1.4.0**
 6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store — **v1.5.0** (completed and owner-approved)
-7. React/TanStack and form compatibility, browser/Node integration, and testing
+7. React/TanStack and form compatibility, browser/Node integration, and testing — **v1.6.0** (form adapters excluded)
 8. Large-file uploads, chunking, resumability, parallel transfers, and storage adapters
 9. File lifecycle management, cleanup policies, performance, documentation, and release hardening
 

@@ -1,16 +1,17 @@
 ---
-description: Only edit the Next.js example; leave other examples alone
+description: Only edit the Next.js examples; leave other examples alone
 globs: examples/**/*
 alwaysApply: true
 ---
 
 # Examples — Next only
 
-The maintained playground is **`examples/next`**. Do not create, edit, delete, or “sync” other example apps unless the user explicitly names that framework.
+The maintained Next.js apps are **`examples/query-ssr-next`** (tracked and driven by `pnpm verify`: this is where scenarios that must stay maintained live) and the local, untracked playground **`examples/next`** (ignored by git). Do not create, edit, delete, or “sync” other example apps unless the user explicitly names that framework.
 
 ## Allowed
 
-- `examples/next/**` (and its README when documenting Next usage)
+- `examples/query-ssr-next/**` (tracked; its README when documenting Next usage)
+- `examples/next/**` (local playground; not committed)
 - Root docs / README that *mention* examples in general
 
 ## Do not touch
@@ -29,8 +30,8 @@ examples/vue/src/api.ts
 examples/react-vite/src/api.ts
 
 # ✅ GOOD — Next only
-examples/next/lib/api.ts
-examples/next/components/...
+examples/query-ssr-next/lib/api.ts
+examples/query-ssr-next/app/files/...
 ```
 
 If an API change needs a usage sample and Next is not enough, update Core tests / README first. Only open another example when the user asks for that example by name.

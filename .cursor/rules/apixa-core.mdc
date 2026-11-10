@@ -18,7 +18,7 @@ docs/           # living: context, architecture, roadmap, conventions, decisions
 versions/       # frozen milestones only — never empty future stubs
 packages/       # private core, mocking, react, internal/shared implementations
 src/            # facade for the only published npm package: apixa
-examples/next/  # only maintained example; do not edit other examples/*
+examples/query-ssr-next/  # tracked, verified Next example (examples/next is the local playground); do not edit other examples/*
 tests/
 ```
 

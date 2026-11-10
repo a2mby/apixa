@@ -10,7 +10,13 @@ client components against the hydrated cache:
 - `useResourceQuery` in infinite mode for cursor-paginated posts (`fetchNextPage`).
 
 The paging config lives in `lib/api.ts` so the server and the client build the same cache key.
-A deterministic local transport supplies data, so no API service or credentials are required.
+A second page, `/files`, covers files end to end (`lib/files-demo.ts`, `app/files/`): a rule-checked
+upload (`fileFields: { photo: { maxSize, accept } }`) that rejects locally with typed
+`ValidationError.violations` and sends no request; a counted stream upload and a download with
+`onTransfer` progress (known total); and cancellation with an `AbortController`. Progress is plain React
+state fed by `onTransfer`; the Server Component downloads a `Blob` itself and passes only plain values
+down (binary data does not cross the Server -> Client boundary). `pnpm verify` drives this page in
+Chromium. A deterministic local transport supplies data, so no API service or credentials are required.
 
 From the repository root:
 

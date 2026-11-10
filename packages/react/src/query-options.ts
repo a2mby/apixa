@@ -206,7 +206,7 @@ export function buildResourceQueryOptions(
       const bound =
         typeof args === "function"
           ? callArgs
-          : withOptions(callArgs, info, { signal: context.signal });
+          : withOptions(callArgs, info, { signal: bindSignal(callArgs, info, context.signal) });
       return (run as (...values: unknown[]) => Promise<unknown>)(...bound);
     },
   }) as GeneratedQueryOptions<unknown>;
@@ -218,6 +218,35 @@ export type RuntimeQueryOptions = ResourceQueryNativeOptions<unknown> & {
   keyParts?: QueryKey;
   query?: unknown;
 };
+
+/** A signal that aborts when any of the given signals does (`AbortSignal.any` where available). */
+function anySignal(signals: readonly AbortSignal[]): AbortSignal {
+  if (typeof AbortSignal.any === "function") return AbortSignal.any([...signals]);
+  const controller = new AbortController();
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
+      break;
+    }
+    signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+  }
+  return controller.signal;
+}
+
+/**
+ * TanStack's query signal, combined with a signal the caller put in the call options: aborting
+ * either one cancels the request (a caller's signal must never be silently replaced).
+ */
+function bindSignal(
+  values: readonly unknown[],
+  info: OperationInfo,
+  tanstack: AbortSignal,
+): AbortSignal {
+  const index = info.optionsIndex;
+  const current = index === null ? undefined : values[index];
+  const own = isPlainObject(current) ? current.signal : undefined;
+  return own instanceof AbortSignal ? anySignal([own, tanstack]) : tanstack;
+}
 
 /**
  * Merge `extra` into Core's `RequestOptions` slot at its known position. Never touches functions
@@ -236,6 +265,40 @@ export function withOptions(
   while (result.length < index) result.push(undefined);
   result[index] = { ...(current ?? {}), ...extra };
   return result;
+}
+
+const BINARY_KINDS: ReadonlyArray<[string, (value: unknown) => boolean]> = [
+  ["Blob/File", (v) => typeof Blob !== "undefined" && v instanceof Blob],
+  ["ArrayBuffer", (v) => v instanceof ArrayBuffer],
+  ["FormData", (v) => typeof FormData !== "undefined" && v instanceof FormData],
+  ["ReadableStream", (v) => typeof ReadableStream !== "undefined" && v instanceof ReadableStream],
+];
+
+/**
+ * TanStack hashes a query key with `JSON.stringify`, which turns every `File`, `Blob`, `ArrayBuffer`,
+ * `FormData` and stream into `{}`: two different files would share one cache entry and silently
+ * return each other's data. Refuse them in a generated identity instead (bounded, cycle-safe walk).
+ */
+function assertNoBinaryIdentity(identity: readonly unknown[]): void {
+  const seen = new Set<object>();
+  const walk = (value: unknown, depth: number): string | undefined => {
+    if (value === null || typeof value !== "object") return undefined;
+    for (const [name, test] of BINARY_KINDS) if (test(value)) return name;
+    if (depth > 16 || seen.has(value)) return undefined;
+    seen.add(value);
+    for (const child of Array.isArray(value) ? value : Object.values(value)) {
+      const found = walk(child, depth + 1);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  const found = walk(identity, 0);
+  if (found) {
+    throw new Error(
+      `A ${found} cannot be part of a query's identity: it would hash like {} and share one cache entry with every other value. ` +
+        "Send files with a mutation, or give the query an explicit identity with `keyParts` (for example a content hash or an id).",
+    );
+  }
 }
 
 /**
@@ -258,6 +321,7 @@ export function normalizeIdentity(values: readonly unknown[], info: OperationInf
     result[index] = Object.keys(rest).length === 0 ? undefined : rest;
   }
   while (result.length > 0 && result[result.length - 1] === undefined) result.pop();
+  assertNoBinaryIdentity(result);
   return result;
 }
 
