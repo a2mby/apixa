@@ -432,3 +432,35 @@ architecture contract above.
 - Public API contract and migration map: [public-api.md](./public-api.md)
 - Roadmap: [roadmap.md](./roadmap.md)
 - Latest coding contract: [../versions/v0.8.0/](../versions/v0.8.0/) (shipped; see [versions/README.md](../versions/README.md))
+
+## Advanced transfers (v1.7.0, unreleased)
+
+Advanced uploads are optional operation strategies inside Core's existing `transfer/` area.
+`runOperation` builds the logical request, runs its request middleware and whole-source validation,
+then invokes the private session orchestrator instead of sending the outer body once. Protocol
+steps recursively use `runOperation` with strategy selection disabled; `sendWithRetry` remains the
+only transport attempt/retry loop. Root/resource middleware applies to step requests, while the
+outer operation's middleware runs on the logical call and final result. Protocol requests have
+explicit validated method kinds; ordinary function request classification is unchanged.
+
+One overall deadline/signal covers the session, child calls, backoff, hashing, pause and persistence.
+A finite worker set slices parts lazily; one sequential digest pass creates a capped chunk-manifest
+identity where resume requires it. Checkpoints hold metadata, not binary source or delegated URLs;
+reconciliation uses authoritative backend parts, never local flags alone. Successful logical
+completion requires decoded backend confirmation. The final real response supplies full metadata.
+Session observation and controls are optional inputs; operations remain native promises and hooks
+remain consumers of Core. No global scheduler, cache or separate transfer client is introduced.
+
+Presigned requests require an explicit exact-origin policy and a transport capable of enforcing
+credential omission/redirect rejection. They bypass inherited auth providers and ordinary request
+middleware, use a separate explicit trusted request-middleware list, and are revalidated before
+transport. Ordinary calls retain their existing same-origin guard. Signed URL/credential metadata
+is sanitized before response/error middleware and error observation; request replay is disabled for
+signed failures. Custom transports opt in explicitly. Backend protocol decoders and trusted
+middleware remain application code and must not expose secrets or fabricate acknowledgments.
+
+S3 integration is a tested backend-mediated recipe in the maintained Next example, not a public
+provider abstraction. Existing mock storage remains a client-scoped record/file engine and does not
+become a multipart session server. Ranged downloads, mandatory whole-file hashing dependencies and
+background persistence remain outside this milestone. See the [Core recipes](../packages/core/README.md#advanced-transfers-v170)
+and [version decisions](../versions/v1.7.0/implementation-plan.md).

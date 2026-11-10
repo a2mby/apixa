@@ -836,7 +836,7 @@ type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
     : ValidateOperationShape<Name, Op>;
 
 type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
-  ? Exact<Op, { kind: unknown; run: unknown }> &
+  ? Exact<Op, { kind: unknown; run: unknown; presigned?: unknown }> &
       (Name extends AllBuiltinOpName
         ? unknown
         : Op extends { kind: "read" | "write" }
@@ -931,13 +931,40 @@ type ValidateFileFields<F, E> =
         }
     : unknown;
 
+type DeclaredTransferFields<R> = R extends { fileFields: infer F }
+  ? F extends readonly string[]
+    ? F[number]
+    : keyof F
+  : never;
+type ValidateTransfer<Name, Op, R> = Op extends { transfer: { source: infer S } }
+  ? (EffectiveKind<Name, Op> extends "write"
+      ? unknown
+      : { transfer: ConfigTypeError<"transfer is only for write operations"> }) &
+      (Op extends { dataFormat: unknown }
+        ? { transfer: ConfigTypeError<"transfer cannot combine with outer dataFormat"> }
+        : unknown) &
+      (S extends string
+        ? string extends S
+          ? unknown
+          : S extends DeclaredTransferFields<R>
+            ? unknown
+            : {
+                transfer: {
+                  source: ConfigTypeError<"transfer source must name a declared file field">;
+                };
+              }
+        : unknown)
+  : unknown;
+
 type ValidateResource<R, Meta, Root extends RootTypes> = Exact<R, ResourceDefinition> &
   (R extends { readOnly: true; writeOnly: true }
     ? { writeOnly: ConfigTypeError<"readOnly and writeOnly cannot both be true"> }
     : unknown) &
   (R extends { operations: infer Ops }
     ? {
-        operations: { [O in keyof Ops]: ValidateOperation<O, Ops[O]> } & {
+        operations: {
+          [O in keyof Ops]: ValidateOperation<O, Ops[O]> & ValidateTransfer<O, Ops[O], R>;
+        } & {
           [
             O in MissingCustomOps<Meta, R>
           ]: ConfigTypeError<"declared in metadata but not defined in runtime operations">;

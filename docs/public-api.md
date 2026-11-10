@@ -196,3 +196,28 @@ Additions belong to `apixa/core` and `apixa/mocking`; the curated root exports a
 
 See [Core usage](../packages/core/README.md#advanced-mock-file-storage) and the
 [architecture lifecycle contract](./architecture.md).
+
+## v1.7.0 additions (advanced transfers, unreleased)
+
+Additions are specialized to `apixa/core`; curated root values and all import paths stay unchanged.
+
+- Value: `createTransferControl` (caller-owned input with pause/resume/cancel/remote-abort methods).
+- Types: `AdvancedTransferConfig`, `AdvancedTransferOptions`, `AdvancedTransferFailure`,
+  `TransferProtocol`, `TransferStepContext`, `TransferCheckpoint`, `TransferPart`, `TransferPartAck`,
+  `TransferSnapshot`, `TransferControl`, `TransferSessionState`, `PresignedPolicy`, `PresignedRequest`.
+- Optional operation `transfer` and `presigned`; function operation `presigned`; call-option
+  `transfer`/`presigned`; `ctx.transfer` and `ctx.request` presigned descriptors. Only protocol
+  context requests accept explicit mixed read/write kinds. Ordinary function kinds remain fixed.
+- Optional `Transport.capabilities.presigned`, `TransportRequest.security`, `ApiRequest.delegated`,
+  `ApiError.advancedTransfer`. Existing custom transports remain valid for ordinary calls; delegated
+  requests require capability opt-in and actual credential/redirect enforcement.
+- Ordinary file requests, hooks, errors and onTransfer are unchanged. Advanced aggregate events use
+  `onSession`. Checkpoint persistence is caller-owned; resume requires server inspection and strong
+  chunk-manifest source identity. Checkpoints are never authoritative server state.
+- Fix: `ctx.request` now forwards the already-declared maxResponseSize option into its pipeline.
+- React query identities exclude transfer controls; new presigned reads require explicit safe
+  keyParts so temporary signed destinations cannot enter generated keys. No new React exports.
+
+Implemented configuration, backend obligations, security boundaries and runtime limits are in the
+[Core README](../packages/core/README.md#advanced-transfers-v170). No cloud SDK, new public package,
+S3 adapter framework or ranged-download API is introduced.

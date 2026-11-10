@@ -313,3 +313,127 @@ External side effects and response middleware after commit cannot be rolled back
 never use the network; fixture setup has no transfer events. Upload observation remains unsupported
 and sized mock downloads report actual bytes. No File constructor is required for fixture setup;
 Blob plus explicit metadata works in Node, browsers, SSR and Edge. No driver/provider dependency.
+
+<a id="advanced-transfers-v170"></a>
+
+## Advanced transfers (v1.7.0, unreleased)
+
+Normal uploads and downloads keep their existing behavior. To use a backend's chunk/session
+protocol, add `transfer` to a **write operation** (including a builtin override). Configuration is
+operation-local; there is no automatic file-size threshold or resource-wide mode. Select a declared
+file field with `source: "document"`, or select a raw Blob with `source: body => body` after checking
+its type. Outer `dataFormat` and `transfer` cannot be combined; each protocol request selects its
+own serialization. Operations still return native promises and their inferred domain result;
+`full: true` returns the real finalization response metadata.
+
+The maintained [Next recipe](../../examples/query-ssr-next/lib/advanced-transfer.ts) shows the
+complete protocol: `initiate`, `inspect`, `uploadPart`, `complete`, and optional `abort`/`renew`.
+Callbacks use a narrow `TransferStepContext.request({ kind, method, ... })`, which runs through
+Core's existing request pipeline, transport, middleware, limits, timeout and retry mechanism.
+Backend steps inherit caller headers, metadata and response limits; caller `retry: false` disables
+step retries. Operation idempotency keys are scoped to initiation, individual parts and completion.
+Control responses default to a 4 MiB cap through the existing `maxResponseSize` option. Presigned
+steps receive no inherited headers or metadata and retain their isolated security policy.
+Only that protocol context allows explicitly classified read and write steps in one upload.
+Ordinary function `ctx.request` retains its kind restriction; write functions can compose a transfer
+with `ctx.transfer(config, body, options)`.
+
+Defaults are 8 MiB slices, one active part, and a maximum of 10,000 parts (provider limits may be
+stricter). Parallelism is explicit and requires `independentParts`; otherwise it falls back to one.
+Parts are sliced lazily. Hashing uses one bounded slice buffer; no whole-file ArrayBuffer is created.
+Acknowledgment metadata grows with the capped part count. Validation checks the original logical
+body after request middleware and before session creation; splitting cannot evade whole-file rules.
+Non-seekable streams do not support this mode. A protocol must declare empty-file behavior.
+
+`onTransfer` retains its existing per-request/per-attempt observed-byte semantics. Optional
+`transfer.onSession` supplies immutable phase/part snapshots and unique server-confirmed bytes.
+Reading an upload body is not a server acknowledgment. Unsupported byte observation stays absent;
+observer errors are ignored. `uploadPart` must return a decoded server acknowledgment with exact
+index/offset/size, optional ETag/checksum, and explicit verification strength. Completion must return
+a real successful `ApiResponse` after parsing backend errors, including errors embedded under HTTP 200.
+
+```ts
+import { createTransferControl } from "apixa/core";
+
+const control = createTransferControl();
+const pending = api.files.create(
+  { document: file },
+  {
+    transfer: {
+      control,
+      onSession: ({ confirmedBytes, total }) => updateProgress(confirmedBytes, total),
+      saveCheckpoint: async (checkpoint) => saveToApplicationStorage(checkpoint),
+    },
+  },
+);
+await control.pause(); // quiesces parts and persistence; the deadline continues
+control.resume();
+await pending; // the original native Promise resolves after backend completion
+```
+
+The snippet assumes `api.files.create` is configured with the protocol shown in the linked recipe;
+application progress and storage functions are supplied by the caller. A control binds to one active
+invocation. `cancel()`/caller AbortSignal stop local work and reject AbortError without deleting remote
+storage. `abort()` is a separate, awaited remote operation; deletion is confirmed only after the
+backend acknowledges it. A failed abort does not pretend the session was deleted. Resume after
+interruption is a **new call**, with a new signal/control, the reacquired Blob/File and the persisted
+checkpoint in `transfer.checkpoint`.
+
+Checkpoints are versioned typed metadata, never source bytes, headers, tokens or signed URLs.
+`inspect` is required for durable resume and checkpoint persistence. Core validates operation,
+protocol, layout, source type/size and a SHA-256 chunk-manifest identity before reconciliation.
+The manifest is a content identity, **not** whole-file SHA-256. It detects same-size content changes;
+name/time alone are insufficient. Core then inspects authoritative server state before skipping any
+part. Expired, conflicting or unknown sessions fail without automatically creating another upload.
+Keep opaque session IDs in access-controlled application storage. Persistence snapshots are deeply
+immutable, ordered and awaited; save failure stops further scheduling. Cross-tab/process coordination
+and durable storage are the application's responsibility.
+
+Optional `integrity: "sha256"` sends bounded chunk digests to the protocol decoder. Resumable source
+identity requires Web Crypto even with wire integrity `"none"`; unavailable required crypto rejects
+before initiate. Local digests and server verification are separate evidence. ETags are opaque,
+not MD5. Whole-file verification is a backend/protocol responsibility; no mandatory hashing SDK is
+installed. Existing retry policy applies to safe replayable parts only; write retries are never
+implicitly enabled. Use `replaySafeParts` only for a backend with safe part replacement/idempotency.
+Control writes default to no retry; explicitly configured control-request retries require backend
+idempotency. TanStack mutation retry must not blindly restart an upload: reuse its safe session and
+checkpoint. Overall timeout covers all steps, hashing, pause, persistence and retry backoff.
+
+### Presigned destinations
+
+Opt in per operation with `presigned: { origins: ["https://storage.example.com"], headers: [...] }`.
+Use `presigned: { url, headers? }` in a protocol request, ordinary `ctx.request`, or the call options
+of an explicitly authorized download operation. Only exact HTTPS origins are accepted. Signed URLs
+retain exact query encoding; ordinary path/query/header options cannot be combined with them.
+Normal cross-origin calls still fail the original same-origin guard.
+
+Delegated requests begin with empty credentials/headers. Inherited header providers and ordinary
+request middleware do not run for them. Only explicitly trusted `presigned.requestMiddleware` runs,
+then destination, method, body identity and allowed headers are checked again. Authorization/Cookie/
+Proxy-Authorization/Host cannot be passed. Fetch uses `credentials: "omit"` and `redirect: "error"`.
+A custom Transport must advertise `capabilities: { presigned: true }` **and enforce** the supplied
+security policy; otherwise Core rejects it before sending. Response/error request metadata and
+library error causes are sanitized; auth-refresh replay is disabled for signed errors. Trusted request
+middleware intentionally sees the URL and must not log its secrets. Credential/signing keys stay on
+the server. Backend renewals are explicit, bounded and reconciled before repeating uncertain parts.
+
+Presigned reads through React queries require explicit nonsecret `keyParts`. Do not put signed URLs
+in query keys or SSR props. Buffered Blob/ArrayBuffer downloads retain their documented memory cost;
+use the existing stream response with a caller-owned sink for bounded large downloads. Range resume
+is not implemented in this milestone.
+
+The [SDK-free S3 recipe](../../examples/query-ssr-next/lib/s3-transfer.ts) delegates initiate,
+presign, list, complete and abort to the backend. It sends raw part blobs, captures exposed ETags,
+and completes an ordered part manifest. Configure storage CORS to expose ETag; the backend must
+paginate ListParts and normalize provider errors/checksum evidence. HTTP multipart/form-data and
+S3 multipart sessions are different protocols. No general storage adapter, credentials manager or
+cloud SDK is added. Production mock resources explicitly reject advanced session orchestration with
+MOCK_UNSUPPORTED; deterministic protocol tests use an injected transport and the existing mock file
+store remains unchanged.
+
+Advanced finalization honors buffered `responseType` overrides (text, Blob, ArrayBuffer). For an
+already-completed resume, the protocol inspector must provide a matching response representation;
+Core rejects a mismatch. A live stream cannot be the completion result of an upload session: use
+an existing separate download operation for streaming. Function `ctx.transfer(..., { full: true })`
+also preserves the typed final response envelope. Raw chunk blobs cannot be replaced by request
+middleware after hashing; transform the logical source before validation instead.

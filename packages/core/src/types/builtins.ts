@@ -1,3 +1,5 @@
+import type { AdvancedTransferConfig, PresignedRequest } from "./advanced-transfer.js";
+import type { RequestOptions } from "./transport.js";
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
 import type { RetryOption } from "./retry.js";
 import type { DataFormat } from "./definition.js";
@@ -24,6 +26,7 @@ export type AllBuiltinOpName = BuiltinOpName | ExtendedBuiltinOpName;
 
 /** A request issued by a custom operation through `ctx.request()`. */
 export interface OperationFnRequestInit {
+  presigned?: PresignedRequest;
   method?: HttpMethod;
   /**
    * Path relative to the resource `path` (`"/:id/archive"`), `:name` filled from `params`. On a
@@ -55,6 +58,11 @@ export interface OperationFnRequestInit {
  * lifecycle as generated operations (headers, middleware, transforms, retry, errors, mocking).
  */
 export interface OperationFnContext {
+  transfer<T, F extends boolean = false>(
+    config: AdvancedTransferConfig<T>,
+    body: unknown,
+    options?: RequestOptions & { full?: F },
+  ): Promise<F extends true ? ApiResponse<T> : T>;
   /**
    * A literal non-JSON `responseType` types the result (`"blob"` → `Blob`, `"arrayBuffer"` →
    * `ArrayBuffer`, `"text"` → `string`, `"stream"` → `ReadableStream<Uint8Array> | null`), and

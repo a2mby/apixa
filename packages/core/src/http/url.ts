@@ -94,3 +94,68 @@ export function assertSameOrigin(url: string, origin: string): URL {
   }
   return parsed;
 }
+
+/** Validate an explicitly delegated destination without weakening ordinary same-origin requests. */
+export function validatePresignedPolicy(
+  policy: import("../types/advanced-transfer.js").PresignedPolicy,
+): void {
+  if (
+    !policy ||
+    !Array.isArray(policy.origins) ||
+    !policy.origins.length ||
+    policy.origins.some((origin) => {
+      try {
+        const u = new URL(origin);
+        return u.protocol !== "https:" || u.origin !== origin || !!u.username || !!u.password;
+      } catch {
+        return true;
+      }
+    }) ||
+    (policy.headers !== undefined &&
+      (!Array.isArray(policy.headers) ||
+        policy.headers.some(
+          (h) =>
+            typeof h !== "string" || /^(authorization|cookie|proxy-authorization|host)$/i.test(h),
+        )))
+  ) {
+    throw new ConfigError(
+      "Presigned policy requires exact HTTPS origins and safe explicit header names.",
+    );
+  }
+  if (
+    policy.requestMiddleware !== undefined &&
+    (!Array.isArray(policy.requestMiddleware) ||
+      policy.requestMiddleware.some((fn) => typeof fn !== "function"))
+  )
+    throw new ConfigError("Invalid presigned request middleware.");
+}
+export function assertPresigned(
+  url: string,
+  policy: import("../types/advanced-transfer.js").PresignedPolicy,
+  headers: Headers,
+): URL {
+  validatePresignedPolicy(policy);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new SecurityError("Invalid presigned destination.");
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    !policy.origins.includes(parsed.origin) ||
+    parsed.username ||
+    parsed.password ||
+    parsed.hash ||
+    !/^https:\/\//i.test(url)
+  )
+    throw new SecurityError("Presigned destination is not authorized.");
+  const allowed = new Set((policy.headers ?? []).map((h) => h.toLowerCase()));
+  for (const key of headers.keys())
+    if (
+      !allowed.has(key.toLowerCase()) ||
+      /^(authorization|cookie|proxy-authorization|host)$/i.test(key)
+    )
+      throw new SecurityError("Presigned header is not authorized.");
+  return parsed;
+}

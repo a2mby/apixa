@@ -309,12 +309,15 @@ export function normalizeIdentity(values: readonly unknown[], info: OperationInf
   const result = [...values];
   const index = info.optionsIndex;
   if (index !== null && isPlainObject(result[index])) {
+    if ((result[index] as Record<string, unknown>).presigned !== undefined)
+      throw new Error("Presigned queries require explicit keyParts without signed URLs.");
     const {
       signal: _signal,
       timeout: _timeout,
       retry: _retry,
       idempotencyKey: _idempotencyKey,
       onTransfer: _onTransfer,
+      transfer: _transfer,
       maxResponseSize: _maxResponseSize,
       ...rest
     } = result[index] as Record<string, unknown>;

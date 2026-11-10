@@ -240,6 +240,9 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
         convention?.access ?? (definition as OperationRunDefinition).kind!,
         prepareLayers(where, [root, resourceLayer]),
         def,
+        typeof definition === "object"
+          ? (definition as OperationRunDefinition).presigned
+          : undefined,
       );
       metadata[opName] = Object.freeze({
         kind: convention?.access ?? (definition as OperationRunDefinition).kind!,
@@ -266,6 +269,22 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       ...prepareLayers(where, [root, resourceLayer, declared]),
     };
     Object.assign(op, prepareFiles(def, declared, op.requestKeys, where));
+    if (declared.transfer !== undefined) {
+      op.transfer = declared.transfer;
+      if (typeof declared.transfer.source === "string") {
+        const fields = def.fileFields;
+        if (
+          !(Array.isArray(fields)
+            ? fields.includes(declared.transfer.source)
+            : fields &&
+              typeof fields === "object" &&
+              Object.hasOwn(fields, declared.transfer.source))
+        )
+          throw new ConfigError("Transfer source must name a declared file field.");
+      }
+      op.transferLayers = prepareLayers(where, [root, resourceLayer]);
+    }
+    if (declared.presigned !== undefined) op.presigned = declared.presigned;
     if (declared.responseType !== undefined) op.responseType = declared.responseType;
     if (declared.onTransfer !== undefined) op.onTransfer = declared.onTransfer;
     if (declared.mock !== undefined) {
@@ -459,8 +478,10 @@ function functionOperation(
   kind: "read" | "write",
   layers: ReturnType<typeof prepareLayers>,
   def: Record<string, unknown>,
+  presigned?: import("../types/advanced-transfer.js").PresignedPolicy,
 ): Fn {
   const base: PreparedOperation = {
+    presigned,
     name: opName,
     method: "GET",
     path: runtime.path,
@@ -470,6 +491,20 @@ function functionOperation(
     ...prepareFiles(def, undefined, layers.requestKeys),
   };
   const ctx: OperationFnContext = {
+    transfer: <T, F extends boolean = false>(
+      config: import("../types/advanced-transfer.js").AdvancedTransferConfig<T>,
+      body: unknown,
+      options?: RequestOptions & { full?: F },
+    ) => {
+      if (kind !== "write")
+        return Promise.reject(new ConfigError("Read operations cannot start an upload."));
+      return runOperation(
+        client,
+        runtime,
+        { ...base, transfer: config, hasBody: true, method: "POST" },
+        { body, options },
+      ) as Promise<F extends true ? import("../types/transport.js").ApiResponse<T> : T>;
+    },
     resource: runtime.name,
     operation: opName,
     request: <T>(init: OperationFnRequestInit = {}) => {
@@ -481,13 +516,15 @@ function functionOperation(
         timeout: init.timeout,
         retry: init.retry,
         responseType: init.responseType,
+        maxResponseSize: init.maxResponseSize,
+        presigned: init.presigned,
         onTransfer: init.onTransfer,
         meta: init.meta,
         full: init.full,
       };
       return runOperation(client, runtime, base, {
         method,
-        path: joinPath(runtime.path, init.path ?? ""),
+        ...(init.presigned ? {} : { path: joinPath(runtime.path, init.path ?? "") }),
         relativePath: init.path ?? "",
         params: init.params,
         query: init.query,

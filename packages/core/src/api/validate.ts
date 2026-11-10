@@ -1,3 +1,6 @@
+import { validateAdvanced } from "../transfer/advanced.js";
+import { validatePresignedPolicy } from "../http/url.js";
+import type { AdvancedTransferConfig, PresignedPolicy } from "../types/advanced-transfer.js";
 import { ConfigError } from "../errors/index.js";
 import { BUILTIN_CONVENTIONS, isBuiltinName } from "../operation/conventions.js";
 import { resolveRetryConfig } from "../request/retry.js";
@@ -56,6 +59,8 @@ export const RESOURCE_KEYS = new Set([
 ]);
 
 export const OPERATION_KEYS = new Set([
+  "transfer",
+  "presigned",
   "kind",
   "idempotency",
   "method",
@@ -79,7 +84,7 @@ export const OPERATION_KEYS = new Set([
   "responseAccept",
 ]);
 
-const RUN_KEYS = new Set(["kind", "run"]);
+const RUN_KEYS = new Set(["kind", "run", "presigned"]);
 
 const METHODS = new Set<HttpMethod>(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]);
 export function requiredKind(method: HttpMethod): "read" | "write" {
@@ -344,11 +349,23 @@ function validateOperation(where: string, name: string, value: unknown): void {
   }
   if ("run" in value) {
     assertKnownKeys(where, value, RUN_KEYS);
+    if (value.presigned !== undefined) validatePresignedPolicy(value.presigned as PresignedPolicy);
     if (typeof value.run !== "function")
       throw new ConfigError(`${where}.run must be a function (got ${typeName(value.run)}).`);
     return;
   }
   assertKnownKeys(where, value, OPERATION_KEYS);
+  if (value.transfer !== undefined) {
+    validateAdvanced(value.transfer as AdvancedTransferConfig);
+    if (
+      (builtin ? BUILTIN_CONVENTIONS[name].access : value.kind) !== "write" ||
+      value.dataFormat !== undefined
+    )
+      throw new ConfigError(
+        "Advanced transfers require a write operation without outer dataFormat.",
+      );
+  }
+  if (value.presigned !== undefined) validatePresignedPolicy(value.presigned as PresignedPolicy);
   if (value.mock !== undefined) {
     if (builtin) {
       throw new ConfigError(

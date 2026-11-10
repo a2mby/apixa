@@ -1,3 +1,4 @@
+import { createServer as createSecureServer } from "node:https";
 import { MOCK_STORAGE_SCENARIO } from "./lib/mock-storage-scenario.mjs";
 // Real-browser verification of server rendering, hydration and client behavior, against the
 // tracked Next.js example (`examples/query-ssr-next`) in production (`next start`) and development
@@ -370,6 +371,26 @@ async function exercise(mode, port) {
       /download:complete/,
       `${mode}: a cancelled download never completes`,
     );
+    await filesPage.getByTestId("advanced-start").click();
+    await filesPage.waitForFunction(() =>
+      document
+        .querySelector('[data-testid="advanced-status"]')
+        .textContent.startsWith("interrupted:"),
+    );
+    assert.equal(
+      await filesPage.getByTestId("advanced-confirmed").textContent(),
+      "4 confirmed bytes",
+    );
+    await filesPage.getByTestId("advanced-resume").click();
+    await filesPage.waitForFunction(
+      () =>
+        document.querySelector('[data-testid="advanced-status"]').textContent ===
+        "complete: 13 bytes",
+    );
+    assert.equal(
+      await filesPage.getByTestId("advanced-confirmed").textContent(),
+      "13 confirmed bytes",
+    );
     assert.deepEqual(
       fileProblems,
       [],
@@ -635,6 +656,168 @@ async function verifyTransfers() {
   }
 }
 
+async function verifyPresignedSecurity() {
+  const key = join(temporary, "presigned-key.pem");
+  const cert = join(temporary, "presigned-cert.pem");
+  execFileSync(
+    "openssl",
+    [
+      "req",
+      "-x509",
+      "-newkey",
+      "rsa:2048",
+      "-nodes",
+      "-keyout",
+      key,
+      "-out",
+      cert,
+      "-days",
+      "1",
+      "-subj",
+      "/CN=localhost",
+    ],
+    { stdio: "ignore" },
+  );
+  const tls = { key: readFileSync(key), cert: readFileSync(cert) };
+  const received = [];
+  let applicationOrigin;
+  const storage = createSecureServer(tls, async (req, res) => {
+    res.setHeader("access-control-allow-origin", applicationOrigin);
+    res.setHeader("access-control-allow-credentials", "true");
+    res.setHeader("access-control-allow-methods", "GET, PUT, OPTIONS");
+    res.setHeader("access-control-allow-headers", "x-signed, content-type");
+    res.setHeader("access-control-expose-headers", "etag");
+    if (req.method === "OPTIONS") return void res.writeHead(204).end();
+    received.push({ path: req.url, headers: req.headers });
+    if (req.url.startsWith("/redirect"))
+      return void res.writeHead(307, { location: "/target" }).end();
+    for await (const chunk of req) void chunk;
+    res.setHeader("etag", '"opaque-browser-etag"');
+    res.end("stored");
+  });
+  const dist = join(example, "node_modules/apixa/dist");
+  const application = createSecureServer(tls, (req, res) => {
+    const path = new URL(req.url, "https://localhost").pathname;
+    if (path.startsWith("/apixa/")) {
+      const file = join(dist, path.slice("/apixa/".length));
+      if (!file.startsWith(dist) || !existsSync(file)) return void res.writeHead(404).end();
+      res.writeHead(200, { "content-type": "text/javascript" });
+      res.end(readFileSync(file));
+    } else {
+      res.writeHead(200, { "content-type": "text/html" });
+      res.end("<!doctype html><title>Presigned security</title>");
+    }
+  });
+  await new Promise((resolve) => application.listen(0, "127.0.0.1", resolve));
+  await new Promise((resolve) => storage.listen(0, "127.0.0.1", resolve));
+  applicationOrigin = `https://localhost:${application.address().port}`;
+  const storageOrigin = `https://localhost:${storage.address().port}`;
+  const browser = await chromium.launch({ executablePath, headless: true });
+  try {
+    const context = await browser.newContext({ ignoreHTTPSErrors: true });
+    await context.addCookies([
+      {
+        name: "storage-cookie",
+        value: "must-not-leak",
+        url: storageOrigin,
+        secure: true,
+        sameSite: "None",
+      },
+    ]);
+    const page = await context.newPage();
+    await page.goto(applicationOrigin);
+    const proof = await page.evaluate(
+      async ({ applicationOrigin, storageOrigin }) => {
+        const m = await import(applicationOrigin + "/apixa/core.js");
+        // Positive control proves this browser would send the cookie across these two origins.
+        await fetch(storageOrigin + "/control", { credentials: "include" });
+        let providers = 0,
+          middleware = 0;
+        const api = m.defineApi({
+          baseURL: applicationOrigin,
+          headers: () => {
+            providers++;
+            return { Authorization: "Bearer backend-secret" };
+          },
+          middleware: {
+            onRequest(r) {
+              middleware++;
+              r.headers.set("x-api-key", "backend-secret");
+            },
+          },
+          resources: {
+            objects: {
+              path: "/objects",
+              operations: {
+                put: {
+                  kind: "write",
+                  method: "PUT",
+                  responseType: "text",
+                  presigned: { origins: [storageOrigin], headers: ["x-signed"] },
+                },
+              },
+            },
+          },
+        });
+        const response = await api.objects.put(new Blob(["binary"]), {
+          full: true,
+          presigned: {
+            url: storageOrigin + "/object?signature=temporary",
+            headers: { "x-signed": "approved" },
+          },
+        });
+        const error = await api.objects
+          .put(new Blob(["binary"]), {
+            presigned: { url: storageOrigin + "/redirect?signature=temporary" },
+          })
+          .catch((e) => e);
+        return {
+          providers,
+          middleware,
+          etag: response.headers.get("etag"),
+          bytes: response.data,
+          redirected: error instanceof m.NetworkError,
+          error: JSON.stringify(error),
+          requestURL: response.request.url,
+        };
+      },
+      { applicationOrigin, storageOrigin },
+    );
+    assert.match(
+      received.find((r) => r.path === "/control").headers.cookie,
+      /storage-cookie=must-not-leak/,
+      "positive cookie control",
+    );
+    const signed = received.find((r) => r.path.startsWith("/object?"));
+    assert.equal(signed.headers.cookie, undefined, "native browser omits storage cookies");
+    assert.equal(signed.headers.authorization, undefined, "no API authorization");
+    assert.equal(signed.headers["x-api-key"], undefined, "no API middleware secret");
+    assert.equal(signed.headers["x-signed"], "approved");
+    assert.equal(proof.providers, 0);
+    assert.equal(proof.middleware, 0);
+    assert.equal(proof.etag, '"opaque-browser-etag"');
+    assert.equal(proof.bytes, "stored");
+    assert.equal(proof.redirected, true);
+    assert.equal(
+      received.some((r) => r.path === "/target"),
+      false,
+    );
+    assert.doesNotMatch(proof.error, /signature|temporary|backend-secret/);
+    assert.doesNotMatch(proof.requestURL, /signature|temporary/);
+    note(
+      "Browser HTTPS presigned security: positive cookie control, credential omission, CORS ETag, auth isolation and redirect rejection passed",
+    );
+  } finally {
+    await browser.close();
+    application.closeAllConnections();
+    storage.closeAllConnections();
+    await Promise.all([
+      new Promise((r) => application.close(r)),
+      new Promise((r) => storage.close(r)),
+    ]);
+  }
+}
+
 try {
   const packs = join(temporary, "packs");
   mkdirSync(packs);
@@ -699,6 +882,7 @@ try {
   await exercise("start", 3421);
   await exercise("dev", 3422);
   await verifyTransfers();
+  await verifyPresignedSecurity();
   console.log(`\nbrowser verification ok (${results.length} checks)`);
 } finally {
   rmSync(temporary, { recursive: true, force: true });

@@ -1,3 +1,4 @@
+import { ADVANCED_TRANSFER_SCENARIO } from "./lib/advanced-transfer-scenario.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -161,7 +162,9 @@ console.log("Registered named mock dataset loaded");
     // the packed hooks on this React version; closes the runtime-coverage gap recorded since v1.3.0.
     writeFileSync(
       join(directory, "file-runtime.mjs"),
-      readFileSync(join(root, "scripts/file-consumer-runtime.mjs"), "utf8"),
+      ADVANCED_TRANSFER_SCENARIO +
+        "\n" +
+        readFileSync(join(root, "scripts/file-consumer-runtime.mjs"), "utf8"),
     );
     execFileSync("node", ["file-runtime.mjs"], {
       cwd: directory,

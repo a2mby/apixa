@@ -1,3 +1,4 @@
+import { AdvancedTransfers } from "./advanced-transfers";
 import { ApixaHydrationBoundary } from "@apixa/react";
 import { QueryClient, dehydrate, prefetchResourceQuery } from "@apixa/react/advanced";
 import { filesApi } from "../../lib/files-demo";
@@ -18,6 +19,7 @@ export default async function Page() {
         <h1>Files</h1>
         <p data-testid="server-bytes">server downloaded {blob.size} bytes</p>
         <FilesDemo />
+        <AdvancedTransfers />
       </main>
     </ApixaHydrationBoundary>
   );

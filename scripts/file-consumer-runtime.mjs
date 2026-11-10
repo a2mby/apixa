@@ -1,3 +1,4 @@
+import * as advancedCore from "apixa/core";
 // Executed inside the packed React 18 / React 19 consumers (see verify-react-consumers.mjs): real hooks
 // from the published `apixa` package upload, download, report progress, cancel, time out, reject files
 // with typed errors and use mock fixtures. Node's own Blob/File/FormData/Response are used (jsdom only
@@ -277,5 +278,17 @@ const png = (size) => new File([new Uint8Array(size)], "secret-name.png", { type
   console.log(`React ${expectedMajor}: mock fixtures, validation and reset ok`);
 }
 
+assert.equal(
+  await advancedTransferScenario(advancedCore, async (api, body, options) => {
+    await mount(() => useResourceMutation(api.files, { queryKey: ["advanced-packed"] }));
+    let result;
+    await act(async () => {
+      result = await current.create(body, options);
+    });
+    return result;
+  }),
+  "advanced:resumed:8",
+  "packed hook advanced transfer recovery",
+);
 await act(async () => root.unmount());
 console.log(`React ${expectedMajor}: file runtime scenarios passed (${React.version})`);
