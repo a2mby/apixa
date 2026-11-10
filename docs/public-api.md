@@ -95,6 +95,17 @@ above are the platforms' own engines, not deployed services).
   the 14 public entries. No symbol list changed in this migration.
 - The unscoped `apixa` package belongs to the project maintainer. No npm organization scope is needed.
 
+## v1.6.0 behavior notes (framework integration; no new exports)
+
+No symbol or import path changed. Three corrections in `apixa/react` and `apixa/react/advanced`:
+
+- A `File`, `Blob`, `ArrayBuffer`, `FormData` or `ReadableStream` in the arguments of a generated query identity throws
+  a clear error (it would hash as `{}` and share one cache entry); use a mutation, or an explicit `keyParts` identity.
+- For reads, a caller's `signal` in the call options is combined with TanStack's query signal (aborting either cancels);
+  it used to be replaced by TanStack's signal.
+- `dehydrate` omits queries whose data is a `Blob`, `File`, `ArrayBuffer` or `ReadableStream`; a `shouldDehydrateQuery`
+  option still applies (both must agree).
+
 ## v1.4.0 additions (file validation and safety)
 
 New in `apixa` (root) and `apixa/core`; nothing existing changed.

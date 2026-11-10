@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-10 — v1.6.0 framework and consumer integration implemented
+
+Implemented [v1.6.0](../versions/v1.6.0/) through the existing three hooks, with no new public API. The audit confirmed and fixed three defects test-first: a binary value in a query identity (silent cache collision), a caller's `AbortSignal` replaced by TanStack's on reads, and binary/stream data entering `dehydrate`. Real React 18.3.1 and 19 hook scenarios now run against the packed package, and `examples/query-ssr-next` `/files` (rules, progress, cancellation) is driven in Chromium. `pnpm verify` passes (125 files / 1336 tests); owner sign-off remains open.
+
+## 2026-11-09 — v1.6.0 kickoff: framework and consumer integration
+
+Created the [v1.6.0](../versions/v1.6.0/) contract (Advanced File Handling, phase 7); no production code. The audit found React 18 still has no executed hook coverage, the maintained Next file scenarios are untracked (`examples/**` is ignored) while the tracked `query-ssr-next` has none, and unverified cache, stream and dehydration behavior for binary values. The plan is tests, documentation and small proven fixes through the existing three hooks, with an owner decision on the example's location and no new API unless proven.
+
 ## 2026-11-09 — v1.5.0 advanced mock file storage completed and approved
 
 Completed v1.5.0: optional disks, safe paths and naming, lazy dataset fixtures, shared-reference cleanup and atomic managed writes extend the existing client-scoped mock store, with `defineMockApi` on the same Core pipeline. The owner signed off the milestone after `pnpm verify` passed (117 files / 1,279 tests, 62/62 packed type consumers, Chromium, Next SSR, Vercel Edge and workerd); issue #99 carries the change through squash merge. Earlier milestone sign-offs and coverage gaps remain open; no package versions are bumped, nothing is published and v1.6.0 is not started.

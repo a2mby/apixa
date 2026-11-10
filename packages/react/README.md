@@ -27,6 +27,39 @@ Install `npm install apixa @tanstack/react-query` (TanStack Query >=5.90.1 withi
 Transfer events work through the hooks as plain call options: `useResourceQuery(api.files, { queryKey, operation: "download", args: [id, { onTransfer }] })`.
 `onTransfer` is not part of the query key (like `signal`), so changing the callback never refetches.
 
+### Files through the hooks (v1.6.0)
+
+Files use the same three hooks and the same operations; there is no upload/download hook, store or
+client. Verified on React 18.3.1 (TanStack 5.90.1) and React 19 against the packed package.
+
+- **Uploads and downloads.** A write takes `File`/`Blob`/`FormData`/streams like the direct client:
+  `await pets.create({ name, photo }, { onTransfer, signal })`. A download is an operation with
+  `responseType: "blob"` and is typed `Blob`.
+- **Progress is your state.** `onTransfer` is a per-call option (in `args` for `useResourceQuery`). Feed it into
+  `useState`; it is never part of a query key, and a stale callback after unmount must be guarded with a ref.
+  Compute a percentage only when `event.total` is defined; `unsupported` events mean the runtime or transport
+  cannot observe that direction (browsers for sized uploads, workerd, custom transports that ignore
+  `onTransfer`).
+- **Cancel.** Pass an `AbortController` signal in the call options. A caller's `signal` and TanStack's own query
+  signal are combined for reads, so either one cancels. A call `timeout` surfaces `TimeoutError`.
+- **Reads through a hook are cached queries.** `users.download(id)` (a flat read) and `useResourceQuery` share
+  TanStack's cache: a second call inside `staleTime` returns the cached `Blob` with no request and no transfer
+  events. Use the direct client (or `staleTime: 0`) for a one-off download with progress.
+- **Errors.** `ValidationError` (typed `violations`), `HttpError` (with body), `AbortError`, `TimeoutError` and
+  `NetworkError` reach the query `error`, the mutation `error` / `states.<op>.error` and the rejected promise.
+  Narrow with `instanceof`. A rejected file sends no request and is never retried.
+- **Invalidation.** Every successful mutation invalidates the whole resource by default (unchanged). Scope it with
+  `mutations: { create: { invalidate: "lists" } }`, `{ details: (data) => [data.id] }`, a function, or `false`
+  (the existing option; it works the same for file writes).
+- **Binary values and the cache.** A `Blob`/`ArrayBuffer` result caches client-side like any value. A `File`, `Blob`,
+  `ArrayBuffer`, `FormData` or `ReadableStream` in a query's arguments throws a clear error (TanStack hashes them all
+  as `{}`, so different files would share one entry): send files with a mutation, or give the query an identity with
+  `keyParts`. A `stream` result held by a query is the app's to consume or cancel; the call `timeout` still bounds it.
+- **Next.js.** `dehydrate()` (from `apixa/react/advanced`) leaves out queries whose data is a `Blob`, `File`,
+  `ArrayBuffer` or `ReadableStream` (a stream is single-use, bytes would bloat the page payload, and React 18 / older
+  Next cannot serialize them); the client fetches those itself. A Server Component may read a binary result and pass
+  only plain values down. See `examples/query-ssr-next` (`/files`).
+
 ### `ApixaProvider` and `QueryClient`
 
 ```tsx

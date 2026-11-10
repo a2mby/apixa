@@ -151,6 +151,19 @@ replayed); each attempt starts a new event sequence at `loaded: 0`, and an `erro
 whether a retry follows (`willRetry`). `ApiError.transfer` carries direction and bytes for a failure
 during an observed transfer.
 
+## Files through the framework integration (v1.6.0, implemented)
+
+No new hook or store: files ride the existing hooks and Core operations. Audit findings (see
+`versions/v1.6.0/implementation-plan.md`): a binary value in a **generated query identity** now throws
+(`assertNoBinaryIdentity` in `query-options.ts`) because TanStack hashes `File`/`Blob`/`ArrayBuffer`/`FormData`/stream
+as `{}` (silent cache collision); `bindSignal` combines a caller's `signal` with TanStack's query signal (a read's
+caller signal used to be overwritten); `dehydrate` (`hydration.ts`) leaves binary and stream query data out of the
+Server -> Client payload. Unchanged by design: resource-wide mutation invalidation (scoped via the existing
+`invalidate` option), a stream held in the query cache is the app's to consume (Core's `timeout` bounds it), and flat
+reads through a hook are cached queries. Evidence: `tests/react/framework-files-*.test.tsx`, `query-identity-binary`,
+`ssr-binary-dehydrate`, the packed React 18/19 runtime (`scripts/file-consumer-runtime.mjs`) and the Chromium-driven
+`examples/query-ssr-next` `/files` scenario.
+
 ## File validation and safety (v1.4.0, implemented)
 
 Opt-in rules live where files are already declared: `FileFieldOptions` (`minSize`, `maxSize`, `min`,

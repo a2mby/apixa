@@ -157,6 +157,17 @@ console.log("Registered named mock dataset loaded");
     run("pnpm", ["install", "--no-frozen-lockfile"], directory);
     run("pnpm", ["exec", "tsc", "--noEmit"], directory);
     run("node", ["runtime.mjs"], directory);
+    // Executed file scenarios (uploads, downloads, progress, cancellation, typed errors, mocks) through
+    // the packed hooks on this React version; closes the runtime-coverage gap recorded since v1.3.0.
+    writeFileSync(
+      join(directory, "file-runtime.mjs"),
+      readFileSync(join(root, "scripts/file-consumer-runtime.mjs"), "utf8"),
+    );
+    execFileSync("node", ["file-runtime.mjs"], {
+      cwd: directory,
+      stdio: "inherit",
+      env: { ...process.env, REACT_MAJOR: String(major) },
+    });
     run("pnpm", ["exec", "vite", "build"], directory);
     if (major === 19) {
       mkdirSync(join(directory, "app"));

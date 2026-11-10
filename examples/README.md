@@ -15,7 +15,7 @@ pnpm --filter @apixa/mocking build
 | Example | Focus | Platform script (macOS) | URL |
 | --- | --- | --- | --- |
 | **[next](./next/)** | **Primary** — App Router + resource mocking + `defineMockApi()` | `./scripts/macos/run-frontend-next.sh` | http://localhost:3000 |
-| [query-ssr-next](./query-ssr-next/) | Tracked App Router prefetch + hydration example | `pnpm --filter @apixa/example-query-ssr-next dev` | http://localhost:3010 |
+| [query-ssr-next](./query-ssr-next/) | Tracked App Router prefetch + hydration example, plus the `/files` scenario (rules, progress, cancel); driven by `pnpm verify` | `pnpm --filter @apixa/example-query-ssr-next dev` | http://localhost:3010 |
 | [react-vite](./react-vite/) | React + Vite SPA | `./scripts/macos/run-frontend-react.sh` | http://localhost:5173 |
 | [vue](./vue/) | Vue 3 + Vite | `./scripts/macos/run-frontend-vue.sh` | http://localhost:5174 |
 | [vanilla](./vanilla/) | No UI framework (Vite + DOM) | `./scripts/macos/run-frontend-vanilla.sh` | http://localhost:5175 |

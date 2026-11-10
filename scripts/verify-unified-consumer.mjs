@@ -1049,6 +1049,36 @@ export default async function Page() {
 }
 `,
       );
+      // v1.6.0: binary and stream queries are never dehydrated into the Server -> Client payload; the
+      // serializable list is, and the Server Component can still read the bytes itself.
+      write(
+        dir,
+        "app/binary/page.jsx",
+        `import { createFetchTransport, defineApi } from "apixa";
+import { QueryClient, dehydrate, prefetchResourceQuery } from "apixa/react/advanced";
+export const dynamic = "force-dynamic";
+export default async function Page() {
+  const api = defineApi({
+    baseURL: "https://example.test",
+    transport: createFetchTransport(async (url) =>
+      String(url).endsWith("/list") ? Response.json([{ id: "1" }]) : new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "application/octet-stream" } }),
+    ),
+    resources: { docs: { path: "/docs", operations: {
+      list: { kind: "read", method: "GET", path: "/list" },
+      blob: { kind: "read", method: "GET", path: "/blob", responseType: "blob" },
+      feed: { kind: "read", method: "GET", path: "/feed", responseType: "stream" },
+    } } },
+  });
+  const client = new QueryClient();
+  for (const operation of ["list", "blob", "feed"]) {
+    await prefetchResourceQuery(client, api.docs, { queryKey: ["d", operation], operation });
+  }
+  const state = dehydrate(client);
+  const bytes = (await api.docs.blob()).size;
+  return <p>{["dehydrated", state.queries.map((q) => q.queryKey[1]).join(","), "server-bytes", bytes].join("|")}</p>;
+}
+`,
+      );
       write(dir, "next.config.mjs", "export default {};\n");
       write(
         dir,
@@ -1111,6 +1141,11 @@ export default async function Page() {
             await get(port, "/download"),
             /live\|9\|live\.txt\|rsc-bytes\|mock\|10\|mock-bytes\|download:start:0~download:progress:9~download:complete:9/,
             `${mode}: Server Component downloads a Blob (live Response and mock)`,
+          );
+          assert.match(
+            await get(port, "/binary"),
+            /dehydrated\|list\|server-bytes\|3/,
+            `${mode}: binary and stream queries stay out of the dehydrated state; the server still reads the bytes`,
           );
           const pages = await Promise.all(
             ["alice", "bob", "alice", "carol", "bob"].map((user) =>
