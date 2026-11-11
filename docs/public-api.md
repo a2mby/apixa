@@ -95,6 +95,36 @@ above are the platforms' own engines, not deployed services).
   the 14 public entries. No symbol list changed in this migration.
 - The unscoped `apixa` package belongs to the project maintainer. No npm organization scope is needed.
 
+## v1.8.0 behavior notes (hardening; one optional option, no new exports)
+
+No symbol or import path changed; the generated export snapshot is unchanged. One optional property was added
+(`redirectOrigins`, below). Corrections in
+`apixa/core` advanced transfers and mock storage:
+
+- `TransferControl.abort()` while a completion is in flight no longer races it: it waits for the completion to settle and
+  rejects with a `ConfigError` ("The upload already finished; there is no active remote upload session."); the transfer
+  itself settles with its own outcome. Previously the remote session could be aborted after the backend had completed it.
+- With `concurrency > 1`, a part acknowledgment that arrives while another part is renewing and reconciling is kept
+  (previously the transfer could fail with "Upload is missing required part acknowledgments.").
+- Checkpoint bookkeeping is constant per acknowledgment. Checkpoint snapshots are now frozen with a shared, frozen
+  `source.manifest` array and frozen `parts` entries (same shape and values); the 4 MiB serialized cap is unchanged.
+- `MockFileStorage.put` checks virtual-path collisions without allocating per entry (same results, about 10x faster).
+- **Secure redirects (breaking security correction, owner-approved).** The built-in fetch transport no longer lets the
+  runtime follow redirects of ordinary requests (which forwards custom headers such as `X-Api-Key` to the target).
+  It inspects every hop: same-origin hops are followed unchanged; a cross-origin hop fails with `SecurityError` before
+  the destination is contacted; an origin listed in the new optional `redirectOrigins` (operation config, per-call and
+  `ctx.request` option; also `TransportRequest.redirectOrigins`) is followed with no headers, cookies, credentials or
+  body, `GET`/`HEAD` only. Browsers hide redirect destinations, so any redirect fails closed there. Presigned steps are
+  unchanged. **Migration:** an API that redirected to another origin must list that origin or return the URL in a JSON
+  body and use a `presigned` descriptor. This is the only public type addition in v1.8.0 (one optional property); no
+  export was added or removed.
+- Validation counts each occurrence of a shared object (a plain object reachable twice is serialized twice, so its files
+  count twice); previously the second occurrence was skipped, which under-counted `maxFiles` / `maxTotalSize`.
+- `loadDataset(id, { basePath })` (`apixa/mocking/node`) no longer resolves an `id` that points outside the datasets root.
+- Documented, not changed: `session.id` from a checkpoint is passed to protocol steps verbatim (encode it; validate it on
+  the backend); `concurrency` has no ceiling (author-defined); `maxResponseSize` is opt-in; a stream in the TanStack cache is
+  consumer-owned; mutation variables (including `File`s) stay in the mutation cache for `gcTime`.
+
 ## v1.6.0 behavior notes (framework integration; no new exports)
 
 No symbol or import path changed. Three corrections in `apixa/react` and `apixa/react/advanced`:

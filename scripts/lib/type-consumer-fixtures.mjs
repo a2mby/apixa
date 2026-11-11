@@ -147,12 +147,14 @@ export async function main() {
         path: "/pets",
         fileFields: { photo: { maxSize: 5, accept: ["image/*", ".heic"], unknownType: "allow", filename: "strict" } },
         fileLimits: { maxTotalSize: 10, maxFiles: 2 },
-        operations: { export: { kind: "read", method: "GET", path: "/export", responseType: "blob", maxResponseSize: 100 } },
+        operations: { export: { kind: "read", method: "GET", path: "/export", responseType: "blob", maxResponseSize: 100, redirectOrigins: ["https://cdn.example.com"] } },
       },
     },
   });
-  const exported = await rules.pets.export({ maxResponseSize: 5 });
+  const exported = await rules.pets.export({ maxResponseSize: 5, redirectOrigins: ["https://cdn.example.com"] });
   type _v1 = Assert<Equal<typeof exported, Blob>>;
+  // @ts-expect-error redirectOrigins is a list of origins, not a string
+  await rules.pets.export({ redirectOrigins: "https://cdn.example.com" });
   try {
     await rules.pets.create({ photo: new File([], "a.png") });
   } catch (error) {

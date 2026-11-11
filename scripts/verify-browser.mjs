@@ -680,7 +680,10 @@ async function verifyPresignedSecurity() {
   );
   const tls = { key: readFileSync(key), cert: readFileSync(cert) };
   const received = [];
+  const applicationRequests = [];
   let applicationOrigin;
+  let storageOriginValue;
+  const storageOriginForRedirects = () => storageOriginValue;
   const storage = createSecureServer(tls, async (req, res) => {
     res.setHeader("access-control-allow-origin", applicationOrigin);
     res.setHeader("access-control-allow-credentials", "true");
@@ -698,6 +701,15 @@ async function verifyPresignedSecurity() {
   const dist = join(example, "node_modules/apixa/dist");
   const application = createSecureServer(tls, (req, res) => {
     const path = new URL(req.url, "https://localhost").pathname;
+    applicationRequests.push({ path, headers: req.headers });
+    if (path === "/api/plain") {
+      res.writeHead(200, { "content-type": "application/json" });
+      return void res.end(JSON.stringify([{ id: 1 }]));
+    }
+    if (path === "/api/redirect-same")
+      return void res.writeHead(302, { location: "/api/plain" }).end();
+    if (path === "/api/redirect-cross")
+      return void res.writeHead(302, { location: `${storageOriginForRedirects()}/stolen` }).end();
     if (path.startsWith("/apixa/")) {
       const file = join(dist, path.slice("/apixa/".length));
       if (!file.startsWith(dist) || !existsSync(file)) return void res.writeHead(404).end();
@@ -712,6 +724,7 @@ async function verifyPresignedSecurity() {
   await new Promise((resolve) => storage.listen(0, "127.0.0.1", resolve));
   applicationOrigin = `https://localhost:${application.address().port}`;
   const storageOrigin = `https://localhost:${storage.address().port}`;
+  storageOriginValue = storageOrigin;
   const browser = await chromium.launch({ executablePath, headless: true });
   try {
     const context = await browser.newContext({ ignoreHTTPSErrors: true });
@@ -771,7 +784,28 @@ async function verifyPresignedSecurity() {
             presigned: { url: storageOrigin + "/redirect?signature=temporary" },
           })
           .catch((e) => e);
+        // v1.8.0 secure redirects: a browser hides where a manual redirect leads, so Apixa fails closed.
+        const secure = m.defineApi({
+          baseURL: applicationOrigin,
+          headers: { "X-Api-Key": "backend-secret" },
+          resources: {
+            plain: { path: "/api/plain" },
+            sameHop: { path: "/api/redirect-same" },
+            crossHop: { path: "/api/redirect-cross" },
+          },
+        });
+        const plain = await secure.plain.getAll();
+        const same = await secure.sameHop.getAll({ retry: false }).catch((e) => e);
+        const cross = await secure.crossHop
+          .getAll({ retry: false, redirectOrigins: [storageOrigin] })
+          .catch((e) => e);
         return {
+          redirects: {
+            plain: plain.length,
+            sameBlocked: same instanceof m.SecurityError,
+            crossBlocked: cross instanceof m.SecurityError,
+            message: String(cross.message),
+          },
           providers,
           middleware,
           etag: response.headers.get("etag"),
@@ -802,10 +836,27 @@ async function verifyPresignedSecurity() {
       received.some((r) => r.path === "/target"),
       false,
     );
+    assert.equal(proof.redirects.plain, 1, "a request without a redirect still works");
+    assert.equal(
+      proof.redirects.sameBlocked,
+      true,
+      "browser: same-origin redirect fails closed (opaque redirect)",
+    );
+    assert.equal(
+      proof.redirects.crossBlocked,
+      true,
+      "browser: cross-origin redirect fails closed even when its origin is listed",
+    );
+    assert.doesNotMatch(proof.redirects.message, /stolen|backend-secret/);
+    assert.equal(
+      received.some((r) => r.path === "/stolen"),
+      false,
+      "the redirect destination never receives a request",
+    );
     assert.doesNotMatch(proof.error, /signature|temporary|backend-secret/);
     assert.doesNotMatch(proof.requestURL, /signature|temporary/);
     note(
-      "Browser HTTPS presigned security: positive cookie control, credential omission, CORS ETag, auth isolation and redirect rejection passed",
+      "Browser HTTPS presigned security: positive cookie control, credential omission, CORS ETag, auth isolation and redirect rejection passed; ordinary-request redirects fail closed before the destination is contacted",
     );
   } finally {
     await browser.close();

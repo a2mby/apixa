@@ -151,6 +151,23 @@ replayed); each attempt starts a new event sequence at `loaded: 0`, and an `erro
 whether a retry follows (`willRetry`). `ApiError.transfer` carries direction and bytes for a failure
 during an observed transfer.
 
+## File lifecycle and hardening (v1.8.0, implemented)
+
+Guarantees are stated per owner (`docs/guides/humans/production-file-handling.md`): Apixa owns client-side mock storage
+(atomic managed commits per client; low-level `delete`/`clear` stay deliberate and may leave stale refs) and its own
+transfer sessions (part delivery at least once, completion exactly once by authoritative reconciliation, abort ordered
+against completion); a backend owns remote files, sessions and their expiry; the author owns replacement and deletion
+policy. Apixa never deletes a remote file because a frontend record changed and makes no cross-system atomicity claim.
+Resource bounds: advanced upload memory is `concurrency x chunkSize` plus one hash chunk; checkpoint bookkeeping is O(1)
+per acknowledgment (sorted ledger, running size total, frozen shared manifest); a raw `Blob` with `onTransfer` streams.
+Redirects of ordinary requests are inspected hop by hop in `transport/redirects.ts` (`fetchSafely`): same-origin followed,
+cross-origin refused before it is contacted, `redirectOrigins` followed bare (GET/HEAD), browsers (opaque redirects) fail
+closed; presigned steps keep `redirect: "error"`. Known limits kept visible: a cached stream is consumer-owned (cancelling an unlocked replaced stream would read as an
+empty success), custom transports must bound their own reads, custom headers follow cross-origin redirects, `session.id`
+is opaque input. Evidence: `tests/core/advanced-transfer-{races,faults}`, `file-{security-boundaries,memory-bounds,
+error-matrix}`, `mock-file-lifecycle`, `tests/react/file-{stream-lifecycle,error-propagation}` and
+`scripts/measure-file-memory.mjs`.
+
 ## Files through the framework integration (v1.6.0, implemented)
 
 No new hook or store: files ride the existing hooks and Core operations. Audit findings (see

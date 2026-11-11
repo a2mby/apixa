@@ -1,5 +1,5 @@
 import { readdir, readFile, stat } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 
 /** Recursively find directories that contain `meta.json`. */
 export async function findDatasetDirs(root: string): Promise<string[]> {
@@ -35,9 +35,12 @@ export async function findDatasetDirs(root: string): Promise<string[]> {
 
 export async function resolveDatasetDir(root: string, id: string): Promise<string | null> {
   const direct = join(root, id);
+  // An id names a dataset under the root; it can never address a folder outside it.
+  const outside = relative(resolve(root), resolve(direct));
+  const inside = outside !== "" && !/^\.\.(?:[\\/]|$)/.test(outside) && !isAbsolute(outside);
   try {
-    const info = await stat(direct);
-    if (info.isDirectory()) {
+    const info = inside ? await stat(direct) : undefined;
+    if (info?.isDirectory()) {
       await readFile(join(direct, "meta.json"), "utf8");
       return direct;
     }

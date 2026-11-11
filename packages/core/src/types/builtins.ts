@@ -45,6 +45,8 @@ export interface OperationFnRequestInit {
   responseType?: ResponseType;
   /** Largest accepted response body in bytes for this request. */
   maxResponseSize?: number;
+  /** Origins this request may be redirected to, credential-free (`GET` / `HEAD` only). */
+  redirectOrigins?: readonly string[];
   /** Opt in to transfer lifecycle events for this request. */
   onTransfer?: TransferObserver;
   meta?: Record<string, unknown>;

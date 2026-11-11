@@ -1,4 +1,5 @@
-import { AbortError, NetworkError, TimeoutError } from "../errors/index.js";
+import { AbortError, ApiError, NetworkError, TimeoutError } from "../errors/index.js";
+import { fetchSafely } from "./redirects.js";
 import type { Transport, TransportRequest, TransportResponse } from "../types/transport.js";
 import { countedStream, trustworthyTotal } from "../transfer/counting.js";
 import { detectTransferSupport } from "../transfer/support.js";
@@ -85,6 +86,13 @@ async function prepareBody(input: TransportRequest): Promise<PreparedBody> {
   };
 }
 
+/** The same request body again for a 307/308; a stream cannot be sent twice, so it fails closed. */
+async function replayBody(input: TransportRequest): Promise<PreparedBody> {
+  if (isStream(input.body))
+    throw new NetworkError("A streamed request body cannot be replayed for a redirect.");
+  return prepareBody(input);
+}
+
 export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport {
   return {
     capabilities: { presigned: true },
@@ -93,18 +101,23 @@ export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport
 
       try {
         const prepared = await prepareBody(input);
-        response = await fetchImpl(input.url, {
-          method: input.method,
-          headers: prepared.headers,
-          body: prepared.body,
-          signal: input.signal,
-          ...(input.security
-            ? { credentials: input.security.credentials, redirect: input.security.redirect }
-            : {}),
-          // A stream body (caller's or counted) must declare half-duplex or fetch rejects it.
-          ...(prepared.duplex ? ({ duplex: "half" } as RequestInit) : {}),
-        });
+        if (input.security) {
+          // Presigned destinations: never follow, never send ambient credentials.
+          response = await fetchImpl(input.url, {
+            method: input.method,
+            headers: prepared.headers,
+            body: prepared.body,
+            signal: input.signal,
+            credentials: input.security.credentials,
+            redirect: input.security.redirect,
+            // A stream body (caller's or counted) must declare half-duplex or fetch rejects it.
+            ...(prepared.duplex ? ({ duplex: "half" } as RequestInit) : {}),
+          });
+        } else {
+          response = await fetchSafely(fetchImpl, input, prepared, () => replayBody(input));
+        }
       } catch (error) {
+        if (error instanceof ApiError) throw error;
         if (error instanceof DOMException && error.name === "AbortError") {
           throw new AbortError("Request was aborted", { cause: error });
         }

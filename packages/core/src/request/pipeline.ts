@@ -1,4 +1,5 @@
 import type { AdvancedTransferConfig, PresignedPolicy } from "../types/advanced-transfer.js";
+import { assertRedirectOrigins } from "../http/redirect-origins.js";
 import { runAdvanced } from "../transfer/advanced.js";
 import { assertPresigned } from "../http/url.js";
 import { joinPath } from "../http/path.js";
@@ -142,6 +143,8 @@ export interface PreparedOperation {
   fileRules?: ResolvedFileRules;
   /** Largest accepted response body in bytes; a per-call `maxResponseSize` wins. */
   maxResponseSize?: number;
+  /** Exact origins a redirect may lead to, credential-free; a per-call list wins. */
+  redirectOrigins?: readonly string[];
   /** Accepted response `Content-Type`s, normalized. */
   responseAccept?: readonly string[];
   /** Opt-in idempotency header for writes (resolved at construction). */
@@ -382,6 +385,8 @@ export async function runOperation(
         );
       }
     }
+    if (options.redirectOrigins !== undefined)
+      assertRedirectOrigins(`${resource.name}.${op.name} (call options)`, options.redirectOrigins);
     const maxResponse = options.maxResponseSize ?? op.maxResponseSize;
     const responseLimits =
       maxResponse !== undefined || op.responseAccept
@@ -971,6 +976,9 @@ async function sendWithRetry(
           ? { security: { credentials: "omit" as const, redirect: "error" as const } }
           : {}),
         ...(limits ? { limits } : {}),
+        ...((options.redirectOrigins ?? op.redirectOrigins)?.length && !request.delegated
+          ? { redirectOrigins: options.redirectOrigins ?? op.redirectOrigins }
+          : {}),
         ...(channel ? { onTransfer: channel.sink } : {}),
       });
       channel?.finishRequest(body !== null && body !== undefined);

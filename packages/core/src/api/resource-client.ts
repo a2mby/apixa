@@ -91,7 +91,13 @@ function prepareFiles(
   where?: string,
 ): Pick<
   PreparedOperation,
-  "dataFormat" | "multipart" | "fileFields" | "fileRules" | "maxResponseSize" | "responseAccept"
+  | "dataFormat"
+  | "multipart"
+  | "fileFields"
+  | "fileRules"
+  | "maxResponseSize"
+  | "redirectOrigins"
+  | "responseAccept"
 > {
   const wire = (field: string) => (requestKeys ? convertKey(field, requestKeys) : field);
   const config = def.fileFields as readonly string[] | Record<string, FileFieldOptions> | undefined;
@@ -147,6 +153,7 @@ function prepareFiles(
     fileFields: fields.length > 0 ? fields.map(wire) : undefined,
     fileRules: resolved.size > 0 || hasLimits ? { fields: resolved, partNames, limits } : undefined,
     maxResponseSize,
+    redirectOrigins: declared?.redirectOrigins,
     responseAccept: resolveResponseAccept(declared?.responseAccept),
   };
 }
@@ -517,6 +524,7 @@ function functionOperation(
         retry: init.retry,
         responseType: init.responseType,
         maxResponseSize: init.maxResponseSize,
+        redirectOrigins: init.redirectOrigins,
         presigned: init.presigned,
         onTransfer: init.onTransfer,
         meta: init.meta,

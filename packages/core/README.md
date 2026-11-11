@@ -240,6 +240,14 @@ while reading (blob, arrayBuffer, text, json and stream), without breaking cance
 are chosen by whoever built the `File`, an extension does not prove content, nothing is sniffed, and a limit hit mid-stream
 cannot undo bytes already sent. Your backend must validate everything again.
 
+**Redirects (v1.8.0):** a redirect is followed only within the request's own origin. A cross-origin redirect fails with
+`SecurityError` before the destination is contacted, so credentials and custom headers are never forwarded. For a CDN, list
+the destination with `redirectOrigins: ["https://cdn.example.com"]` (operation setting or call option): it is followed with
+no headers, cookies or body (`GET`/`HEAD` only). Browsers hide redirect destinations, so any redirect fails closed there;
+return the URL in a JSON body and use a `presigned` descriptor instead.
+
+> **Production guidance:** guarantees, backend responsibilities, limits, measured memory and recovery for everything above are consolidated in [Production file handling](../../docs/guides/humans/production-file-handling.md).
+
 ## Errors
 
 `ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT` | `SERIALIZATION` (an unencodable body, such as binary values under `dataFormat: "json"`).  
