@@ -120,6 +120,12 @@ const stateOf = (storage: MockFileStorage) => states.get(storage)!;
 const rootState = (state: State): State =>
   state.parent ? rootState(stateOf(state.parent)) : state;
 const pathKey = (meta: MockFileMeta) => `path:${meta.disk}:${meta.path}`;
+/** Whether a virtual path is occupied; compares fields in place instead of building keys and copies per entry. */
+function pathTaken(entries: Map<string, Entry>, meta: MockFileMeta): boolean {
+  for (const { meta: other } of entries.values())
+    if (other.path === meta.path && other.disk === meta.disk) return true;
+  return false;
+}
 function collect(storage: MockFileStorage): void {
   const state = stateOf(storage);
   const kept = new Set([...state.owners.values(), ...state.pins.values()].flatMap((s) => [...s]));
@@ -226,7 +232,7 @@ export class MockFileStorage {
     if (
       root.entries.has(id) ||
       root.reserved.has(id) ||
-      [...root.entries.values()].some((e) => pathKey(e.meta) === pathKey(meta)) ||
+      pathTaken(root.entries, meta) ||
       root.reserved.has(pathKey(meta))
     )
       throw new MockError(
@@ -338,11 +344,7 @@ export function commitFiles(
     const id = idOf(ref);
     const entry = state.entries.get(id);
     if (!parent.entries.has(id) && entry && !state.added.has(id)) {
-      if (
-        [...parent.entries.values()].some(
-          (existing) => pathKey(existing.meta) === pathKey(entry.meta),
-        )
-      )
+      if (pathTaken(parent.entries, entry.meta))
         throw new MockError(
           "MOCK_DUPLICATE_ID",
           "Referenced mock file path was replaced before commit.",

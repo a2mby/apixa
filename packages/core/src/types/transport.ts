@@ -124,6 +124,12 @@ export type TransportTransferEvent =
 
 export interface TransportRequest {
   security?: { credentials: "omit"; redirect: "error" };
+  /**
+   * Origins a redirect may lead to without request headers or credentials (see
+   * `RequestOptions.redirectOrigins`). The built-in fetch transport follows redirects itself and
+   * refuses every other cross-origin destination; a custom transport owns its redirect policy.
+   */
+  redirectOrigins?: readonly string[];
   url: string;
   method: HttpMethod;
   headers: Headers;
@@ -170,6 +176,12 @@ export type RequestOptions<TQuery = QueryParams> = {
   responseType?: ResponseType;
   /** Largest accepted response body in bytes for this call; wins over the operation's. */
   maxResponseSize?: number;
+  /**
+   * Exact origins this call may be redirected to (for example a CDN the API answers `302` with).
+   * A listed destination is followed **without** request headers, cookies, credentials or body and
+   * only for `GET` / `HEAD`. Wins over the operation's list. Any other cross-origin redirect fails.
+   */
+  redirectOrigins?: readonly string[];
   /**
    * Opt in to transfer lifecycle events (upload and download progress, retry attempts, abort and
    * failure). Without it nothing is wrapped or observed. Overrides the operation's `onTransfer`.

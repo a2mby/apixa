@@ -1,3 +1,4 @@
+import { assertRedirectOrigins } from "../http/redirect-origins.js";
 import { validateAdvanced } from "../transfer/advanced.js";
 import { validatePresignedPolicy } from "../http/url.js";
 import type { AdvancedTransferConfig, PresignedPolicy } from "../types/advanced-transfer.js";
@@ -81,6 +82,7 @@ export const OPERATION_KEYS = new Set([
   "fileFields",
   "fileLimits",
   "maxResponseSize",
+  "redirectOrigins",
   "responseAccept",
 ]);
 
@@ -469,6 +471,7 @@ function validateOperationFileConfig(where: string, value: Record<string, unknow
       );
     }
   }
+  if (value.redirectOrigins !== undefined) assertRedirectOrigins(where, value.redirectOrigins);
   if (value.responseAccept !== undefined) {
     const list = value.responseAccept;
     if (!Array.isArray(list) || list.length === 0) {

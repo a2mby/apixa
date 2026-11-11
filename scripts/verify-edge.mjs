@@ -35,7 +35,7 @@ function run(command, args, cwd, quiet = false) {
 }
 
 const CORE_SCENARIO = `
-import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, detectTransferSupport, parseContentDisposition, ValidationError } from "apixa";
+import { ApiError, HttpError, createFetchTransport, defineApi, defineMockApi, detectTransferSupport, parseContentDisposition, SecurityError, ValidationError } from "apixa";
 import "apixa/mocking/register";
 import * as storage from "apixa/core";
 ${MOCK_STORAGE_SCENARIO}
@@ -93,6 +93,15 @@ export async function run() {
   const cutStream = await guarded.pets.put(new ReadableStream({ start(c) { c.enqueue(new Uint8Array(15)); c.enqueue(new Uint8Array(15)); c.close(); } })).catch((e) => e);
   const bigResponse = await guarded.pets.big().catch((e) => e);
   out.validation = { rejected: badFile instanceof ValidationError, codes: badFile.violations?.map((v) => v.code).sort(), requestsAfterReject: validationRequests === 1 ? "only the stream call" : validationRequests, stream: cutStream instanceof ValidationError && cutStream.violations[0].code, response: bigResponse instanceof ValidationError && bigResponse.violations[0].code, support: detectTransferSupport().streamingUpload };
+  // v1.8.0 secure redirects: every hop is inspected before it is sent (fetch is stubbed; the runtimes' real
+  // manual-redirect socket behavior is covered in Node and Chromium).
+  const hops = [];
+  const redirecting = (redirectOrigins) => defineApi({ baseURL: "https://api.test", headers: { "x-api-key": "SECRET" }, transport: createFetchTransport(async (url, init) => { hops.push({ url: String(url), manual: init.redirect, key: new Headers(init.headers).get("x-api-key"), credentials: init.credentials }); const u = new URL(String(url)); if (u.pathname === "/same") return new Response(null, { status: 302, headers: { location: "/final" } }); if (u.pathname === "/cross") return new Response(null, { status: 302, headers: { location: "https://evil.test/steal" } }); if (u.pathname === "/cdn") return new Response(null, { status: 302, headers: { location: "https://cdn.test/o?sig=1" } }); return new Response("{}", { headers: { "content-type": "application/json" } }); }), resources: { same: { path: "/same", operations: { getAll: { redirectOrigins } } }, cross: { path: "/cross", operations: { getAll: { redirectOrigins } } }, cdn: { path: "/cdn", operations: { getAll: { redirectOrigins } } } } });
+  const guardedRedirects = redirecting(["https://cdn.test"]);
+  await guardedRedirects.same.getAll();
+  const crossError = await guardedRedirects.cross.getAll({ retry: false }).catch((e) => e);
+  await guardedRedirects.cdn.getAll();
+  out.redirects = { manual: hops.every((h) => h.manual === "manual"), sameKey: hops.find((h) => h.url.endsWith("/final"))?.key, blocked: crossError instanceof SecurityError, evilContacted: hops.some((h) => h.url.includes("evil.test")), cdnKey: hops.find((h) => h.url.startsWith("https://cdn.test"))?.key ?? null, cdnCredentials: hops.find((h) => h.url.startsWith("https://cdn.test"))?.credentials };
   out.nodeGlobals = { process: typeof globalThis.process, Buffer: typeof globalThis.Buffer, require: typeof globalThis.require };
   out.storage = await mockStorageScenario(storage);
   return out;
@@ -130,6 +139,18 @@ function expectCore(out, label) {
   );
   expectTransfer(out, label);
   expectValidation(out, label);
+  assert.deepEqual(
+    out.redirects,
+    {
+      manual: true,
+      sameKey: "SECRET",
+      blocked: true,
+      evilContacted: false,
+      cdnKey: null,
+      cdnCredentials: "omit",
+    },
+    `${label}: redirects are inspected per hop (same origin kept, cross origin refused, listed origin bare)`,
+  );
 }
 function expectValidation(out, label) {
   const v = out.validation;

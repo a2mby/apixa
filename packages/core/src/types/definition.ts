@@ -155,6 +155,13 @@ export interface OperationDefinition extends LayerOptions {
    */
   maxResponseSize?: number;
   /**
+   * Exact origins a redirect of this operation may lead to (for example a CDN), followed without
+   * request headers, cookies, credentials or body and only for `GET` / `HEAD`. Every other
+   * cross-origin redirect fails with `SecurityError`; same-origin redirects keep working
+   * (not in browsers, which hide redirect destinations). A per-call `redirectOrigins` wins.
+   */
+  redirectOrigins?: readonly string[];
+  /**
    * Accepted response `Content-Type`s (MIME patterns like `"application/pdf"` / `"image/*"`). The
    * header is declared by the server and is not proof of content.
    */

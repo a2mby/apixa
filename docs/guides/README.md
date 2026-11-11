@@ -12,3 +12,4 @@ Same topics may exist in both folders with different detail. Prefer the folder t
 Living docs still live next to this tree: [context](../context.md), [architecture](../architecture.md), [conventions](../conventions.md), [roadmap](../roadmap.md), [story](../story.md), [decisions/](../decisions/).
 
 - [Install Apixa and choose an entry point](./humans/install-apixa.md)
+- [Production file handling](./humans/production-file-handling.md) — guarantees, limits, ownership and recovery for file uploads, downloads and advanced transfers

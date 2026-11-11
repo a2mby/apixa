@@ -160,15 +160,60 @@ export async function runAdvanced<T>(
   let ended = false;
   let abortTask: Promise<void> | undefined;
   let abortedRemote = false;
+  let abortSkipped = false;
+  // Settles when the whole transfer is over; remote abort waits on it while completion is in flight.
+  const finished = deferred();
+  // Acknowledgment sequence numbers let reconcile() keep parts acknowledged while an inspect was in flight.
+  let ackSeq = 0;
+  const ackedAt = new Map<number, number>();
   let saving: Promise<void> = Promise.resolve();
-  const parts = () => [...confirmed.values()].sort((a, b) => a.index - b.index);
+  // Confirmed parts are kept sorted with a running byte and serialized-size total, so each
+  // acknowledgment costs O(log n) lookup plus a pointer move instead of a re-sort, re-copy and
+  // re-validation of every earlier part (quadratic in part count).
+  const sortedParts: TransferPartAck[] = [];
+  const ackSizes = new Map<number, number>();
+  let confirmedBytes = 0;
+  let ackJsonBytes = 0;
+  const setConfirmed = (ack: TransferPartAck) => {
+    const frozen = Object.freeze({ ...ack });
+    const previous = confirmed.get(frozen.index);
+    let low = 0;
+    let high = sortedParts.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (sortedParts[mid]!.index < frozen.index) low = mid + 1;
+      else high = mid;
+    }
+    const json = JSON.stringify(frozen).length + 1;
+    if (previous) {
+      sortedParts[low] = frozen;
+      confirmedBytes += frozen.size - previous.size;
+      ackJsonBytes += json - (ackSizes.get(frozen.index) ?? 0);
+    } else {
+      sortedParts.splice(low, 0, frozen);
+      confirmedBytes += frozen.size;
+      ackJsonBytes += json;
+    }
+    ackSizes.set(frozen.index, json);
+    confirmed.set(frozen.index, frozen);
+  };
+  const replaceConfirmed = (acks: Iterable<TransferPartAck>) => {
+    confirmed.clear();
+    ackSizes.clear();
+    sortedParts.length = 0;
+    confirmedBytes = 0;
+    ackJsonBytes = 0;
+    for (const ack of acks) setConfirmed(ack);
+  };
+  const parts = () => sortedParts.slice();
+  let manifestSnapshot: readonly string[] | undefined;
   const emit = (next = phase) => {
     phase = next;
     if (!options.transfer?.onSession) return;
     const snapshot: TransferSnapshot = freezeSnapshot({
       phase,
       total: source.size,
-      confirmedBytes: parts().reduce((sum, p) => sum + p.size, 0),
+      confirmedBytes,
       parts: [...progress.values()].map((p) => ({ ...p })),
       ...(checkpoint ? { checkpoint } : {}),
     });
@@ -196,25 +241,28 @@ export async function runAdvanced<T>(
   };
   const save = () => {
     if (!protocol.inspect || !session) return Promise.resolve();
-    checkpoint = freezeSnapshot({
-      version: 1,
+    manifestSnapshot ??= Object.freeze([...manifest]);
+    // Every field below is already validated state; only the persisted size needs a bound.
+    if (512 + session.id.length + manifest.length * 67 + ackJsonBytes > 4 * 1024 * 1024)
+      throw new ConfigError("Transfer checkpoint exceeds its limits.");
+    checkpoint = Object.freeze({
+      version: 1 as const,
       revision: ++revision,
-      protocol: { id: protocol.id, version: protocol.version },
+      protocol: Object.freeze({ id: protocol.id, version: protocol.version }),
       resource: runtime.resource,
       operation: runtime.operation,
-      session: { ...session },
-      source: {
+      session: Object.freeze({ ...session }),
+      source: Object.freeze({
         size: source.size,
         type: source.type,
         ...(typeof File !== "undefined" && source instanceof File
           ? { name: source.name, lastModified: source.lastModified }
           : {}),
-        manifest: [...manifest],
-      },
+        manifest: manifestSnapshot,
+      }),
       chunkSize,
-      parts: parts().map((p) => ({ ...p })),
+      parts: Object.freeze(parts()),
     });
-    validateCheckpoint(checkpoint, maxParts);
     const snapshot = checkpoint;
     saving = saving.then(async () => {
       check();
@@ -342,6 +390,7 @@ export async function runAdvanced<T>(
   const reconcile = async (): Promise<ApiResponse<T> | undefined> => {
     if (!protocol.inspect) throw failure("protocol", "Cannot reconcile this transfer protocol.");
     emit("reconciling");
+    const mark = ackSeq;
     let state: Awaited<ReturnType<NonNullable<typeof protocol.inspect>>>;
     try {
       state = await gate(protocol.inspect(context(), input()));
@@ -379,8 +428,12 @@ export async function runAdvanced<T>(
         throw failure("integrity", "Server part identity conflicts with the checkpoint.");
       server.set(ack.index, { ...ack });
     }
-    confirmed.clear();
-    for (const [index, ack] of server) confirmed.set(index, ack);
+    // An acknowledgment received after this inspect began may postdate the server's snapshot: it is
+    // real evidence, so it survives the authoritative overwrite.
+    const recent = [...confirmed].filter(([index]) => (ackedAt.get(index) ?? 0) > mark);
+    const merged = new Map(server);
+    for (const [index, ack] of recent) if (!merged.has(index)) merged.set(index, ack);
+    replaceConfirmed(merged.values());
     await save();
     emit("uploading");
   };
@@ -412,6 +465,15 @@ export async function runAdvanced<T>(
         if (abortTask) return abortTask;
         abortTask = (async () => {
           if (!session || ended) throw new ConfigError("No active remote upload session.");
+          if (phase === "completing") {
+            // The completion request may already have been processed: aborting now would race it.
+            // Wait for it to settle, then report that there is nothing left to abort.
+            abortSkipped = true;
+            await gate(finished.promise, runtime.signal).catch(() => {});
+            throw new ConfigError(
+              "The upload already finished; there is no active remote upload session.",
+            );
+          }
           ctl.abort(new AbortError("Transfer server abort requested."));
           wake.resolve();
           if (active) await idle.promise;
@@ -450,7 +512,7 @@ export async function runAdvanced<T>(
       )
         throw failure("checkpoint", "Checkpoint is incompatible with the operation or source.");
       session = { ...resume.session };
-      for (const ack of resume.parts) confirmed.set(ack.index, { ...ack });
+      replaceConfirmed(resume.parts);
     } else {
       session = await gate(
         protocol.initiate(context(), {
@@ -527,7 +589,8 @@ export async function runAdvanced<T>(
           validateAck(ack, source.size, chunkSize, count);
           if (ack.index !== index || (ack.checksum && ack.checksum !== manifest[index]))
             throw failure("integrity", "Upload part acknowledgment does not match sent bytes.");
-          confirmed.set(index, { ...ack });
+          setConfirmed(ack);
+          ackedAt.set(index, ++ackSeq);
           await save();
           check();
           emit();
@@ -580,7 +643,7 @@ export async function runAdvanced<T>(
     emit("complete");
     return result;
   } catch (thrown) {
-    if (abortTask) {
+    if (abortTask && !abortSkipped) {
       try {
         await abortTask;
       } catch (error) {
@@ -608,6 +671,7 @@ export async function runAdvanced<T>(
     throw error;
   } finally {
     ended = true;
+    finished.resolve();
     ctl.abort(new AbortError());
     wake.resolve();
     unbind();

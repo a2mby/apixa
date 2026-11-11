@@ -2,6 +2,33 @@
 
 Project log. Newest entry first.
 
+## 2026-11-11 — v1.8.0 owner decisions resolved: secure redirects and final audit
+
+The owner approved secure-by-default redirects (guidance-only for concurrency and session ids): the fetch transport now inspects
+every redirect hop before sending, refuses cross-origin destinations before contacting them, follows an explicit
+`redirectOrigins` origin with no headers, cookies or body, and fails closed in browsers, which hide redirect targets. The remaining
+audit also fixed shared-object under-counting in file validation and a dataset-id path escape, and proved managed mock writes
+atomic with 15 fault-injection tests. `pnpm verify` and Node 22 pass (151 files / 1,600 tests); CI and G4 sign-off are pending.
+
+## 2026-11-11 — v1.8.0 file hardening implemented
+
+Probed all 23 audit findings against real sockets, a fault-injectable session server and direct measurements:
+four were confirmed defects and fixed test-first (abort could abort an already-completed upload, a renew/reconcile race
+dropped parallel acknowledgments, checkpointing was quadratic in part count, mock path checks allocated per file) with
+two files of production change and no public API change. The rest are pinned as non-issues, platform limits or
+documented limitations (cached streams stay consumer-owned; custom headers follow cross-origin redirects, which needs
+an owner decision), and a production guide states Apixa's guarantees versus backend responsibilities.
+`pnpm verify` and Node 22 pass (146 files / 1,540 tests); CI and owner sign-off are pending.
+
+## 2026-11-11 — v1.8.0 kicked off: file lifecycle and production hardening
+
+v1.7.0 is merged (PR #104, squash `03fde16`, CI Node 22/24 green) and v1.8.0 starts as the final
+Advanced File Handling phase. Stage 1 created `versions/v1.8.0/` with a static audit and a 23-item
+provisional finding register (highest-impact candidates: redirects on ordinary requests,
+abort versus completion, a renew/reconcile race, the manual mock-delete contract, quadratic
+checkpoint work and multipart buffering under progress), decisions H1–H14, eight batches and owner
+gates. Nothing is implemented; Batch 0 must reproduce each finding before any fix.
+
 ## 2026-11-11 — v1.7.0 signed off and merged
 
 Node 22 and 24 CI passed on the final head of PR #104 (1,451 tests, 62/62 type consumers, Chromium,

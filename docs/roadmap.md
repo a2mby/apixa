@@ -115,9 +115,19 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
 
-## Current: v1.7.0 — Large Files & Advanced Transfers
+## Current: v1.8.0 — File Lifecycle, Performance & Production Hardening
 
-**Spec:** [versions/v1.7.0/](../versions/v1.7.0/) (implemented, verified and owner-signed-off 2026-11-11)
+**Spec:** [versions/v1.8.0/](../versions/v1.8.0/) (implemented and locally verified under issue #105; owner decisions resolved; CI and sign-off pending)
+
+- Secure-by-default redirects for ordinary requests (owner-approved breaking security correction; optional `redirectOrigins`)
+- Hardening, not a feature family: audit lifecycle, atomicity, memory/CPU, stream ownership, security, transfer-session races, error consistency, mock/live parity and runtime compatibility across v1.1.0–v1.7.0
+- Fix only confirmed defects (regression test first); document limits; no remote-file deletion, no distributed-transaction promises
+- Deterministic fault injection and measured memory/CPU thresholds; one consolidated production guide
+- Owner gates G1–G4; no public API, package or dependency without approval; no release
+
+## Completed: v1.7.0 — Large Files & Advanced Transfers
+
+**Spec:** [versions/v1.7.0/](../versions/v1.7.0/) (implemented, verified, merged as PR #104 and owner-signed-off 2026-11-11)
 
 - Explicit advanced strategies through existing API operations and Core request infrastructure;
   ordinary small-file uploads/downloads remain unchanged and require no new configuration
@@ -224,7 +234,7 @@ optional milestone **after** file handling.
 6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store — **v1.5.0** (completed and owner-approved)
 7. React/TanStack and form compatibility, browser/Node integration, and testing — **v1.6.0** (form adapters excluded)
 8. Large-file uploads, chunking, resumability, parallel transfers, checkpoints, integrity, presigned transfers and justified storage integrations — **v1.7.0** (implemented, verified, owner sign-off recorded 2026-11-11)
-9. File lifecycle management, cleanup policies, performance, documentation, and release hardening — **v1.8.0** (roadmap only; no folder)
+9. File lifecycle management, cleanup policies, performance, documentation, and release hardening — **v1.8.0** (implemented; owner decisions and sign-off pending)
 
 ## Later: Proposed backlog catalog (planning only)
 

@@ -20,14 +20,18 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-**[v1.7.0](./v1.7.0/)** — Large Files & Advanced Transfers (Advanced File Handling, phase 8).
-Implemented and verified under issue #103 (PR #104, CI Node 22/24 green); precise API owner-approved 2026-11-10, owner sign-off recorded 2026-11-11. Explicit optional chunk/session
-strategies through existing operations and request infrastructure, protocol-supported resumability,
-bounded parallelism, checkpoints, safe retries, integrity and presigned security. S3-compatible
-recipe and download audit included; public adapter/range extensions require recorded decisions.
-D1–D18 were resolved by explicit owner approval before production implementation; no npm release.
+**[v1.8.0](./v1.8.0/)** — File Lifecycle, Performance & Production Hardening (Advanced File Handling,
+phase 9, the final phase). **G1 and the three owner decisions approved; implemented and locally verified under issue #105 (`pnpm verify` exit 0, 151 files / 1,600 tests); CI and G4 sign-off pending.**
+A hardening milestone: 23 findings plus V1, M1 and R1 dispositioned (7 defects fixed: secure redirects, abort-vs-completion, renew/reconcile race,
+quadratic checkpointing, mock path scan, shared-reference validation, dataset path escape), H1–H14 locked. No new feature family, public API, package or dependency without owner approval; no npm release.
 
-Previous: **[v1.6.0](./v1.6.0/)** — Advanced Framework & Consumer Integration (phase 7).
+Previous: **[v1.7.0](./v1.7.0/)** — Large Files & Advanced Transfers (phase 8). Implemented and
+verified under issue #103 (PR #104 squash `03fde16`, CI Node 22/24 green); precise API owner-approved
+2026-11-10, owner sign-off recorded 2026-11-11. Explicit optional chunk/session strategies,
+protocol-supported resumability, bounded parallelism, checkpoints, safe retries, integrity and
+presigned security; no npm release.
+
+Earlier: **[v1.6.0](./v1.6.0/)** — Advanced Framework & Consumer Integration (phase 7).
 Implemented, verified (`pnpm verify`) and merged (PR #102); owner sign-off remains open. Packed
 React 18/19 runtime coverage and tracked Next `/files` now supply the later evidence for earlier
 coverage gaps. The frozen final CI checkbox remains unchecked; no shipped status is inferred.
@@ -54,20 +58,21 @@ is **not** declared stable). Its folder stays as the contract for that line.
 
 ## Completed
 
-| Version | Status                                                                                | Path                   |
-| ------- | ------------------------------------------------------------------------------------- | ---------------------- |
-| v1.5.0  | Completed and owner-approved — Advanced Mock File Storage; no npm release             | [v1.5.0/](./v1.5.0/)   |
-| v0.11.0 | Shipped — Harden v0.10.0 (`ParseError`, single retry decision, `useResourceMutation`) | [v0.11.0/](./v0.11.0/) |
-| v0.10.0 | Shipped — Fully customizable resource operations, plus 11 always-on builtins          | [v0.10.0/](./v0.10.0/) |
-| v0.9.0  | Shipped — Flatten Core mock syntax (`mock: "<dataset-id>"`)                           | [v0.9.0/](./v0.9.0/)   |
-| v0.8.0  | Shipped — Unified TanStack Query resource integration (`useResourceQuery`)            | [v0.8.0/](./v0.8.0/)   |
-| v0.7.0  | Shipped — Thin Core + plugin seams (types, middleware, errors)                        | [v0.7.0/](./v0.7.0/)   |
-| v0.6.0  | Shipped — Core request reliability (abort, retries, thin middleware)                  | [v0.6.0/](./v0.6.0/)   |
-| v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend                            | [v0.5.0/](./v0.5.0/)   |
-| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing                                   | [v0.4.0/](./v0.4.0/)   |
-| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)                                     | [v0.3.0/](./v0.3.0/)   |
-| v0.2.0  | Shipped — default-first resource CRUD                                                 | [v0.2.0/](./v0.2.0/)   |
-| v0.1.0  | Shipped — opt-in operations foundation                                                | [v0.1.0/](./v0.1.0/)   |
+| Version | Status                                                                                       | Path                   |
+| ------- | -------------------------------------------------------------------------------------------- | ---------------------- |
+| v1.7.0  | Completed and owner-signed-off 2026-11-11 — Large Files & Advanced Transfers; no npm release | [v1.7.0/](./v1.7.0/)   |
+| v1.5.0  | Completed and owner-approved — Advanced Mock File Storage; no npm release                    | [v1.5.0/](./v1.5.0/)   |
+| v0.11.0 | Shipped — Harden v0.10.0 (`ParseError`, single retry decision, `useResourceMutation`)        | [v0.11.0/](./v0.11.0/) |
+| v0.10.0 | Shipped — Fully customizable resource operations, plus 11 always-on builtins                 | [v0.10.0/](./v0.10.0/) |
+| v0.9.0  | Shipped — Flatten Core mock syntax (`mock: "<dataset-id>"`)                                  | [v0.9.0/](./v0.9.0/)   |
+| v0.8.0  | Shipped — Unified TanStack Query resource integration (`useResourceQuery`)                   | [v0.8.0/](./v0.8.0/)   |
+| v0.7.0  | Shipped — Thin Core + plugin seams (types, middleware, errors)                               | [v0.7.0/](./v0.7.0/)   |
+| v0.6.0  | Shipped — Core request reliability (abort, retries, thin middleware)                         | [v0.6.0/](./v0.6.0/)   |
+| v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend                                   | [v0.5.0/](./v0.5.0/)   |
+| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing                                          | [v0.4.0/](./v0.4.0/)   |
+| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)                                            | [v0.3.0/](./v0.3.0/)   |
+| v0.2.0  | Shipped — default-first resource CRUD                                                        | [v0.2.0/](./v0.2.0/)   |
+| v0.1.0  | Shipped — opt-in operations foundation                                                       | [v0.1.0/](./v0.1.0/)   |
 
 ## Later (roadmap only)
 

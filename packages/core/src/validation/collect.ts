@@ -81,25 +81,30 @@ export function collectFiles(
     return out;
   }
 
-  const seen = new Set<object>();
+  // Ancestors only: a node reachable twice is serialized twice, so its files count twice; a cycle is skipped.
+  const active = new Set<object>();
   const walk = (node: unknown, path: string, field: string | undefined, depth: number): void => {
     if (isBlob(node)) {
       out.files.push({ path, field: field ?? "", ...(metadata?.get(node) ?? describe(node)) });
       return;
     }
-    if (node === null || typeof node !== "object" || depth > MAX_DEPTH || seen.has(node)) return;
+    if (node === null || typeof node !== "object" || depth > MAX_DEPTH || active.has(node)) return;
     const isArray = Array.isArray(node);
     if (!isArray && !isPlainObject(node)) return;
-    seen.add(node);
-    if (isArray) {
-      node.forEach((item, i) => walk(item, `${path}[${i}]`, field, depth + 1));
-    } else {
-      for (const [key, value] of Object.entries(node)) {
-        // The owning field is the first object key below the root (leading array indices skipped).
-        const owner = field ?? key;
-        if (field === undefined && value !== undefined && value !== null) out.present.add(key);
-        walk(value, `${path}.${key}`, owner, depth + 1);
+    active.add(node);
+    try {
+      if (isArray) {
+        node.forEach((item, i) => walk(item, `${path}[${i}]`, field, depth + 1));
+      } else {
+        for (const [key, value] of Object.entries(node)) {
+          // The owning field is the first object key below the root (leading array indices skipped).
+          const owner = field ?? key;
+          if (field === undefined && value !== undefined && value !== null) out.present.add(key);
+          walk(value, `${path}.${key}`, owner, depth + 1);
+        }
       }
+    } finally {
+      active.delete(node);
     }
   };
   walk(body, "$", undefined, 0);
