@@ -20,8 +20,10 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-**[v1.8.0](./v1.8.0/)** — File Lifecycle, Performance & Production Hardening (Advanced File Handling,
-phase 9, the final phase). **G1 and the three owner decisions approved; implemented and locally verified under issue #105 (`pnpm verify` exit 0, 151 files / 1,600 tests); CI and G4 sign-off pending.**
+**[v1.8.1](./v1.8.1/)** — Laravel Real-World Backend Playground. Environment-only implementation under issue #107: independent Composer/Laravel project, native PostgreSQL, empty API routing, CORS, storage and isolated test/E2E/production configuration. No SDK/package-version change or npm release.
+
+Previous: **[v1.8.0](./v1.8.0/)** — File Lifecycle, Performance & Production Hardening (Advanced File Handling,
+phase 9, the final phase). **G1 and the three owner decisions approved; implemented and locally verified under issue #105 (`pnpm verify` exit 0, 151 files / 1,600 tests); merged as PR #106 (`b0cf6b4`), CI Node 22/24 green; G4 owner sign-off is not inferred.**
 A hardening milestone: 23 findings plus V1, M1 and R1 dispositioned (7 defects fixed: secure redirects, abort-vs-completion, renew/reconcile race,
 quadratic checkpointing, mock path scan, shared-reference validation, dataset path escape), H1–H14 locked. No new feature family, public API, package or dependency without owner approval; no npm release.
 

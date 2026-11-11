@@ -346,3 +346,5 @@ Advanced chunk/session uploads (implemented, unreleased) are explicit operation 
 pipeline. Ordinary file uploads/downloads keep their existing zero-config behavior. See the
 [advanced transfer guide](packages/core/README.md#advanced-transfers-v170) for typed checkpoints,
 server reconciliation, bounded concurrency, controls, presigned security and the SDK-free S3 recipe.
+
+Contributors can use the independent [Laravel/PostgreSQL backend playground](examples/laravel-backend/README.md) for real HTTP infrastructure experiments.

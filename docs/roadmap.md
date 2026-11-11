@@ -2,6 +2,16 @@
 
 This roadmap describes possible future capabilities. Do not implement them all at once. The active coding contract is always the current version folder under [`versions/`](../versions/).
 
+## Active: v1.8.1 — Laravel Real-World Backend Playground
+
+**Spec:** [versions/v1.8.1/](../versions/v1.8.1/)
+
+Independent Laravel 13 backend environment at `examples/laravel-backend/`: native PostgreSQL,
+empty API routing, configurable built-in CORS, local storage, separate development/test/E2E
+environments, multi-worker local serving and production configuration guidance. The author owns
+all future APIs and business behavior. No SDK integration, Node dependency, application scenarios,
+npm release or deployment. v1.8.0 is merged (PR #106), CI Node 22/24 green; no owner sign-off inferred.
+
 ## Completed: v0.1.0 — Foundation
 
 **Spec:** [versions/v0.1.0/](../versions/v0.1.0/)
@@ -115,9 +125,9 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
 
-## Current: v1.8.0 — File Lifecycle, Performance & Production Hardening
+## Merged: v1.8.0 — File Lifecycle, Performance & Production Hardening
 
-**Spec:** [versions/v1.8.0/](../versions/v1.8.0/) (implemented and locally verified under issue #105; owner decisions resolved; CI and sign-off pending)
+**Spec:** [versions/v1.8.0/](../versions/v1.8.0/) (merged in PR #106; owner decisions resolved; CI Node 22/24 green; owner final sign-off not inferred)
 
 - Secure-by-default redirects for ordinary requests (owner-approved breaking security correction; optional `redirectOrigins`)
 - Hardening, not a feature family: audit lifecycle, atomicity, memory/CPU, stream ownership, security, transfer-session races, error consistency, mock/live parity and runtime compatibility across v1.1.0–v1.7.0
@@ -220,8 +230,9 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 ## Planned: Advanced File Handling (nine phases)
 
 Phase 1 is **v1.1.0** (with minimal mock storage pulled in by owner decision). Phases 3–7 have
-implemented milestones; phase 6 is **v1.5.0 (completed and owner-approved)**. Phase 8 is the active
-**v1.7.0** implementation milestone. Phase 9 remains **v1.8.0**, roadmap only. Phase 2 has no separate
+implemented milestones; phase 6 is **v1.5.0 (completed and owner-approved)**. Phase 8 is
+**v1.7.0** (implemented and owner-signed-off). Phase 9, **v1.8.0**, is merged with green CI;
+owner final sign-off is not inferred. Phase 2 has no separate
 version folder; existing CRUD/custom serialization coverage is audited without claiming every
 possible extension complete. A dedicated React Hook Form integration is a separate
 optional milestone **after** file handling.
@@ -234,7 +245,7 @@ optional milestone **after** file handling.
 6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store — **v1.5.0** (completed and owner-approved)
 7. React/TanStack and form compatibility, browser/Node integration, and testing — **v1.6.0** (form adapters excluded)
 8. Large-file uploads, chunking, resumability, parallel transfers, checkpoints, integrity, presigned transfers and justified storage integrations — **v1.7.0** (implemented, verified, owner sign-off recorded 2026-11-11)
-9. File lifecycle management, cleanup policies, performance, documentation, and release hardening — **v1.8.0** (implemented; owner decisions and sign-off pending)
+9. File lifecycle management, cleanup policies, performance, documentation, and release hardening — **v1.8.0** (merged, owner decisions resolved, CI green; owner final sign-off not inferred)
 
 ## Later: Proposed backlog catalog (planning only)
 
