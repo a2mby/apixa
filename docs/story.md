@@ -2,6 +2,14 @@
 
 Project log. Newest entry first.
 
+## 2026-11-11 — v1.8.1 Laravel/PostgreSQL environment verified locally
+
+The independent Laravel 13.42.0 backend boots on PHP 8.4 with native PostgreSQL 16, empty API routing, configurable built-in CORS and private local storage. All three default migrations ran on the new development database; separate test/E2E connections, four HTTP workers, real health/preflight requests, storage cleanup, two default framework tests and a clean production dependency/cache setup were verified. `pnpm verify` passes unchanged (151 files / 1,600 tests, 62/62 type consumers, Chromium and both edge runtimes). No application behavior, SDK integration, package-version change or deployment was added; PR CI and owner sign-off remain delivery gates.
+
+## 2026-11-11 — v1.8.1 Laravel backend playground kicked off
+
+v1.8.0 is present on main through PR #106 (`b0cf6b4`), with Node 22/24 CI green. Issue #107 starts an independent Laravel 13/PostgreSQL environment under `examples/laravel-backend/`; this milestone provisions configuration and verifies real infrastructure only. The author retains all API design and backend behavior; no SDK changes, npm release or deployment are included.
+
 ## 2026-11-11 — v1.8.0 owner decisions resolved: secure redirects and final audit
 
 The owner approved secure-by-default redirects (guidance-only for concurrency and session ids): the fetch transport now inspects
