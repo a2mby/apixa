@@ -2,6 +2,59 @@
 
 Project log. Newest entry first.
 
+## 2026-11-11 — v1.7.0 signed off and merged
+
+Node 22 and 24 CI passed on the final head of PR #104 (1,451 tests, 62/62 type consumers, Chromium,
+Edge, workerd), and the owner explicitly signed off Large Files & Advanced Transfers with its
+documented backend requirements and provider/range-download deferrals. Acceptance criteria are
+checked off; the squash merge closes issue #103.
+
+## 2026-11-10 — v1.7.0 prepared for remote verification
+
+Prepared the complete Large Files & Advanced Transfers implementation for issue #103, including
+chunk sessions, secure presigned requests, the S3 recipe and runtime/typing regression evidence.
+Local verification passed; Node 22/24 remote CI and explicit final owner sign-off remain required
+before squash merge, with backend requirements and provider/range-download deferrals retained.
+
+## 2026-11-10 — v1.7.0 implementation: Large Files & Advanced Transfers
+
+Implemented the owner-approved D1–D18 proposal under issue #103 through the single
+`/implement-version` invocation. Explicit operation strategies use the existing request pipeline
+for bounded Blob slicing, sequential/parallel scheduling, authoritative session reconciliation,
+caller-owned checkpoints, SHA-256 chunk identity, safe part retries and lifecycle controls.
+Ordinary uploads and downloads retain their existing defaults.
+
+Added `createTransferControl` and specialized transfer types only to `apixa/core`; curated root
+exports remain unchanged. Presigned steps isolate credentials and middleware with exact authorized
+HTTPS origins and transport capability checks. The tracked Next example includes interruption and
+resume plus an SDK-free backend-mediated S3 recipe. Core remains framework independent.
+
+Regression evidence covers unsafe middleware replay, response-limit/caller-option forwarding,
+checkpoint recovery, integrity, truthful progress and signed diagnostics/cache identities. See the
+[v1.7.0 acceptance evidence](../versions/v1.7.0/acceptance-criteria.md) for final command results. `pnpm verify` passed in full, including 1,451 tests across 138 files,
+62/62 packed type checks, React 18/19, Chromium/Next and both Edge runtimes. Node 22 independently
+passed all 1,451 tests.
+Resumption requires backend support; advanced upload completion must settle its response body.
+A provider framework and range downloader remain deferred. Remote CI and final milestone owner
+sign-off remain open. No commit, push, package-version change or publication was performed.
+
+## 2026-11-10 — v1.7.0 kickoff: Large Files & Advanced Transfers
+
+Created the [v1.7.0 contract](../versions/v1.7.0/) after auditing v1.1.0–v1.6.0 contracts,
+public API, request/retry/security pipeline, serialization, streaming, validation, mocks and React
+runtime evidence at `2cdf2e2`. Existing downloads/streams are reused. Missing session orchestration,
+checkpoint reconciliation and delegated-origin security are planned through existing operations,
+with bounded chunks/parallelism, per-part recovery, integrity and a backend-mediated S3 recipe.
+D1–D18 record options, recommendations and trade-offs for owner review; progress, control/native
+Promise, mixed read/write step binding, presigned credential/redirect policy and exports are explicit
+implementation gates. Range downloads and a public provider adapter require concrete justification.
+
+Stage 1 only: four contract files plus living pointers/roadmap/story; no production code, package
+version changes, implementation command, future version folders, commit, push or publish. Broader
+cleanup/performance/hardening remains v1.8.0 roadmap work; RHF/Zod remain excluded. v1.6.0 is
+implemented, verified and merged, owner sign-off open; its later coverage evidence does not rewrite
+older frozen checklists. v1.0.0 remains a release candidate. No fresh `pnpm verify` claim in this audit.
+
 ## 2026-11-10 — v1.6.0 framework and consumer integration implemented
 
 Implemented [v1.6.0](../versions/v1.6.0/) through the existing three hooks, with no new public API. The audit confirmed and fixed three defects test-first: a binary value in a query identity (silent cache collision), a caller's `AbortSignal` replaced by TanStack's on reads, and binary/stream data entering `dehydrate`. Real React 18.3.1 and 19 hook scenarios now run against the packed package, and `examples/query-ssr-next` `/files` (rules, progress, cancellation) is driven in Chromium. `pnpm verify` passes (125 files / 1336 tests); owner sign-off remains open.

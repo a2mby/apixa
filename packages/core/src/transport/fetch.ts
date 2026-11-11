@@ -87,6 +87,7 @@ async function prepareBody(input: TransportRequest): Promise<PreparedBody> {
 
 export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport {
   return {
+    capabilities: { presigned: true },
     async request(input: TransportRequest): Promise<TransportResponse> {
       let response: Response;
 
@@ -97,6 +98,9 @@ export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport
           headers: prepared.headers,
           body: prepared.body,
           signal: input.signal,
+          ...(input.security
+            ? { credentials: input.security.credentials, redirect: input.security.redirect }
+            : {}),
           // A stream body (caller's or counted) must declare half-duplex or fetch rejects it.
           ...(prepared.duplex ? ({ duplex: "half" } as RequestInit) : {}),
         });

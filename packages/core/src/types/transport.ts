@@ -1,3 +1,4 @@
+import type { AdvancedTransferOptions, PresignedRequest } from "./advanced-transfer.js";
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
 import type { RetryConfig } from "./retry.js";
 
@@ -24,6 +25,8 @@ export type ResponseTypeData<RT extends BinaryResponseType> = RT extends "text"
  * (retries reuse it), so middleware runs once per call, not once per attempt.
  */
 export interface ApiRequest {
+  /** Isolated, explicitly authorized delegated destination. */
+  delegated?: boolean;
   method: HttpMethod;
   /** Final destination. Changing it in middleware is allowed but re-checked against the API origin. */
   url: string;
@@ -120,6 +123,7 @@ export type TransportTransferEvent =
   | { phase: "unsupported"; direction: TransferDirection; reason: string };
 
 export interface TransportRequest {
+  security?: { credentials: "omit"; redirect: "error" };
   url: string;
   method: HttpMethod;
   headers: Headers;
@@ -148,11 +152,14 @@ export interface TransportResponse {
 }
 
 export interface Transport {
+  capabilities?: { presigned?: true };
   request(input: TransportRequest): Promise<TransportResponse>;
 }
 
 /** Per-call options, always the last argument of an operation. */
 export type RequestOptions<TQuery = QueryParams> = {
+  transfer?: AdvancedTransferOptions;
+  presigned?: PresignedRequest;
   query?: TQuery;
   /** Highest-precedence headers for this call. */
   headers?: HeadersInitLike;

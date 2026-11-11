@@ -1,6 +1,10 @@
+import { ADVANCED_TRANSFER_SCENARIO } from "./advanced-transfer-scenario.mjs";
 // The same packed-package workflow runs in Node, Chromium, Next SSR and both Edge runtimes.
-export const MOCK_STORAGE_SCENARIO = String.raw`
+export const MOCK_STORAGE_SCENARIO =
+  ADVANCED_TRANSFER_SCENARIO +
+  String.raw`
 async function mockStorageScenario(m) {
+  if (await advancedTransferScenario(m) !== "advanced:resumed:8") throw Error("advanced transfer cross-runtime scenario");
   const api = m.defineApi({ baseURL: 'https://mock.test', transport: { request() { throw Error('mock reached network'); } }, resources: {
     docs: { path: '/docs', fileFields: { file: { maxSize: 20, accept: ['text/plain'] } }, mock: {
       data: [{ id: 1, file: m.mockFixtureRef('seed') }],

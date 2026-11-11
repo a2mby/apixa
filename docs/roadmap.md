@@ -115,7 +115,21 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
   and isolated public subpaths (ADR 005). Vue and Angular remain future work.
 
-## Current: v1.6.0 — Advanced Framework & Consumer Integration
+## Current: v1.7.0 — Large Files & Advanced Transfers
+
+**Spec:** [versions/v1.7.0/](../versions/v1.7.0/) (implemented, verified and owner-signed-off 2026-11-11)
+
+- Explicit advanced strategies through existing API operations and Core request infrastructure;
+  ordinary small-file uploads/downloads remain unchanged and require no new configuration
+- Lazy File/Blob chunks, protocol-supported sessions/resume, bounded sequential/parallel transfer,
+  caller-owned typed checkpoints, authoritative reconciliation and safe per-part recovery
+- Honest aggregate progress, integrity evidence, shared cancellation/deadlines and explicit controls
+- Presigned upload/download security with owner-reviewed origins, credential and redirect policy
+- Tested backend-mediated S3-compatible recipe without mandatory SDKs; public adapters only if justified
+- Audit/reuse existing large streamed downloads; range resume only on a proven gap and explicit approval
+- D1–D18 and the precise API proposal owner-approved; implemented through one Core pipeline, no new package/client
+
+## Implemented, owner sign-off open: v1.6.0 — Advanced Framework & Consumer Integration
 
 **Spec:** [versions/v1.6.0/](../versions/v1.6.0/) (implemented and verified; owner sign-off open)
 
@@ -191,13 +205,15 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
   `dataFormat` override; documented bracket / repeated-name serialization
 - Minimal in-memory mock file storage (bytes separate from records, string references on reads)
 - Binary-safe pipeline, `SerializationError`, React type compatibility; no new packages
-- Implemented and verified (`pnpm verify`); sign-off and landing on `main` pending. One published `apixa` package.
+- Implemented, verified (`pnpm verify`) and merged; owner sign-off open. One published `apixa` package.
 
 ## Planned: Advanced File Handling (nine phases)
 
-Phase 1 is **v1.1.0** (with minimal mock storage pulled in by owner decision). Phases 3–5 have
-implemented milestones; phase 6 is **v1.5.0 (completed and owner-approved)**. Unassigned phases remain roadmap
-headings until each milestone starts. A dedicated React Hook Form integration is a separate
+Phase 1 is **v1.1.0** (with minimal mock storage pulled in by owner decision). Phases 3–7 have
+implemented milestones; phase 6 is **v1.5.0 (completed and owner-approved)**. Phase 8 is the active
+**v1.7.0** implementation milestone. Phase 9 remains **v1.8.0**, roadmap only. Phase 2 has no separate
+version folder; existing CRUD/custom serialization coverage is audited without claiming every
+possible extension complete. A dedicated React Hook Form integration is a separate
 optional milestone **after** file handling.
 
 1. File-field foundation, automatic serialization and minimal mock file storage — **v1.1.0**
@@ -207,8 +223,8 @@ optional milestone **after** file handling.
 5. Middleware, validation, file limits, and error handling — **v1.4.0**
 6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store — **v1.5.0** (completed and owner-approved)
 7. React/TanStack and form compatibility, browser/Node integration, and testing — **v1.6.0** (form adapters excluded)
-8. Large-file uploads, chunking, resumability, parallel transfers, and storage adapters
-9. File lifecycle management, cleanup policies, performance, documentation, and release hardening
+8. Large-file uploads, chunking, resumability, parallel transfers, checkpoints, integrity, presigned transfers and justified storage integrations — **v1.7.0** (implemented, verified, owner sign-off recorded 2026-11-11)
+9. File lifecycle management, cleanup policies, performance, documentation, and release hardening — **v1.8.0** (roadmap only; no folder)
 
 ## Later: Proposed backlog catalog (planning only)
 

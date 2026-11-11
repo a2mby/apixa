@@ -1,3 +1,7 @@
+import type { AdvancedTransferConfig, PresignedPolicy } from "../types/advanced-transfer.js";
+import { runAdvanced } from "../transfer/advanced.js";
+import { assertPresigned } from "../http/url.js";
+import { joinPath } from "../http/path.js";
 import { runManagedMock } from "../mock/transaction.js";
 import {
   AbortError,
@@ -91,6 +95,19 @@ export interface ResourceRuntime {
 
 /** Everything a call needs that does not depend on its arguments — resolved once. */
 export interface PreparedOperation {
+  transfer?: AdvancedTransferConfig;
+  transferLayers?: Pick<
+    PreparedOperation,
+    | "headers"
+    | "timeout"
+    | "retry"
+    | "onRequest"
+    | "onResponse"
+    | "onError"
+    | "requestKeys"
+    | "responseKeys"
+  >;
+  presigned?: PresignedPolicy;
   name: string;
   method: HttpMethod;
   /** Resource path joined with the operation path (`/users/:id`) or an absolute URL. */
@@ -144,6 +161,10 @@ export interface CallInput {
   hasBody?: boolean;
   /** Set on the single replay started from error middleware (prevents replay loops). */
   replayed?: boolean;
+  /** Internal: raw advanced part bytes cannot be replaced by request middleware. */
+  preserveBody?: boolean;
+  /** Internal: protocol writes only expose safe, explicit middleware replay. */
+  replayAllowed?: boolean;
   /** The key chosen for this logical call; a replay reuses it. */
   idempotencyKey?: string;
   /**
@@ -293,6 +314,16 @@ function assertResponse(value: unknown, where: string): ApiResponse<unknown> {
   return res;
 }
 
+/** Bound advanced logical middleware/provider work to its existing call signal. */
+function waitForSignal<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const aborted = () => reject(signal.reason ?? new AbortError());
+    if (signal.aborted) aborted();
+    else signal.addEventListener("abort", aborted, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", aborted));
+  });
+}
+
 /**
  * The single execution lifecycle for every operation, HTTP or mocked:
  *
@@ -309,6 +340,19 @@ export async function runOperation(
   call: CallInput,
 ): Promise<unknown> {
   const options = call.options ?? {};
+  const delegated = options.presigned;
+  if (delegated && op.transfer)
+    throw new ConfigError("Use presigned descriptors on protocol steps, not on the outer upload.");
+  if (options.transfer && !op.transfer)
+    throw new ConfigError("Transfer options require an advanced operation.");
+  if (delegated && !op.presigned)
+    throw new ConfigError("Presigned requests require an operation destination policy.");
+  if (delegated && !client.transport.capabilities?.presigned)
+    throw new ConfigError("Transport cannot enforce presigned request security.");
+  if (delegated && (call.params || call.query || options.query || call.path || options.headers))
+    throw new ConfigError(
+      "Presigned requests cannot combine path, query or ordinary header options.",
+    );
   const responseType = options.responseType ?? op.responseType ?? "json";
   const timeout = options.timeout ?? op.timeout;
   const observer = options.onTransfer ?? op.onTransfer;
@@ -351,13 +395,19 @@ export async function runOperation(
       ? normalizeQs(client.querySerializer(query ?? {}))
       : buildQueryString(query, client.queryArrayFormat);
     const origin = mocked ? client.base.origin : requestOrigin(client.base);
-    const headers = await resolveHeaders(op.headers, options.headers);
-    idempotencyKey = applyIdempotency(op, options, headers, idempotencyKey, resource.name);
+    const headerWork = delegated
+      ? Promise.resolve(new Headers(delegated.headers))
+      : resolveHeaders(op.headers, options.headers);
+    const headers = op.transfer ? await waitForSignal(headerWork, signal) : await headerWork;
+    if (delegated) assertPresigned(delegated.url, op.presigned!, headers);
+    if (!delegated)
+      idempotencyKey = applyIdempotency(op, options, headers, idempotencyKey, resource.name);
     throwIfAborted(signal);
 
     request = {
       method,
-      url: buildUrl(client.base, path, qs, origin),
+      url: delegated ? delegated.url : buildUrl(client.base, path, qs, origin),
+      ...(delegated ? { delegated: true } : {}),
       path,
       baseURL: client.base.raw,
       headers,
@@ -372,16 +422,27 @@ export async function runOperation(
       mocked,
     };
 
-    for (const hook of op.onRequest) {
-      const next = await hook(request);
+    for (const hook of delegated ? (op.presigned!.requestMiddleware ?? []) : op.onRequest) {
+      const next = op.transfer
+        ? await waitForSignal(Promise.resolve(hook(request)), signal)
+        : await hook(request);
       if (next !== undefined)
         request = assertRequest(next, `request middleware for ${resource.name}.${op.name}`);
       throwIfAborted(signal);
     }
 
+    if (delegated) {
+      assertPresigned(request.url, op.presigned!, request.headers);
+      if (request.url !== delegated.url || request.method !== method || request.body !== call.body)
+        throw new ConfigError("Presigned middleware cannot change signed request identity.");
+    }
+    if (call.preserveBody && request.body !== call.body)
+      throw new ValidationError("Transfer part middleware cannot replace the binary body.");
     const hasBody = call.hasBody ?? op.hasBody;
     const wireBody =
-      hasBody && op.requestKeys ? transformKeys(request.body, op.requestKeys) : request.body;
+      hasBody && op.requestKeys && !delegated
+        ? transformKeys(request.body, op.requestKeys)
+        : request.body;
 
     // One shared checkpoint for live and mocked calls, before serialization and execution: a
     // rejected request makes no network call, no mock write and starts no transfer.
@@ -412,8 +473,123 @@ export async function runOperation(
     let responseHeaders: Headers;
     let raw: Response | undefined;
     let data: unknown;
+    let finalRequest: ApiRequest | undefined;
 
-    if (resource.mock) {
+    if (op.transfer) {
+      if (resource.mock)
+        throw new MockError(
+          "MOCK_UNSUPPORTED",
+          "Advanced transfer sessions require an explicit protocol transport; mocked resources never use the network.",
+        );
+      const advanced = await runAdvanced(
+        op.transfer,
+        request.body,
+        {
+          ...options,
+          idempotencyKey,
+          ...(op.responseType !== undefined && options.responseType === undefined
+            ? { responseType: op.responseType }
+            : {}),
+          onTransfer: observer,
+        },
+        {
+          signal,
+          resource: resource.name,
+          operation: op.name,
+          params: call.params,
+          query,
+          request: async <T>(
+            init: import("../types/builtins.js").OperationFnRequestInit & {
+              kind: "read" | "write";
+            },
+            stepKey?: string,
+          ) => {
+            const stepMethod = init.method ?? "GET";
+            const read = ["GET", "HEAD", "OPTIONS"].includes(stepMethod);
+            if (
+              (read ? "read" : "write") !== init.kind ||
+              !["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"].includes(stepMethod)
+            )
+              throw new ConfigError("Transfer step kind does not match HTTP method.");
+            if (init.presigned && init.headers !== undefined)
+              throw new ConfigError("Put signed headers in the presigned descriptor.");
+            const stepHeaders = new Headers(
+              init.presigned ? undefined : (options.headers as HeadersInit),
+            );
+            new Headers(init.headers as HeadersInit).forEach((value, key) =>
+              stepHeaders.set(key, value),
+            );
+            if (
+              !init.presigned &&
+              op.idempotency &&
+              stepKey &&
+              !new Headers(init.headers as HeadersInit).has(op.idempotency.header)
+            )
+              stepHeaders.set(op.idempotency.header, stepKey);
+            const stepLimit =
+              options.maxResponseSize !== undefined
+                ? Math.min(options.maxResponseSize, init.maxResponseSize ?? Infinity)
+                : (init.maxResponseSize ?? op.maxResponseSize ?? 4 * 1024 * 1024);
+            return runOperation(
+              client,
+              resource,
+              {
+                ...op,
+                ...op.transferLayers,
+                retry: op.retry,
+                timeout: op.timeout,
+                headers: op.headers,
+                transfer: undefined,
+                idempotency: undefined,
+                method: stepMethod,
+                path: joinPath(resource.path, init.path ?? ""),
+                relativePath: init.path ?? "",
+                responseType: init.responseType,
+                dataFormat: init.dataFormat,
+                hasBody: init.body !== undefined,
+              },
+              {
+                method: stepMethod,
+                ...(init.presigned ? {} : { path: joinPath(resource.path, init.path ?? "") }),
+                relativePath: init.path,
+                params: init.params,
+                query: init.query,
+                body: init.body,
+                preserveBody: init.body instanceof Blob,
+                replayAllowed:
+                  read ||
+                  (!(
+                    typeof ReadableStream !== "undefined" && init.body instanceof ReadableStream
+                  ) &&
+                    (containsBinary(init.body) ||
+                    init.body instanceof FormData ||
+                    init.body instanceof ArrayBuffer ||
+                    ArrayBuffer.isView(init.body)
+                      ? op.transfer!.protocol.replaySafeParts === true
+                      : stepHeaders.has("idempotency-key") || !!(op.idempotency && stepKey))),
+                options: {
+                  headers: init.presigned ? undefined : stepHeaders,
+                  signal: init.signal,
+                  timeout: init.timeout,
+                  retry: options.retry === false ? false : (init.retry ?? options.retry),
+                  responseType: init.responseType,
+                  onTransfer: init.onTransfer,
+                  maxResponseSize: stepLimit,
+                  meta: init.presigned ? init.meta : { ...options.meta, ...init.meta },
+                  full: init.full,
+                  presigned: init.presigned,
+                },
+              },
+            ) as Promise<T>;
+          },
+        },
+      );
+      finalRequest = advanced.request;
+      status = advanced.status;
+      responseHeaders = advanced.headers;
+      raw = advanced.raw;
+      data = advanced.data;
+    } else if (resource.mock) {
       // Mocked resources execute the resolved operation against the store. They never reach a
       // transport, whatever the URL looks like after middleware.
       const mockRequest = request;
@@ -527,7 +703,8 @@ export async function runOperation(
         }
       }
     } else {
-      assertSameOrigin(request.url, origin!);
+      if (delegated) assertPresigned(request.url, op.presigned!, request.headers);
+      else assertSameOrigin(request.url, origin!);
       const response = await sendWithRetry(
         client,
         call.dataFormat ? { ...op, dataFormat: call.dataFormat } : op,
@@ -617,9 +794,24 @@ export async function runOperation(
       data = transformKeys(data, op.responseKeys);
     if (call.shape && responseType === "json") data = call.shape(data);
 
-    let response: ApiResponse<unknown> = { data, status, headers: responseHeaders, request, raw };
+    if (delegated) {
+      request.url = new URL(delegated.url).origin + new URL(delegated.url).pathname;
+      request.path = new URL(delegated.url).pathname;
+      request.headers = new Headers();
+      request.body = undefined;
+      raw = new Response(null, { status, headers: responseHeaders });
+    }
+    let response: ApiResponse<unknown> = {
+      data,
+      status,
+      headers: responseHeaders,
+      request: finalRequest ?? request,
+      raw,
+    };
     for (const hook of op.onResponse) {
-      const next = await hook(response);
+      const next = op.transfer
+        ? await waitForSignal(Promise.resolve(hook(response)), signal)
+        : await hook(response);
       if (next !== undefined)
         response = assertResponse(next, `response middleware for ${resource.name}.${op.name}`);
     }
@@ -628,10 +820,47 @@ export async function runOperation(
     // A stream already handed to this call is released if the call then fails (for example a
     // response middleware throws): cancelling it ends the connection and runs the cleanup.
     boundStream?.cancel(thrown).catch(() => {});
+    if (delegated) {
+      if (request) {
+        request.url = "[presigned destination]";
+        request.path = "[presigned destination]";
+        request.headers = new Headers();
+        request.body = undefined;
+      }
+      if (thrown instanceof ApiError) {
+        thrown.message = "Presigned request failed.";
+        thrown.stack = "Presigned request failed.";
+        thrown.cause = undefined;
+        thrown.data = undefined;
+        thrown.response = undefined;
+      } else thrown = new NetworkError("Presigned request failed.");
+    }
     let error = classify(thrown, signal, timedOut(), request);
-    const replay = call.replayed
-      ? undefined
-      : () => runOperation(client, resource, op, { ...call, replayed: true, idempotencyKey });
+    const recoveryCheckpoint =
+      error instanceof ApiError ? error.advancedTransfer?.checkpoint : undefined;
+    const safeTransferReplay =
+      !op.transfer ||
+      (recoveryCheckpoint !== undefined &&
+        !signal.aborted &&
+        (error instanceof NetworkError || error instanceof HttpError));
+    const replay =
+      call.replayed || delegated || call.replayAllowed === false || !safeTransferReplay
+        ? undefined
+        : () =>
+            runOperation(client, resource, op, {
+              ...call,
+              replayed: true,
+              idempotencyKey,
+              ...(op.transfer
+                ? {
+                    options: {
+                      ...options,
+                      signal,
+                      transfer: { ...options.transfer, checkpoint: recoveryCheckpoint },
+                    },
+                  }
+                : {}),
+            });
     for (const hook of op.onError) {
       try {
         const recovered = await hook(error, { request, replay });
@@ -738,6 +967,9 @@ async function sendWithRetry(
         body,
         signal,
         responseType,
+        ...(request.delegated
+          ? { security: { credentials: "omit" as const, redirect: "error" as const } }
+          : {}),
         ...(limits ? { limits } : {}),
         ...(channel ? { onTransfer: channel.sink } : {}),
       });
@@ -797,6 +1029,20 @@ async function sendWithRetry(
       decideRetry(retry, ctx, failure) &&
       (retryAfter === undefined || retryAfter <= retry.maxDelayMs);
     failure.retryable = canRetry;
+    if (request.delegated) {
+      failure.message = "Presigned request failed.";
+      failure.stack = "Presigned request failed.";
+      failure.cause = undefined;
+      failure.data = undefined;
+      failure.response = undefined;
+      failure.request = {
+        ...request,
+        url: "[presigned destination]",
+        path: "[presigned destination]",
+        headers: new Headers(),
+        body: undefined,
+      };
+    }
     channel?.fail({ kind: "error", error: failure, willRetry: canRetry });
     if (!canRetry) throw failure;
 

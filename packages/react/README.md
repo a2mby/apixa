@@ -605,3 +605,18 @@ After building, run `node scripts/query-performance.mjs [iterations]` from the r
 ### Advanced cache synchronization
 
 The advanced create and update helpers invalidate by default. Pass a mapping function only when the response contains a complete entity: `(response) => ({ id: response.userId, entity: response })`. This supports custom identifier fields and avoids treating acknowledgments or partial responses as complete records. Delete removes the detail and invalidates lists.
+
+### Advanced file transfers (v1.7.0, unreleased)
+
+Existing `useResourceMutation` and `useResource` writes call configured Core transfer operations
+and keep their inferred native Promise results. Pass `transfer: { control, checkpoint, onSession,
+saveCheckpoint }` in the operation's normal call options. UI progress and durable storage belong
+to the application; there is no new transfer hook. `onTransfer` still describes individual request
+attempts. Invalidate after final confirmed success; do not configure whole-mutation retry to blindly
+create a new upload session. Interrupted work resumes with a reacquired source and a checkpoint,
+which Core reconciles with the server. See the [tracked Next example](../../examples/query-ssr-next/app/files/advanced-transfers.tsx).
+
+Controls/callbacks are excluded from automatic query identities. Presigned downloads through queries
+require explicit nonsecret `keyParts`; never use the signed URL as a cache key or SSR prop. Existing
+binary identity rejection, binary/stream dehydration exclusion and consumer-owned stream rules still
+apply. Signing credentials stay on the server; Core enforces the explicit delegated-destination policy.

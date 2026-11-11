@@ -1,3 +1,4 @@
+import type { AdvancedTransferConfig, PresignedPolicy } from "./advanced-transfer.js";
 import type { MockStorageOptions } from "../mock/files.js";
 import type { MockFileFixtures } from "../mock/fixtures.js";
 import type { AllBuiltinOpName, OperationFn } from "./builtins.js";
@@ -124,6 +125,8 @@ export interface MultipartOptions {
 }
 
 export interface OperationDefinition extends LayerOptions {
+  transfer?: AdvancedTransferConfig;
+  presigned?: PresignedPolicy;
   method?: HttpMethod;
   /**
    * How this operation's response body is read: `"blob"`, `"arrayBuffer"`, `"text"`, `"stream"` or
@@ -182,6 +185,7 @@ export interface OperationDefinition extends LayerOptions {
 
 /** A function operation with metadata — same execution as passing the function directly. */
 export interface OperationRunDefinition {
+  presigned?: PresignedPolicy;
   /** Required for custom operations. */
   kind?: OperationKind;
   run: OperationFn;

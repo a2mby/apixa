@@ -341,3 +341,8 @@ Created and maintained by **Abdalrahman bani younes** ([a2mby](https://github.co
 ## License
 
 Apixa is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+Advanced chunk/session uploads (implemented, unreleased) are explicit operation strategies through the same Core request
+pipeline. Ordinary file uploads/downloads keep their existing zero-config behavior. See the
+[advanced transfer guide](packages/core/README.md#advanced-transfers-v170) for typed checkpoints,
+server reconciliation, bounded concurrency, controls, presigned security and the SDK-free S3 recipe.

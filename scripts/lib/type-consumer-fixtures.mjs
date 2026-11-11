@@ -29,6 +29,17 @@ const api = defineApi<{ users: { entity: User } }>()({
 });
 `;
 
+const ADVANCED_TYPES = `
+import { createTransferControl, type AdvancedTransferConfig, type TransferCheckpoint, type TransferSnapshot } from "apixa/core";
+const control = createTransferControl();
+const advancedConfig = {} as AdvancedTransferConfig;
+const advanced = defineApi<{ uploads: { entity: { id: string; file: string } } }>()({ baseURL: "https://example.test", resources: { uploads: { path: "/uploads", fileFields: ["file"], operations: { create: { transfer: advancedConfig } } } } });
+const pending = advanced.uploads.create({ file: new Blob(["x"]) }, { transfer: { control, onSession(snapshot) { const typed: TransferSnapshot = snapshot; void typed; }, saveCheckpoint(checkpoint) { const typed: TransferCheckpoint = checkpoint; void typed; } } });
+type AdvancedResult = Assert<Equal<Awaited<typeof pending>, { id: string; file: string }>>;
+// @ts-expect-error a checkpoint must use the versioned schema
+advanced.uploads.create({ file: new Blob([]) }, { transfer: { checkpoint: { version: 99 } } });
+`;
+
 /** Binary downloads: shared by every fixture (operation-level and per-call `responseType`). */
 const DOWNLOAD_API = `
 type Doc = { id: string; name: string };
@@ -74,7 +85,7 @@ void storageTypes;
 export const CORE_ONLY = `import { defineApi, detectTransferSupport, parseContentDisposition, type ApiError, type TransferEvent, type TransferSupport, type FileViolation, type FileViolationCode, ValidationError } from "apixa";
 import { defineApi as defineCore, mockFileFixture, mockFixtureRef, mockFiles } from "apixa/core";
 import { defineMockApi } from "apixa/mocking";
-${HELPERS}${API}${DOWNLOAD_API}${STORAGE_API}
+${HELPERS}${API}${ADVANCED_TYPES}${DOWNLOAD_API}${STORAGE_API}
 const core = defineCore({ baseURL: "https://example.test", resources: { u: { path: "/u" } } });
 void core;
 void defineMockApi;
@@ -156,7 +167,7 @@ export async function main() {
 /** Fully typed React usage: every hook result checked as a whole and member by member. */
 export const REACT_TYPED = `import { defineApi } from "apixa/core";
 import { useResource, useResourceMutation, useResourceQuery } from "apixa/react";
-${HELPERS}${API}${DOWNLOAD_API}
+${HELPERS}${API}${ADVANCED_TYPES}${DOWNLOAD_API}
 export function App() {
   const q = useResourceQuery(api.users, { queryKey: ["users"] });
   type Q = typeof q;

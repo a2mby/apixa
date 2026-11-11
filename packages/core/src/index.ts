@@ -66,3 +66,20 @@ export { expandOperations, BUILTIN_CONVENTIONS } from "./operation/index.js";
 export { convertKey, transformKeys, KEY_CASES } from "./transform/index.js";
 
 export type * from "./types/index.js";
+
+export { createTransferControl } from "./transfer/control.js";
+export type {
+  AdvancedTransferConfig,
+  AdvancedTransferOptions,
+  AdvancedTransferFailure,
+  TransferProtocol,
+  TransferStepContext,
+  TransferCheckpoint,
+  TransferPart,
+  TransferPartAck,
+  TransferSnapshot,
+  TransferControl,
+  TransferSessionState,
+  PresignedPolicy,
+  PresignedRequest,
+} from "./types/advanced-transfer.js";

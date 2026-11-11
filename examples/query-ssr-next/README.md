@@ -30,3 +30,12 @@ pnpm --filter @apixa/example-query-ssr-next dev
 The server imports the React-free `@apixa/react/advanced` entry (`QueryClient`, `dehydrate`, the
 prefetch helpers). Client components import the main entry (`ApixaProvider`,
 `ApixaHydrationBoundary`, the hooks), which is built with a `"use client"` directive.
+
+The `/files` page also demonstrates an explicitly configured 13-byte chunked upload with one
+intentional interruption, a caller-owned checkpoint and authoritative resume against the local
+`/api/transfers` demo backend. Chromium verifies interruption at 4 confirmed bytes and completion
+at 13 bytes in both dev and production. This tiny fixture demonstrates protocol behavior, not a
+production storage backend. The backend caps file/session memory; implement your real protocol and
+access control on your own server. `lib/s3-transfer.ts` provides a backend-mediated S3 recipe with
+no SDK or browser signing credentials. Public `apixa/...` imports resolve to workspace packages
+through local TypeScript aliases; the verification consumer installs only the packed `apixa` package.
