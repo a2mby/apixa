@@ -21,8 +21,7 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 ## Current
 
 **[v1.7.0](./v1.7.0/)** — Large Files & Advanced Transfers (Advanced File Handling, phase 8).
-Implemented and locally verified under issue #103; precise API owner-approved 2026-11-10, final verification evidence
-in acceptance criteria, milestone sign-off open. Explicit optional chunk/session
+Implemented and verified under issue #103 (PR #104, CI Node 22/24 green); precise API owner-approved 2026-11-10, owner sign-off recorded 2026-11-11. Explicit optional chunk/session
 strategies through existing operations and request infrastructure, protocol-supported resumability,
 bounded parallelism, checkpoints, safe retries, integrity and presigned security. S3-compatible
 recipe and download audit included; public adapter/range extensions require recorded decisions.

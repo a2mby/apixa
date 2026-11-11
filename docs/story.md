@@ -2,6 +2,13 @@
 
 Project log. Newest entry first.
 
+## 2026-11-11 — v1.7.0 signed off and merged
+
+Node 22 and 24 CI passed on the final head of PR #104 (1,451 tests, 62/62 type consumers, Chromium,
+Edge, workerd), and the owner explicitly signed off Large Files & Advanced Transfers with its
+documented backend requirements and provider/range-download deferrals. Acceptance criteria are
+checked off; the squash merge closes issue #103.
+
 ## 2026-11-10 — v1.7.0 prepared for remote verification
 
 Prepared the complete Large Files & Advanced Transfers implementation for issue #103, including

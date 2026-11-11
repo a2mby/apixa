@@ -117,7 +117,7 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 
 ## Current: v1.7.0 — Large Files & Advanced Transfers
 
-**Spec:** [versions/v1.7.0/](../versions/v1.7.0/) (implemented and locally verified; owner-approved API, final evidence in acceptance criteria, milestone sign-off open)
+**Spec:** [versions/v1.7.0/](../versions/v1.7.0/) (implemented, verified and owner-signed-off 2026-11-11)
 
 - Explicit advanced strategies through existing API operations and Core request infrastructure;
   ordinary small-file uploads/downloads remain unchanged and require no new configuration
@@ -223,7 +223,7 @@ optional milestone **after** file handling.
 5. Middleware, validation, file limits, and error handling — **v1.4.0**
 6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store — **v1.5.0** (completed and owner-approved)
 7. React/TanStack and form compatibility, browser/Node integration, and testing — **v1.6.0** (form adapters excluded)
-8. Large-file uploads, chunking, resumability, parallel transfers, checkpoints, integrity, presigned transfers and justified storage integrations — **v1.7.0** (implemented; milestone sign-off open)
+8. Large-file uploads, chunking, resumability, parallel transfers, checkpoints, integrity, presigned transfers and justified storage integrations — **v1.7.0** (implemented, verified, owner sign-off recorded 2026-11-11)
 9. File lifecycle management, cleanup policies, performance, documentation, and release hardening — **v1.8.0** (roadmap only; no folder)
 
 ## Later: Proposed backlog catalog (planning only)

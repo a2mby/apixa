@@ -187,10 +187,10 @@ explicit D14/D18 owner decision and corresponding criteria, not an implicit clai
       security, integrity strength, resource caps and runtime limits. Planned/deferred work stays labeled.
 - [x] `graphify update .` runs after implementation code changes; existing suites remain intact
       except explicitly justified regression corrections.
-- [ ] Final `pnpm verify` passes in full; CI Node 22 and 24 is green. Record commands, counts,
+- [x] Final `pnpm verify` passes in full; CI Node 22 and 24 is green. Record commands, counts,
       runtime/protocol evidence and any explicit owner-approved deferrals here, without conflating
       static audit or historical verification with a fresh run.
-- [ ] Implementation-plan batches complete, completion story/pointers reflect reality, and owner
+- [x] Implementation-plan batches complete, completion story/pointers reflect reality, and owner
       signs off the remaining limitations and v1.7.0. No incidental version bump or publication.
 
 ## Implementation evidence — 2026-11-10
@@ -217,9 +217,9 @@ an advanced upload is unsupported; existing streamed downloads remain available.
 concrete backend-mediated recipe, with no general provider framework, mandatory SDK or range
 resumable downloader. These are the approved D14/D18 boundaries.
 
-Remote CI has not run because commit/push is outside the authorized stage. Final milestone owner
-sign-off remains open; prior API approval is recorded separately. The two combined final checklist
-items remain unchecked for those reasons, even after local verification passes.
+Remote CI (`verify (22)` and `verify (24)`, run 42851778301) passed on `10dce7d` with 1,451 tests,
+62/62 type consumers, 5 browser checks and Edge/workerd. Final milestone owner sign-off was given
+explicitly on 2026-11-11, accepting the documented limitations; both final checklist items are checked.
 
 ### Final local verification
 
