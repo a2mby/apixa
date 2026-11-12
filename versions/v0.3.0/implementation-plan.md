@@ -93,7 +93,7 @@ Files: `examples/frontends/next/lib/api.ts` (local), `README.md`, living docs, `
 | `packages/core/src/types/index.ts`      | Export markers                        |
 | `packages/core/src/index.ts`            | Public export `type`, `Type`, `Infer` |
 | `tests/core/*.test.ts`                  | Marker inference + breaking cases     |
-| `examples/frontends/next/lib/api.ts`              | `type<T>()` usage                     |
+| `examples/frontends/next/lib/api.ts`    | `type<T>()` usage                     |
 | `README.md`, `docs/*`, `CHANGELOG.md`   | DX + breaking note                    |
 | `docs/story.md`                         | Implementation outcome                |
 

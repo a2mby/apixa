@@ -79,16 +79,16 @@ Files: `examples/frontends/basic`, `examples/frontends/next/lib/api.ts`, `README
 
 ## File touch list
 
-| Path                                       | Change                                                       |
-| ------------------------------------------ | ------------------------------------------------------------ |
-| `packages/core/src/types/definition.ts`    | Optional `operations`; resource headers / request if shipped |
-| `packages/core/src/types/inference.ts`     | Default builtin client types                                 |
-| `packages/core/src/operation/*`            | Effective op map + resolve                                   |
-| `packages/core/src/api/resource-client.ts` | Build defaults + overrides                                   |
-| `packages/core/src/request/execute.ts`     | Resource-level merge                                         |
-| `tests/core/*.test.ts`                     | New + updated cases                                          |
-| `examples/frontends/basic`, `examples/frontends/next`          | Minimal definitions                                          |
-| `README.md`, `docs/*`                      | Honest DX                                                    |
+| Path                                                  | Change                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| `packages/core/src/types/definition.ts`               | Optional `operations`; resource headers / request if shipped |
+| `packages/core/src/types/inference.ts`                | Default builtin client types                                 |
+| `packages/core/src/operation/*`                       | Effective op map + resolve                                   |
+| `packages/core/src/api/resource-client.ts`            | Build defaults + overrides                                   |
+| `packages/core/src/request/execute.ts`                | Resource-level merge                                         |
+| `tests/core/*.test.ts`                                | New + updated cases                                          |
+| `examples/frontends/basic`, `examples/frontends/next` | Minimal definitions                                          |
+| `README.md`, `docs/*`                                 | Honest DX                                                    |
 
 ## Non-steps
 

@@ -126,7 +126,7 @@ Cover at minimum:
 | `packages/core/src/transport/fetch.ts`                    | Keep                                                       |
 | `packages/core/src/errors.ts`                             | Keep                                                       |
 | `packages/core/src/mock.ts` / `auth.ts` / `middleware.ts` | Unexport or delete from public path                        |
-| `examples/frontends/basic/src/index.ts`                             | Rewrite                                                    |
+| `examples/frontends/basic/src/index.ts`                   | Rewrite                                                    |
 | `tests/**`                                                | Add                                                        |
 | `README.md`                                               | Match implemented API                                      |
 | `docs/story.md`                                           | Log completion                                             |

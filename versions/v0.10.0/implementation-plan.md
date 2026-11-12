@@ -175,7 +175,7 @@ Location: [`tests/core/`](../../tests/core/), [`tests/mocking/`](../../tests/moc
 | `tests/core/operations-customization.test.ts`                                                     | New                                                                     |
 | `tests/core/operations-builtins.test.ts`                                                          | New                                                                     |
 | `tests/mocking/operations-customization.test.ts`                                                  | New                                                                     |
-| `examples/frontends/next/lib/api.ts`                                                                        | Demonstrate one function op + one builtin                               |
+| `examples/frontends/next/lib/api.ts`                                                              | Demonstrate one function op + one builtin                               |
 | `docs/context.md`, `docs/conventions.md`, `docs/architecture.md`, `CHANGELOG.md`, `docs/story.md` | Honesty pass + completion note                                          |
 
 ## Done when

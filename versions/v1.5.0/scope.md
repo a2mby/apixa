@@ -45,7 +45,7 @@ Status: **completed and verified (`pnpm verify`); owner sign-off recorded 2026-1
 | `packages/mocking` (private)                           | Fixture convenience exports, dataset loading integration and `defineMockApi` parity; depends on Core, never reverse.                                                            |
 | `src/` facade                                          | Re-exports only; expose justified additions through existing specialized subpaths, no new root convenience API by default.                                                      |
 | `packages/react`, `packages/internal/shared` (private) | No planned production changes; preserve existing integration behavior and tests.                                                                                                |
-| Root tests/scripts/docs; `examples/frontends/next`               | Regression, consumer and runtime evidence; no other example edited.                                                                                                             |
+| Root tests/scripts/docs; `examples/frontends/next`     | Regression, consumer and runtime evidence; no other example edited.                                                                                                             |
 
 ## Compatibility boundaries
 

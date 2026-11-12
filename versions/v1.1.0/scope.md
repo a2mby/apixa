@@ -18,7 +18,7 @@ moved in; automatic-on-binary replaced always-multipart).
 | Mock storage     | In-memory virtual file store in the shared mock engine: bytes separate from records, unique ids/refs, metadata, get/list/delete/reset, replace and cleanup, atomic with the dataset write   |
 | React            | Existing `useResourceMutation` / hooks accept file-enabled inputs; inference verified; native `FileList` converted explicitly by consumers; no RHF dependency                               |
 | Errors           | New `SerializationError`; config problems stay `ConfigError`; mock storage problems stay `MockError`; no binary data or request contents in messages                                        |
-| Docs / tests     | `docs/architecture.md`, `docs/public-api.md`, `docs/story.md`, Core README; type, runtime, mock, React and packed-consumer tests; `examples/frontends/next` demonstration                             |
+| Docs / tests     | `docs/architecture.md`, `docs/public-api.md`, `docs/story.md`, Core README; type, runtime, mock, React and packed-consumer tests; `examples/frontends/next` demonstration                   |
 
 ### Packages touched
 

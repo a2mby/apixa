@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-11-12 — Release apixa 2.0.0
+
+Bumped the single public package `apixa` from `1.0.0-rc.0` to `2.0.0` (private workspace manifests kept in step). The release is published first to the `experimental` dist-tag, then `latest` is pointed at 2.0.0 so `npm install apixa` resolves without a scope. Local `pnpm verify` and `verify:publish` checks gate the publish; CI gates the merged SHA.
+
 ## 2026-11-12 — Grouped examples and a direct Laravel launcher
 
 Regrouped `examples/` by role: `backends/laravel-backend/`, `frontends/query-ssr-next/` (maintained)
