@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "executable": false,
+  "requires": "Author-owned endpoint or controlled client harness; seeding does not implement this behavior.",
+  "cases": [
+    {
+      "id": "lost-update",
+      "input": {
+        "record": "counter-zero",
+        "workers": 2,
+        "operation": "read-then-write"
+      },
+      "expected": "observe actual invariant under chosen implementation"
+    },
+    {
+      "id": "atomic-increment",
+      "input": {
+        "record": "counter-zero",
+        "workers": 2,
+        "increments_each": 10
+      },
+      "expected": "initial plus twenty if endpoint is atomic"
+    },
+    {
+      "id": "version-conflict",
+      "input": {
+        "record": "task-001",
+        "expected_version": 1,
+        "writers": 2
+      },
+      "expected": "author-defined stale-version conflict"
+    },
+    {
+      "id": "row-lock",
+      "input": {
+        "record": "counter-positive",
+        "hold_lock_ms": 500
+      },
+      "expected": "second independent connection contends"
+    },
+    {
+      "id": "transaction-rollback",
+      "input": {
+        "article": "article-001",
+        "fail_after": "child-write"
+      },
+      "expected": "parent/child changes roll back together if transaction implemented"
+    },
+    {
+      "id": "duplicate-idempotency",
+      "input": {
+        "key": "SYNTHETIC-DUPLICATE",
+        "workers": 2
+      },
+      "expected": "author-defined deduplication under contention"
+    },
+    {
+      "id": "optimistic-a-fails",
+      "input": {
+        "record": "task-001",
+        "completion_order": ["b-success", "a-failure"]
+      },
+      "expected": "successful change survives rollback"
+    },
+    {
+      "id": "tenant-isolation",
+      "input": {
+        "workspaces": ["ws-1", "ws-2"]
+      },
+      "expected": "no cross-workspace record access under explicit endpoint policy"
+    }
+  ]
+}

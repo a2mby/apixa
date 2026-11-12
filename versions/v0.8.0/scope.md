@@ -56,7 +56,7 @@ Required surface on the returned object:
 
 ### 6. Example and docs
 
-- Migrate Next CRUD playground (`examples/next` — maintained example only) to `useResourceQuery`.
+- Migrate Next CRUD playground (`examples/frontends/next` — maintained example only) to `useResourceQuery`.
 - Keep form/UI state in the app; remove repetitive TanStack glue.
 - Update living docs: `docs/context.md` §6, `docs/architecture.md` workspace map, package README, root CHANGELOG, `docs/story.md` on completion.
 - Mark implemented vs planned (no infinite-query / optimistic product claims).

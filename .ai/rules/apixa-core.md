@@ -1,0 +1,43 @@
+---
+description: Apixa project structure, docs/versions workflow, and Core constraints. Always apply.
+alwaysApply: true
+---
+
+# Apixa — always follow this
+
+## Before coding
+
+1. Read `docs/context.md` (principles). Do not recap it in chat.
+2. Read the **active** milestone under `versions/` (see `versions/README.md`).
+3. Implement against that folder’s `scope.md`, `implementation-plan.md`, and `acceptance-criteria.md`.
+
+## Structure (do not invent a different layout)
+
+```text
+docs/           # living: context, architecture, roadmap, conventions, decisions/, story
+versions/       # frozen milestones only — never empty future stubs
+packages/       # private core, mocking, react, internal/shared implementations
+src/            # facade for the only published npm package: apixa
+examples/frontends/query-ssr-next/  # tracked, verified Next example (examples/frontends/next is the local playground); do not edit other examples/*
+tests/
+```
+
+- Living context stays at `docs/context.md` — **not** a duplicate root `context.md`.
+- Do **not** create future version folders until that milestone starts (use `/start-version`).
+- Do **not** create `transport-fetch`, `client`, `server`, `openapi`, `vue`, or `angular` packages unless the **active** version scope says so. Existing packages: `core`, `mocking`, `react`, and the private `internal/shared`.
+
+## Core non-negotiables
+
+- No React, Next.js, or TanStack Query in `@apixa/core`.
+- Native `Promise<T>` — no custom Promise wrappers.
+- Custom endpoints beat conventions; do not silently invent backend ops.
+- Fetch stays **inside** Core until ADR/version says otherwise.
+- Do not couple mocking to production request execution.
+- Mark docs as implemented vs planned. Examples show **implemented** API only.
+
+## When direction or a milestone changes
+
+- Update living docs under `docs/` when principles/architecture change.
+- Append to `docs/story.md` (newest first); do not rewrite old entries.
+- After a version ships, do not rewrite its frozen folder except factual fixes.
+- New milestone → create `versions/vX.Y.Z/` with all four files (use `/start-version`).

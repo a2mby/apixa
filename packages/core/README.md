@@ -324,7 +324,7 @@ Blob plus explicit metadata works in Node, browsers, SSR and Edge. No driver/pro
 
 <a id="advanced-transfers-v170"></a>
 
-## Advanced transfers (v1.7.0, unreleased)
+## Advanced transfers (v1.7.0; implemented, not npm-published)
 
 Normal uploads and downloads keep their existing behavior. To use a backend's chunk/session
 protocol, add `transfer` to a **write operation** (including a builtin override). Configuration is
@@ -334,7 +334,7 @@ its type. Outer `dataFormat` and `transfer` cannot be combined; each protocol re
 own serialization. Operations still return native promises and their inferred domain result;
 `full: true` returns the real finalization response metadata.
 
-The maintained [Next recipe](../../examples/query-ssr-next/lib/advanced-transfer.ts) shows the
+The maintained [Next recipe](../../examples/frontends/query-ssr-next/lib/advanced-transfer.ts) shows the
 complete protocol: `initiate`, `inspect`, `uploadPart`, `complete`, and optional `abort`/`renew`.
 Callbacks use a narrow `TransferStepContext.request({ kind, method, ... })`, which runs through
 Core's existing request pipeline, transport, middleware, limits, timeout and retry mechanism.
@@ -430,7 +430,7 @@ in query keys or SSR props. Buffered Blob/ArrayBuffer downloads retain their doc
 use the existing stream response with a caller-owned sink for bounded large downloads. Range resume
 is not implemented in this milestone.
 
-The [SDK-free S3 recipe](../../examples/query-ssr-next/lib/s3-transfer.ts) delegates initiate,
+The [SDK-free S3 recipe](../../examples/frontends/query-ssr-next/lib/s3-transfer.ts) delegates initiate,
 presign, list, complete and abort to the backend. It sends raw part blobs, captures exposed ETags,
 and completes an ordered part manifest. Configure storage CORS to expose ETag; the backend must
 paginate ListParts and normalize provider errors/checksum evidence. HTTP multipart/form-data and

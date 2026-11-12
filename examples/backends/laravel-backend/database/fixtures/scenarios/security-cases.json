@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "executable": false,
+  "requires": "Author-owned endpoint or controlled client harness; seeding does not implement this behavior.",
+  "cases": [
+    {
+      "id": "foreign-origin",
+      "input": {
+        "destination": "https://foreign.invalid"
+      },
+      "expected": "reject ordinary cross-origin request before contact"
+    },
+    {
+      "id": "same-origin-redirect",
+      "input": {
+        "status": 307,
+        "location": "/api/manual-target"
+      },
+      "expected": "runtime-specific supported redirect policy"
+    },
+    {
+      "id": "cross-origin-redirect",
+      "input": {
+        "status": 302,
+        "location": "https://foreign.invalid"
+      },
+      "expected": "blocked before target contact"
+    },
+    {
+      "id": "allowlisted-read-redirect",
+      "input": {
+        "method": "GET",
+        "allow_origin": "https://cdn.invalid"
+      },
+      "expected": "no forwarded headers/body/credentials"
+    },
+    {
+      "id": "signed-query-preservation",
+      "input": {
+        "url": "https://storage.invalid/file?a=1&a=2&sig=SYNTHETIC%2BVALUE"
+      },
+      "expected": "retain exact signature input"
+    },
+    {
+      "id": "forbidden-signed-header",
+      "input": {
+        "header": "Authorization",
+        "value": "Bearer SYNTHETIC"
+      },
+      "expected": "reject forbidden ambient credentials"
+    },
+    {
+      "id": "unlisted-cors-origin",
+      "input": {
+        "origin": "https://frontend.invalid"
+      },
+      "expected": "no matching browser origin permission"
+    },
+    {
+      "id": "error-redaction",
+      "input": {
+        "marker": "SYNTHETIC-SECRET-MARKER"
+      },
+      "expected": "sanitized SDK metadata omits marker"
+    },
+    {
+      "id": "session-ownership",
+      "input": {
+        "workspace": "ws-2",
+        "session_owner": "ws-1"
+      },
+      "expected": "author backend denies unauthorized session access"
+    }
+  ]
+}

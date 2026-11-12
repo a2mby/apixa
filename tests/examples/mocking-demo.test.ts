@@ -8,10 +8,10 @@ import {
   runLazyLoad,
   runPaginationAndSlice,
   runStandalone,
-} from "../../examples/query-ssr-next/lib/mocking-demo.js";
+} from "../../examples/frontends/query-ssr-next/lib/mocking-demo.js";
 
 /** The /mocking page calls exactly these: the documented pass conditions must hold. */
-describe("examples/query-ssr-next mocking scenarios", () => {
+describe("examples/frontends/query-ssr-next mocking scenarios", () => {
   it("inline records: inferred create and list", async () => {
     const { created, all, rex } = await runInline();
     expect(rex).toMatchObject({ id: "1", name: "Rex" });

@@ -1,5 +1,12 @@
 # Changelog
 
+`apixa@1.0.0-rc.0` is the published baseline. This file tracks the `1.0.0-rc` line and earlier; it
+retains the release-candidate migration record and post-RC fixes. Later repository milestones
+(v1.1.0 files, v1.2.0 downloads, v1.3.0 progress/streaming, v1.4.0 validation, v1.5.0 mock storage,
+v1.6.0 framework files, v1.7.0 advanced transfers, v1.8.0 hardening, v1.8.1 Laravel playground) are
+documented by their frozen contracts in [`versions/`](./versions/) and the dated log in
+[`docs/story.md`](./docs/story.md); they are not duplicated here.
+
 ## Unreleased
 
 ### Security — errors no longer expose credentials to logs
@@ -233,7 +240,7 @@ name)`; operation metadata gains `idempotency`.
   ops that `useResourceQuery` does not wire individually (invalidate-on-success default).
 - Documented: opt-in `pagination?: "page" | "cursor"` and `readOnly?: boolean` (behavior already in
   Core from the v0.10.0 land via shared files).
-- `docs/study-guide.md` — internal analysis notes for the post-v0.10 hardening pass.
+- `docs/study-guide.md` — internal analysis notes for the post-v0.10 hardening pass (removed 2026-11-12; recoverable from git history).
 
 ### Added (v0.10.0)
 

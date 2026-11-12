@@ -1,129 +1,46 @@
 # Roadmap
 
-This roadmap describes possible future capabilities. Do not implement them all at once. The active coding contract is always the current version folder under [`versions/`](../versions/).
+This roadmap describes milestone status and possible future capabilities. Do not implement future
+items all at once. The active coding contract is always the current version folder under
+[`versions/`](../versions/README.md).
+
+The development milestone number is **not** the npm package version. Only the `apixa` release
+candidate `1.0.0-rc.0` is published; v1.1.0–v1.8.1 are repository milestones that require a build
+of the matching checkout.
+
+## Milestone index
+
+| Milestone      | Status                                                            | Topic                                                |
+| -------------- | ----------------------------------------------------------------- | ---------------------------------------------------- |
+| v1.8.1         | **Active** — environment verified locally; PR/sign-off pending    | Laravel/PostgreSQL/MongoDB playground                |
+| v1.8.0         | Merged (PR #106); CI green; final sign-off not inferred           | File lifecycle, performance and production hardening |
+| v1.7.0         | Completed and owner-signed-off 2026-11-11 (PR #104)               | Large files and advanced transfers                   |
+| v1.6.0         | Implemented and verified (PR #102); owner sign-off open           | Advanced framework and consumer integration          |
+| v1.5.0         | Completed; owner sign-off recorded 2026-11-09                     | Advanced mock file storage                           |
+| v1.4.0         | Merged and verified; owner sign-off open                          | File validation, middleware and safety               |
+| v1.3.0         | Merged; owner sign-off open                                       | Transfer progress, streaming and reliability         |
+| v1.2.0         | Merged; owner sign-off open                                       | Downloads and binary responses                       |
+| v1.1.0         | Merged; owner sign-off open                                       | Advanced file handling, phase 1                      |
+| v1.0.0         | Release candidate only — `apixa@1.0.0-rc.0` published, not stable | Query/mutation DX, single-package distribution       |
+| v0.11.0        | Shipped                                                           | Harden v0.10.0 and close analyzed gaps               |
+| v0.1.0–v0.10.0 | Shipped                                                           | Foundation through customizable operations           |
+
+Exact delivery evidence and frozen checkboxes live in each folder and in
+[`versions/README.md`](../versions/README.md). A merged milestone is not an npm release.
 
 ## Active: v1.8.1 — Laravel Real-World Backend Playground
 
 **Spec:** [versions/v1.8.1/](../versions/v1.8.1/)
 
-Independent Laravel 13 backend environment at `examples/laravel-backend/`: native PostgreSQL,
-empty API routing, configurable built-in CORS, local storage, separate development/test/E2E
-environments, multi-worker local serving and production configuration guidance. The author owns
-all future APIs and business behavior. No SDK integration, Node dependency, application scenarios,
-npm release or deployment. v1.8.0 is merged (PR #106), CI Node 22/24 green; no owner sign-off inferred.
+Independent Laravel 13 backend environment at `examples/backends/laravel-backend/`: native PostgreSQL,
+MongoDB documents, empty API routing, configurable built-in CORS, local storage, separate
+development/test/E2E environments, multi-worker local serving and production configuration
+guidance. The author owns all future APIs and business behavior. No SDK integration, Node
+dependency, application scenarios, npm release or deployment. v1.8.0 is merged (PR #106), CI Node
+22/24 green; no owner sign-off inferred.
 
-## Completed: v0.1.0 — Foundation
-
-**Spec:** [versions/v0.1.0/](../versions/v0.1.0/)
-
-Shipped: `defineApi()`, opt-in operations, type inference, Fetch transport, errors, basic example and tests.
-
-## Completed: v0.2.0 — Default-first resources
-
-**Spec:** [versions/v0.2.0/](../versions/v0.2.0/)
-
-- Path-only resources expose built-in CRUD automatically
-- Optional partial `operations` overrides + custom ops
-- Resource-level headers and merge precedence
-- Updated examples, docs, and tests
-
-## Completed: v0.3.0 — Resource typing (`type<T>()`)
-
-**Spec:** [versions/v0.3.0/](../versions/v0.3.0/)
-
-Shipped branded markers; **removed in v0.4.0** in favor of state typing.
-
-## Completed: v0.4.0 — State typing (`defineApi<T>()`)
-
-**Spec:** [versions/v0.4.0/](../versions/v0.4.0/)
-
-- Resource-only `defineApi<AppApi>()({ … })` (`path` + `entity`)
-- Derived `create` / `update`; Core root builtins + `BuiltinHeaders`
-- Remove public `type()` / `Type` / `Infer`
-
-## Completed: v0.5.0 — Simple Mocking + remove backend
-
-**Spec:** [versions/v0.5.0/](../versions/v0.5.0/)
-
-- Local JSON datasets + metadata; lightweight on-demand registry
-- `@apixa/mocking` mock `Transport` (not coupled to Core production execution)
-- Remove FastAPI `backend/` and backend scripts
-- No website; future online catalog documented as planned only
-
-## Completed: v0.6.0 — Core request reliability
-
-**Spec:** [versions/v0.6.0/](../versions/v0.6.0/)
-
-- Cancellation and `AbortSignal` as a first-class, documented surface
-- Documented timeouts (call / operation / resource / api)
-- Configurable opt-in retries (safe defaults for idempotent methods)
-- Thin middleware / interceptors as a stable public API
-- Core only — no client/server packages, schema library, or TanStack package
-
-## Completed: v0.7.0 — Thin Core + plugin seams
-
-**Spec:** [versions/v0.7.0/](../versions/v0.7.0/)
-
-- Types cleanup (ApiState, path-param concat, list/query, delete dead types)
-- Runtime: hasBody-by-method, body passthrough, query array format / serializer
-- RequestOptions: retry, responseType, meta, full → ApiResponse
-- Breaking middleware reshape (re-callable next, richer context)
-- Retry hooks: respectRetryAfter, shouldRetry, onRetry
-- Plugin seams: ResourceExtensions / OperationExtensions; mock keys leave Core types
-- Error codes + isHttpError / isTimeoutError
-- Out: auth, cache, validation, pagination helpers
-
-## Completed: v0.8.0 — Unified TanStack Query resource integration
-
-**Spec:** [versions/v0.8.0/](../versions/v0.8.0/)
-
-- Optional package `@apixa/tanstack-query` with unified `useResourceQuery`
-- List query state, Promise CRUD, invalidate-first cache, per-mutation state, Apixa inference
-- Advanced escape hatch export; Next playground migrated; Core stays framework-agnostic
-- Deferred: `patch-list` / optimistic helpers, infinite queries, auto custom ops
-
-## Completed: v0.9.0 — Flatten Core mock syntax
-
-**Spec:** [versions/v0.9.0/](../versions/v0.9.0/)
-
-- Replace `mock: true` + `mockConfig` with `mock: "<dataset-id>"`
-- Move mock `pagination` to resource level (sibling of `path` / `slice` / `mock`)
-- Fill Core `MockDatasetIds` so autocomplete needs no `@apixa/mocking` import
-- `defineMockApi` string shorthand; docs/tests migration; no new mock engine features
-
-## Completed: v0.10.0 — Fully customizable resource operations
-
-**Spec:** [versions/v0.10.0/](../versions/v0.10.0/)
-
-- `operations` accepts a config object, a function, or `false` (removes a built-in) per key
-- Custom and built-in operations surface identically: `api.resource.<name>()`
-- Suggested-keys typing on `operations` for autocomplete of known operation names
-- 11 new always-on builtins (same default-first treatment as the original 5): `getBySlug`, `patch`,
-  `upsert`, `count`, `search`, `bulkCreate`, `bulkDelete`, `getMany`, `exists`, `findFirst`, `getBy`
-- Mirrored surface on `@apixa/mocking` (both `mock: "<id>"` and `defineMockApi`)
-
-## Completed: v0.11.0 — Harden v0.10.0 + close analyzed gaps
-
-**Spec:** [versions/v0.11.0/](../versions/v0.11.0/)
-
-- `ParseError` on malformed declared-JSON bodies; single `decideRetry` per attempt
-- `useResourceMutation` for builtins/custom ops outside `useResourceQuery`
-- Documents `pagination` / `readOnly` and mock-bridge extended routes (much of that surface already
-  landed with v0.10.0 via shared files)
-
-## Release candidate: v1.0.0 TanStack integration overhaul
-
-**Spec:** [versions/v1.0.0/](../versions/v1.0.0/)
-
-- Step 1 (#62): `useResourceQuery` is query-only; `useResourceMutation` runs every write (create /
-  update / delete / builtins / custom); controller split into query + mutation controllers
-- Query workstream: native v5 options/results, typed built-in and declared custom reads,
-  query-options factory, cache controller, cancellation, App Router hydration, and consumer builds
-- Query, resource-wide `useResourceMutation`, the `useResource` facade, and Core `kind`
-  classification are implemented on the task branch; release is still pending
-
-- Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
-  and isolated public subpaths (ADR 005). Vue and Angular remain future work.
+HTTP operations remain blocked for manual testing until the author adds real endpoints. The
+playground currently provides seeded data and models, not application APIs.
 
 ## Merged: v1.8.0 — File Lifecycle, Performance & Production Hardening
 
@@ -227,56 +144,62 @@ Shipped branded markers; **removed in v0.4.0** in favor of state typing.
 - Binary-safe pipeline, `SerializationError`, React type compatibility; no new packages
 - Implemented, verified (`pnpm verify`) and merged; owner sign-off open. One published `apixa` package.
 
-## Planned: Advanced File Handling (nine phases)
+## Release candidate: v1.0.0 — Query/mutation DX and single-package distribution
 
-Phase 1 is **v1.1.0** (with minimal mock storage pulled in by owner decision). Phases 3–7 have
-implemented milestones; phase 6 is **v1.5.0 (completed and owner-approved)**. Phase 8 is
-**v1.7.0** (implemented and owner-signed-off). Phase 9, **v1.8.0**, is merged with green CI;
-owner final sign-off is not inferred. Phase 2 has no separate
-version folder; existing CRUD/custom serialization coverage is audited without claiming every
-possible extension complete. A dedicated React Hook Form integration is a separate
-optional milestone **after** file handling.
+**Spec:** [versions/v1.0.0/](../versions/v1.0.0/)
 
-1. File-field foundation, automatic serialization and minimal mock file storage — **v1.1.0**
-2. Extended CRUD/custom operations and advanced serialization
-3. Downloads and binary responses — **v1.2.0**
-4. Transfer progress, cancellation, streaming, and reliability — **v1.3.0**
-5. Middleware, validation, file limits, and error handling — **v1.4.0**
-6. Advanced mock file storage (virtual disks, fixtures, lifecycle) on top of the v1.1.0 store — **v1.5.0** (completed and owner-approved)
-7. React/TanStack and form compatibility, browser/Node integration, and testing — **v1.6.0** (form adapters excluded)
-8. Large-file uploads, chunking, resumability, parallel transfers, checkpoints, integrity, presigned transfers and justified storage integrations — **v1.7.0** (implemented, verified, owner sign-off recorded 2026-11-11)
-9. File lifecycle management, cleanup policies, performance, documentation, and release hardening — **v1.8.0** (merged, owner decisions resolved, CI green; owner final sign-off not inferred)
+- Step 1 (#62): `useResourceQuery` is query-only; `useResourceMutation` runs every write (create /
+  update / delete / builtins / custom); controller split into query + mutation controllers
+- Query workstream: native v5 options/results, typed built-in and declared custom reads,
+  query-options factory, cache controller, cancellation, App Router hydration, and consumer builds
+- Resource-wide `useResourceMutation`, the `useResource` facade, and Core `kind` classification
+- Final packaging: one `apixa` npm package, private modular workspaces, optional framework peers
+  and isolated public subpaths (ADR 005). Vue and Angular remain future work.
+- Only `apixa@1.0.0-rc.0` is published; no stable `1.0.0` release has been declared.
 
-## Later: Proposed backlog catalog (planning only)
+## Shipped: v0.1.0–v0.11.0
 
-Eighteen separately scoped proposals (`v0.12.0`–`v0.29.0`) live under
-[`docs/apixa-backlog-versions/`](./apixa-backlog-versions/backlog/README.md). They are **not**
-active coding contracts and must not be copied into `versions/` until `/start-version`
-promotes one. Topics include TanStack hardening, Zod, unified package/public API cleanup, CI,
-uploads/downloads, WebSockets, webhooks, auth adapters, SSE, OpenAPI, observability, and
-benchmarks.
+| Version | Topic                                                                  |
+| ------- | ---------------------------------------------------------------------- |
+| v0.11.0 | `ParseError`, single retry decision per attempt, `useResourceMutation` |
+| v0.10.0 | Fully customizable operations; sixteen builtins                        |
+| v0.9.0  | Flat resource mock configuration (`mock: "<dataset-id>"`)              |
+| v0.8.0  | Unified TanStack Query resource integration (`useResourceQuery`)       |
+| v0.7.0  | Thin Core, raw bodies, query serialization, envelopes, retry hooks     |
+| v0.6.0  | Cancellation, timeouts, retries, middleware reshape                    |
+| v0.5.0  | Local datasets, `@apixa/mocking`, FastAPI backend removed              |
+| v0.4.0  | Entity-only `defineApi<T>()` state typing; markers removed             |
+| v0.3.0  | `type<T>()` markers (removed in v0.4.0)                                |
+| v0.2.0  | Default-first resource CRUD and partial overrides                      |
+| v0.1.0  | Opt-in operations foundation                                           |
 
-## Later: Developer experience follow-ups
+## Planned: remaining file-handling phase
+
+The nine-phase file program is complete except phase 2 (extended CRUD/custom serialization), which
+has no separate version folder because existing CRUD/custom-operation coverage is audited rather
+than claimed fully exhaustive. A dedicated React Hook Form adapter is a separate optional
+milestone, not part of this roadmap's active line.
+
+## Later: developer experience follow-ups
 
 - Optional schema validation hooks (without baking in a schema library)
-- Operation `deprecated` / versioning metadata (ties to the v1.0.0 API-versioning item below;
-  premature before then)
-- Request deduplication / in-flight coalescing in `@apixa/tanstack-query` (not Core)
+- Operation `deprecated` / versioning metadata
 - Dataset catalog codegen from `datasets/manifest.json` (tooling, not library surface)
+- `crud<>()` preset
+- Online dataset catalog (browse/download); local datasets only today
 
-## Later: Environment and integrations
+## Later: integrations and runtime
 
-- Browser and server packages
+- Vue, Angular and other framework adapters (each with its own public subpath and optional peers)
+- Browser and server convenience packages
 - Secure server-only configuration (secrets must not leak to browser bundles)
-- Further `@apixa/tanstack-query` depth (infinite queries, optimistic/`patch-list` helpers) after v0.8.0
-- Other data-fetching library integrations
-- File uploads, downloads, and streaming where appropriate
-
-## Stable platform: v1.0.0 and beyond
-
+- Ranged/resumable downloads (streamed downloads already exist)
+- Additional transports extracted from Core
 - OpenAPI import/export
+
+## Later: platform
+
 - Reusable resource definitions and API versioning
-- Additional transports (if Fetch-in-Core is no longer enough)
 - Observability and tracing
 - CLI tooling and optional code generation
 - Plugin ecosystem

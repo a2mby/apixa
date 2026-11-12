@@ -31,7 +31,7 @@ Contract approved at gate G1 and implemented under issue #105 (no commit, push o
 | `packages/internal/shared` (private) | No planned change.                                                                                                                                                                        |
 | `src/` (`apixa`)                     | No planned change; re-exports only if gate G3 approves an addition.                                                                                                                       |
 | Root `tests/`, `scripts/`, docs      | Fault-injection and memory tests, packed/runtime scenarios, measurement scripts, production guide.                                                                                        |
-| `examples/query-ssr-next`            | Only if a scenario must demonstrate a fixed lifecycle behavior; other examples are untouched.                                                                                             |
+| `examples/frontends/query-ssr-next`            | Only if a scenario must demonstrate a fixed lifecycle behavior; other examples are untouched.                                                                                             |
 
 No new workspace or public package and no mandatory runtime dependency. No package-version change.
 

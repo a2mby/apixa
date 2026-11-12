@@ -15,7 +15,7 @@
 | Errors           | `HttpError` for failed downloads; `ConfigError` for unsupported `responseType`; `MockError` (`MOCK_NOT_FOUND`, `MOCK_UNSUPPORTED` for mocked `stream`); aborts/timeouts during body read are `AbortError`/`TimeoutError`                                |
 | Reliability      | Retries decide on status and headers only; a successful binary body is read once; cancellation and timeout cover the body read                                                                                                                          |
 | Tests            | Characterization tests for today's `responseType` (none exist), type tests, runtime, mock, error/cancel, React, packed npm consumers, Chromium, Node, Vercel Edge, workerd                                                                              |
-| Docs and example | `docs/architecture.md`, `docs/public-api.md`, README and Core README; `examples/next` download scenario; story and roadmap                                                                                                                              |
+| Docs and example | `docs/architecture.md`, `docs/public-api.md`, README and Core README; `examples/frontends/next` download scenario; story and roadmap                                                                                                                              |
 
 ## Affected packages
 
@@ -26,7 +26,7 @@
 | `packages/react` (private)   | **no source change expected**; type and runtime verification only. Any change needs a stated reason                                               |
 | `apixa` facade (`src/`)      | explicit re-exports of the additions; `tests/facade/curated-root-exports.json` and the snapshot                                                   |
 | `scripts/`                   | `verify-type-consumers.mjs`, `verify-unified-consumer.mjs`, `verify-edge.mjs`, fixtures                                                           |
-| `examples/next`              | one download scenario; no other example touched                                                                                                   |
+| `examples/frontends/next`              | one download scenario; no other example touched                                                                                                   |
 
 No new packages. No new runtime dependencies. No version bump.
 

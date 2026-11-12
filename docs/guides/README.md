@@ -5,7 +5,7 @@ Short how-tos for people improving Apixa — not project identity (`context.md`)
 | Folder                 | Audience                                    | Style                              |
 | ---------------------- | ------------------------------------------- | ---------------------------------- |
 | [`humans/`](./humans/) | Contributors reading in a browser or editor | Plain language, light on commands  |
-| [`agents/`](./agents/) | Cursor / coding agents                      | Checklists, paths, Cursor commands |
+| [`agents/`](./agents/) | Coding agents on any supported provider     | Checklists, paths, workflow skills |
 
 Same topics may exist in both folders with different detail. Prefer the folder that matches the reader.
 

@@ -27,7 +27,7 @@
 ### Workspace deliverables
 
 - Reshape Core under `packages/core/src/` — no new packages.
-- Update ignored local examples that we still maintain (`examples/basic`, `examples/next`) to the minimal path-first style.
+- Update ignored local examples that we still maintain (`examples/frontends/basic`, `examples/frontends/next`) to the minimal path-first style.
 - Expand root tests for defaults, merges, overrides, and custom coexistence.
 - Update living docs, README, and `docs/story.md`.
 

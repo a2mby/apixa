@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "example_limits": {
+    "max_size_bytes": 1024,
+    "max_files": 3,
+    "max_total_size_bytes": 2048
+  },
+  "files": [
+    {
+      "key": "empty",
+      "source": "sources/empty.fixture",
+      "filename": "empty.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk": "local",
+      "path": "playground-fixtures/v1/empty/empty.txt"
+    },
+    {
+      "key": "one-byte",
+      "source": "sources/one-byte.fixture",
+      "filename": "one.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 1,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "disk": "local",
+      "path": "playground-fixtures/v1/one-byte/one.txt"
+    },
+    {
+      "key": "ascii",
+      "source": "sources/ascii.fixture",
+      "filename": "readme.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 14,
+      "sha256": "4e509f3af734da35ec61590249fd3697fc51cc775bb2a4810eaedbeb7836b3d7",
+      "disk": "local",
+      "path": "playground-fixtures/v1/ascii/readme.txt"
+    },
+    {
+      "key": "unicode",
+      "source": "sources/unicode.fixture",
+      "filename": "ملاحظات.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 39,
+      "sha256": "9a4e174e1289c808e57b326c32fe8930238ce51ee344f65e2f8ee658679b4fc4",
+      "disk": "local",
+      "path": "playground-fixtures/v1/unicode/ملاحظات.txt"
+    },
+    {
+      "key": "binary",
+      "source": "sources/binary.fixture",
+      "filename": "bytes.bin",
+      "mime_type": "application/octet-stream",
+      "size_bytes": 256,
+      "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
+      "disk": "local",
+      "path": "playground-fixtures/v1/binary/bytes.bin"
+    },
+    {
+      "key": "png",
+      "source": "sources/png.fixture",
+      "filename": "pixel.png",
+      "mime_type": "image/png",
+      "size_bytes": 69,
+      "sha256": "b1ff9c8ea3a780bad09b346c423d2d0e46815926879b18e841d928376a946640",
+      "disk": "local",
+      "path": "playground-fixtures/v1/png/pixel.png"
+    },
+    {
+      "key": "pdf",
+      "source": "sources/pdf.fixture",
+      "filename": "sample.pdf",
+      "mime_type": "application/pdf",
+      "size_bytes": 329,
+      "sha256": "1608478b971ed5190557ca977aeeea08b44fabdae1646252b5f4f6d21642335b",
+      "disk": "local",
+      "path": "playground-fixtures/v1/pdf/sample.pdf"
+    },
+    {
+      "key": "zip",
+      "source": "sources/zip.fixture",
+      "filename": "archive.zip",
+      "mime_type": "application/zip",
+      "size_bytes": 140,
+      "sha256": "db98aecd41427e9acf3bc4237a976b0efdb35aed71a3efc3daf4425e470f6270",
+      "disk": "local",
+      "path": "playground-fixtures/v1/zip/archive.zip"
+    },
+    {
+      "key": "same-name-a",
+      "source": "sources/same-name-a.fixture",
+      "filename": "same.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 5,
+      "sha256": "a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1b84cd99541461a08e",
+      "disk": "local",
+      "path": "playground-fixtures/v1/same-name-a/same.txt"
+    },
+    {
+      "key": "same-name-b",
+      "source": "sources/same-name-b.fixture",
+      "filename": "same.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 6,
+      "sha256": "16367aacb67a4a017c8da8ab95682ccb390863780f7114dda0a0e0c55644c7c4",
+      "disk": "local",
+      "path": "playground-fixtures/v1/same-name-b/same.txt"
+    },
+    {
+      "key": "same-bytes-other-name",
+      "source": "sources/same-bytes-other-name.fixture",
+      "filename": "other.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 5,
+      "sha256": "a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1b84cd99541461a08e",
+      "disk": "local",
+      "path": "playground-fixtures/v1/same-bytes-other-name/other.txt"
+    },
+    {
+      "key": "spaces",
+      "source": "sources/spaces.fixture",
+      "filename": "name with spaces.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 6,
+      "sha256": "ff6f0e9a530a025ad61dbea8fefa873faf153860b184d14af9bb4f57354f93cd",
+      "disk": "local",
+      "path": "playground-fixtures/v1/spaces/name with spaces.txt"
+    },
+    {
+      "key": "multi-dot",
+      "source": "sources/multi-dot.fixture",
+      "filename": "report.backup.tar.gz",
+      "mime_type": "application/gzip",
+      "size_bytes": 35,
+      "sha256": "30603ae3d276fc8c4351cb80e9c9833e7b965d42342a1f078a1f7d60604ab501",
+      "disk": "local",
+      "path": "playground-fixtures/v1/multi-dot/report.backup.tar.gz"
+    },
+    {
+      "key": "uppercase",
+      "source": "sources/uppercase.fixture",
+      "filename": "PHOTO.PNG",
+      "mime_type": "image/png",
+      "size_bytes": 69,
+      "sha256": "b1ff9c8ea3a780bad09b346c423d2d0e46815926879b18e841d928376a946640",
+      "disk": "local",
+      "path": "playground-fixtures/v1/uppercase/PHOTO.PNG"
+    },
+    {
+      "key": "no-extension",
+      "source": "sources/no-extension.fixture",
+      "filename": "README",
+      "mime_type": "text/plain",
+      "size_bytes": 12,
+      "sha256": "5344287ad0cd517b62386e7698af494ea129fbf7fa96a5905ca0011d4b972a40",
+      "disk": "local",
+      "path": "playground-fixtures/v1/no-extension/README"
+    },
+    {
+      "key": "dotfile",
+      "source": "sources/dotfile.fixture",
+      "filename": ".env-fixture",
+      "mime_type": "text/plain",
+      "size_bytes": 15,
+      "sha256": "9b88fb32e69675e8c7bcb7b93de6921a775aac24130a6b05c712ec2658e4bb06",
+      "disk": "local",
+      "path": "playground-fixtures/v1/dotfile/.env-fixture"
+    },
+    {
+      "key": "unknown-mime",
+      "source": "sources/unknown-mime.fixture",
+      "filename": "unknown.dat",
+      "mime_type": "",
+      "size_bytes": 7,
+      "sha256": "b23a6a8439c0dde5515893e7c90c1e3233b8616e634470f20dc4928bcf3609bc",
+      "disk": "local",
+      "path": "playground-fixtures/v1/unknown-mime/unknown.dat"
+    },
+    {
+      "key": "mismatched-mime",
+      "source": "sources/mismatched-mime.fixture",
+      "filename": "claimed.png",
+      "mime_type": "image/png",
+      "size_bytes": 12,
+      "sha256": "5464533c9647b67eb320c40ccc5959537c09102ae75388f6a7675b433e745c9d",
+      "disk": "local",
+      "path": "playground-fixtures/v1/mismatched-mime/claimed.png"
+    },
+    {
+      "key": "below-limit",
+      "source": "sources/below-limit.fixture",
+      "filename": "1023.bin",
+      "mime_type": "application/octet-stream",
+      "size_bytes": 1023,
+      "sha256": "97c9d367e67d0cff2f99f4c97ddff45250552d880b0d2c57caf78b1483da8c56",
+      "disk": "local",
+      "path": "playground-fixtures/v1/below-limit/1023.bin"
+    },
+    {
+      "key": "at-limit",
+      "source": "sources/at-limit.fixture",
+      "filename": "1024.bin",
+      "mime_type": "application/octet-stream",
+      "size_bytes": 1024,
+      "sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7",
+      "disk": "local",
+      "path": "playground-fixtures/v1/at-limit/1024.bin"
+    },
+    {
+      "key": "over-limit",
+      "source": "sources/over-limit.fixture",
+      "filename": "1025.bin",
+      "mime_type": "application/octet-stream",
+      "size_bytes": 1025,
+      "sha256": "c6d8e9905300876046729949cc95c2385221270d389176f7234fe7ac00c4e430",
+      "disk": "local",
+      "path": "playground-fixtures/v1/over-limit/1025.bin"
+    }
+  ],
+  "large_files": [
+    {
+      "key": "large-64mib",
+      "size_bytes": 67108864,
+      "byte": "x",
+      "path": "playground-fixtures/large/64MiB.bin",
+      "sha256": "e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76"
+    },
+    {
+      "key": "large-256mib",
+      "size_bytes": 268435456,
+      "byte": "x",
+      "path": "playground-fixtures/large/256MiB.bin",
+      "sha256": "8531f9720e3f5ce15fde831a4c677c501b3ef320d4f156c1248299cd9955392d"
+    },
+    {
+      "key": "large-512mib",
+      "size_bytes": 536870912,
+      "byte": "x",
+      "path": "playground-fixtures/large/512MiB.bin",
+      "sha256": "ddbb49d537146f639c1861504180e70f03249caca9fe7631d54e7c01429d85b5"
+    }
+  ]
+}

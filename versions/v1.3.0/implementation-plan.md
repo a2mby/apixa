@@ -61,7 +61,7 @@ Deviations from the recommendations (each consistent with the contract's intent)
   `O | RequestOptions<Query>` so an inline `onTransfer: (event) => …` is contextually typed (before,
   inline callbacks in call options, including `retry.shouldRetry`, were implicitly `any`).
 - Browser verification (`scripts/verify-browser.mjs`) runs a loopback server with the packed ESM
-  instead of adding a page to `examples/query-ssr-next` (only `examples/next`, which is untracked
+  instead of adding a page to `examples/frontends/query-ssr-next` (only `examples/frontends/next`, which is untracked
   here, may be edited).
 
 ## Batches
@@ -126,7 +126,7 @@ Deviations from the recommendations (each consistent with the contract's intent)
 
 - `verify-unified-consumer.mjs` (Node + Next SSR), `verify-browser.mjs` (Chromium upload/download
   progress and abort), `verify-edge.mjs` (Vercel Edge, workerd; assert honest `unsupported` where
-  applicable). `examples/next` one scenario. Docs: architecture (Transfer section),
+  applicable). `examples/frontends/next` one scenario. Docs: architecture (Transfer section),
   `public-api.md`, READMEs, story; `node scripts/verify-public-api.mjs --update` and review the
   snapshot. Tick acceptance criteria only with evidence; run complete `pnpm verify`.
 
@@ -138,7 +138,7 @@ Deviations from the recommendations (each consistent with the contract's intent)
 `packages/mocking/src/index.ts` (re-exports if any); `src/index.ts`;
 `tests/core/{transfer-*,stream-*}.test.ts`, `tests/react/transfer.test.tsx`;
 `tests/facade/*`; `scripts/verify-*.mjs`, `scripts/lib/type-consumer-fixtures.mjs`;
-`examples/next/**` (one scenario); docs and `versions/v1.3.0/*`.
+`examples/frontends/next/**` (one scenario); docs and `versions/v1.3.0/*`.
 
 ## Verification strategy
 

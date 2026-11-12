@@ -29,7 +29,7 @@ Check every item before calling v0.1.0 done.
 
 ## Example and docs
 
-- [x] `examples/basic` runs against the **implemented** `defineApi` API.
+- [x] `examples/frontends/basic` runs against the **implemented** `defineApi` API.
 - [x] README usage matches implemented behavior (not aspirational only).
 - [x] Planned ecosystem packages remain clearly marked as future in docs/README.
 

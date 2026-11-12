@@ -185,7 +185,9 @@ const api = defineApi({
 - Living docs live under [`docs/`](./):
   - [context.md](./context.md) — project direction
   - [architecture.md](./architecture.md) — structure and request flow
-  - [roadmap.md](./roadmap.md) — phases
+  - [public-api.md](./public-api.md) — public entry-point contract
+  - [roadmap.md](./roadmap.md) — milestone status and phases
+  - [use-cases.md](./use-cases.md) — manual-testing catalog
   - [decisions/](./decisions/) — ADRs
   - [guides/](./guides/) — short how-tos ([humans](./guides/humans/), [agents](./guides/agents/))
 - Milestone specs live under [`versions/`](../versions/). A version folder freezes intent for that release. Do not invent empty future version folders; add them when that milestone starts.
@@ -211,24 +213,26 @@ See [versions/README.md](../versions/README.md).
 4. Update `docs/story.md` when a meaningful milestone lands.
 5. Update living docs when direction changes; do not rewrite frozen version folders after the version ships unless correcting factual errors.
 
-## Cursor agent workflow
+## AI agent workflow
 
 Use these so the structure does not drift:
 
-| Command              | When                                       |
-| -------------------- | ------------------------------------------ |
-| `/plan-change`       | Open issue + `task/N-slug` branch          |
-| `/implement-version` | Code against the active `versions/vX.Y.Z/` |
-| `/start-version`     | Create the next filled version folder      |
-| `/check-structure`   | Audit docs/versions/packages layout        |
-| `/git-push`          | Commit, PR, squash merge, story log        |
+| Command              | When                                                      |
+| -------------------- | --------------------------------------------------------- |
+| `/plan-change`       | Open issue + `task/N-slug` branch                         |
+| `/implement-version` | Code against the active `versions/vX.Y.Z/`                |
+| `/start-version`     | Create the next filled version folder                     |
+| `/check-structure`   | Audit docs/versions/packages layout                       |
+| `/publish-library`   | Publish root `apixa` to npm `latest` (owner request only) |
+| `/git-push`          | Commit, PR, squash merge, story log                       |
 
-Rules live in `.cursor/rules/apixa-*.mdc`. Skill: `.cursor/skills/apixa-workflow/`.
+- Reusable workflows live in `.agents/skills/`; rules live in `.ai/rules/`. Run `pnpm ai:sync` after changing canonical configuration and `pnpm ai:check` to verify it. The command names above use slash syntax; Codex uses `$plan-change`, `$git-push`, etc. See [the AI configuration guide](../.ai/README.md) for provider discovery, roles and native settings ownership.
+- Release work has its own skill: `.agents/skills/publish-library/` (owner request only).
 
 How-to checklists for agents (and prose for humans): [`docs/guides/`](./guides/).
 
 ## Examples and tests
 
-- `examples/basic` should demonstrate **implemented** API, not aspirational syntax.
+- `examples/frontends/basic` should demonstrate **implemented** API, not aspirational syntax.
 - Tests for Core live under root `tests/` (see [tests/README.md](../tests/README.md)).
 - Prefer testing behavior (URL building, success/error paths, generation) over testing implementation details.

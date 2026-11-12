@@ -56,7 +56,7 @@ Exact method/path defaults and the function-context shape are locked in
   surface.
 - Tests under `tests/core/` and `tests/mocking/` for: function operations, operation removal, each new
   builtin's default behavior, and the mirrored mock surface.
-- `examples/next` updated to demonstrate at least one function operation and one of the 10 builtins.
+- `examples/frontends/next` updated to demonstrate at least one function operation and one of the 10 builtins.
 - Docs: `docs/context.md`, `docs/architecture.md` (if the resolution pipeline shape changes),
   `docs/conventions.md` builtins table, `CHANGELOG.md`, `docs/story.md` completion note.
 

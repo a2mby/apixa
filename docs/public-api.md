@@ -227,7 +227,7 @@ Additions belong to `apixa/core` and `apixa/mocking`; the curated root exports a
 See [Core usage](../packages/core/README.md#advanced-mock-file-storage) and the
 [architecture lifecycle contract](./architecture.md).
 
-## v1.7.0 additions (advanced transfers, unreleased)
+## v1.7.0 additions (advanced transfers; implemented, not npm-published)
 
 Additions are specialized to `apixa/core`; curated root values and all import paths stay unchanged.
 

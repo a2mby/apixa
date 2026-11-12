@@ -1,0 +1,2090 @@
+[
+  {
+    "id": "article-001",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-001",
+    "slug": "article-001",
+    "title": "Manual testing 1",
+    "status": "published",
+    "body": "Predictable article body 1. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 0,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 1"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-001",
+        "contact_id": "contact-001",
+        "body": "Comment 1: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-046",
+        "contact_id": "contact-006",
+        "body": "Comment 46: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-002",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-002",
+    "slug": "article-002",
+    "title": "File handling 2",
+    "status": "archived",
+    "body": "Predictable article body 2. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 0,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 2"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-002",
+        "contact_id": "contact-002",
+        "body": "Comment 2: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-047",
+        "contact_id": "contact-007",
+        "body": "Comment 47: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-003",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-003",
+    "slug": "article-003",
+    "title": "Concurrent updates 3",
+    "status": "draft",
+    "body": "Predictable article body 3. Search token ordinary",
+    "published_at": null,
+    "rank": 0,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 3"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-003",
+        "contact_id": "contact-003",
+        "body": "Comment 3: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-048",
+        "contact_id": "contact-008",
+        "body": "Comment 48: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-004",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-004",
+    "slug": "article-004",
+    "title": "دليل الاختبار 4",
+    "status": "published",
+    "body": "Predictable article body 4. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 1,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 4"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-004",
+        "contact_id": "contact-004",
+        "body": "Comment 4: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-049",
+        "contact_id": "contact-009",
+        "body": "Comment 49: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-005",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-005",
+    "slug": "article-005",
+    "title": "Unicode café 5",
+    "status": "archived",
+    "body": "Predictable article body 5. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 1,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-005",
+        "contact_id": "contact-005",
+        "body": "Comment 5: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-050",
+        "contact_id": "contact-010",
+        "body": "Comment 50: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-006",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-006",
+    "slug": "article-006",
+    "title": "Manual testing 6",
+    "status": "draft",
+    "body": "Predictable article body 6. Search token ordinary",
+    "published_at": null,
+    "rank": 1,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 6"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-006",
+        "contact_id": "contact-006",
+        "body": "Comment 6: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-051",
+        "contact_id": "contact-011",
+        "body": "Comment 51: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-007",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-007",
+    "slug": "article-007",
+    "title": "File handling 7",
+    "status": "published",
+    "body": "Predictable article body 7. Search token needle",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 1,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 7"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-007",
+        "contact_id": "contact-007",
+        "body": "Comment 7: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-052",
+        "contact_id": "contact-012",
+        "body": "Comment 52: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-008",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-008",
+    "slug": "article-008",
+    "title": "Concurrent updates 8",
+    "status": "archived",
+    "body": "Predictable article body 8. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 2,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 8"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-008",
+        "contact_id": "contact-008",
+        "body": "Comment 8: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-053",
+        "contact_id": "contact-013",
+        "body": "Comment 53: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-009",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-009",
+    "slug": "article-009",
+    "title": "دليل الاختبار 9",
+    "status": "draft",
+    "body": "Predictable article body 9. Search token ordinary",
+    "published_at": null,
+    "rank": 2,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 9"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-009",
+        "contact_id": "contact-009",
+        "body": "Comment 9: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-054",
+        "contact_id": "contact-014",
+        "body": "Comment 54: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-010",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-010",
+    "slug": "article-010",
+    "title": "Unicode café 10",
+    "status": "published",
+    "body": "Predictable article body 10. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 2,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-010",
+        "contact_id": "contact-010",
+        "body": "Comment 10: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-055",
+        "contact_id": "contact-015",
+        "body": "Comment 55: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-011",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-011",
+    "slug": "article-011",
+    "title": "Manual testing 11",
+    "status": "archived",
+    "body": "Predictable article body 11. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 2,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 11"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-011",
+        "contact_id": "contact-011",
+        "body": "Comment 11: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-056",
+        "contact_id": "contact-016",
+        "body": "Comment 56: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-012",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-012",
+    "slug": "article-012",
+    "title": "File handling 12",
+    "status": "draft",
+    "body": "Predictable article body 12. Search token ordinary",
+    "published_at": null,
+    "rank": 3,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 12"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-012",
+        "contact_id": "contact-012",
+        "body": "Comment 12: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-057",
+        "contact_id": "contact-017",
+        "body": "Comment 57: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-013",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-013",
+    "slug": "article-013",
+    "title": "Concurrent updates 13",
+    "status": "published",
+    "body": "Predictable article body 13. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 3,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 13"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-013",
+        "contact_id": "contact-013",
+        "body": "Comment 13: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-058",
+        "contact_id": "contact-018",
+        "body": "Comment 58: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-014",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-014",
+    "slug": "article-014",
+    "title": "دليل الاختبار 14",
+    "status": "archived",
+    "body": "Predictable article body 14. Search token needle",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 3,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 14"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-014",
+        "contact_id": "contact-014",
+        "body": "Comment 14: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-059",
+        "contact_id": "contact-019",
+        "body": "Comment 59: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-015",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-015",
+    "slug": "article-015",
+    "title": "Unicode café 15",
+    "status": "draft",
+    "body": "Predictable article body 15. Search token ordinary",
+    "published_at": null,
+    "rank": 3,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-015",
+        "contact_id": "contact-015",
+        "body": "Comment 15: ملاحظة عربية",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-060",
+        "contact_id": "contact-020",
+        "body": "Comment 60: ملاحظة عربية",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-016",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-016",
+    "slug": "article-016",
+    "title": "Manual testing 16",
+    "status": "published",
+    "body": "Predictable article body 16. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 4,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 16"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-016",
+        "contact_id": "contact-016",
+        "body": "Comment 16: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-061",
+        "contact_id": "contact-021",
+        "body": "Comment 61: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-017",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-017",
+    "slug": "article-017",
+    "title": "File handling 17",
+    "status": "archived",
+    "body": "Predictable article body 17. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 4,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 17"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-017",
+        "contact_id": "contact-017",
+        "body": "Comment 17: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-062",
+        "contact_id": "contact-022",
+        "body": "Comment 62: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-018",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-018",
+    "slug": "article-018",
+    "title": "Concurrent updates 18",
+    "status": "draft",
+    "body": "Predictable article body 18. Search token ordinary",
+    "published_at": null,
+    "rank": 4,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 18"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-018",
+        "contact_id": "contact-018",
+        "body": "Comment 18: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-063",
+        "contact_id": "contact-023",
+        "body": "Comment 63: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-019",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-019",
+    "slug": "article-019",
+    "title": "دليل الاختبار 19",
+    "status": "published",
+    "body": "Predictable article body 19. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 4,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 19"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-019",
+        "contact_id": "contact-019",
+        "body": "Comment 19: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-064",
+        "contact_id": "contact-024",
+        "body": "Comment 64: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-020",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-020",
+    "slug": "article-020",
+    "title": "Unicode café 20",
+    "status": "archived",
+    "body": "Predictable article body 20. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 5,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-020",
+        "contact_id": "contact-020",
+        "body": "Comment 20: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-065",
+        "contact_id": "contact-025",
+        "body": "Comment 65: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-021",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-021",
+    "slug": "article-021",
+    "title": "Manual testing 21",
+    "status": "draft",
+    "body": "Predictable article body 21. Search token needle",
+    "published_at": null,
+    "rank": 5,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 21"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-021",
+        "contact_id": "contact-021",
+        "body": "Comment 21: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-066",
+        "contact_id": "contact-026",
+        "body": "Comment 66: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-022",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-022",
+    "slug": "article-022",
+    "title": "File handling 22",
+    "status": "published",
+    "body": "Predictable article body 22. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 5,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 22"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-022",
+        "contact_id": "contact-022",
+        "body": "Comment 22: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-067",
+        "contact_id": "contact-027",
+        "body": "Comment 67: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-023",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-023",
+    "slug": "article-023",
+    "title": "Concurrent updates 23",
+    "status": "archived",
+    "body": "Predictable article body 23. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 5,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 23"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-023",
+        "contact_id": "contact-023",
+        "body": "Comment 23: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-068",
+        "contact_id": "contact-028",
+        "body": "Comment 68: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-024",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-024",
+    "slug": "article-024",
+    "title": "دليل الاختبار 24",
+    "status": "draft",
+    "body": "Predictable article body 24. Search token ordinary",
+    "published_at": null,
+    "rank": 6,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 24"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-024",
+        "contact_id": "contact-024",
+        "body": "Comment 24: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-069",
+        "contact_id": "contact-029",
+        "body": "Comment 69: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-025",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-025",
+    "slug": "article-025",
+    "title": "Unicode café 25",
+    "status": "published",
+    "body": "Predictable article body 25. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 6,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-025",
+        "contact_id": "contact-025",
+        "body": "Comment 25: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-070",
+        "contact_id": "contact-030",
+        "body": "Comment 70: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-026",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-026",
+    "slug": "article-026",
+    "title": "Manual testing 26",
+    "status": "archived",
+    "body": "Predictable article body 26. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 6,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 26"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-026",
+        "contact_id": "contact-026",
+        "body": "Comment 26: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-071",
+        "contact_id": "contact-031",
+        "body": "Comment 71: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-027",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-027",
+    "slug": "article-027",
+    "title": "File handling 27",
+    "status": "draft",
+    "body": "Predictable article body 27. Search token ordinary",
+    "published_at": null,
+    "rank": 6,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 27"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-027",
+        "contact_id": "contact-027",
+        "body": "Comment 27: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-072",
+        "contact_id": "contact-032",
+        "body": "Comment 72: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-028",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-028",
+    "slug": "article-028",
+    "title": "Concurrent updates 28",
+    "status": "published",
+    "body": "Predictable article body 28. Search token needle",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 7,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 28"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-028",
+        "contact_id": "contact-028",
+        "body": "Comment 28: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-073",
+        "contact_id": "contact-033",
+        "body": "Comment 73: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-029",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-029",
+    "slug": "article-029",
+    "title": "دليل الاختبار 29",
+    "status": "archived",
+    "body": "Predictable article body 29. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 7,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 29"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-029",
+        "contact_id": "contact-029",
+        "body": "Comment 29: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-074",
+        "contact_id": "contact-034",
+        "body": "Comment 74: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-030",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-030",
+    "slug": "article-030",
+    "title": "Unicode café 30",
+    "status": "draft",
+    "body": "Predictable article body 30. Search token ordinary",
+    "published_at": null,
+    "rank": 7,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-030",
+        "contact_id": "contact-030",
+        "body": "Comment 30: ملاحظة عربية",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-075",
+        "contact_id": "contact-035",
+        "body": "Comment 75: ملاحظة عربية",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-031",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-031",
+    "slug": "article-031",
+    "title": "Manual testing 31",
+    "status": "published",
+    "body": "Predictable article body 31. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 7,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 31"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-031",
+        "contact_id": "contact-031",
+        "body": "Comment 31: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-076",
+        "contact_id": "contact-036",
+        "body": "Comment 76: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-032",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-032",
+    "slug": "article-032",
+    "title": "File handling 32",
+    "status": "archived",
+    "body": "Predictable article body 32. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 8,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 32"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-032",
+        "contact_id": "contact-032",
+        "body": "Comment 32: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-077",
+        "contact_id": "contact-037",
+        "body": "Comment 77: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-033",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-033",
+    "slug": "article-033",
+    "title": "Concurrent updates 33",
+    "status": "draft",
+    "body": "Predictable article body 33. Search token ordinary",
+    "published_at": null,
+    "rank": 8,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 33"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-033",
+        "contact_id": "contact-033",
+        "body": "Comment 33: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-078",
+        "contact_id": "contact-038",
+        "body": "Comment 78: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-034",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-034",
+    "slug": "article-034",
+    "title": "دليل الاختبار 34",
+    "status": "published",
+    "body": "Predictable article body 34. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 8,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 34"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-034",
+        "contact_id": "contact-034",
+        "body": "Comment 34: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-079",
+        "contact_id": "contact-039",
+        "body": "Comment 79: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-035",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-035",
+    "slug": "article-035",
+    "title": "Unicode café 35",
+    "status": "archived",
+    "body": "Predictable article body 35. Search token needle",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 8,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-035",
+        "contact_id": "contact-035",
+        "body": "Comment 35: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-080",
+        "contact_id": "contact-040",
+        "body": "Comment 80: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-036",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-036",
+    "slug": "article-036",
+    "title": "Manual testing 36",
+    "status": "draft",
+    "body": "Predictable article body 36. Search token ordinary",
+    "published_at": null,
+    "rank": 9,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 36"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-036",
+        "contact_id": "contact-036",
+        "body": "Comment 36: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-081",
+        "contact_id": "contact-001",
+        "body": "Comment 81: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-037",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-037",
+    "slug": "article-037",
+    "title": "File handling 37",
+    "status": "published",
+    "body": "Predictable article body 37. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 9,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 37"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-037",
+        "contact_id": "contact-037",
+        "body": "Comment 37: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-082",
+        "contact_id": "contact-002",
+        "body": "Comment 82: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-038",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-038",
+    "slug": "article-038",
+    "title": "Concurrent updates 38",
+    "status": "archived",
+    "body": "Predictable article body 38. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 9,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 38"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-038",
+        "contact_id": "contact-038",
+        "body": "Comment 38: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-083",
+        "contact_id": "contact-003",
+        "body": "Comment 83: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-039",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-039",
+    "slug": "article-039",
+    "title": "دليل الاختبار 39",
+    "status": "draft",
+    "body": "Predictable article body 39. Search token ordinary",
+    "published_at": null,
+    "rank": 9,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 39"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-039",
+        "contact_id": "contact-039",
+        "body": "Comment 39: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-084",
+        "contact_id": "contact-004",
+        "body": "Comment 84: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-040",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-040",
+    "slug": "article-040",
+    "title": "Unicode café 40",
+    "status": "published",
+    "body": "Predictable article body 40. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 10,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-040",
+        "contact_id": "contact-040",
+        "body": "Comment 40: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-085",
+        "contact_id": "contact-005",
+        "body": "Comment 85: ملاحظة عربية",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-041",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-001",
+    "slug": "article-041",
+    "title": "Manual testing 41",
+    "status": "archived",
+    "body": "Predictable article body 41. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 10,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 41"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-041",
+        "contact_id": "contact-001",
+        "body": "Comment 41: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-086",
+        "contact_id": "contact-006",
+        "body": "Comment 86: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-042",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-002",
+    "slug": "article-042",
+    "title": "File handling 42",
+    "status": "draft",
+    "body": "Predictable article body 42. Search token needle",
+    "published_at": null,
+    "rank": 10,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 42"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-042",
+        "contact_id": "contact-002",
+        "body": "Comment 42: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-087",
+        "contact_id": "contact-007",
+        "body": "Comment 87: manual test note",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-043",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-003",
+    "slug": "article-043",
+    "title": "Concurrent updates 43",
+    "status": "published",
+    "body": "Predictable article body 43. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 10,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 43"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-043",
+        "contact_id": "contact-003",
+        "body": "Comment 43: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-088",
+        "contact_id": "contact-008",
+        "body": "Comment 88: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-044",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-004",
+    "slug": "article-044",
+    "title": "دليل الاختبار 44",
+    "status": "archived",
+    "body": "Predictable article body 44. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 11,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 44"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-044",
+        "contact_id": "contact-004",
+        "body": "Comment 44: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-089",
+        "contact_id": "contact-009",
+        "body": "Comment 89: manual test note",
+        "approved": true,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-045",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-005",
+    "slug": "article-045",
+    "title": "Unicode café 45",
+    "status": "draft",
+    "body": "Predictable article body 45. Search token ordinary",
+    "published_at": null,
+    "rank": 11,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": [
+      {
+        "id": "comment-045",
+        "contact_id": "contact-005",
+        "body": "Comment 45: ملاحظة عربية",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      },
+      {
+        "id": "comment-090",
+        "contact_id": "contact-010",
+        "body": "Comment 90: ملاحظة عربية",
+        "approved": false,
+        "created_at": "2026-01-01T12:00:00+00:00",
+        "updated_at": "2026-01-01T12:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "id": "article-046",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-006",
+    "slug": "article-046",
+    "title": "Manual testing 46",
+    "status": "published",
+    "body": "Predictable article body 46. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 11,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 46"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-047",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-007",
+    "slug": "article-047",
+    "title": "File handling 47",
+    "status": "archived",
+    "body": "Predictable article body 47. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 11,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 47"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-048",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-008",
+    "slug": "article-048",
+    "title": "Concurrent updates 48",
+    "status": "draft",
+    "body": "Predictable article body 48. Search token ordinary",
+    "published_at": null,
+    "rank": 12,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 48"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-049",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-009",
+    "slug": "article-049",
+    "title": "دليل الاختبار 49",
+    "status": "published",
+    "body": "Predictable article body 49. Search token needle",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 12,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 49"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-050",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-010",
+    "slug": "article-050",
+    "title": "Unicode café 50",
+    "status": "archived",
+    "body": "Predictable article body 50. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 12,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-051",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-011",
+    "slug": "article-051",
+    "title": "Manual testing 51",
+    "status": "draft",
+    "body": "Predictable article body 51. Search token ordinary",
+    "published_at": null,
+    "rank": 12,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 51"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-052",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-012",
+    "slug": "article-052",
+    "title": "File handling 52",
+    "status": "published",
+    "body": "Predictable article body 52. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 13,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 52"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-053",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-013",
+    "slug": "article-053",
+    "title": "Concurrent updates 53",
+    "status": "archived",
+    "body": "Predictable article body 53. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 13,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 53"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-054",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-014",
+    "slug": "article-054",
+    "title": "دليل الاختبار 54",
+    "status": "draft",
+    "body": "Predictable article body 54. Search token ordinary",
+    "published_at": null,
+    "rank": 13,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 54"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-055",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-015",
+    "slug": "article-055",
+    "title": "Unicode café 55",
+    "status": "published",
+    "body": "Predictable article body 55. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 13,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-056",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-016",
+    "slug": "article-056",
+    "title": "Manual testing 56",
+    "status": "archived",
+    "body": "Predictable article body 56. Search token needle",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 14,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": "Article 56"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-057",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-017",
+    "slug": "article-057",
+    "title": "File handling 57",
+    "status": "draft",
+    "body": "Predictable article body 57. Search token ordinary",
+    "published_at": null,
+    "rank": 14,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 57"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-058",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-018",
+    "slug": "article-058",
+    "title": "Concurrent updates 58",
+    "status": "published",
+    "body": "Predictable article body 58. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 14,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 58"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-059",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-019",
+    "slug": "article-059",
+    "title": "دليل الاختبار 59",
+    "status": "archived",
+    "body": "Predictable article body 59. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 14,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 59"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-060",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-020",
+    "slug": "article-060",
+    "title": "Unicode café 60",
+    "status": "draft",
+    "body": "Predictable article body 60. Search token ordinary",
+    "published_at": null,
+    "rank": 15,
+    "metadata": {
+      "featured": true,
+      "tags": [],
+      "seo": {
+        "description": null
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-061",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-021",
+    "slug": "article-061",
+    "title": "Manual testing 61",
+    "status": "published",
+    "body": "Predictable article body 61. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 15,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 61"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-062",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-022",
+    "slug": "article-062",
+    "title": "File handling 62",
+    "status": "archived",
+    "body": "Predictable article body 62. Search token ordinary",
+    "published_at": "2026-01-02T09:00:00+00:00",
+    "rank": 15,
+    "metadata": {
+      "featured": true,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 62"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  },
+  {
+    "id": "article-063",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-023",
+    "slug": "article-063",
+    "title": "Concurrent updates 63",
+    "status": "draft",
+    "body": "Predictable article body 63. Search token needle",
+    "published_at": null,
+    "rank": 15,
+    "metadata": {
+      "featured": false,
+      "tags": ["testing", "files"],
+      "seo": {
+        "description": "Article 63"
+      }
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "comments": []
+  }
+]

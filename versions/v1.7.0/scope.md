@@ -35,7 +35,7 @@ issue #103. Actual verification and remaining sign-off gates are in acceptance c
 | `packages/internal/shared` (private) | No planned production changes; only reusable framework-neutral Core-based algorithms if proven necessary.                                       |
 | `src/` (`apixa`)                     | Approved re-exports only, through existing entry points; no client implementation.                                                              |
 | Root `tests/`, `scripts/`, docs      | Protocol simulations, typing, packed/runtime verification and implemented usage.                                                                |
-| `examples/query-ssr-next`            | Tracked Next transfer/recovery scenario driven by Chromium. `examples/next` remains a local playground; no other example apps touched.          |
+| `examples/frontends/query-ssr-next`            | Tracked Next transfer/recovery scenario driven by Chromium. `examples/frontends/next` remains a local playground; no other example apps touched.          |
 
 No new workspace/public package or mandatory runtime dependency. No package-version changes.
 

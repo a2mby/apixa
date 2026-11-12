@@ -16,7 +16,7 @@ This guide explains how to set up the project, understand its architecture, and 
 
 Before contributing, make sure you have:
 
-- **Node.js** 18 or newer
+- **Node.js** 22 or newer (CI covers 22 and 24)
 - **pnpm** 9.15.0 (managed through Corepack)
 - **Git**
 - A code editor with TypeScript support
@@ -24,7 +24,7 @@ Before contributing, make sure you have:
 Optional:
 
 - Python 3.10+ and Graphify for local knowledge-graph exploration
-- Claude Code, Codex, or Cursor for AI-assisted development
+- Claude Code, Codex, Cursor, Gemini CLI, or OpenCode for AI-assisted development (see [`.ai/README.md`](.ai/README.md))
 
 ### Fork and Clone
 
@@ -56,7 +56,8 @@ corepack pnpm install --frozen-lockfile
 corepack pnpm build
 ```
 
-This builds the Core, Mocking, and TanStack Query packages in dependency order.
+This builds the Core, Mocking, React and shared implementation modules, then the single `apixa`
+facade. Use `pnpm ai:sync` only when changing `.ai/` or `.agents/` configuration.
 
 ## 2. Project Architecture
 
@@ -66,17 +67,24 @@ are source boundaries, not consumer installation dependencies. See [ADR 005](doc
 
 ```text
 apixa/
+├── src/                    # the single public `apixa` facade (re-exports only)
 ├── packages/
 │   ├── core/
 │   ├── mocking/
 │   ├── react/
 │   └── internal/shared/   # private, never published
+├── .ai/                    # canonical rules, roles, adapters, sync
+├── .agents/skills/         # canonical reusable workflows
 ├── datasets/
 ├── examples/
+│   ├── backends/laravel-backend/
+│   ├── frontends/          # query-ssr-next (maintained), local next and other playgrounds
+│   └── templates/          # empty laravel/next/react placeholders
 ├── tests/
 ├── docs/
 ├── versions/
 ├── scripts/
+├── AGENTS.md               # generated from .ai/rules
 ├── README.md
 └── CONTRIBUTING.md
 ```
@@ -427,9 +435,12 @@ Apixa maintains separate documentation for ongoing development and version-speci
 
 - [`docs/context.md`](docs/context.md) — project principles
 - [`docs/architecture.md`](docs/architecture.md) — technical architecture
+- [`docs/public-api.md`](docs/public-api.md) — export contract for every public entry
 - [`docs/conventions.md`](docs/conventions.md) — development rules
-- [`docs/roadmap.md`](docs/roadmap.md) — future direction
+- [`docs/roadmap.md`](docs/roadmap.md) — milestone status and future direction
+- [`docs/use-cases.md`](docs/use-cases.md) — manual-testing catalog
 - [`versions/`](versions/) — milestone-specific scope and acceptance criteria
+- [`.ai/README.md`](.ai/README.md) — AI rules, roles, skills and provider adapters
 
 Before implementing a milestone feature, consult the active milestone under `versions/`.
 

@@ -81,7 +81,7 @@ Files: [`packages/core/src/client.ts`](../../packages/core/src/client.ts), [`pac
 
 ### 6. Example
 
-File: [`examples/basic/src/index.ts`](../../examples/basic/src/index.ts)
+File: [`examples/frontends/basic/src/index.ts`](../../examples/frontends/basic/src/index.ts)
 
 - Rewrite to `defineApi` + resource operations.
 - Hit a real or injectable HTTP path; if a live API is unavailable, use a custom `transport` in the example **only if** that demonstrates the public API clearly—prefer documenting a public demo URL or a tiny local mock server only if necessary. Do not reintroduce production `mocks` config.
@@ -126,7 +126,7 @@ Cover at minimum:
 | `packages/core/src/transport/fetch.ts`                    | Keep                                                       |
 | `packages/core/src/errors.ts`                             | Keep                                                       |
 | `packages/core/src/mock.ts` / `auth.ts` / `middleware.ts` | Unexport or delete from public path                        |
-| `examples/basic/src/index.ts`                             | Rewrite                                                    |
+| `examples/frontends/basic/src/index.ts`                             | Rewrite                                                    |
 | `tests/**`                                                | Add                                                        |
 | `README.md`                                               | Match implemented API                                      |
 | `docs/story.md`                                           | Log completion                                             |

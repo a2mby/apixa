@@ -29,7 +29,7 @@ One hook and one returned object cover list query state, Promise-based CRUD, cac
 - New package: `@apixa/tanstack-query` (optional integration)
 - Peers: `@apixa/core`, `@tanstack/react-query` ^5, `react` ^18 \| ^19
 - Core remains framework-agnostic (ADR 001)
-- Maintained example: **`examples/next` only**
+- Maintained example: **`examples/frontends/next` only**
 
 ## What success looks like
 
@@ -54,7 +54,7 @@ One hook and one returned object cover list query state, Promise-based CRUD, cac
 
 - `@apixa/core` — `defineApi`, default-first CRUD, `ResourceClient`, `ApiError` hierarchy, `signal` on call options.
 - `@apixa/mocking` — optional peer / `defineMockApi`.
-- Next playground — manual TanStack keys, queries, and mutation cache edits (`examples/next`).
+- Next playground — manual TanStack keys, queries, and mutation cache edits (`examples/frontends/next`).
 - No `@apixa/tanstack-query` package yet (roadmap-planned until this milestone).
 
 ## Non-goals for this folder

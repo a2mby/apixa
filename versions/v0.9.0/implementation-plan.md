@@ -88,7 +88,7 @@ Location: [`tests/mocking/`](../../tests/mocking/) (and any Core tests that asse
 
 ### 6. Next example + docs
 
-- [`examples/next/lib/api.ts`](../../examples/next/lib/api.ts) and any other Next files using old keys
+- [`examples/frontends/next/lib/api.ts`](../../examples/frontends/next/lib/api.ts) and any other Next files using old keys
 - [`packages/mocking/README.md`](../../packages/mocking/README.md), root README snippets, guides that mention `mockConfig`
 - [`CHANGELOG.md`](../../CHANGELOG.md) — breaking note
 - Living docs that still describe boolean mock / `mockConfig`
@@ -98,7 +98,7 @@ Location: [`tests/mocking/`](../../tests/mocking/) (and any Core tests that asse
 
 - Do not add delay, fail rate, handlers, or `mock: { type }` on `defineApi`
 - Do not change TanStack Query package APIs
-- Do not edit `examples/basic`, `react-vite`, `vue`, etc.
+- Do not edit `examples/frontends/basic`, `react-vite`, `vue`, etc.
 - Do not create new packages
 - Do not rewrite frozen older `versions/v0.*` folders for the new syntax
 
@@ -116,7 +116,7 @@ Location: [`tests/mocking/`](../../tests/mocking/) (and any Core tests that asse
 | `packages/mocking/src/core-augmentation.ts` / `data/*` | Trim redundant id merges                                 |
 | `packages/mocking/README.md`                           | New syntax                                               |
 | `tests/mocking/**`                                     | Update + add cases                                       |
-| `examples/next/lib/api.ts` (+ call sites)              | Migrate                                                  |
+| `examples/frontends/next/lib/api.ts` (+ call sites)              | Migrate                                                  |
 | `CHANGELOG.md`, docs as needed                         | Breaking honesty                                         |
 | `docs/story.md`                                        | Completion when done                                     |
 

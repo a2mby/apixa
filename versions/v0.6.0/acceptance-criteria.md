@@ -44,4 +44,4 @@ Check every item before calling v0.6.0 done.
 - [x] [implementation-plan.md](./implementation-plan.md) steps completed or consciously waived with a note here.
 - [x] [docs/story.md](../../docs/story.md) updated with a completion note.
 
-Implementation-plan notes: Steps 2–7 completed. Step 1 was the `/start-version` kickoff. Optional Next abort demo waived (docs + `tests/core/reliability.test.ts` suffice per scope). `examples/basic` not updated (repo rule: maintain `examples/next` only; Next demo optional and skipped).
+Implementation-plan notes: Steps 2–7 completed. Step 1 was the `/start-version` kickoff. Optional Next abort demo waived (docs + `tests/core/reliability.test.ts` suffice per scope). `examples/frontends/basic` not updated (repo rule: maintain `examples/frontends/next` only; Next demo optional and skipped).

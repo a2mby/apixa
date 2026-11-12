@@ -1,0 +1,45 @@
+---
+description: Rules when editing docs/ or versions/ in Apixa
+globs: docs/**/*,versions/**/*
+alwaysApply: false
+---
+
+# Docs and versions
+
+## Living docs (`docs/`)
+
+| File                 | Role                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| `context.md`         | Identity, principles, constraints                            |
+| `architecture.md`    | Core shape, request flow, source map                         |
+| `roadmap.md`         | Phases; later versions as headings only                      |
+| `conventions.md`     | How we build and document                                    |
+| `story.md`           | Dated log, newest first                                      |
+| `decisions/NNN-*.md` | ADRs (Context / Decision / Consequences)                     |
+| `guides/`            | Short how-tos — `humans/` (prose) and `agents/` (checklists) |
+
+Do not move living context to the repo root.
+
+### Guides (`docs/guides/`)
+
+- Task-oriented only — not a second `context.md` or architecture dump.
+- Put human-facing prose under `guides/humans/`; agent checklists and Cursor command pointers under `guides/agents/`.
+- Keep both indexes (`guides/README.md`, folder READMEs) updated when you add a guide.
+- Prefer linking to package READMEs / source for long code samples instead of duplicating them.
+
+## Version folders (`versions/vX.Y.Z/`)
+
+Required files — all four, filled (no empty stubs):
+
+1. `context.md` — frozen subset for that release
+2. `scope.md` — explicit in / out
+3. `implementation-plan.md` — ordered smallest path
+4. `acceptance-criteria.md` — checklist that gates “done”
+
+Also keep `versions/README.md` pointing at the **active** version.
+
+## Honesty
+
+- Planned ≠ implemented.
+- Do not invent future version folders “for later.”
+- Roadmap bullets are enough until the milestone starts.

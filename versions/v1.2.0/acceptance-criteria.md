@@ -45,13 +45,13 @@ Check an item only with evidence (test name, command output, browser run).
 
 ## Cross-runtime
 
-- [x] Node (unit and packed), Chromium against `examples/next` (a real download scenario, mock and fake-transport), React 18 and 19, Next.js SSR, Vercel Edge Runtime and workerd all pass; `pnpm verify:browser` and `pnpm verify:edge` cover the new behavior. _Evidence: Node: vitest + unified consumer; Chromium: `/test/files` driven with playwright (mock download, live `Response.blob`, reset), `verify:browser` ok; React 18/19 consumers; Next start and dev: `/download` Server Component asserts (unified consumer); Vercel Edge and workerd: `verify-edge.mjs` download assertions pass._
+- [x] Node (unit and packed), Chromium against `examples/frontends/next` (a real download scenario, mock and fake-transport), React 18 and 19, Next.js SSR, Vercel Edge Runtime and workerd all pass; `pnpm verify:browser` and `pnpm verify:edge` cover the new behavior. _Evidence: Node: vitest + unified consumer; Chromium: `/test/files` driven with playwright (mock download, live `Response.blob`, reset), `verify:browser` ok; React 18/19 consumers; Next start and dev: `/download` Server Component asserts (unified consumer); Vercel Edge and workerd: `verify-edge.mjs` download assertions pass._
 
 ## Constraints, docs and example
 
 - [x] One published package `apixa`; no new workspace package or runtime dependency; no version bump; nothing committed, pushed or published by this milestone's implementation run. _Evidence: no new package or dependency; no version bump; nothing committed or pushed._
 - [x] `docs/architecture.md`, `docs/public-api.md`, README and Core README describe downloads, the typing rules, the 204 and error-body behavior, the mock download path, and the Blob/SSR limitation; later phases stay marked planned. _Evidence: architecture section, public-api v1.2.0 section, README paragraph, Core README section (typing rules, 204, error bodies, mock path, Blob/SSR and hooks-unwrap notes)._
-- [x] `examples/next` shows a download workflow; no other example touched. _Evidence: `/test/files` Download and Live download buttons (`examples/next` only; gitignored here)._
+- [x] `examples/frontends/next` shows a download workflow; no other example touched. _Evidence: `/test/files` Download and Live download buttons (`examples/frontends/next` only; gitignored here)._
 - [x] `docs/story.md` and `docs/roadmap.md` updated honestly; `graphify update .` run. _Evidence: story entry added; roadmap updated; `graphify update .` run._
 
 ## Verification

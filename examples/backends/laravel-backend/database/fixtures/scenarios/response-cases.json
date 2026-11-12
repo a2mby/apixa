@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "executable": false,
+  "requires": "Author-owned endpoint or controlled client harness; seeding does not implement this behavior.",
+  "cases": [
+    {
+      "id": "bare-list",
+      "input": {
+        "shape": "array"
+      },
+      "expected": "known ordered records"
+    },
+    {
+      "id": "page-envelope",
+      "input": {
+        "page": 7,
+        "page_size": 10,
+        "total": 63
+      },
+      "expected": "three final-page articles"
+    },
+    {
+      "id": "empty-page",
+      "input": {
+        "page": 999
+      },
+      "expected": "empty data with valid envelope"
+    },
+    {
+      "id": "cursor-envelope",
+      "input": {
+        "page_size": 10,
+        "order": ["rank", "id"]
+      },
+      "expected": "deterministic next cursor"
+    },
+    {
+      "id": "empty-204",
+      "input": {
+        "status": 204
+      },
+      "expected": "empty success per responseType"
+    },
+    {
+      "id": "empty-205",
+      "input": {
+        "status": 205
+      },
+      "expected": "empty success per responseType"
+    },
+    {
+      "id": "invalid-json",
+      "input": {
+        "status": 200,
+        "raw_body": "{broken"
+      },
+      "expected": "ParseError in JSON mode"
+    },
+    {
+      "id": "json-error",
+      "input": {
+        "status": 422,
+        "body": {
+          "message": "Synthetic validation error"
+        }
+      },
+      "expected": "HttpError with parsed error data"
+    },
+    {
+      "id": "text-error",
+      "input": {
+        "status": 500,
+        "raw_body": "Synthetic server error"
+      },
+      "expected": "HttpError with permitted text"
+    },
+    {
+      "id": "binary-download",
+      "input": {
+        "file_fixture": "binary"
+      },
+      "expected": "exact known hash and byte length"
+    },
+    {
+      "id": "missing-length",
+      "input": {
+        "omit_headers": ["Content-Length"]
+      },
+      "expected": "unknown total; enforce actual-byte limits"
+    },
+    {
+      "id": "oversized-error",
+      "input": {
+        "status": 500,
+        "body_size_bytes": 4096,
+        "response_limit_bytes": 1024
+      },
+      "expected": "retain HTTP status and drop oversized error data"
+    }
+  ]
+}

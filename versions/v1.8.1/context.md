@@ -8,7 +8,7 @@ Provide a permanent, independent Laravel HTTP backend playground for the author 
 
 ## Identity (this release)
 
-- Official Laravel 13 Composer skeleton under `examples/laravel-backend/`, PHP 8.4 supported by the resolved lockfile.
+- Official Laravel 13 Composer skeleton under `examples/backends/laravel-backend/`, PHP 8.4 supported by the resolved lockfile.
 - External native PostgreSQL; separate development, backend-test and browser/E2E databases.
 - Baseline: `origin/main` at `b0cf6b4`, including v1.8.0 PR #106; Node 22/24 CI passed. No assertion of v1.8.0 owner sign-off.
 - Issue #107; branch `task/107-laravel-backend`. One published npm package stays `apixa@1.0.0-rc.0`; no npm release or version bump.

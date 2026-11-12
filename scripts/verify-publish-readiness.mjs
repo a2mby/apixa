@@ -9,8 +9,8 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 assert.equal(manifest.name, "apixa");
-assert.match(manifest.version, /^1\.0\.0-rc\.\d+$/);
-assert.deepEqual(manifest.publishConfig, { access: "public", tag: "next" });
+assert.match(manifest.version, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/);
+assert.deepEqual(manifest.publishConfig, { access: "public", tag: "latest" });
 for (const dir of ["core", "mocking", "react", "internal/shared"]) {
   assert.equal(
     JSON.parse(readFileSync(join(root, "packages", dir, "package.json"), "utf8")).private,
@@ -69,7 +69,7 @@ try {
       );
     }
   }
-  const args = ["publish", tarball, "--dry-run", "--tag", "next", "--access", "public", "--json"];
+  const args = ["publish", tarball, "--dry-run", "--tag", "latest", "--access", "public", "--json"];
   assert.ok(args.includes("--dry-run"));
   const dry = capture("npm", args);
   assert.ok(dry.ok, dry.out);
@@ -79,7 +79,7 @@ try {
   assert.equal(info.name, "apixa");
   assert.equal(info.version, manifest.version);
   console.log(
-    `npm publish --dry-run --tag next: apixa@${info.version}, ${info.size} bytes compressed, ${info.unpackedSize} bytes unpacked, ${info.entryCount} files.`,
+    `npm publish --dry-run --tag latest: apixa@${info.version}, ${info.size} bytes compressed, ${info.unpackedSize} bytes unpacked, ${info.entryCount} files.`,
   );
 } finally {
   rmSync(temporary, { recursive: true, force: true });
@@ -88,7 +88,7 @@ console.log(
   "Only apixa is publishable. No npm scope or coordinated package publication is required.",
 );
 console.log(
-  "Nothing was published. Manual release command, after authorization: pnpm --dir . publish --tag next --access public",
+  "Nothing was published. Manual release command, after authorization: pnpm --dir . publish --tag latest --access public",
 );
 if (blockers.length) {
   console.error(`Publication blockers:\n${blockers.map((b) => `- ${b}`).join("\n")}`);

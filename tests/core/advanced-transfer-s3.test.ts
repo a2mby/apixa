@@ -1,6 +1,6 @@
 import { ValidationError, defineApi, type Transport, type TransportRequest } from "apixa/core";
 import { describe, expect, it } from "vitest";
-import { s3Transfer } from "../../examples/query-ssr-next/lib/s3-transfer.js";
+import { s3Transfer } from "../../examples/frontends/query-ssr-next/lib/s3-transfer.js";
 
 function setup() {
   const parts = new Map<number, { partNumber: number; size: number; etag: string }>();

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "executable": false,
+  "requires": "Author-owned endpoint or controlled client harness; seeding does not implement this behavior.",
+  "cases": [
+    {
+      "id": "fail-once",
+      "input": {
+        "statuses": [503, 200],
+        "method": "GET"
+      },
+      "expected": "one permitted retry"
+    },
+    {
+      "id": "persistent-failure",
+      "input": {
+        "statuses": [503, 503, 503]
+      },
+      "expected": "respect retry ceiling"
+    },
+    {
+      "id": "rate-limit",
+      "input": {
+        "statuses": [429, 200],
+        "retry_after": "1"
+      },
+      "expected": "respect Retry-After"
+    },
+    {
+      "id": "request-timeout",
+      "input": {
+        "delay_headers_ms": 2000,
+        "timeout_ms": 100
+      },
+      "expected": "TimeoutError"
+    },
+    {
+      "id": "body-timeout",
+      "input": {
+        "delay_body_ms": 2000,
+        "timeout_ms": 100
+      },
+      "expected": "timeout during body consumption"
+    },
+    {
+      "id": "caller-abort",
+      "input": {
+        "abort_after_ms": 50,
+        "delay_body_ms": 2000
+      },
+      "expected": "AbortError without later success"
+    },
+    {
+      "id": "interrupted-body",
+      "input": {
+        "disconnect_after_bytes": 128
+      },
+      "expected": "no fabricated complete body"
+    },
+    {
+      "id": "same-key-retry",
+      "input": {
+        "logical_key": "synthetic-checkout-1",
+        "attempts": 2
+      },
+      "expected": "same key across permitted retries; backend owns deduplication"
+    },
+    {
+      "id": "refresh-replay",
+      "input": {
+        "statuses": [401, 200],
+        "token": "SYNTHETIC-ONLY"
+      },
+      "expected": "one guarded replay with fresh synthetic auth"
+    }
+  ]
+}

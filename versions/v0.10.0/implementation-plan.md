@@ -144,7 +144,7 @@ Location: [`tests/core/`](../../tests/core/), [`tests/mocking/`](../../tests/moc
 
 ### 8. Example + docs
 
-- `examples/next`: add one function operation and one builtin to the existing resource.
+- `examples/frontends/next`: add one function operation and one builtin to the existing resource.
 - `docs/context.md`, `docs/conventions.md` (builtins table), `docs/architecture.md` if the resolution
   branch is worth documenting, `CHANGELOG.md`, `docs/story.md` completion entry.
 
@@ -175,7 +175,7 @@ Location: [`tests/core/`](../../tests/core/), [`tests/mocking/`](../../tests/moc
 | `tests/core/operations-customization.test.ts`                                                     | New                                                                     |
 | `tests/core/operations-builtins.test.ts`                                                          | New                                                                     |
 | `tests/mocking/operations-customization.test.ts`                                                  | New                                                                     |
-| `examples/next/lib/api.ts`                                                                        | Demonstrate one function op + one builtin                               |
+| `examples/frontends/next/lib/api.ts`                                                                        | Demonstrate one function op + one builtin                               |
 | `docs/context.md`, `docs/conventions.md`, `docs/architecture.md`, `CHANGELOG.md`, `docs/story.md` | Honesty pass + completion note                                          |
 
 ## Done when

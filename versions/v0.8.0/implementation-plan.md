@@ -98,7 +98,7 @@ Consumers who need instant list patches can use TanStack APIs via escape hatches
 7. **Internals:** Controller builds `queryOptions` / `mutationOptions`; the unified hook always mounts `useQuery` + three `useMutation`s + `useQueryClient`.
 8. **Import path:** `import { useResourceQuery } from "@apixa/tanstack-query"` — no Core export; no required global `apixa` object.
 9. **Provider:** App-owned `QueryClientProvider` (Next already has one locally); package does not ship a mandatory Apixa provider.
-10. **Examples rule:** Touch **`examples/next` only**.
+10. **Examples rule:** Touch **`examples/frontends/next` only**.
 
 ## Target developer surface (normative)
 
@@ -156,7 +156,7 @@ function UsersPage() {
 - Do not implement `patch-list`, optimistic helpers, infinite queries, or custom-op auto surface for acceptance.
 - Do not make granular `useList` / `useCreate` the documented default.
 - Do not create `client`, `server`, `openapi`, or `transport-fetch` packages.
-- Do not edit `examples/basic`, `react-vite`, `vue`, etc.
+- Do not edit `examples/frontends/basic`, `react-vite`, `vue`, etc.
 - Do not start implementation in the `/start-version` kickoff itself.
 
 ## Suggested file touch list
@@ -167,8 +167,8 @@ function UsersPage() {
 | `package.json` (root)                                        | Include build/typecheck for new package                                                                          |
 | `pnpm-workspace.yaml`                                        | Already `packages/*` — verify                                                                                    |
 | `tests/tanstack-query/**`                                    | New unit + hook + type tests                                                                                     |
-| `examples/next/lib/users.ts`                                 | Resource query setup / remove hand keys as needed                                                                |
-| `examples/next/app/test/page.tsx` and/or components          | Migrate to `useResourceQuery` (Next only; respect gitignore for local scaffolding)                               |
+| `examples/frontends/next/lib/users.ts`                                 | Resource query setup / remove hand keys as needed                                                                |
+| `examples/frontends/next/app/test/page.tsx` and/or components          | Migrate to `useResourceQuery` (Next only; respect gitignore for local scaffolding)                               |
 | `docs/context.md`, `docs/architecture.md`, `docs/roadmap.md` | Honesty when shipping                                                                                            |
 | `CHANGELOG.md`, `docs/story.md`                              | Ship notes                                                                                                       |
 | `packages/core/**`                                           | **No feature changes** unless a blocking type export is missing (prefer infer from public `ResourceClient` only) |

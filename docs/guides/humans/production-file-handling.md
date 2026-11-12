@@ -158,7 +158,7 @@ You are responsible for:
 - **Server-side idempotency.** Apixa sends a stable `Idempotency-Key` per part for replay-safe
   protocols; honoring it is the backend's job.
 
-Recipe and protocol shape: [Advanced transfers](../../../packages/core/README.md#advanced-transfers-v170-unreleased).
+Recipe and protocol shape: [Advanced transfers](../../../packages/core/README.md#advanced-transfers-v170).
 
 ## 6. Presigned URLs and S3-compatible uploads
 
@@ -169,7 +169,7 @@ Backend-issued, temporary destinations only; signing and secrets stay on your se
   `[presigned destination]` in errors and logs (the signed query string is never exposed).
 - An S3-compatible multipart upload is a **multi-request session protocol** (initiate, presigned
   part URLs, ETags, complete), not HTTP `multipart/form-data`. The tracked
-  [S3 recipe](../../../examples/query-ssr-next/lib/advanced-transfer.ts) needs no AWS SDK. CORS must
+  [S3 recipe](../../../examples/frontends/query-ssr-next/lib/advanced-transfer.ts) needs no AWS SDK. CORS must
   expose `ETag`; expired URLs are renewed through the protocol's `renew` step.
 
 ## 7. Resource ownership and cleanup (checklist)

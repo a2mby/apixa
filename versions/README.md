@@ -20,62 +20,39 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-**[v1.8.1](./v1.8.1/)** — Laravel Real-World Backend Playground. Environment-only implementation under issue #107: independent Composer/Laravel project, native PostgreSQL, empty API routing, CORS, storage and isolated test/E2E/production configuration. No SDK/package-version change or npm release.
+**[v1.8.1](./v1.8.1/)** — Laravel Real-World Backend Playground. Environment-only implementation under issue #107: independent Composer/Laravel project, native PostgreSQL, MongoDB documents, empty API routing, CORS, storage and isolated test/E2E/production configuration. No SDK/package-version change or npm release. HTTP manual-test cases stay blocked until the author adds application endpoints.
 
-Previous: **[v1.8.0](./v1.8.0/)** — File Lifecycle, Performance & Production Hardening (Advanced File Handling,
-phase 9, the final phase). **G1 and the three owner decisions approved; implemented and locally verified under issue #105 (`pnpm verify` exit 0, 151 files / 1,600 tests); merged as PR #106 (`b0cf6b4`), CI Node 22/24 green; G4 owner sign-off is not inferred.**
-A hardening milestone: 23 findings plus V1, M1 and R1 dispositioned (7 defects fixed: secure redirects, abort-vs-completion, renew/reconcile race,
-quadratic checkpointing, mock path scan, shared-reference validation, dataset path escape), H1–H14 locked. No new feature family, public API, package or dependency without owner approval; no npm release.
+## Milestone status
 
-Previous: **[v1.7.0](./v1.7.0/)** — Large Files & Advanced Transfers (phase 8). Implemented and
-verified under issue #103 (PR #104 squash `03fde16`, CI Node 22/24 green); precise API owner-approved
-2026-11-10, owner sign-off recorded 2026-11-11. Explicit optional chunk/session strategies,
-protocol-supported resumability, bounded parallelism, checkpoints, safe retries, integrity and
-presigned security; no npm release.
+A merged milestone is not an npm release. "Owner sign-off" is recorded only when the owner states it;
+an unchecked frozen box is not inferred as passed.
 
-Earlier: **[v1.6.0](./v1.6.0/)** — Advanced Framework & Consumer Integration (phase 7).
-Implemented, verified (`pnpm verify`) and merged (PR #102); owner sign-off remains open. Packed
-React 18/19 runtime coverage and tracked Next `/files` now supply the later evidence for earlier
-coverage gaps. The frozen final CI checkbox remains unchecked; no shipped status is inferred.
-
-Previous: **[v1.5.0](./v1.5.0/)** — Advanced Mock File Storage (phase 6). Completed and verified
-(`pnpm verify`); owner sign-off recorded 2026-11-09.
-
-Earlier: **[v1.4.0](./v1.4.0/)** — File Validation, Middleware & Safety (phase 5).
-Merged and verified (`pnpm verify`); **owner sign-off remains open**. Its frozen coverage
-checkboxes remain unchanged; v1.6.0 supplies later React 18 runtime and tracked Next/browser evidence.
-Not declared shipped.
-
-Earlier: **[v1.3.0](./v1.3.0/)** — File Transfer Progress, Streaming & Reliability (phase 4). Merged
-to `main`; **owner sign-off is still open**.
-
-Earlier: **[v1.2.0](./v1.2.0/)** — File Downloads & Binary Responses (phase 3). Merged to `main`;
-**owner sign-off is still open**.
-
-Earlier: **[v1.1.0](./v1.1.0/)** — Advanced File Handling, phase 1 (file fields, multipart, mock
-file store). Merged to `main`; **owner sign-off is still open**.
-
-Earlier: **[v1.0.0](./v1.0.0/)** — release candidate only (`apixa@1.0.0-rc.0` is published; v1.0.0
-is **not** declared stable). Its folder stays as the contract for that line.
-
-## Completed
-
-| Version | Status                                                                                       | Path                   |
-| ------- | -------------------------------------------------------------------------------------------- | ---------------------- |
-| v1.7.0  | Completed and owner-signed-off 2026-11-11 — Large Files & Advanced Transfers; no npm release | [v1.7.0/](./v1.7.0/)   |
-| v1.5.0  | Completed and owner-approved — Advanced Mock File Storage; no npm release                    | [v1.5.0/](./v1.5.0/)   |
-| v0.11.0 | Shipped — Harden v0.10.0 (`ParseError`, single retry decision, `useResourceMutation`)        | [v0.11.0/](./v0.11.0/) |
-| v0.10.0 | Shipped — Fully customizable resource operations, plus 11 always-on builtins                 | [v0.10.0/](./v0.10.0/) |
-| v0.9.0  | Shipped — Flatten Core mock syntax (`mock: "<dataset-id>"`)                                  | [v0.9.0/](./v0.9.0/)   |
-| v0.8.0  | Shipped — Unified TanStack Query resource integration (`useResourceQuery`)                   | [v0.8.0/](./v0.8.0/)   |
-| v0.7.0  | Shipped — Thin Core + plugin seams (types, middleware, errors)                               | [v0.7.0/](./v0.7.0/)   |
-| v0.6.0  | Shipped — Core request reliability (abort, retries, thin middleware)                         | [v0.6.0/](./v0.6.0/)   |
-| v0.5.0  | Shipped — Simple Mocking + local datasets + remove backend                                   | [v0.5.0/](./v0.5.0/)   |
-| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing                                          | [v0.4.0/](./v0.4.0/)   |
-| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)                                            | [v0.3.0/](./v0.3.0/)   |
-| v0.2.0  | Shipped — default-first resource CRUD                                                        | [v0.2.0/](./v0.2.0/)   |
-| v0.1.0  | Shipped — opt-in operations foundation                                                       | [v0.1.0/](./v0.1.0/)   |
+| Version | Status                                                                                | Topic                                                |
+| ------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| v1.8.1  | Active — environment verified locally; PR CI and owner sign-off remain delivery gates | Laravel/PostgreSQL/MongoDB playground                |
+| v1.8.0  | Merged as PR #106 (`b0cf6b4`); CI Node 22/24 green; owner final sign-off not inferred | File lifecycle, performance and production hardening |
+| v1.7.0  | Completed, verified, merged as PR #104; owner-signed-off 2026-11-11                   | Large files and advanced transfers                   |
+| v1.6.0  | Implemented and verified; merged as PR #102; owner sign-off open                      | Advanced framework and consumer integration          |
+| v1.5.0  | Completed and verified (`pnpm verify`); owner-signed-off 2026-11-09                   | Advanced mock file storage                           |
+| v1.4.0  | Merged and verified; owner sign-off open                                              | File validation, middleware and safety               |
+| v1.3.0  | Merged; owner sign-off open                                                           | Transfer progress, streaming and reliability         |
+| v1.2.0  | Merged; owner sign-off open                                                           | Downloads and binary responses                       |
+| v1.1.0  | Implemented, verified and merged; owner sign-off open                                 | Advanced file handling, phase 1                      |
+| v1.0.0  | Release candidate only — `apixa@1.0.0-rc.0` is published; stable `1.0.0` not declared | Query/mutation DX and single-package distribution    |
+| v0.11.0 | Shipped — `ParseError`, single retry decision, `useResourceMutation`                  | Harden v0.10.0                                       |
+| v0.10.0 | Shipped — fully customizable operations, sixteen builtins                             | Operation customization                              |
+| v0.9.0  | Shipped — flat resource mock configuration                                            | Mock syntax                                          |
+| v0.8.0  | Shipped — unified TanStack Query resource integration                                 | React integration                                    |
+| v0.7.0  | Shipped — thin Core, plugin seams, raw bodies and retry hooks                         | Core seams                                           |
+| v0.6.0  | Shipped — abort, retries, timeouts, thin middleware                                   | Reliability                                          |
+| v0.5.0  | Shipped — local datasets and `@apixa/mocking`; backend removed                        | Mocking foundation                                   |
+| v0.4.0  | Shipped — entity-only `defineApi<T>()` state typing                                   | State typing                                         |
+| v0.3.0  | Shipped — `type<T>()` markers (removed in v0.4.0)                                     | Historical typing                                    |
+| v0.2.0  | Shipped — default-first resource CRUD                                                 | Default operations                                   |
+| v0.1.0  | Shipped — opt-in operations foundation                                                | Foundation                                           |
 
 ## Later (roadmap only)
 
-Schema hooks, env packages, and remaining integrations stay in [`docs/roadmap.md`](../docs/roadmap.md) until each milestone starts.
+Schema hooks, Vue/Angular adapters, authenticated/provider storage, ranged downloads, OpenAPI and
+other future work stay in [`docs/roadmap.md`](../docs/roadmap.md) until each milestone starts.
+Do not create those folders in advance.

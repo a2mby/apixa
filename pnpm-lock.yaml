@@ -54,7 +54,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.33.0)(sass@1.85.0)(terser@5.51.2)(tsx@4.23.15)
 
-  examples/angular:
+  examples/frontends/angular:
     dependencies:
       '@angular/common':
         specifier: ^19.2.14
@@ -76,7 +76,7 @@ importers:
         version: 19.2.25(@angular/common@19.2.25(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/compiler@19.2.25)(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@19.2.25(@angular/common@19.2.25(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.15.1)))
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
       rxjs:
         specifier: ~7.8.2
         version: 7.8.2
@@ -100,14 +100,14 @@ importers:
         specifier: ~5.8.2
         version: 5.8.3
 
-  examples/basic:
+  examples/frontends/basic:
     dependencies:
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
       '@apixa/mocking':
         specifier: workspace:*
-        version: link:../../packages/mocking
+        version: link:../../../packages/mocking
     devDependencies:
       '@types/node':
         specifier: ^22.13.10
@@ -119,17 +119,17 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
-  examples/next:
+  examples/frontends/next:
     dependencies:
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
       '@apixa/mocking':
         specifier: workspace:*
-        version: link:../../packages/mocking
+        version: link:../../../packages/mocking
       '@apixa/react':
         specifier: workspace:*
-        version: link:../../packages/react
+        version: link:../../../packages/react
       '@tanstack/react-query':
         specifier: ^5.104.4
         version: 5.104.4(@types/react@19.3.0)(react@19.3.0)
@@ -165,17 +165,17 @@ importers:
         specifier: ^5.8.2
         version: 5.8.3
 
-  examples/query-ssr-next:
+  examples/frontends/query-ssr-next:
     dependencies:
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
       '@apixa/mocking':
         specifier: workspace:*
-        version: link:../../packages/mocking
+        version: link:../../../packages/mocking
       '@apixa/react':
         specifier: workspace:*
-        version: link:../../packages/react
+        version: link:../../../packages/react
       '@tanstack/react-query':
         specifier: ^5.104.4
         version: 5.104.4(@types/react@19.3.0)(react@19.3.0)
@@ -202,11 +202,11 @@ importers:
         specifier: ^5.8.2
         version: 5.8.3
 
-  examples/react-native:
+  examples/frontends/react-native:
     dependencies:
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
       expo:
         specifier: ~52.0.46
         version: 52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(encoding@0.1.13)(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -230,11 +230,11 @@ importers:
         specifier: ^5.8.2
         version: 5.8.3
 
-  examples/react-vite:
+  examples/frontends/react-vite:
     dependencies:
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
       react:
         specifier: ^19.1.1
         version: 19.3.0
@@ -258,11 +258,11 @@ importers:
         specifier: ^6.3.5
         version: 6.4.4(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(sass@1.85.0)(terser@5.51.2)(tsx@4.23.15)
 
-  examples/vanilla:
+  examples/frontends/vanilla:
     dependencies:
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
     devDependencies:
       typescript:
         specifier: ^5.8.2
@@ -271,11 +271,11 @@ importers:
         specifier: ^6.3.5
         version: 6.4.4(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(sass@1.85.0)(terser@5.51.2)(tsx@4.23.15)
 
-  examples/vue:
+  examples/frontends/vue:
     dependencies:
       '@apixa/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../../packages/core
       vue:
         specifier: ^3.5.21
         version: 3.5.43(typescript@5.8.3)

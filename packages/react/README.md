@@ -58,7 +58,7 @@ client. Verified on React 18.3.1 (TanStack 5.90.1) and React 19 against the pack
 - **Next.js.** `dehydrate()` (from `apixa/react/advanced`) leaves out queries whose data is a `Blob`, `File`,
   `ArrayBuffer` or `ReadableStream` (a stream is single-use, bytes would bloat the page payload, and React 18 / older
   Next cannot serialize them); the client fetches those itself. A Server Component may read a binary result and pass
-  only plain values down. See `examples/query-ssr-next` (`/files`).
+  only plain values down. See `examples/frontends/query-ssr-next` (`/files`).
 
 ### `ApixaProvider` and `QueryClient`
 
@@ -357,7 +357,7 @@ Client components call the hooks with the same `queryKey` (and the same `infinit
 a shared module) under `ApixaProvider` (or `QueryClientProvider`); with a `staleTime` the hydrated data is used without
 an immediate refetch. The advanced entry is hook-free and server-safe; the main entry keeps
 `"use client"`. Native `queryClient.prefetchQuery(createResourceQueryOptions(...))` remains the
-escape hatch. A [working example](../../examples/query-ssr-next/) includes a production build.
+escape hatch. A [working example](../../examples/frontends/query-ssr-next/) includes a production build.
 
 ## Cancellation, retries, and errors
 
@@ -533,7 +533,7 @@ controllers. Conventional `createOptions`, `updateOptions`, and `deleteOptions` 
 argument tuples as mutation variables. For example, `mutateAsync([id, body])` for `update`. The advanced entry also exports `ResourceMutationStore`,
 `applyInvalidation`, and `describeOperations` for custom integrations.
 
-## Query and mutation DX additions (unreleased)
+## Query and mutation DX additions (v1.0.0 release candidate; implemented)
 
 Runtime-verified with React 18.3.1 and 19.1.1 against `@tanstack/react-query` 5.90.1 (the peer
 minimum) and 5.106.1; SSR hydration verified in Chromium with Next.js 15.5.
@@ -606,7 +606,7 @@ After building, run `node scripts/query-performance.mjs [iterations]` from the r
 
 The advanced create and update helpers invalidate by default. Pass a mapping function only when the response contains a complete entity: `(response) => ({ id: response.userId, entity: response })`. This supports custom identifier fields and avoids treating acknowledgments or partial responses as complete records. Delete removes the detail and invalidates lists.
 
-### Advanced file transfers (v1.7.0, unreleased)
+### Advanced file transfers (v1.7.0; implemented, not npm-published)
 
 Existing `useResourceMutation` and `useResource` writes call configured Core transfer operations
 and keep their inferred native Promise results. Pass `transfer: { control, checkpoint, onSession,
@@ -614,7 +614,7 @@ saveCheckpoint }` in the operation's normal call options. UI progress and durabl
 to the application; there is no new transfer hook. `onTransfer` still describes individual request
 attempts. Invalidate after final confirmed success; do not configure whole-mutation retry to blindly
 create a new upload session. Interrupted work resumes with a reacquired source and a checkpoint,
-which Core reconciles with the server. See the [tracked Next example](../../examples/query-ssr-next/app/files/advanced-transfers.tsx).
+which Core reconciles with the server. See the [tracked Next example](../../examples/frontends/query-ssr-next/app/files/advanced-transfers.tsx).
 
 Controls/callbacks are excluded from automatic query identities. Presigned downloads through queries
 require explicit nonsecret `keyParts`; never use the signed URL as a cache key or SSR prop. Existing

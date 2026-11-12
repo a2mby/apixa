@@ -11,12 +11,17 @@ coverage
 .vite
 /.vscode
 
-# Examples are local except the maintained Next app and standalone Laravel backend.
+# Examples are local except the maintained Next app, the standalone Laravel backend,
+# and the empty starter-template placeholders.
 examples/**
-!examples/query-ssr-next/
-!examples/query-ssr-next/**
-!examples/laravel-backend/
-!examples/laravel-backend/**
+!examples/backends/
+!examples/backends/laravel-backend/
+!examples/backends/laravel-backend/**
+!examples/frontends/
+!examples/frontends/query-ssr-next/
+!examples/frontends/query-ssr-next/**
+!examples/templates/
+!examples/templates/**
 
 # dataset build cache (re-fetched by scripts/datasets/build-collection.mjs)
 scripts/datasets/.cache/

@@ -2,6 +2,35 @@
 
 Project log. Newest entry first.
 
+## 2026-11-12 — Grouped examples and a direct Laravel launcher
+
+Regrouped `examples/` by role: `backends/laravel-backend/`, `frontends/query-ssr-next/` (maintained)
+and the local frontend playgrounds, plus empty tracked `templates/laravel`, `templates/next` and
+`templates/react` placeholders. Updated the pnpm workspace globs, `.gitignore`, tracking rules,
+verification scripts, docs and frozen milestone path references to the new locations. No example
+code or SDK behavior changed.
+
+Added `scripts/laravel/{macos,linux,win}` launchers and a shared helper. They check PHP, install
+Composer dependencies when `vendor/` is missing, create `.env` and an app key when needed, then run
+`php artisan serve --host=127.0.0.1 --port=8000 --no-reload` with optional `LARAVEL_HOST`,
+`LARAVEL_PORT` and `LARAVEL_ENV` overrides. Database provisioning and migrations remain manual.
+
+## 2026-11-12 — Documentation audit: one living structure
+
+Removed two stale documentation sets: the 18-version `docs/apixa-backlog-versions/` catalog (several
+proposals had shipped under v1.x numbering) and the v0.10-era `docs/study-guide.md`. The release
+guide moved to `docs/guides/humans/publish-a-release.md`, and the owner-supplied
+`publish-library` workflow became a canonical `.agents/skills/publish-library/` skill; publishing
+now targets the `latest` dist-tag (`package.json`, `verify-publish-readiness.mjs`). Corrected
+published-state claims (`apixa@1.0.0-rc.0` is live on npm `latest` and `next`), rewrote the
+roadmap and version status tables around v1.8.1, and refreshed `README`, `docs/context.md`,
+`docs/architecture.md`, `docs/external-context.md`, `docs/public-api.md`, `tests/README.md`,
+`CONTRIBUTING.md` and the agent guides. No SDK behavior, public export or milestone contract changed.
+
+## 2026-11-12 — Provider-independent AI configuration
+
+Shared engineering rules now live under `.ai/rules/`, with seven reusable workflows in real `.agents/skills/` directories and four shared role definitions. Repository-local synchronization generates Cursor, Codex, Claude Code, Gemini CLI and OpenCode adapters while preserving native settings and hooks; conditional rule metadata is retained instead of flattened by the former generator. Automated migration and filesystem-safety checks accompany the adapters; runtime discovery evidence and provider limitations are recorded in `.ai/README.md`.
+
 ## 2026-11-11 — v1.8.1 Laravel/PostgreSQL environment verified locally
 
 The independent Laravel 13.42.0 backend boots on PHP 8.4 with native PostgreSQL 16, empty API routing, configurable built-in CORS and private local storage. All three default migrations ran on the new development database; separate test/E2E connections, four HTTP workers, real health/preflight requests, storage cleanup, two default framework tests and a clean production dependency/cache setup were verified. `pnpm verify` passes unchanged (151 files / 1,600 tests, 62/62 type consumers, Chromium and both edge runtimes). No application behavior, SDK integration, package-version change or deployment was added; PR CI and owner sign-off remain delivery gates.
@@ -255,7 +284,7 @@ grew to match the claims: public exports are checked against declarations and a 
 example runs in real Chromium, and the packed facade runs in `workerd` and the Vercel Edge Runtime.
 The architecture checker's failure detection is tested. The `@apixa` npm scope is owned by a different
 npm user than the one logged in here, so publishing `@apixa/*` is blocked until that is resolved; see
-[the release guide](./guides/humans/publish-a-release-candidate.md). Nothing was published.
+[the release guide](./guides/humans/publish-a-release.md). Nothing was published.
 
 ## 2026-11-07 — `apixa` facade and `@apixa/react` (Phase 2)
 
@@ -408,7 +437,9 @@ remains open per acceptance criteria.
 Checked in the planning-only tree at `docs/apixa-backlog-versions/` — eighteen proposed
 milestones (`v0.12.0`–`v0.29.0`) with context/scope/plan/acceptance drafts, kept outside
 `versions/` so none become an active coding contract until `/start-version`. Index at
-`docs/apixa-backlog-versions/backlog/README.md`; roadmap links to it for later work.
+`docs/apixa-backlog-versions/backlog/README.md`; roadmap links to it for later work. (The catalog
+was removed on 2026-11-12 because several proposals shipped under v1.x numbering; git history keeps
+the drafts.)
 
 ## 2026-11-04 — Complete the defineApi architecture: resources, defineApis, client-scoped mocking (#58)
 
@@ -442,7 +473,8 @@ operation-path protection, mock ID filtering, and TanStack support for partially
 Closed the stacked post-v0.10 hardening that had to wait for a separate issue: `ParseError` on
 malformed declared-JSON bodies, a single `decideRetry` per failed attempt, and
 `useResourceMutation` for builtins/custom ops outside `useResourceQuery`. Froze
-`versions/v0.11.0/` and added `docs/study-guide.md`. Several acceptance items (mock store clone,
+`versions/v0.11.0/` and added `docs/study-guide.md` (removed on 2026-11-12 as a stale v0.10-era
+snapshot; see git history). Several acceptance items (mock store clone,
 extended mock routes, `readOnly` / pagination typing, path validation, composed-builtin delegation)
 had already shipped inside the v0.10.0 land via shared files — this issue documents that and lands
 the remaining dedicated pieces.

@@ -499,7 +499,7 @@ caller checkpoints. Subsequent batch evidence is recorded in acceptance criteria
   `app/api/transfers/[...path]/route.ts`. Local tsconfig public-import aliases point at existing
   workspace package directories; packed consumers have no such packages and resolve the tarball.
 - Additional touches: `packages/core/src/types/inference.ts`, `packages/react/src/query-options.ts`,
-  `examples/query-ssr-next/tsconfig.json`, its README, the two existing script fixture modules above.
+  `examples/frontends/query-ssr-next/tsconfig.json`, its README, the two existing script fixture modules above.
   These narrow additions follow test-proven typing/identity and consumer needs, not broad redesign.
 
 - Additional regressions reproduce and fix signed tokens in already-materialized error stacks,
@@ -630,7 +630,7 @@ Paths below exist unless marked proposed. Keep the smallest change set proven by
 | `tests/core/advanced-transfer-*.test.ts`, `tests/helpers/` (proposed)                                                                                                          | State/scheduler/recovery/security/integrity/types tests and independent protocol simulator.                                                                    |
 | `tests/react/framework-files-*.test.tsx`, `tests/facade/`                                                                                                                      | Advanced operation integration and stable existing public surfaces.                                                                                            |
 | `scripts/file-consumer-runtime.mjs`, `scripts/verify-react-consumers.mjs`, `verify-type-consumers.mjs`, `verify-unified-consumer.mjs`, `verify-browser.mjs`, `verify-edge.mjs` | Extend existing packed/runtime matrices, no parallel verification toolchain.                                                                                   |
-| `examples/query-ssr-next/app/files/`, associated routes/lib                                                                                                                    | Tracked deterministic transfer/recovery demonstration through public `apixa` imports.                                                                          |
+| `examples/frontends/query-ssr-next/app/files/`, associated routes/lib                                                                                                                    | Tracked deterministic transfer/recovery demonstration through public `apixa` imports.                                                                          |
 | `packages/core/README.md`, `packages/react/README.md`, `README.md`, `docs/architecture.md`, `docs/public-api.md`, `docs/story.md`, roadmap/pointers                            | Implemented recipes, security boundaries, runtime evidence and milestone status.                                                                               |
 | `tests/facade/public-exports.snapshot.json`                                                                                                                                    | Generated only after an approved actual export change, using `node scripts/verify-public-api.mjs --update`; never hand-edit.                                   |
 

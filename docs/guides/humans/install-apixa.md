@@ -1,6 +1,6 @@
 # Install and choose an entry point
 
-The prepared RC is `apixa@1.0.0-rc.0`; it has not yet been published. Once available:
+The published release candidate is `apixa@1.0.0-rc.0` (npm `latest` and `next`). Install it with:
 
 ```sh
 npm install apixa
