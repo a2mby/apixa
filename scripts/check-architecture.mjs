@@ -491,8 +491,8 @@ for (const [file, { pkg }] of graph) {
   if (m.type !== "module" || m.engines?.node !== ">=22")
     fail("release", "apixa must be ESM, Node >=22");
   if (!m.files?.includes("dist")) fail("release", "apixa must publish dist");
-  if (m.publishConfig?.tag !== "next" || m.publishConfig?.access !== "public")
-    fail("release", "RC must use public access and next tag");
+  if (m.publishConfig?.tag !== "latest" || m.publishConfig?.access !== "public")
+    fail("release", "root package must use public access and the latest tag");
   for (const group of [
     "dependencies",
     "optionalDependencies",

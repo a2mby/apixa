@@ -1,0 +1,162 @@
+[
+  {
+    "id": "39f6bd16-a05d-5261-a276-265590cc200d",
+    "workspace_id": "ws-2",
+    "label": "UUID 1",
+    "value": 1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "75091613-3411-5084-a33b-f3f5632bd5c3",
+    "workspace_id": "ws-1",
+    "label": "UUID 2",
+    "value": 2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "f73dd1b8-49b1-5c55-bcd2-1ebe3ff9afd9",
+    "workspace_id": "ws-2",
+    "label": "UUID 3",
+    "value": 3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "d8b56b97-2f8c-53dc-9e90-2ce99b15d509",
+    "workspace_id": "ws-1",
+    "label": "UUID 4",
+    "value": 4,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "c02041e4-41ba-5b1e-9e4e-ea7bd1499a74",
+    "workspace_id": "ws-2",
+    "label": "UUID 5",
+    "value": 5,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "7fcddf9b-51b9-5bfc-af60-04247747ebe0",
+    "workspace_id": "ws-1",
+    "label": "UUID 6",
+    "value": 6,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "ded8203a-43ac-5982-a9a0-7617f52a96f9",
+    "workspace_id": "ws-2",
+    "label": "UUID 7",
+    "value": 7,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "9a94ecb8-30ca-5b8c-ac2e-c96788d529a5",
+    "workspace_id": "ws-1",
+    "label": "UUID 8",
+    "value": 8,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "00bcd6ed-a70c-504d-858f-3805c65fa163",
+    "workspace_id": "ws-2",
+    "label": "UUID 9",
+    "value": 9,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "69dfe3b4-c80b-5a02-84db-ab9fa48202e7",
+    "workspace_id": "ws-1",
+    "label": "UUID 10",
+    "value": 10,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "eba1917f-232a-547d-8239-fc9af6950708",
+    "workspace_id": "ws-2",
+    "label": "UUID 11",
+    "value": 11,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "58bd16d2-5627-54e8-b0a7-2e73d8ddcf25",
+    "workspace_id": "ws-1",
+    "label": "UUID 12",
+    "value": 12,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "be218bcd-c4c4-5240-8624-2d086b13396e",
+    "workspace_id": "ws-2",
+    "label": "UUID 13",
+    "value": 13,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "da83c2c2-5d9f-536d-a097-565d5f91949a",
+    "workspace_id": "ws-1",
+    "label": "UUID 14",
+    "value": 14,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "0e360d95-e213-5913-b2db-5d0213857aa4",
+    "workspace_id": "ws-2",
+    "label": "UUID 15",
+    "value": 15,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "f032a3a8-e9e5-53f7-bf03-0098df188a32",
+    "workspace_id": "ws-1",
+    "label": "UUID 16",
+    "value": 16,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "2744fa58-26e8-51f7-b38f-8e6abb191a0d",
+    "workspace_id": "ws-2",
+    "label": "UUID 17",
+    "value": 17,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "1c9bb418-869a-530d-afc4-e1e5a4d96f47",
+    "workspace_id": "ws-1",
+    "label": "UUID 18",
+    "value": 18,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "aeff2ded-2e17-50bd-bd8e-5fa2b4ecb771",
+    "workspace_id": "ws-2",
+    "label": "UUID 19",
+    "value": 19,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "cd5516e7-7eca-5f87-9791-30e6f4d860f3",
+    "workspace_id": "ws-1",
+    "label": "UUID 20",
+    "value": 20,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  }
+]

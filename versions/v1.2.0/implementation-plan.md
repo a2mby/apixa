@@ -88,7 +88,7 @@ before batch 4, because the mock download reads that store. Batches 0–3 do not
    results, no `any`.
 7. **Packed consumers and runtimes.** Extend `verify-type-consumers.mjs` fixtures (core-only and
    React, typed `Blob`) and `verify-unified-consumer.mjs` (runtime); edge scripts for Vercel Edge
-   and workerd with a faked `Response`; `examples/next` download scenario driven in Chromium;
+   and workerd with a faked `Response`; `examples/frontends/next` download scenario driven in Chromium;
    Next SSR check.
 8. **Docs and close.** `docs/architecture.md`, `docs/public-api.md`, README, Core README,
    `docs/story.md`, `docs/roadmap.md`; `pnpm verify`; `graphify update .`; tick acceptance
@@ -130,7 +130,7 @@ stop and report instead of widening scope.
 - `packages/mocking/src/index.ts`, `src/index.ts`, `tests/facade/*`
 - `tests/core/*`, `tests/mocking/*` (if needed), `tests/react/*`
 - `scripts/{verify-type-consumers,verify-unified-consumer,verify-edge}.mjs`, `scripts/lib/*`
-- `docs/{architecture,public-api,roadmap,story,context}.md`, README, Core README, `examples/next`
+- `docs/{architecture,public-api,roadmap,story,context}.md`, README, Core README, `examples/frontends/next`
 
 ## Explicit non-steps
 

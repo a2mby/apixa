@@ -98,7 +98,7 @@ and direct inferred forms remain supported. Root builtins (`baseURL`, `headers` 
 `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core. Call options
 support `signal` / `timeout`; opt-in `retry` and thin `middleware` shipped in v0.6.0.
 Writes may opt into `idempotency` (`true` or `{ header, generate }`): one key per call,
-reused by Core retries and middleware replay (v1.0.0 workstream, unreleased).
+reused by Core retries and middleware replay (implemented in the v1.0.0 release candidate).
 
 **Implemented (v0.10.0):** `operations` accepts a config object, a function, or `false` per key —
 add, remove, or override any operation, on both `defineApi` and `@apixa/mocking` resources. 11 new
@@ -156,7 +156,7 @@ useMutation({
 });
 ```
 
-**Implemented (v1.0.0 workstream, unreleased):** optional `apixa/react` (TanStack Query inside) with three
+**Implemented (v1.0.0 release candidate, published as `apixa@1.0.0-rc.0`):** optional `apixa/react` (TanStack Query inside) with three
 hooks — `useResourceQuery` (reads), `useResourceMutation` (writes), and the
 `useResource` facade:
 
@@ -187,42 +187,39 @@ Core must not implement its own caching or state-management system just to suppo
 
 **Dependency direction:** Integrations depend on Core. Core never depends on integrations.
 
-## 7. Intended Workspace Structure
+## 7. Workspace Structure
 
-The planned repository structure is:
+The current repository structure is:
 
 ```text
+src/                       # the single public `apixa` facade (re-exports only)
 packages/
-  core/
-  transport-fetch/
-  client/
-  server/
-  mocking/
-  react/
-  internal/shared/   # private, never published
-  openapi/
-
+  core/                    # implemented: definitions, operations, request pipeline
+  mocking/                 # implemented: datasets, mock engine adapter, Node loaders
+  react/                   # implemented: optional React/TanStack Query integration
+  internal/shared/         # implemented, private, never published
 examples/
-  basic/
-
-README.md
-LICENSE
-package.json
-pnpm-workspace.yaml
-tsconfig.json
+  backends/
+    laravel-backend/       # independent Laravel/PostgreSQL/MongoDB playground (environment only)
+  frontends/
+    query-ssr-next/        # maintained Next.js App Router example (verified by pnpm verify)
+    next/                  # local, untracked Next.js playground
+  templates/               # empty laravel/next/react starter placeholders
+docs/                      # living docs
+versions/                  # frozen milestone contracts (v0.1.0 ... v1.8.1)
+.ai/, .agents/             # canonical AI rules, roles and skills
+scripts/, tests/, datasets/
 ```
 
 The intended responsibilities are:
 
-- `core`: API definitions, type inference, operation generation, and execution.
-- `transport-fetch`: Fetch transport implementation, if separation proves useful.
-- `client`: Browser-specific configuration and behavior.
-- `server`: Server-specific configuration and behavior.
-- `mocking`: **Implemented (redesigned in #58)** — resource `mock` is a data source (`"<dataset-id>"`, inline records, a provider, or `{ data, idKey, seed }`) executed by Core's client-scoped engine; `@apixa/mocking` ships lazily loaded dataset records (one module per synthetic set under `apixa/mocking/datasets/<name>`) and `defineMockApi()` on the same engine, with Core as a private build dependency. A declarative custom operation on a mock runs its own inline `mock` handler, or fails with `MOCK_UNSUPPORTED` when it has none; builtins and function operations are simulated by Core. See ADR 003.
-- `react`: **Implemented** — `@apixa/react`, the optional React integration (hooks, `ApixaProvider`, `QueryClient`, hydration); TanStack Query is its engine, not its public name.
+- `core`: API definitions, type inference, operation generation, execution, the client-scoped mock engine, file validation, streaming and advanced transfers.
+- `mocking`: built-in datasets, lazy registration, the standalone `defineMockApi()` adapter and Node filesystem loaders. It depends on Core; Core never imports it.
+- `react`: **Implemented** — `apixa/react`, the optional React integration (hooks, `ApixaProvider`, `QueryClient`, hydration, framework file handling); TanStack Query is its engine, not its public name.
 - `internal/shared`: **Implemented, private** — framework-neutral integration helpers bundled into integrations, never published.
+- `mocking` is an explicit, client-scoped branch of the one execution pipeline (ADR 003): resource `mock` is a data source (`"<dataset-id>"`, inline records, a provider, or `{ data, idKey, seed }`) executed by Core's client-scoped engine. A declarative custom operation on a mock runs its own inline `mock` handler, or fails with `MOCK_UNSUPPORTED` when it has none; builtins and function operations are simulated by Core. `defineMockApi()` uses the same engine.
 - The root `apixa` package is the only npm publication. Its facade compiles private Core, Mocking, React and shared sources into one code-split distribution; React peers remain optional. All workspace implementation modules are private.
-- `openapi`: OpenAPI interoperability (planned).
+- `transport-fetch`, `client`, `server` and `openapi`: **not implemented**. Fetch stays inside Core until an ADR and milestone say otherwise.
 
 Do not prematurely implement remaining packages or introduce unnecessary cross-package dependencies.
 
@@ -248,7 +245,7 @@ Each folder owns one concern; keep modules short. Avoid speculative abstractions
 
 ## 9. Future Roadmap
 
-### Foundation
+### Implemented (historical foundation)
 
 - API and resource definitions.
 - Configurable generated operations.
@@ -257,23 +254,24 @@ Each folder owns one concern; keep modules short. Avoid speculative abstractions
 - Headers and request customization.
 - Response parsing and standardized errors.
 - Basic example.
+- Cancellation, timeouts, retries and middleware (v0.6.0).
+- Mocking and local datasets (v0.5.0, redesigned in v0.9.0/v1.0.0).
+- TanStack Query integration through `apixa/react` (v1.0.0 release candidate).
+- File uploads, downloads, progress, streaming, validation, mock storage, framework files and advanced transfers (v1.1.0–v1.7.0).
+- Security and lifecycle hardening (v1.8.0).
 
 ### Reliability and developer experience
 
-- Cancellation and `AbortSignal` (**implemented** — v0.6.0).
-- Timeouts and configurable retries (**implemented** — v0.6.0).
-- Middleware and interceptors (**implemented** thin surface — v0.6.0).
 - Optional schema validation (planned).
-- Mocking and contract tests (**implemented** — v0.5.0).
-- Pagination, filtering, sorting, and search conventions (planned for live API).
+- Live pagination, filtering, sorting and search conventions beyond the current opt-in pagination envelope (planned).
+- Ranged/resumable downloads (planned; streamed downloads exist).
 
 ### Environment and integrations
 
-- Browser and server packages.
-- Secure server-only configuration.
-- TanStack Query integration.
-- Other data-fetching library integrations.
-- File uploads, downloads, and streaming where appropriate.
+- Browser and server packages (planned).
+- Secure server-only configuration (planned).
+- Other data-fetching library integrations (planned).
+- Vue/Angular and other framework adapters (planned).
 
 ### Advanced ecosystem
 
@@ -301,14 +299,18 @@ This roadmap describes possible future capabilities. Do not implement them all a
 
 ## 11. Immediate Objective
 
-Establish a minimal, scalable Core that proves the main idea:
+The active milestone is [v1.8.1](../versions/v1.8.1/): an independent Laravel/PostgreSQL/MongoDB
+playground with no application HTTP endpoints. It does not change the SDK. Day-to-day SDK work
+should follow the active milestone contract; when none is open, use the roadmap and open a new
+milestone with `/start-version` rather than inventing work.
 
-A developer defines a resource in a few lines, obtains a fully typed client, and executes real HTTP requests without manually implementing every repetitive request function.
+The original Core objective is met: a developer defines a resource in a few lines, obtains a fully
+typed client, and executes real HTTP requests without manually implementing every repetitive
+request function. Current work therefore protects that contract — API stability, correctness,
+documentation honesty and manual-test evidence — instead of adding speculative surface.
 
-The first milestone is a coherent `defineApi()` API, reliable generated operations, explicit customization, native Promise-based execution, and strong TypeScript inference.
-
-Before implementing, inspect the existing repository and its configuration. Preserve working setup, identify what already exists, and propose the smallest implementation plan consistent with this context.
-
-Do not start building future integrations before Core's API design is established.
+Before implementing, inspect the existing repository and its configuration. Preserve working setup,
+identify what already exists, and propose the smallest implementation plan consistent with this
+context. Do not start a new integration or package without an approved milestone.
 
 **Guiding principle: Define the API once. Let Apixa handle repetitive mechanics. Keep application-specific behavior explicit and customizable.**

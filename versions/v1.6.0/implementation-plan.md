@@ -15,8 +15,8 @@ classifies it (defect / documented limitation / non-issue) before anything is ch
 | Query functions bind `context.signal` at the options position (`withOptions(..., { signal })`); mutations have no TanStack signal                                                                                              | Cancellation of an upload through a mutation is the caller's `AbortController` in call options                                                                          |
 | Mutation `onSuccess` always `invalidateQueries({ queryKey: keys.all() })` for the resource unless `invalidate: false`; custom/flat ops use the same helper                                                                     | Broad by design; document scoped invalidation instead of changing it                                                                                                    |
 | `dehydrate` (`hydration.ts`) is a pass-through of TanStack's `dehydrate`                                                                                                                                                       | Whether binary/stream queries break the RSC boundary is the Batch 0/4 question                                                                                          |
-| `examples/**` is ignored except `examples/query-ssr-next`; `examples/next` (50 source files) lists `react-hook-form`; `pnpm-workspace.yaml` includes `examples/*` and `pnpm-lock.yaml` already has an `examples/next` importer | Tracking `examples/next` wholesale would drag an out-of-scope dependency and a lockfile change                                                                          |
-| `AGENTS.md` (generated from `.cursor/rules/*.mdc`) calls `examples/next` the only maintained example                                                                                                                           | If the example lives elsewhere (O1), the rule must be updated at its source and regenerated                                                                             |
+| `examples/**` is ignored except `examples/frontends/query-ssr-next`; `examples/frontends/next` (50 source files) lists `react-hook-form`; `pnpm-workspace.yaml` includes `examples/*` and `pnpm-lock.yaml` already has an `examples/frontends/next` importer | Tracking `examples/frontends/next` wholesale would drag an out-of-scope dependency and a lockfile change                                                                          |
+| `AGENTS.md` (generated from `.cursor/rules/*.mdc`) calls `examples/frontends/next` the only maintained example                                                                                                                           | If the example lives elsewhere (O1), the rule must be updated at its source and regenerated                                                                             |
 | Custom transports that ignore `TransportRequest.onTransfer` yield `unsupported` events (v1.3.0); sized uploads are `unsupported` in browsers and workerd                                                                       | A documented platform limit that hooks inherit; test and document, do not "fix"                                                                                         |
 
 ## Findings to confirm in Batch 0 (classification pending)
@@ -66,17 +66,17 @@ Also found by the Chromium run: rendering `detectTransferSupport()` during SSR c
 | H6  | Invalidation                        | Keep resource-wide invalidation as the default; document `invalidate: false` + `cache` controller recipes for file-scoped invalidation; tests assert other resources are untouched. No change.                                                                                                      |
 | H7  | Errors                              | No new guard or type helper. Document `instanceof` narrowing with `ValidationError.violations`; test propagation through query `error`, mutation `error`/`states.*.error` and rejected promises, on both React versions.                                                                            |
 | H8  | React 18 runtime verification       | Execute a scenario script in the **packed** React 18.3.1 / TanStack 5.90.1 consumer (and 19) with jsdom and `@testing-library/react` as consumer-only devDependencies; share one scenario source between versions. Keep workspace tests on React 19.                                                |
-| H9  | Example placement (see O1)          | Recommend adding the file scenario to the tracked, CI-driven `examples/query-ssr-next` (new route(s) ported from the playground's `/test/files`, without `react-hook-form`), driven by `verify-browser.mjs`; update the example rule in `.cursor/rules` and regenerate `AGENTS.md`.                 |
+| H9  | Example placement (see O1)          | Recommend adding the file scenario to the tracked, CI-driven `examples/frontends/query-ssr-next` (new route(s) ported from the playground's `/test/files`, without `react-hook-form`), driven by `verify-browser.mjs`; update the example rule in `.cursor/rules` and regenerate `AGENTS.md`.                 |
 | H10 | Mock + hooks                        | Use the existing mocking entry through hooks; test fixtures, namespaces, validation and downloads with per-test `resetMock`; no mock changes.                                                                                                                                                       |
 | H11 | Custom-transport limits             | Document that hooks inherit `unsupported` transfer events from transports that ignore `onTransfer`; test with a custom transport through a hook.                                                                                                                                                    |
 | H12 | Runtime detection                   | Reuse `detectTransferSupport()`; the example shows reading it to adapt UI (no new helper).                                                                                                                                                                                                          |
 
 ### Owner decisions (escalate only these)
 
-- **O1 — Where the tracked example lives.** `AGENTS.md` names `examples/next` (ignored, local) as the
-  only maintained example; the only tracked CI-driven Next app is `examples/query-ssr-next`. Options:
+- **O1 — Where the tracked example lives.** `AGENTS.md` names `examples/frontends/next` (ignored, local) as the
+  only maintained example; the only tracked CI-driven Next app is `examples/frontends/query-ssr-next`. Options:
   (a) **recommended** add the scenario to `query-ssr-next` and update the rule; (b) allowlist
-  `examples/next` in `.gitignore` and track it (50 files, `react-hook-form`, lockfile importer change,
+  `examples/frontends/next` in `.gitignore` and track it (50 files, `react-hook-form`, lockfile importer change,
   Tailwind). Option (a) has the smaller blast radius and is already verified by `pnpm verify`.
 - **O2 — Any new public API** (a progress hook, an `isValidationError` guard, a `dehydrate` option).
   Default: none. Each needs a failing Batch 0 test and approval.
@@ -90,7 +90,7 @@ H6 resource-wide invalidation unchanged; the existing `invalidate` option (`"lis
 `false`) is the scoped recipe. H7 no guard/type helper; `instanceof` narrowing. H8 packed React 18.3.1 + TanStack
 5.90.1 and React 19 runtime scenarios (`scripts/file-consumer-runtime.mjs`, run by `verify-react-consumers.mjs`, which
 already executes a hook runtime) — no new devDependencies (React DOM `act` + jsdom). H9/O1 the tracked scenario lives
-in `examples/query-ssr-next` (`/files`), the example rule source `.cursor/rules/*.mdc` is updated and `AGENTS.md`
+in `examples/frontends/query-ssr-next` (`/files`), the example rule source `.cursor/rules/*.mdc` is updated and `AGENTS.md`
 regenerated with `scripts/sync-agent-rules.sh`. H10–H12 as recommended (no mock changes; documented transport limits;
 `detectTransferSupport()` reused, read after mount).
 
@@ -101,7 +101,7 @@ Deviations from the contract:
   `@testing-library/react` in the consumer).
 - `framework-files-types` is a `.test.tsx` (it renders hooks); the rest of the file names follow the plan.
 - `verify-edge.mjs` is unchanged (no React hooks run there); it still passes with the `dehydrate` change.
-- `spike-framework-files.mjs` was not kept: the F3 spike used a temporary page in `examples/query-ssr-next` (removed);
+- `spike-framework-files.mjs` was not kept: the F3 spike used a temporary page in `examples/frontends/query-ssr-next` (removed);
   its result is recorded in the findings table.
 - The F3 hardening changes `dehydrate`'s behavior for binary data (previously it worked on React 19); recorded as a
   behavior note, not an API change.
@@ -114,7 +114,7 @@ Deviations from the contract:
   `tests/react/query-identity-binary.test.tsx`), plus a Next SSR probe in a throwaway consumer
   (`scripts/spike-framework-files.mjs`, not shipped) for F3 and F2. Each test passes (non-issue /
   documented limitation) or fails (defect) and is classified in a "Findings" section here.
-- Inventory `examples/next`'s file scenario (pages, `lib/file-upload-demo.ts`, mock setup) for the
+- Inventory `examples/frontends/next`'s file scenario (pages, `lib/file-upload-demo.ts`, mock setup) for the
   port, and record O1/O2 answers. Lock H1–H12.
 
 ### Batch 1 — Hook-level runtime matrix (workspace React 19)
@@ -172,7 +172,7 @@ suites only if unavoidable; `tests/helpers/` (hook harnesses). `packages/react/s
 (`query-options.ts`, `hydration.ts`). `scripts/`: `verify-react-consumers.mjs`,
 `verify-unified-consumer.mjs`, `verify-type-consumers.mjs`, `verify-browser.mjs`, `verify-edge.mjs`,
 `lib/react-runtime-scenarios.mjs` (new), `lib/type-consumer-fixtures.mjs`, `spike-framework-files.mjs`
-(new, unshipped). `examples/query-ssr-next/**` (or per O1), `examples/README.md`, `.gitignore` (O1b
+(new, unshipped). `examples/frontends/query-ssr-next/**` (or per O1), `examples/README.md`, `.gitignore` (O1b
 only). Docs: `packages/react/README.md`, `docs/architecture.md`, `docs/public-api.md` (if API changes),
 `docs/context.md`, `docs/roadmap.md`, `docs/story.md`, `versions/README.md`, `versions/v1.6.0/*`,
 `.cursor/rules/*.mdc` + `AGENTS.md` (O1a).

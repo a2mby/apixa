@@ -1,0 +1,182 @@
+[
+  {
+    "id": 0,
+    "workspace_id": "ws-1",
+    "label": "Numeric 0",
+    "value": -10,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 1,
+    "workspace_id": "ws-2",
+    "label": "Numeric 1",
+    "value": -9,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 2,
+    "workspace_id": "ws-1",
+    "label": "Numeric 2",
+    "value": -8,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 3,
+    "workspace_id": "ws-2",
+    "label": "Numeric 3",
+    "value": -7,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 4,
+    "workspace_id": "ws-1",
+    "label": "Numeric 4",
+    "value": -6,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 5,
+    "workspace_id": "ws-2",
+    "label": "Numeric 5",
+    "value": -5,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 6,
+    "workspace_id": "ws-1",
+    "label": "Numeric 6",
+    "value": -4,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 7,
+    "workspace_id": "ws-2",
+    "label": "Numeric 7",
+    "value": -3,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 8,
+    "workspace_id": "ws-1",
+    "label": "Numeric 8",
+    "value": -2,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 9,
+    "workspace_id": "ws-2",
+    "label": "Numeric 9",
+    "value": -1,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 10,
+    "workspace_id": "ws-1",
+    "label": "Numeric 10",
+    "value": 0,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 11,
+    "workspace_id": "ws-2",
+    "label": "Numeric 11",
+    "value": 1,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 12,
+    "workspace_id": "ws-1",
+    "label": "Numeric 12",
+    "value": 2,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 13,
+    "workspace_id": "ws-2",
+    "label": "Numeric 13",
+    "value": 3,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 14,
+    "workspace_id": "ws-1",
+    "label": "Numeric 14",
+    "value": 4,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 15,
+    "workspace_id": "ws-2",
+    "label": "Numeric 15",
+    "value": 5,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 16,
+    "workspace_id": "ws-1",
+    "label": "Numeric 16",
+    "value": 6,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 17,
+    "workspace_id": "ws-2",
+    "label": "Numeric 17",
+    "value": 7,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 18,
+    "workspace_id": "ws-1",
+    "label": "Numeric 18",
+    "value": 8,
+    "enabled": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": 19,
+    "workspace_id": "ws-2",
+    "label": "Numeric 19",
+    "value": 9,
+    "enabled": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  }
+]

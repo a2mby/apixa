@@ -31,7 +31,7 @@
 - Reshape Core types + peer-mocking validators
 - Reshape mocking bridge / processor / any augmentation that still documents empty `MockDatasetIds` + import merges
 - Tests under `tests/mocking/` (and Core peer tests if present) for new shape + legacy rejection
-- Minimal Next migration: [`examples/next/lib/api.ts`](../../examples/next/lib/api.ts) and any remaining `mock: true` / `mockConfig` call sites
+- Minimal Next migration: [`examples/frontends/next/lib/api.ts`](../../examples/frontends/next/lib/api.ts) and any remaining `mock: true` / `mockConfig` call sites
 - CHANGELOG + living docs honesty (`docs/context.md`, architecture / guides that mention `mockConfig`)
 - Completion note in [`docs/story.md`](../../docs/story.md)
 

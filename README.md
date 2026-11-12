@@ -20,8 +20,9 @@ Apixa aims to reduce this duplication while preserving TypeScript's type safety 
 
 ## Installation
 
-Apixa publishes one npm package: `apixa` (`1.0.0-rc.0`, ESM, Node.js 22+). The RC is prepared
-locally and has not been published. After release, install it with:
+Apixa publishes one npm package: `apixa` (`1.0.0-rc.0`, ESM, Node.js 22+). That release candidate is
+published on npm under both the `latest` and `next` dist-tags; later repository milestones (v1.1.0
+through v1.8.0) are merged but not yet published. Install the published RC with:
 
 ```sh
 # Core, Mocking and the root entry: this is all you need
@@ -260,24 +261,24 @@ const api = defineApi({
 
 See [`datasets/`](./datasets/) and [`packages/mocking`](./packages/mocking).
 
-See [`examples/next`](./examples/next) for the primary real-app playground (Next.js). Other frontends and a Node CLI live under [`examples/`](./examples/). Platform run scripts: [`scripts/README.md`](./scripts/README.md).
+See [`examples/frontends/query-ssr-next`](./examples/frontends/query-ssr-next) for the maintained, verification-driven Next.js App Router example. [`examples/frontends/next`](./examples/frontends/next) is the untracked local playground; `examples/README.md` lists which other folders are maintained. Backend environment: [`examples/backends/laravel-backend`](./examples/backends/laravel-backend). Platform run scripts: [`scripts/README.md`](./scripts/README.md).
 
 ## Vision
 
 Apixa is being designed around a small, extensible core that can grow into a broader API development ecosystem.
 
-**Implemented:** `defineApi()` with default-first CRUD (v0.2.0), resource-only `defineApi<T>()(config)` (v0.4.0), `@apixa/mocking` + datasets (v0.5.0), request reliability (v0.6.0), thin Core + plugin seams — path-param concat, `full` / middleware re-call, extension interfaces, structured error codes (v0.7.0).
+**Implemented:** the v0.1.0–v0.11.0 foundation; the v1.0.0 release candidate (single `apixa` package, `apixa/react`, query/mutation/optimistic/cache DX); and the v1.1.0–v1.8.0 file line — uploads and multipart, downloads and binary responses, transfer progress and streaming, validation and limits, advanced mock file storage, framework/SSR file handling, advanced chunk/session transfers, and v1.8.0 hardening. v1.8.1 adds only the independent Laravel/PostgreSQL playground. Detailed status and sign-offs: [versions/README.md](./versions/README.md).
 
-**Planned later:**
+**Planned later (not implemented):**
 
 - `crud<>()` preset.
 - Runtime schema validation hooks (no schema library in Core).
-- Live pagination, filtering, sorting, and search conventions.
+- Live pagination, filtering, sorting, and search conventions beyond the current opt-in pagination envelope.
 - Online dataset catalog (browse/download) — local datasets only today.
-- Other data-fetching integrations beyond the implemented TanStack Query package.
-- Browser and server packages.
+- Vue, Angular, or other framework integrations. TanStack Query integration is implemented as `apixa/react`.
 - OpenAPI interoperability.
-- Additional transports extracted from Core.
+- Browser and server packages; additional transports extracted from Core.
+- Ranged/resumable downloads and a storage-provider SDK.
 
 These planned items are not currently implemented.
 
@@ -292,6 +293,7 @@ API methods are intended to return native promises, allowing them to work natura
 ## Project Structure
 
 ```text
+src/                # the single public `apixa` facade (re-exports only)
 packages/
   core/             # API definitions and execution
   mocking/          # Local datasets and standalone mock APIs
@@ -299,13 +301,19 @@ packages/
   internal/shared/  # Private, never published: framework-neutral integration helpers
 datasets/           # Version-controlled JSON fixtures
 examples/
-  next/             # Primary frontend playground (Next.js)
-  react-vite/ vue/ vanilla/ angular/ react-native/ basic/
-scripts/            # Frontend run scripts (macOS / Linux / Windows)
-tests/              # Vitest suite for core, mocking, and query
-docs/               # Living context, architecture, roadmap, ADRs
-versions/
-  v1.0.0/           # Active Query workstream
+  backends/
+    laravel-backend/  # Independent Laravel/PostgreSQL/MongoDB playground (no HTTP APIs yet)
+  frontends/
+    query-ssr-next/   # Maintained Next.js App Router example (verified by pnpm verify)
+    next/             # Local, untracked Next.js playground
+    ...               # Older local playgrounds; not maintained (see examples/README.md)
+  templates/          # Empty laravel/next/react starter placeholders
+scripts/            # Build, verification, dataset, frontend and Laravel launchers
+tests/              # Vitest suite (core, mocking, react, facade, ai) + packed consumers
+docs/               # Living context, architecture, roadmap, public API, use cases, ADRs
+versions/           # Frozen milestone contracts (active: v1.8.1)
+.ai/                # Canonical rules, roles, adapters and sync script
+.agents/skills/     # Canonical reusable workflows
 ```
 
 Planned later packages (not created yet): `transport-fetch`, `client`, `server`, `openapi`.
@@ -320,19 +328,27 @@ filesystem dependency is required.
 
 ## Documentation
 
-| Doc                                            | Purpose                                              |
-| ---------------------------------------------- | ---------------------------------------------------- |
-| [docs/context.md](./docs/context.md)           | Project identity, principles, constraints            |
-| [docs/architecture.md](./docs/architecture.md) | Core shape and request flow                          |
-| [docs/roadmap.md](./docs/roadmap.md)           | Milestones and future phases                         |
-| [docs/conventions.md](./docs/conventions.md)   | How we build and document                            |
-| [versions/v1.5.0/](./versions/v1.5.0/)         | **Active coding contract** (scope, plan, acceptance) |
+| Doc                                            | Purpose                                                |
+| ---------------------------------------------- | ------------------------------------------------------ |
+| [docs/context.md](./docs/context.md)           | Project identity, principles, constraints              |
+| [docs/architecture.md](./docs/architecture.md) | Core shape and request flow                            |
+| [docs/conventions.md](./docs/conventions.md)   | How we build and document                              |
+| [docs/public-api.md](./docs/public-api.md)     | Export contract for every public entry point           |
+| [docs/roadmap.md](./docs/roadmap.md)           | Milestones and future phases                           |
+| [docs/use-cases.md](./docs/use-cases.md)       | Manual-testing catalog (all milestones, v0.1.0–v1.8.1) |
+| [versions/v1.8.1/](./versions/v1.8.1/)         | **Active coding contract** (scope, plan, acceptance)   |
+| [.ai/README.md](./.ai/README.md)               | AI rule/skill/role layout and provider adapters        |
+| [docs/story.md](./docs/story.md)               | Dated project log, newest first                        |
 
 ## Project Status
 
-Apixa is in early development. Last shipped: **v0.11.0**; `1.0.0-rc.0` remains a release candidate, not stable. The active v1.5.0 milestone adds advanced mock file storage on the existing Core engine. Implementation is complete, `pnpm verify` passes, and the owner approved v1.5.0 on 2026-11-09. Previous milestone sign-offs and coverage gaps remain tracked in [versions/README.md](./versions/README.md).
+Apixa is in early development. The published package is the `1.0.0-rc.0` release candidate (npm
+`latest` and `next`), not a stable release. Repository milestones v1.1.0–v1.7.0 are merged and
+verified with owner sign-off recorded for v1.5.0 and v1.7.0; v1.8.0 is merged with CI green and its
+final sign-off not inferred; v1.8.1 is the active environment-only milestone. Exact per-milestone
+status is [versions/README.md](./versions/README.md).
 
-See [versions/v1.5.0/acceptance-criteria.md](./versions/v1.5.0/acceptance-criteria.md) for the active milestone checklist.
+See [versions/v1.8.1/acceptance-criteria.md](./versions/v1.8.1/acceptance-criteria.md) for the active milestone checklist.
 
 ## Author
 
@@ -342,9 +358,9 @@ Created and maintained by **Abdalrahman bani younes** ([a2mby](https://github.co
 
 Apixa is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
 
-Advanced chunk/session uploads (implemented, unreleased) are explicit operation strategies through the same Core request
+Advanced chunk/session uploads (implemented in v1.7.0, not yet npm-published) are explicit operation strategies through the same Core request
 pipeline. Ordinary file uploads/downloads keep their existing zero-config behavior. See the
 [advanced transfer guide](packages/core/README.md#advanced-transfers-v170) for typed checkpoints,
 server reconciliation, bounded concurrency, controls, presigned security and the SDK-free S3 recipe.
 
-Contributors can use the independent [Laravel/PostgreSQL backend playground](examples/laravel-backend/README.md) for real HTTP infrastructure experiments.
+Contributors can use the independent [Laravel/PostgreSQL backend playground](examples/backends/laravel-backend/README.md) for real HTTP infrastructure experiments.

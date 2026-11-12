@@ -28,7 +28,7 @@
 
 - Reshape [`packages/core`](../../packages/core) — **no new packages**
 - Update root [`tests/`](../../tests/) (fake `Transport`) for abort, timeout, retry, middleware
-- Document in Core README / CHANGELOG; show abort + retry in `examples/next` only if it stays a tiny local demo (optional; docs + tests are enough)
+- Document in Core README / CHANGELOG; show abort + retry in `examples/frontends/next` only if it stays a tiny local demo (optional; docs + tests are enough)
 - Append completion note to [`docs/story.md`](../../docs/story.md) when done
 
 ### Docs

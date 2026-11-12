@@ -1,0 +1,625 @@
+[
+  {
+    "id": "contact-001",
+    "workspace_id": "ws-2",
+    "name": "Ada Lovelace",
+    "slug": "contact-001",
+    "email": "contact-001@example.test",
+    "active": true,
+    "nickname": "",
+    "score": -2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": []
+  },
+  {
+    "id": "contact-002",
+    "workspace_id": "ws-1",
+    "name": "Grace Hopper",
+    "slug": "contact-002",
+    "email": "contact-002@example.test",
+    "active": true,
+    "nickname": "Nick 2",
+    "score": -1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/one-byte/one.txt",
+      "playground-fixtures/v1/ascii/readme.txt"
+    ]
+  },
+  {
+    "id": "contact-003",
+    "workspace_id": "ws-2",
+    "name": "أحمد بني يونس",
+    "slug": "contact-003",
+    "email": "contact-003@example.test",
+    "active": false,
+    "nickname": "Nick 3",
+    "score": 0,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/ascii/readme.txt",
+      "playground-fixtures/v1/unicode/ملاحظات.txt"
+    ]
+  },
+  {
+    "id": "contact-004",
+    "workspace_id": "ws-1",
+    "name": "Zoë García",
+    "slug": "contact-004",
+    "email": "contact-004@example.test",
+    "active": true,
+    "nickname": null,
+    "score": 1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-005",
+    "workspace_id": "ws-2",
+    "name": "李明",
+    "slug": "contact-005",
+    "email": "contact-005@example.test",
+    "active": true,
+    "nickname": "",
+    "score": 2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": ["playground-fixtures/v1/binary/bytes.bin", "playground-fixtures/v1/png/pixel.png"]
+  },
+  {
+    "id": "contact-006",
+    "workspace_id": "ws-1",
+    "name": "Emoji 🚀",
+    "slug": "contact-006",
+    "email": "contact-006@example.test",
+    "active": false,
+    "nickname": "Nick 6",
+    "score": 3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": ["playground-fixtures/v1/png/pixel.png", "playground-fixtures/v1/pdf/sample.pdf"]
+  },
+  {
+    "id": "contact-007",
+    "workspace_id": "ws-2",
+    "name": "ada lowercase",
+    "slug": "contact-007",
+    "email": "contact-007@example.test",
+    "active": true,
+    "nickname": "Nick 7",
+    "score": -3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-008",
+    "workspace_id": "ws-1",
+    "name": "Name with spaces",
+    "slug": "contact-008",
+    "email": "contact-008@example.test",
+    "active": true,
+    "nickname": null,
+    "score": -2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/zip/archive.zip",
+      "playground-fixtures/v1/same-name-a/same.txt"
+    ]
+  },
+  {
+    "id": "contact-009",
+    "workspace_id": "ws-2",
+    "name": "Ada Lovelace 9",
+    "slug": "contact-009",
+    "email": "contact-009@example.test",
+    "active": false,
+    "nickname": "",
+    "score": -1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": [
+      "playground-fixtures/v1/same-name-a/same.txt",
+      "playground-fixtures/v1/same-name-b/same.txt"
+    ]
+  },
+  {
+    "id": "contact-010",
+    "workspace_id": "ws-1",
+    "name": "Grace Hopper 10",
+    "slug": "contact-010",
+    "email": "contact-010@example.test",
+    "active": true,
+    "nickname": "Nick 10",
+    "score": 0,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-011",
+    "workspace_id": "ws-2",
+    "name": "أحمد بني يونس 11",
+    "slug": "contact-011",
+    "email": "contact-011@example.test",
+    "active": true,
+    "nickname": "Nick 11",
+    "score": 1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/same-bytes-other-name/other.txt",
+      "playground-fixtures/v1/spaces/name with spaces.txt"
+    ]
+  },
+  {
+    "id": "contact-012",
+    "workspace_id": "ws-1",
+    "name": "Zoë García 12",
+    "slug": "contact-012",
+    "email": "contact-012@example.test",
+    "active": false,
+    "nickname": null,
+    "score": 2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/spaces/name with spaces.txt",
+      "playground-fixtures/v1/multi-dot/report.backup.tar.gz"
+    ]
+  },
+  {
+    "id": "contact-013",
+    "workspace_id": "ws-2",
+    "name": "李明 13",
+    "slug": "contact-013",
+    "email": "contact-013@example.test",
+    "active": true,
+    "nickname": "",
+    "score": 3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": []
+  },
+  {
+    "id": "contact-014",
+    "workspace_id": "ws-1",
+    "name": "Emoji 🚀 14",
+    "slug": "contact-014",
+    "email": "contact-014@example.test",
+    "active": true,
+    "nickname": "Nick 14",
+    "score": -3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/uppercase/PHOTO.PNG",
+      "playground-fixtures/v1/no-extension/README"
+    ]
+  },
+  {
+    "id": "contact-015",
+    "workspace_id": "ws-2",
+    "name": "ada lowercase 15",
+    "slug": "contact-015",
+    "email": "contact-015@example.test",
+    "active": false,
+    "nickname": "Nick 15",
+    "score": -2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/no-extension/README",
+      "playground-fixtures/v1/dotfile/.env-fixture"
+    ]
+  },
+  {
+    "id": "contact-016",
+    "workspace_id": "ws-1",
+    "name": "Name with spaces 16",
+    "slug": "contact-016",
+    "email": "contact-016@example.test",
+    "active": true,
+    "nickname": null,
+    "score": -1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-017",
+    "workspace_id": "ws-2",
+    "name": "Ada Lovelace 17",
+    "slug": "contact-017",
+    "email": "contact-017@example.test",
+    "active": true,
+    "nickname": "",
+    "score": 0,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": [
+      "playground-fixtures/v1/unknown-mime/unknown.dat",
+      "playground-fixtures/v1/mismatched-mime/claimed.png"
+    ]
+  },
+  {
+    "id": "contact-018",
+    "workspace_id": "ws-1",
+    "name": "Grace Hopper 18",
+    "slug": "contact-018",
+    "email": "contact-018@example.test",
+    "active": false,
+    "nickname": "Nick 18",
+    "score": 1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/mismatched-mime/claimed.png",
+      "playground-fixtures/v1/below-limit/1023.bin"
+    ]
+  },
+  {
+    "id": "contact-019",
+    "workspace_id": "ws-2",
+    "name": "أحمد بني يونس 19",
+    "slug": "contact-019",
+    "email": "contact-019@example.test",
+    "active": true,
+    "nickname": "Nick 19",
+    "score": 2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-020",
+    "workspace_id": "ws-1",
+    "name": "Zoë García 20",
+    "slug": "contact-020",
+    "email": "contact-020@example.test",
+    "active": true,
+    "nickname": null,
+    "score": 3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/at-limit/1024.bin",
+      "playground-fixtures/v1/over-limit/1025.bin"
+    ]
+  },
+  {
+    "id": "contact-021",
+    "workspace_id": "ws-2",
+    "name": "李明 21",
+    "slug": "contact-021",
+    "email": "contact-021@example.test",
+    "active": false,
+    "nickname": "",
+    "score": -3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": ["playground-fixtures/v1/over-limit/1025.bin"]
+  },
+  {
+    "id": "contact-022",
+    "workspace_id": "ws-1",
+    "name": "Emoji 🚀 22",
+    "slug": "contact-022",
+    "email": "contact-022@example.test",
+    "active": true,
+    "nickname": "Nick 22",
+    "score": -2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-023",
+    "workspace_id": "ws-2",
+    "name": "ada lowercase 23",
+    "slug": "contact-023",
+    "email": "contact-023@example.test",
+    "active": true,
+    "nickname": "Nick 23",
+    "score": -1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/one-byte/one.txt",
+      "playground-fixtures/v1/ascii/readme.txt"
+    ]
+  },
+  {
+    "id": "contact-024",
+    "workspace_id": "ws-1",
+    "name": "Name with spaces 24",
+    "slug": "contact-024",
+    "email": "contact-024@example.test",
+    "active": false,
+    "nickname": null,
+    "score": 0,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/ascii/readme.txt",
+      "playground-fixtures/v1/unicode/ملاحظات.txt"
+    ]
+  },
+  {
+    "id": "contact-025",
+    "workspace_id": "ws-2",
+    "name": "Ada Lovelace 25",
+    "slug": "contact-025",
+    "email": "contact-025@example.test",
+    "active": true,
+    "nickname": "",
+    "score": 1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": []
+  },
+  {
+    "id": "contact-026",
+    "workspace_id": "ws-1",
+    "name": "Grace Hopper 26",
+    "slug": "contact-026",
+    "email": "contact-026@example.test",
+    "active": true,
+    "nickname": "Nick 26",
+    "score": 2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": ["playground-fixtures/v1/binary/bytes.bin", "playground-fixtures/v1/png/pixel.png"]
+  },
+  {
+    "id": "contact-027",
+    "workspace_id": "ws-2",
+    "name": "أحمد بني يونس 27",
+    "slug": "contact-027",
+    "email": "contact-027@example.test",
+    "active": false,
+    "nickname": "Nick 27",
+    "score": 3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": ["playground-fixtures/v1/png/pixel.png", "playground-fixtures/v1/pdf/sample.pdf"]
+  },
+  {
+    "id": "contact-028",
+    "workspace_id": "ws-1",
+    "name": "Zoë García 28",
+    "slug": "contact-028",
+    "email": "contact-028@example.test",
+    "active": true,
+    "nickname": null,
+    "score": -3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-029",
+    "workspace_id": "ws-2",
+    "name": "李明 29",
+    "slug": "contact-029",
+    "email": "contact-029@example.test",
+    "active": true,
+    "nickname": "",
+    "score": -2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": [
+      "playground-fixtures/v1/zip/archive.zip",
+      "playground-fixtures/v1/same-name-a/same.txt"
+    ]
+  },
+  {
+    "id": "contact-030",
+    "workspace_id": "ws-1",
+    "name": "Emoji 🚀 30",
+    "slug": "contact-030",
+    "email": "contact-030@example.test",
+    "active": false,
+    "nickname": "Nick 30",
+    "score": -1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/same-name-a/same.txt",
+      "playground-fixtures/v1/same-name-b/same.txt"
+    ]
+  },
+  {
+    "id": "contact-031",
+    "workspace_id": "ws-2",
+    "name": "ada lowercase 31",
+    "slug": "contact-031",
+    "email": "contact-031@example.test",
+    "active": true,
+    "nickname": "Nick 31",
+    "score": 0,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-032",
+    "workspace_id": "ws-1",
+    "name": "Name with spaces 32",
+    "slug": "contact-032",
+    "email": "contact-032@example.test",
+    "active": true,
+    "nickname": null,
+    "score": 1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/same-bytes-other-name/other.txt",
+      "playground-fixtures/v1/spaces/name with spaces.txt"
+    ]
+  },
+  {
+    "id": "contact-033",
+    "workspace_id": "ws-2",
+    "name": "Ada Lovelace 33",
+    "slug": "contact-033",
+    "email": "contact-033@example.test",
+    "active": false,
+    "nickname": "",
+    "score": 2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": [
+      "playground-fixtures/v1/spaces/name with spaces.txt",
+      "playground-fixtures/v1/multi-dot/report.backup.tar.gz"
+    ]
+  },
+  {
+    "id": "contact-034",
+    "workspace_id": "ws-1",
+    "name": "Grace Hopper 34",
+    "slug": "contact-034",
+    "email": "contact-034@example.test",
+    "active": true,
+    "nickname": "Nick 34",
+    "score": 3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  },
+  {
+    "id": "contact-035",
+    "workspace_id": "ws-2",
+    "name": "أحمد بني يونس 35",
+    "slug": "contact-035",
+    "email": "contact-035@example.test",
+    "active": true,
+    "nickname": "Nick 35",
+    "score": -3,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/uppercase/PHOTO.PNG",
+      "playground-fixtures/v1/no-extension/README"
+    ]
+  },
+  {
+    "id": "contact-036",
+    "workspace_id": "ws-1",
+    "name": "Zoë García 36",
+    "slug": "contact-036",
+    "email": "contact-036@example.test",
+    "active": false,
+    "nickname": null,
+    "score": -2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/no-extension/README",
+      "playground-fixtures/v1/dotfile/.env-fixture"
+    ]
+  },
+  {
+    "id": "contact-037",
+    "workspace_id": "ws-2",
+    "name": "李明 37",
+    "slug": "contact-037",
+    "email": "contact-037@example.test",
+    "active": true,
+    "nickname": "",
+    "score": -1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": null,
+    "documents": []
+  },
+  {
+    "id": "contact-038",
+    "workspace_id": "ws-1",
+    "name": "Emoji 🚀 38",
+    "slug": "contact-038",
+    "email": "contact-038@example.test",
+    "active": true,
+    "nickname": "Nick 38",
+    "score": 0,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/unknown-mime/unknown.dat",
+      "playground-fixtures/v1/mismatched-mime/claimed.png"
+    ]
+  },
+  {
+    "id": "contact-039",
+    "workspace_id": "ws-2",
+    "name": "ada lowercase 39",
+    "slug": "contact-039",
+    "email": "contact-039@example.test",
+    "active": false,
+    "nickname": "Nick 39",
+    "score": 1,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": [
+      "playground-fixtures/v1/mismatched-mime/claimed.png",
+      "playground-fixtures/v1/below-limit/1023.bin"
+    ]
+  },
+  {
+    "id": "contact-040",
+    "workspace_id": "ws-1",
+    "name": "Name with spaces 40",
+    "slug": "contact-040",
+    "email": "contact-040@example.test",
+    "active": true,
+    "nickname": null,
+    "score": 2,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00",
+    "avatar": "playground-fixtures/v1/png/pixel.png",
+    "documents": []
+  }
+]

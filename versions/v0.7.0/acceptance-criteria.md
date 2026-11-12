@@ -45,4 +45,4 @@ Check every item before calling v0.7.0 done.
 - [x] [implementation-plan.md](./implementation-plan.md) steps completed or consciously waived with a note here.
 - [x] [docs/story.md](../../docs/story.md) updated with a completion note.
 
-Implementation-plan notes: All steps 2–10 completed. Kickoff (step 1) was `/start-version`. Optional Next demo limited to existing reliability config; no `examples/basic` edits (Next-only rule).
+Implementation-plan notes: All steps 2–10 completed. Kickoff (step 1) was `/start-version`. Optional Next demo limited to existing reliability config; no `examples/frontends/basic` edits (Next-only rule).

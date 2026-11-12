@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "executable": false,
+  "requires": "Author-owned endpoint or controlled client harness; seeding does not implement this behavior.",
+  "cases": [
+    {
+      "id": "below-chunk",
+      "input": {
+        "source_bytes": 1023,
+        "chunk_size": 1024
+      },
+      "expected": "one part"
+    },
+    {
+      "id": "exact-chunk",
+      "input": {
+        "source_bytes": 1024,
+        "chunk_size": 1024
+      },
+      "expected": "one part without empty trailing part"
+    },
+    {
+      "id": "above-chunk",
+      "input": {
+        "source_bytes": 1025,
+        "chunk_size": 1024
+      },
+      "expected": "two parts"
+    },
+    {
+      "id": "out-of-order-acks",
+      "input": {
+        "parts": 3,
+        "ack_order": [2, 0, 1]
+      },
+      "expected": "unique confirmed byte accounting"
+    },
+    {
+      "id": "pause-resume",
+      "input": {
+        "pause_after_parts": 1
+      },
+      "expected": "quiescent pause and same invocation resumes"
+    },
+    {
+      "id": "lost-completion-reply",
+      "input": {
+        "fail_after": "server-complete"
+      },
+      "expected": "inspect authoritative state without duplicate completion"
+    },
+    {
+      "id": "changed-same-size-source",
+      "input": {
+        "sources": ["same-name-a", "same-bytes-other-name"],
+        "replace_bytes_with": "xxxxx"
+      },
+      "expected": "reject different source identity"
+    },
+    {
+      "id": "expired-destination",
+      "input": {
+        "fail_part": 1,
+        "status": 403,
+        "renew_supported": true
+      },
+      "expected": "explicit bounded renewal and inspection"
+    },
+    {
+      "id": "persistence-failure",
+      "input": {
+        "fail_checkpoint_save": 1
+      },
+      "expected": "stop scheduling and retain recovery information"
+    },
+    {
+      "id": "abort-failure",
+      "input": {
+        "abort_status": 503
+      },
+      "expected": "do not claim deletion; retain checkpoint"
+    },
+    {
+      "id": "checksum-mismatch",
+      "input": {
+        "part": 0,
+        "checksum": "deliberately-invalid"
+      },
+      "expected": "reject before completion"
+    }
+  ]
+}

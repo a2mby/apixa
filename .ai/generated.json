@@ -1,0 +1,313 @@
+{
+  "version": 1,
+  "files": {
+    ".claude/agents/architect.md": {
+      "sha256": "54d71983b5c217d369aca17295353a425799f93ece2360537fb73d90300be892",
+      "mode": 420
+    },
+    ".claude/agents/implementer.md": {
+      "sha256": "8a4489dbf28efd82517b0801c3999d6aa9a2f93d147c21acfdabc25f273e4ab4",
+      "mode": 420
+    },
+    ".claude/agents/reviewer.md": {
+      "sha256": "480b1cd74e2ed6ddacaaf00330f7980fa808fda32bc8fe49c0773e69eaaf2d4b",
+      "mode": 420
+    },
+    ".claude/agents/tester.md": {
+      "sha256": "a4524087fcdcb62fed6751b3ee976820cf79dbc27bd177a0033b606baf0aeec0",
+      "mode": 420
+    },
+    ".claude/skills/apixa-workflow/SKILL.md": {
+      "sha256": "b7b8e674af61b9201135aa2aba8943adfb7a8931017079b666f55b4f19f26cea",
+      "mode": 420
+    },
+    ".claude/skills/check-structure/SKILL.md": {
+      "sha256": "7ce6e5aefd26fd3c3b8ed61c35f0d3c354afc37bbb9cbfb9a0558a14d817d1c0",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/SKILL.md": {
+      "sha256": "e6dcc7e1f7ec58621704e261d2e1b31cc58aeb8e0bdb3f78de47afdb3e0495eb",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/assets/module-map.template.md": {
+      "sha256": "0d66d32ff0e4cda50850fdceab6fd19e3e68e05f5bf41426d4fca77708057080",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/assets/output-contract.template.md": {
+      "sha256": "f54a56e3e86461292cab7b5f212433d518406b845889fa18b97283af753e2449",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/anti-patterns.md": {
+      "sha256": "76ea63f5eb9dfaf9784b140ad32842fc7607608ac802742b0d532829a0088042",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/api-first.md": {
+      "sha256": "c399d6a6d77e3065f89c23045ef9d2ed400b23ee551252b4dcd44ee4ac222761",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/decision-making.md": {
+      "sha256": "2f2ad4e88825a8d1827b9545ae747593de80e03d10ff8502e887d5a3acb51003",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/enforcement-configs.md": {
+      "sha256": "95d832d290168e8b420f082b904dfc7d79fc94bfeaf8ffcd30656221e05ba8b8",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/enforcement.md": {
+      "sha256": "5d572bd8f9b9bc714a8c09462de7076b8f19524c9a2127c8f77d8dbd74db33a2",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/examples.md": {
+      "sha256": "2cf3d77af6233c90ec9fc8c76592ad8781ae3b46d69a18e064aace1cccee8c9c",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/feature-based.md": {
+      "sha256": "81bc860f58877439aae7a012096d395ed718c937feacec6e7848ff9c8c7489ec",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/forms-ui-styling.md": {
+      "sha256": "ef4218559fc1a8bbbd982ef3940acc00fe508b1c2facd6999f13baabab0cf9d3",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/nextjs-minimal-surface.md": {
+      "sha256": "3cb2d5535b36cdd43e583b2da51d435add7c24f32f516b12ad431597dad855ed",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/nextjs-react.md": {
+      "sha256": "516caaf6bcdcebf4a77e1d9630aafd5d8d5bbf4f4a78f830aba8c3a99fbfba76",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/refactoring.md": {
+      "sha256": "3b0acb3995030a075530be02bcd1e39d44eb965c27cfedb5cb9cb7ebd6f4556c",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/system-design.md": {
+      "sha256": "8090eb3174abf1be9ad58c30987c31d73464522f40d77d572e4cb728ec707321",
+      "mode": 420
+    },
+    ".claude/skills/frontend-engineering/references/testing.md": {
+      "sha256": "db11d8abc0eb541a2014d16992f0decb350c3b5f936c701751a139017b176145",
+      "mode": 420
+    },
+    ".claude/skills/git-push/SKILL.md": {
+      "sha256": "4cd11b81c0ab726b3e0e9cee18f07206c7d0ace025d89baf7259ffc1e354347a",
+      "mode": 420
+    },
+    ".claude/skills/implement-version/SKILL.md": {
+      "sha256": "316b22f1731a032ff83ccbd1fa8b046cdc7827838f8f4f6379372b052d21aaf6",
+      "mode": 420
+    },
+    ".claude/skills/plan-change/SKILL.md": {
+      "sha256": "9f06b5e19bbe6ce82adc934a1b29eb8d0ad47292dad0e54edc97230f6fb502de",
+      "mode": 420
+    },
+    ".claude/skills/publish-library/SKILL.md": {
+      "sha256": "053a7138cc8eec87bed14a2f775eedfc45746a1cecc52bdd21aabc7327f4ac92",
+      "mode": 420
+    },
+    ".claude/skills/ship-changes/SKILL.md": {
+      "sha256": "cb20c26fd0451df6a9eabe87e244b857fea9f5e33fd887abb531cea48bd72a62",
+      "mode": 420
+    },
+    ".claude/skills/start-version/SKILL.md": {
+      "sha256": "5d79dafd01693d4b94d2b77cda01f4bee604546f824c0448d145df16edb01a94",
+      "mode": 420
+    },
+    ".codex/agents/architect.toml": {
+      "sha256": "6230c25095385ac7dca1ea52b0bd55929dd460869c908d1ae1c415c8381f4fe0",
+      "mode": 420
+    },
+    ".codex/agents/implementer.toml": {
+      "sha256": "1d7e9b0f916c5227a0b43017b50f0b6f9d5319ea8259ab843ec1710e5a74995b",
+      "mode": 420
+    },
+    ".codex/agents/reviewer.toml": {
+      "sha256": "954a5fc762e2d3130ffa9031a9a13891e98e1d85aea0ad6ca2e2dac847eb0b20",
+      "mode": 420
+    },
+    ".codex/agents/tester.toml": {
+      "sha256": "7dc0b21cae5a19061b4c66d66d7efd13d34f77a47c785b21d960e3cdcffd17fa",
+      "mode": 420
+    },
+    ".cursor/commands/apixa-workflow.md": {
+      "sha256": "a37e79c2f6b23fdb782da1984363c8da2baf194aeff388aba04717bb3cd8f914",
+      "mode": 420
+    },
+    ".cursor/commands/check-structure.md": {
+      "sha256": "620cd8880ebcc811531e2d3383c64e9b86d80e22185c7605b43c05c059cc4c35",
+      "mode": 420
+    },
+    ".cursor/commands/frontend-engineering.md": {
+      "sha256": "42b8d2149440a1c1f982d4af97caf28da80d22149e0084fe9eecfc91ba2731fc",
+      "mode": 420
+    },
+    ".cursor/commands/git-push.md": {
+      "sha256": "c31e5bfe2f7e982b0def240bbb20efd0d339f12272f51f887ab9320ac357e173",
+      "mode": 420
+    },
+    ".cursor/commands/implement-version.md": {
+      "sha256": "c43c3de97751eaf5cf209997f6e0db8a72b832234ff97207e1c4b244767fa7bc",
+      "mode": 420
+    },
+    ".cursor/commands/plan-change.md": {
+      "sha256": "0efc1449000523d118808bb3d631277e0d776969c1d393be31fba3c3090d41d7",
+      "mode": 420
+    },
+    ".cursor/commands/publish-library.md": {
+      "sha256": "15fa32a848654dd60834bdf5d25cbc5aa1e23f2472d81f69aa0054c2b92ea96f",
+      "mode": 420
+    },
+    ".cursor/commands/ship-changes.md": {
+      "sha256": "5d5d1a30b981b07e9e11d9b81e5632a6ac4b35760b6432fbaa6aa995f13d1b64",
+      "mode": 420
+    },
+    ".cursor/commands/start-version.md": {
+      "sha256": "de7963664d51c066b935e8196a50aa62c21b6f393d28190fd20c5a9afc0ec28b",
+      "mode": 420
+    },
+    ".cursor/rules/apixa-architecture.mdc": {
+      "sha256": "e216681d6f046cf895e659c81cead409173f57d93d5ff4e3bb42822416a5fa8a",
+      "mode": 420
+    },
+    ".cursor/rules/apixa-core.mdc": {
+      "sha256": "81785a58ffde53816fa0957ecfb68a3caf0ba09ceb3dcb41c2c17ccf8fcd52cc",
+      "mode": 420
+    },
+    ".cursor/rules/apixa-docs.mdc": {
+      "sha256": "082c863d1dddaded06a43c4e870658af95d3be665361bc4944d5459830e9f6c7",
+      "mode": 420
+    },
+    ".cursor/rules/apixa-examples.mdc": {
+      "sha256": "0e2dd3c8a3dc5bdc523fba491c4f82c7e81a821376b602464aa881eae4a3d123",
+      "mode": 420
+    },
+    ".cursor/rules/apixa-git-push-format.mdc": {
+      "sha256": "8f38ab7d80026b4bed964e451f0433806bfcf1d7d598c16e6d405612f77ae12d",
+      "mode": 420
+    },
+    ".cursor/rules/apixa-packages.mdc": {
+      "sha256": "4fd5e165f192c901976fb74121a721778ebcf1c74dded980d7881831ab1f6369",
+      "mode": 420
+    },
+    ".cursor/rules/graphify.mdc": {
+      "sha256": "006b4d77776915056cf01f26871f3728ee21089f59a6a1f772278675766b003e",
+      "mode": 420
+    },
+    ".gemini/commands/apixa-workflow.toml": {
+      "sha256": "c6fe056047083a78a64e19edb709c6bae354935e79fc65d0c10b04eb0d536a16",
+      "mode": 420
+    },
+    ".gemini/commands/check-structure.toml": {
+      "sha256": "09406e923bac447724f60a0e0fad8da50dbf21fb670c6a961cc47813195e6a65",
+      "mode": 420
+    },
+    ".gemini/commands/frontend-engineering.toml": {
+      "sha256": "3bc31aa00a46c762d128812f6ec217e4065aca48eaecd596ccfb308d532e26fa",
+      "mode": 420
+    },
+    ".gemini/commands/git-push.toml": {
+      "sha256": "433b895ee6c746901c0c436e6dc3d2041af9867e9c8e2e116fef5ece71d977aa",
+      "mode": 420
+    },
+    ".gemini/commands/implement-version.toml": {
+      "sha256": "c6ea7dd2f654c764b6effe5dce29403987957f265ac2cdadd2b375ff5f790fc3",
+      "mode": 420
+    },
+    ".gemini/commands/plan-change.toml": {
+      "sha256": "66843d3d8c8f889bd0b3552faacdca27db0ba27a130ce51ad7ecf5847718b8bb",
+      "mode": 420
+    },
+    ".gemini/commands/publish-library.toml": {
+      "sha256": "a7b63aa294d2c571a0993b4b236536dcd5fddf970351ad80d401faeacb94a632",
+      "mode": 420
+    },
+    ".gemini/commands/role-architect.toml": {
+      "sha256": "cd2e63c9e6a02c263d83890a248fa2b99eefe5bb7b5bac3e24a8435824de9c6b",
+      "mode": 420
+    },
+    ".gemini/commands/role-implementer.toml": {
+      "sha256": "03ec01d2b1e810e44b4bd455545ffabcb504f111dc8a540c1437268924478e9a",
+      "mode": 420
+    },
+    ".gemini/commands/role-reviewer.toml": {
+      "sha256": "d6c43e8696c0fbda70c450c1c2ba0bd0e9a53c3315b11c42a563ef4e6d73a523",
+      "mode": 420
+    },
+    ".gemini/commands/role-tester.toml": {
+      "sha256": "ff14bcffcf521bf8084cc414f1b9b0e42d9d4d38b94f886559437e0570da6c66",
+      "mode": 420
+    },
+    ".gemini/commands/ship-changes.toml": {
+      "sha256": "36265ff6685d2885fa4262ac5a0732c784ed7256bb14df5d94076e9752412670",
+      "mode": 420
+    },
+    ".gemini/commands/start-version.toml": {
+      "sha256": "8015ce1e23c4fccf486f3ba64c8cec089d04d78e5d8be49cb34e9054bd477d4d",
+      "mode": 420
+    },
+    ".opencode/agents/architect.md": {
+      "sha256": "e4d2089a23f888bc731f784fb2f94d55a0a35937a65714d24dc726e3f74aae05",
+      "mode": 420
+    },
+    ".opencode/agents/implementer.md": {
+      "sha256": "4749497e3d62803fdb92922960f277a8d6d933605bc376d39b905bce33d3d67b",
+      "mode": 420
+    },
+    ".opencode/agents/reviewer.md": {
+      "sha256": "95b86dcd36b802ed81eb375dc5f670ce39529719b87b348370c266e281c62f5c",
+      "mode": 420
+    },
+    ".opencode/agents/tester.md": {
+      "sha256": "cfe4982e5c50b5cc1d5f407fb8783c5dbc88d2b4b2ebbd5216022a32bfc14f6a",
+      "mode": 420
+    },
+    ".opencode/commands/apixa-workflow.md": {
+      "sha256": "bb0e89caf589c8b1b1789b11540b8ea18c0b9a5ba624908c4faddc46621ed6e3",
+      "mode": 420
+    },
+    ".opencode/commands/check-structure.md": {
+      "sha256": "abef99a9a33a666bef60f6b32219076a78357de2d9246bd42e978f48bdfb1af0",
+      "mode": 420
+    },
+    ".opencode/commands/frontend-engineering.md": {
+      "sha256": "d7467f196574ecfbe80e15d046270a5122e6bb9eef7190681a67fa462371b4b0",
+      "mode": 420
+    },
+    ".opencode/commands/git-push.md": {
+      "sha256": "0d8a9b59714c74368aa4c64e4e941cec39e95c18154dbfa0f2b4d25776b230f8",
+      "mode": 420
+    },
+    ".opencode/commands/implement-version.md": {
+      "sha256": "f65105a534a7425b2acfe389362e486a5bc03edeef87143bd34732121298de3b",
+      "mode": 420
+    },
+    ".opencode/commands/plan-change.md": {
+      "sha256": "d3a004e6a2b64d658a3fb01be9588470d54b1af77e2e1fb94237f0876dc53111",
+      "mode": 420
+    },
+    ".opencode/commands/publish-library.md": {
+      "sha256": "993b37703a7b500ebb3018011b10447ae03b32009df5ff3d361a9b5816b657ef",
+      "mode": 420
+    },
+    ".opencode/commands/ship-changes.md": {
+      "sha256": "02b3844b2b156652a5669996e278d5cd68c07bbc2eac0796f051ef16bd0a9c15",
+      "mode": 420
+    },
+    ".opencode/commands/start-version.md": {
+      "sha256": "a99f43a04dcc26ba351f0d2b7766ea7bf405d2b552fae7a7c3da2e63b4b3b35b",
+      "mode": 420
+    },
+    "AGENTS.md": {
+      "sha256": "b138fb381757ab48ed9022bfa247c08a5c4520aa81a7bc2c7589e5473b2a6acc",
+      "mode": 420
+    },
+    "CLAUDE.md": {
+      "sha256": "d948ec3d764f4aff1cb30d883d3aa2ece3fcfe6d8e659387d80dd79ab9ca7226",
+      "mode": 420
+    },
+    "GEMINI.md": {
+      "sha256": "d948ec3d764f4aff1cb30d883d3aa2ece3fcfe6d8e659387d80dd79ab9ca7226",
+      "mode": 420
+    }
+  }
+}

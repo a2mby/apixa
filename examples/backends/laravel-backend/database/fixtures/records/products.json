@@ -1,0 +1,3722 @@
+[
+  {
+    "id": "product-001",
+    "workspace_id": "ws-2",
+    "sku": "APX-0001",
+    "slug": "product-001",
+    "name": "Camera 1",
+    "category": "office",
+    "price": "1.37",
+    "stock": 1,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-002",
+    "workspace_id": "ws-1",
+    "sku": "APX-0002",
+    "slug": "product-002",
+    "name": "Notebook 2",
+    "category": "accessories",
+    "price": "2.74",
+    "stock": 2,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-003",
+    "workspace_id": "ws-2",
+    "sku": "APX-0003",
+    "slug": "product-003",
+    "name": "Cable 3",
+    "category": "electronics",
+    "price": "4.11",
+    "stock": 3,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 3
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-004",
+    "workspace_id": "ws-1",
+    "sku": "APX-0004",
+    "slug": "product-004",
+    "name": "شاشة 4",
+    "category": "office",
+    "price": "5.48",
+    "stock": 4,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-005",
+    "workspace_id": "ws-2",
+    "sku": "APX-0005",
+    "slug": "product-005",
+    "name": "Café mug 5",
+    "category": "accessories",
+    "price": "6.85",
+    "stock": 5,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-006",
+    "workspace_id": "ws-1",
+    "sku": "APX-0006",
+    "slug": "product-006",
+    "name": "Camera 6",
+    "category": "electronics",
+    "price": "8.22",
+    "stock": 6,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 6
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-007",
+    "workspace_id": "ws-2",
+    "sku": "APX-0007",
+    "slug": "product-007",
+    "name": "Notebook 7",
+    "category": "office",
+    "price": "9.59",
+    "stock": 7,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-008",
+    "workspace_id": "ws-1",
+    "sku": "APX-0008",
+    "slug": "product-008",
+    "name": "Cable 8",
+    "category": "accessories",
+    "price": "10.96",
+    "stock": 8,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-009",
+    "workspace_id": "ws-2",
+    "sku": "APX-0009",
+    "slug": "product-009",
+    "name": "شاشة 9",
+    "category": "electronics",
+    "price": "12.33",
+    "stock": 9,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 1
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-010",
+    "workspace_id": "ws-1",
+    "sku": "APX-0010",
+    "slug": "product-010",
+    "name": "Café mug 10",
+    "category": "office",
+    "price": "13.70",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-011",
+    "workspace_id": "ws-2",
+    "sku": "APX-0011",
+    "slug": "product-011",
+    "name": "Camera 11",
+    "category": "accessories",
+    "price": "15.07",
+    "stock": 11,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-012",
+    "workspace_id": "ws-1",
+    "sku": "APX-0012",
+    "slug": "product-012",
+    "name": "Notebook 12",
+    "category": "electronics",
+    "price": "16.44",
+    "stock": 12,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 4
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-013",
+    "workspace_id": "ws-2",
+    "sku": "APX-0013",
+    "slug": "product-013",
+    "name": "Cable 13",
+    "category": "office",
+    "price": "17.81",
+    "stock": 13,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-014",
+    "workspace_id": "ws-1",
+    "sku": "APX-0014",
+    "slug": "product-014",
+    "name": "شاشة 14",
+    "category": "accessories",
+    "price": "19.18",
+    "stock": 14,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-015",
+    "workspace_id": "ws-2",
+    "sku": "APX-0015",
+    "slug": "product-015",
+    "name": "Café mug 15",
+    "category": "electronics",
+    "price": "20.55",
+    "stock": 15,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 7
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-016",
+    "workspace_id": "ws-1",
+    "sku": "APX-0016",
+    "slug": "product-016",
+    "name": "Camera 16",
+    "category": "office",
+    "price": "21.92",
+    "stock": 16,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-017",
+    "workspace_id": "ws-2",
+    "sku": "APX-0017",
+    "slug": "product-017",
+    "name": "Notebook 17",
+    "category": "accessories",
+    "price": "23.29",
+    "stock": 17,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-018",
+    "workspace_id": "ws-1",
+    "sku": "APX-0018",
+    "slug": "product-018",
+    "name": "Cable 18",
+    "category": "electronics",
+    "price": "24.66",
+    "stock": 18,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 2
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-019",
+    "workspace_id": "ws-2",
+    "sku": "APX-0019",
+    "slug": "product-019",
+    "name": "شاشة 19",
+    "category": "office",
+    "price": "26.03",
+    "stock": 19,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-020",
+    "workspace_id": "ws-1",
+    "sku": "APX-0020",
+    "slug": "product-020",
+    "name": "Café mug 20",
+    "category": "accessories",
+    "price": "27.40",
+    "stock": 0,
+    "active": false,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-021",
+    "workspace_id": "ws-2",
+    "sku": "APX-0021",
+    "slug": "product-021",
+    "name": "Camera 21",
+    "category": "electronics",
+    "price": "28.77",
+    "stock": 21,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 5
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-022",
+    "workspace_id": "ws-1",
+    "sku": "APX-0022",
+    "slug": "product-022",
+    "name": "Notebook 22",
+    "category": "office",
+    "price": "30.14",
+    "stock": 22,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-023",
+    "workspace_id": "ws-2",
+    "sku": "APX-0023",
+    "slug": "product-023",
+    "name": "Cable 23",
+    "category": "accessories",
+    "price": "31.51",
+    "stock": 23,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-024",
+    "workspace_id": "ws-1",
+    "sku": "APX-0024",
+    "slug": "product-024",
+    "name": "شاشة 24",
+    "category": "electronics",
+    "price": "32.88",
+    "stock": 24,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 0
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-025",
+    "workspace_id": "ws-2",
+    "sku": "APX-0025",
+    "slug": "product-025",
+    "name": "Café mug 25",
+    "category": "office",
+    "price": "34.25",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-026",
+    "workspace_id": "ws-1",
+    "sku": "APX-0026",
+    "slug": "product-026",
+    "name": "Camera 26",
+    "category": "accessories",
+    "price": "35.62",
+    "stock": 1,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-027",
+    "workspace_id": "ws-2",
+    "sku": "APX-0027",
+    "slug": "product-027",
+    "name": "Notebook 27",
+    "category": "electronics",
+    "price": "36.99",
+    "stock": 2,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 3
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-028",
+    "workspace_id": "ws-1",
+    "sku": "APX-0028",
+    "slug": "product-028",
+    "name": "Cable 28",
+    "category": "office",
+    "price": "38.36",
+    "stock": 3,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-029",
+    "workspace_id": "ws-2",
+    "sku": "APX-0029",
+    "slug": "product-029",
+    "name": "شاشة 29",
+    "category": "accessories",
+    "price": "39.73",
+    "stock": 4,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-030",
+    "workspace_id": "ws-1",
+    "sku": "APX-0030",
+    "slug": "product-030",
+    "name": "Café mug 30",
+    "category": "electronics",
+    "price": "41.10",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 6
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-031",
+    "workspace_id": "ws-2",
+    "sku": "APX-0031",
+    "slug": "product-031",
+    "name": "Camera 31",
+    "category": "office",
+    "price": "42.47",
+    "stock": 6,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-032",
+    "workspace_id": "ws-1",
+    "sku": "APX-0032",
+    "slug": "product-032",
+    "name": "Notebook 32",
+    "category": "accessories",
+    "price": "43.84",
+    "stock": 7,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-033",
+    "workspace_id": "ws-2",
+    "sku": "APX-0033",
+    "slug": "product-033",
+    "name": "Cable 33",
+    "category": "electronics",
+    "price": "45.21",
+    "stock": 8,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 1
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-034",
+    "workspace_id": "ws-1",
+    "sku": "APX-0034",
+    "slug": "product-034",
+    "name": "شاشة 34",
+    "category": "office",
+    "price": "46.58",
+    "stock": 9,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-035",
+    "workspace_id": "ws-2",
+    "sku": "APX-0035",
+    "slug": "product-035",
+    "name": "Café mug 35",
+    "category": "accessories",
+    "price": "47.95",
+    "stock": 10,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-036",
+    "workspace_id": "ws-1",
+    "sku": "APX-0036",
+    "slug": "product-036",
+    "name": "Camera 36",
+    "category": "electronics",
+    "price": "49.32",
+    "stock": 11,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 4
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-037",
+    "workspace_id": "ws-2",
+    "sku": "APX-0037",
+    "slug": "product-037",
+    "name": "Notebook 37",
+    "category": "office",
+    "price": "50.69",
+    "stock": 12,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-038",
+    "workspace_id": "ws-1",
+    "sku": "APX-0038",
+    "slug": "product-038",
+    "name": "Cable 38",
+    "category": "accessories",
+    "price": "52.06",
+    "stock": 13,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-039",
+    "workspace_id": "ws-2",
+    "sku": "APX-0039",
+    "slug": "product-039",
+    "name": "شاشة 39",
+    "category": "electronics",
+    "price": "53.43",
+    "stock": 14,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 7
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-040",
+    "workspace_id": "ws-1",
+    "sku": "APX-0040",
+    "slug": "product-040",
+    "name": "Café mug 40",
+    "category": "office",
+    "price": "54.80",
+    "stock": 0,
+    "active": false,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-041",
+    "workspace_id": "ws-2",
+    "sku": "APX-0041",
+    "slug": "product-041",
+    "name": "Camera 41",
+    "category": "accessories",
+    "price": "56.17",
+    "stock": 16,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-042",
+    "workspace_id": "ws-1",
+    "sku": "APX-0042",
+    "slug": "product-042",
+    "name": "Notebook 42",
+    "category": "electronics",
+    "price": "57.54",
+    "stock": 17,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 2
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-043",
+    "workspace_id": "ws-2",
+    "sku": "APX-0043",
+    "slug": "product-043",
+    "name": "Cable 43",
+    "category": "office",
+    "price": "58.91",
+    "stock": 18,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-044",
+    "workspace_id": "ws-1",
+    "sku": "APX-0044",
+    "slug": "product-044",
+    "name": "شاشة 44",
+    "category": "accessories",
+    "price": "60.28",
+    "stock": 19,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-045",
+    "workspace_id": "ws-2",
+    "sku": "APX-0045",
+    "slug": "product-045",
+    "name": "Café mug 45",
+    "category": "electronics",
+    "price": "61.65",
+    "stock": 20,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 5
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-046",
+    "workspace_id": "ws-1",
+    "sku": "APX-0046",
+    "slug": "product-046",
+    "name": "Camera 46",
+    "category": "office",
+    "price": "63.02",
+    "stock": 21,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-047",
+    "workspace_id": "ws-2",
+    "sku": "APX-0047",
+    "slug": "product-047",
+    "name": "Notebook 47",
+    "category": "accessories",
+    "price": "64.39",
+    "stock": 22,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-048",
+    "workspace_id": "ws-1",
+    "sku": "APX-0048",
+    "slug": "product-048",
+    "name": "Cable 48",
+    "category": "electronics",
+    "price": "65.76",
+    "stock": 23,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 0
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-049",
+    "workspace_id": "ws-2",
+    "sku": "APX-0049",
+    "slug": "product-049",
+    "name": "شاشة 49",
+    "category": "office",
+    "price": "67.13",
+    "stock": 24,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-050",
+    "workspace_id": "ws-1",
+    "sku": "APX-0050",
+    "slug": "product-050",
+    "name": "Café mug 50",
+    "category": "accessories",
+    "price": "68.50",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-051",
+    "workspace_id": "ws-2",
+    "sku": "APX-0051",
+    "slug": "product-051",
+    "name": "Camera 51",
+    "category": "electronics",
+    "price": "69.87",
+    "stock": 1,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 3
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-052",
+    "workspace_id": "ws-1",
+    "sku": "APX-0052",
+    "slug": "product-052",
+    "name": "Notebook 52",
+    "category": "office",
+    "price": "71.24",
+    "stock": 2,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-053",
+    "workspace_id": "ws-2",
+    "sku": "APX-0053",
+    "slug": "product-053",
+    "name": "Cable 53",
+    "category": "accessories",
+    "price": "72.61",
+    "stock": 3,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-054",
+    "workspace_id": "ws-1",
+    "sku": "APX-0054",
+    "slug": "product-054",
+    "name": "شاشة 54",
+    "category": "electronics",
+    "price": "73.98",
+    "stock": 4,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 6
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-055",
+    "workspace_id": "ws-2",
+    "sku": "APX-0055",
+    "slug": "product-055",
+    "name": "Café mug 55",
+    "category": "office",
+    "price": "75.35",
+    "stock": 5,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-056",
+    "workspace_id": "ws-1",
+    "sku": "APX-0056",
+    "slug": "product-056",
+    "name": "Camera 56",
+    "category": "accessories",
+    "price": "76.72",
+    "stock": 6,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-057",
+    "workspace_id": "ws-2",
+    "sku": "APX-0057",
+    "slug": "product-057",
+    "name": "Notebook 57",
+    "category": "electronics",
+    "price": "78.09",
+    "stock": 7,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 1
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-058",
+    "workspace_id": "ws-1",
+    "sku": "APX-0058",
+    "slug": "product-058",
+    "name": "Cable 58",
+    "category": "office",
+    "price": "79.46",
+    "stock": 8,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-059",
+    "workspace_id": "ws-2",
+    "sku": "APX-0059",
+    "slug": "product-059",
+    "name": "شاشة 59",
+    "category": "accessories",
+    "price": "80.83",
+    "stock": 9,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-060",
+    "workspace_id": "ws-1",
+    "sku": "APX-0060",
+    "slug": "product-060",
+    "name": "Café mug 60",
+    "category": "electronics",
+    "price": "82.20",
+    "stock": 0,
+    "active": false,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 4
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-061",
+    "workspace_id": "ws-2",
+    "sku": "APX-0061",
+    "slug": "product-061",
+    "name": "Camera 61",
+    "category": "office",
+    "price": "83.57",
+    "stock": 11,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-062",
+    "workspace_id": "ws-1",
+    "sku": "APX-0062",
+    "slug": "product-062",
+    "name": "Notebook 62",
+    "category": "accessories",
+    "price": "84.94",
+    "stock": 12,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-063",
+    "workspace_id": "ws-2",
+    "sku": "APX-0063",
+    "slug": "product-063",
+    "name": "Cable 63",
+    "category": "electronics",
+    "price": "86.31",
+    "stock": 13,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 7
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-064",
+    "workspace_id": "ws-1",
+    "sku": "APX-0064",
+    "slug": "product-064",
+    "name": "شاشة 64",
+    "category": "office",
+    "price": "87.68",
+    "stock": 14,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-065",
+    "workspace_id": "ws-2",
+    "sku": "APX-0065",
+    "slug": "product-065",
+    "name": "Café mug 65",
+    "category": "accessories",
+    "price": "89.05",
+    "stock": 15,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-066",
+    "workspace_id": "ws-1",
+    "sku": "APX-0066",
+    "slug": "product-066",
+    "name": "Camera 66",
+    "category": "electronics",
+    "price": "90.42",
+    "stock": 16,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 2
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-067",
+    "workspace_id": "ws-2",
+    "sku": "APX-0067",
+    "slug": "product-067",
+    "name": "Notebook 67",
+    "category": "office",
+    "price": "91.79",
+    "stock": 17,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-068",
+    "workspace_id": "ws-1",
+    "sku": "APX-0068",
+    "slug": "product-068",
+    "name": "Cable 68",
+    "category": "accessories",
+    "price": "93.16",
+    "stock": 18,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-069",
+    "workspace_id": "ws-2",
+    "sku": "APX-0069",
+    "slug": "product-069",
+    "name": "شاشة 69",
+    "category": "electronics",
+    "price": "94.53",
+    "stock": 19,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 5
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-070",
+    "workspace_id": "ws-1",
+    "sku": "APX-0070",
+    "slug": "product-070",
+    "name": "Café mug 70",
+    "category": "office",
+    "price": "95.90",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-071",
+    "workspace_id": "ws-2",
+    "sku": "APX-0071",
+    "slug": "product-071",
+    "name": "Camera 71",
+    "category": "accessories",
+    "price": "97.27",
+    "stock": 21,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-072",
+    "workspace_id": "ws-1",
+    "sku": "APX-0072",
+    "slug": "product-072",
+    "name": "Notebook 72",
+    "category": "electronics",
+    "price": "98.64",
+    "stock": 22,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 0
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-073",
+    "workspace_id": "ws-2",
+    "sku": "APX-0073",
+    "slug": "product-073",
+    "name": "Cable 73",
+    "category": "office",
+    "price": "0.01",
+    "stock": 23,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-074",
+    "workspace_id": "ws-1",
+    "sku": "APX-0074",
+    "slug": "product-074",
+    "name": "شاشة 74",
+    "category": "accessories",
+    "price": "1.38",
+    "stock": 24,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-075",
+    "workspace_id": "ws-2",
+    "sku": "APX-0075",
+    "slug": "product-075",
+    "name": "Café mug 75",
+    "category": "electronics",
+    "price": "2.75",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 3
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-076",
+    "workspace_id": "ws-1",
+    "sku": "APX-0076",
+    "slug": "product-076",
+    "name": "Camera 76",
+    "category": "office",
+    "price": "4.12",
+    "stock": 1,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-077",
+    "workspace_id": "ws-2",
+    "sku": "APX-0077",
+    "slug": "product-077",
+    "name": "Notebook 77",
+    "category": "accessories",
+    "price": "5.49",
+    "stock": 2,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-078",
+    "workspace_id": "ws-1",
+    "sku": "APX-0078",
+    "slug": "product-078",
+    "name": "Cable 78",
+    "category": "electronics",
+    "price": "6.86",
+    "stock": 3,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 6
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-079",
+    "workspace_id": "ws-2",
+    "sku": "APX-0079",
+    "slug": "product-079",
+    "name": "شاشة 79",
+    "category": "office",
+    "price": "8.23",
+    "stock": 4,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-080",
+    "workspace_id": "ws-1",
+    "sku": "APX-0080",
+    "slug": "product-080",
+    "name": "Café mug 80",
+    "category": "accessories",
+    "price": "9.60",
+    "stock": 0,
+    "active": false,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-081",
+    "workspace_id": "ws-2",
+    "sku": "APX-0081",
+    "slug": "product-081",
+    "name": "Camera 81",
+    "category": "electronics",
+    "price": "10.97",
+    "stock": 6,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 1
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-082",
+    "workspace_id": "ws-1",
+    "sku": "APX-0082",
+    "slug": "product-082",
+    "name": "Notebook 82",
+    "category": "office",
+    "price": "12.34",
+    "stock": 7,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-083",
+    "workspace_id": "ws-2",
+    "sku": "APX-0083",
+    "slug": "product-083",
+    "name": "Cable 83",
+    "category": "accessories",
+    "price": "13.71",
+    "stock": 8,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-084",
+    "workspace_id": "ws-1",
+    "sku": "APX-0084",
+    "slug": "product-084",
+    "name": "شاشة 84",
+    "category": "electronics",
+    "price": "15.08",
+    "stock": 9,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 4
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-085",
+    "workspace_id": "ws-2",
+    "sku": "APX-0085",
+    "slug": "product-085",
+    "name": "Café mug 85",
+    "category": "office",
+    "price": "16.45",
+    "stock": 10,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-086",
+    "workspace_id": "ws-1",
+    "sku": "APX-0086",
+    "slug": "product-086",
+    "name": "Camera 86",
+    "category": "accessories",
+    "price": "17.82",
+    "stock": 11,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-087",
+    "workspace_id": "ws-2",
+    "sku": "APX-0087",
+    "slug": "product-087",
+    "name": "Notebook 87",
+    "category": "electronics",
+    "price": "19.19",
+    "stock": 12,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 7
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-088",
+    "workspace_id": "ws-1",
+    "sku": "APX-0088",
+    "slug": "product-088",
+    "name": "Cable 88",
+    "category": "office",
+    "price": "20.56",
+    "stock": 13,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-089",
+    "workspace_id": "ws-2",
+    "sku": "APX-0089",
+    "slug": "product-089",
+    "name": "شاشة 89",
+    "category": "accessories",
+    "price": "21.93",
+    "stock": 14,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-090",
+    "workspace_id": "ws-1",
+    "sku": "APX-0090",
+    "slug": "product-090",
+    "name": "Café mug 90",
+    "category": "electronics",
+    "price": "23.30",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 2
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-091",
+    "workspace_id": "ws-2",
+    "sku": "APX-0091",
+    "slug": "product-091",
+    "name": "Camera 91",
+    "category": "office",
+    "price": "24.67",
+    "stock": 16,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-092",
+    "workspace_id": "ws-1",
+    "sku": "APX-0092",
+    "slug": "product-092",
+    "name": "Notebook 92",
+    "category": "accessories",
+    "price": "26.04",
+    "stock": 17,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-093",
+    "workspace_id": "ws-2",
+    "sku": "APX-0093",
+    "slug": "product-093",
+    "name": "Cable 93",
+    "category": "electronics",
+    "price": "27.41",
+    "stock": 18,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 5
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-094",
+    "workspace_id": "ws-1",
+    "sku": "APX-0094",
+    "slug": "product-094",
+    "name": "شاشة 94",
+    "category": "office",
+    "price": "28.78",
+    "stock": 19,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-095",
+    "workspace_id": "ws-2",
+    "sku": "APX-0095",
+    "slug": "product-095",
+    "name": "Café mug 95",
+    "category": "accessories",
+    "price": "30.15",
+    "stock": 20,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-096",
+    "workspace_id": "ws-1",
+    "sku": "APX-0096",
+    "slug": "product-096",
+    "name": "Camera 96",
+    "category": "electronics",
+    "price": "31.52",
+    "stock": 21,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 0
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-097",
+    "workspace_id": "ws-2",
+    "sku": "APX-0097",
+    "slug": "product-097",
+    "name": "Notebook 97",
+    "category": "office",
+    "price": "32.89",
+    "stock": 22,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-098",
+    "workspace_id": "ws-1",
+    "sku": "APX-0098",
+    "slug": "product-098",
+    "name": "Cable 98",
+    "category": "accessories",
+    "price": "34.26",
+    "stock": 23,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-099",
+    "workspace_id": "ws-2",
+    "sku": "APX-0099",
+    "slug": "product-099",
+    "name": "شاشة 99",
+    "category": "electronics",
+    "price": "35.63",
+    "stock": 24,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 3
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-100",
+    "workspace_id": "ws-1",
+    "sku": "APX-0100",
+    "slug": "product-100",
+    "name": "Café mug 100",
+    "category": "office",
+    "price": "37.00",
+    "stock": 0,
+    "active": false,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-101",
+    "workspace_id": "ws-2",
+    "sku": "APX-0101",
+    "slug": "product-101",
+    "name": "Camera 101",
+    "category": "accessories",
+    "price": "38.37",
+    "stock": 1,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-102",
+    "workspace_id": "ws-1",
+    "sku": "APX-0102",
+    "slug": "product-102",
+    "name": "Notebook 102",
+    "category": "electronics",
+    "price": "39.74",
+    "stock": 2,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 6
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-103",
+    "workspace_id": "ws-2",
+    "sku": "APX-0103",
+    "slug": "product-103",
+    "name": "Cable 103",
+    "category": "office",
+    "price": "41.11",
+    "stock": 3,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-104",
+    "workspace_id": "ws-1",
+    "sku": "APX-0104",
+    "slug": "product-104",
+    "name": "شاشة 104",
+    "category": "accessories",
+    "price": "42.48",
+    "stock": 4,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-105",
+    "workspace_id": "ws-2",
+    "sku": "APX-0105",
+    "slug": "product-105",
+    "name": "Café mug 105",
+    "category": "electronics",
+    "price": "43.85",
+    "stock": 5,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 1
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-106",
+    "workspace_id": "ws-1",
+    "sku": "APX-0106",
+    "slug": "product-106",
+    "name": "Camera 106",
+    "category": "office",
+    "price": "45.22",
+    "stock": 6,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 2
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-107",
+    "workspace_id": "ws-2",
+    "sku": "APX-0107",
+    "slug": "product-107",
+    "name": "Notebook 107",
+    "category": "accessories",
+    "price": "46.59",
+    "stock": 7,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-108",
+    "workspace_id": "ws-1",
+    "sku": "APX-0108",
+    "slug": "product-108",
+    "name": "Cable 108",
+    "category": "electronics",
+    "price": "47.96",
+    "stock": 8,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 4
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-109",
+    "workspace_id": "ws-2",
+    "sku": "APX-0109",
+    "slug": "product-109",
+    "name": "شاشة 109",
+    "category": "office",
+    "price": "49.33",
+    "stock": 9,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 1,
+        "height": 5
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-110",
+    "workspace_id": "ws-1",
+    "sku": "APX-0110",
+    "slug": "product-110",
+    "name": "Café mug 110",
+    "category": "accessories",
+    "price": "50.70",
+    "stock": 0,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 2,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-111",
+    "workspace_id": "ws-2",
+    "sku": "APX-0111",
+    "slug": "product-111",
+    "name": "Camera 111",
+    "category": "electronics",
+    "price": "52.07",
+    "stock": 11,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 3,
+        "height": 7
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-112",
+    "workspace_id": "ws-1",
+    "sku": "APX-0112",
+    "slug": "product-112",
+    "name": "Notebook 112",
+    "category": "office",
+    "price": "53.44",
+    "stock": 12,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 4,
+        "height": 0
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-113",
+    "workspace_id": "ws-2",
+    "sku": "APX-0113",
+    "slug": "product-113",
+    "name": "Cable 113",
+    "category": "accessories",
+    "price": "54.81",
+    "stock": 13,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 5,
+        "height": 1
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-114",
+    "workspace_id": "ws-1",
+    "sku": "APX-0114",
+    "slug": "product-114",
+    "name": "شاشة 114",
+    "category": "electronics",
+    "price": "56.18",
+    "stock": 14,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 6,
+        "height": 2
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-115",
+    "workspace_id": "ws-2",
+    "sku": "APX-0115",
+    "slug": "product-115",
+    "name": "Café mug 115",
+    "category": "office",
+    "price": "57.55",
+    "stock": 15,
+    "active": true,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 7,
+        "height": 3
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-116",
+    "workspace_id": "ws-1",
+    "sku": "APX-0116",
+    "slug": "product-116",
+    "name": "Camera 116",
+    "category": "accessories",
+    "price": "58.92",
+    "stock": 16,
+    "active": false,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 8,
+        "height": 4
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-117",
+    "workspace_id": "ws-2",
+    "sku": "APX-0117",
+    "slug": "product-117",
+    "name": "Notebook 117",
+    "category": "electronics",
+    "price": "60.29",
+    "stock": 17,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 9,
+        "height": 5
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-118",
+    "workspace_id": "ws-1",
+    "sku": "APX-0118",
+    "slug": "product-118",
+    "name": "Cable 118",
+    "category": "office",
+    "price": "61.66",
+    "stock": 18,
+    "active": true,
+    "tags": ["manual", "sale"],
+    "attributes": {
+      "dimensions": {
+        "width": 10,
+        "height": 6
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-119",
+    "workspace_id": "ws-2",
+    "sku": "APX-0119",
+    "slug": "product-119",
+    "name": "شاشة 119",
+    "category": "accessories",
+    "price": "63.03",
+    "stock": 19,
+    "active": true,
+    "tags": ["manual", "regular"],
+    "attributes": {
+      "dimensions": {
+        "width": 11,
+        "height": 7
+      },
+      "color": "blue",
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "product-120",
+    "workspace_id": "ws-1",
+    "sku": "APX-0120",
+    "slug": "product-120",
+    "name": "Café mug 120",
+    "category": "electronics",
+    "price": "64.40",
+    "stock": 0,
+    "active": false,
+    "tags": [],
+    "attributes": {
+      "dimensions": {
+        "width": 0,
+        "height": 0
+      },
+      "color": null,
+      "variants": [
+        {
+          "code": "a",
+          "available": true
+        },
+        {
+          "code": "b",
+          "available": false
+        }
+      ]
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  }
+]

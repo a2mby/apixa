@@ -28,7 +28,7 @@
 ### Workspace deliverables
 
 - Reshape [`packages/core`](../../packages/core) — no new packages.
-- Rewrite [`examples/basic`](../../examples/basic) to the new API (implemented syntax only).
+- Rewrite [`examples/frontends/basic`](../../examples/frontends/basic) to the new API (implemented syntax only).
 - Add tests under root [`tests/`](../../tests/) covering:
   - API / resource definition
   - Operation generation / overrides

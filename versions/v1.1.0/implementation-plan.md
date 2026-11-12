@@ -87,7 +87,7 @@ construction. `MockError` for storage problems. Messages carry field paths and t
 8. **Mock storage** — `mock/files.ts`, mock write staging in the pipeline's mock branch, `resetMock`, `mockFiles`.
 9. **Exports** — Core + Mocking re-exports; `node scripts/verify-public-api.mjs --update`; review snapshot; `docs/public-api.md`.
 10. **Tests** — type, serializer, pipeline (headers, retries, abort, transforms, middleware), mock storage, React inference, packed consumers.
-11. **Docs and example** — architecture, README, `examples/next`, story, roadmap.
+11. **Docs and example** — architecture, README, `examples/frontends/next`, story, roadmap.
 12. **Verify** — full gate (`pnpm verify`), `graphify update .`, tick acceptance criteria with evidence.
 
 13. **Release-blocker correction** — (a) `packages/react/src/peer.ts`: `RequireTanStackQuery`, applied to every overload of the three hooks; (b) `scripts/verify-type-consumers.mjs` + `scripts/lib/type-consumer-fixtures.mjs` (npm, packed tarball, outside the workspace), added to `verify:consumers`; (c) README / `docs/public-api.md` / `docs/architecture.md` install requirements; (d) full gate.
@@ -99,7 +99,7 @@ construction. `MockError` for storage problems. Messages carry field paths and t
 - `packages/core/src/http/{body,multipart,index}.ts`, `request/pipeline.ts`, `mock/{files,store?,index}.ts`, `utils/uuid.ts`
 - `packages/core/src/index.ts`, `packages/mocking/src/index.ts`
 - `tests/core/*`, `tests/mocking/*`, `tests/react/*`, consumer scripts under `scripts/` if needed
-- `docs/{architecture,public-api,story,roadmap}.md`, Core README, `examples/next`
+- `docs/{architecture,public-api,story,roadmap}.md`, Core README, `examples/frontends/next`
 
 ## Explicit non-steps
 

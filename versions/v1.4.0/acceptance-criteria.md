@@ -80,7 +80,7 @@ Tick an item only with verified evidence (test name, command output or script re
 
 - [x] `docs/architecture.md` (validation and safety section), `docs/public-api.md`, README and Core README document rules, precedence, errors and limits, marking implemented vs planned
 - [x] A **trust boundary** section states: client validation is developer experience, the backend must re-validate; `File.type` and `File.name` are caller-controlled; extensions do not prove content; no sniffing; mid-stream limits are best effort
-- [ ] `examples/next` shows one validation scenario (rejected file, no request); no other example touched _(scenario added and type-checked; not driven in a browser: the directory is untracked here)_
+- [ ] `examples/frontends/next` shows one validation scenario (rejected file, no request); no other example touched _(scenario added and type-checked; not driven in a browser: the directory is untracked here)_
 - [x] `docs/story.md`, `docs/roadmap.md`, `docs/context.md` and `versions/README.md` reflect the implemented state
 
 ## Verification gate

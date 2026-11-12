@@ -1,0 +1,812 @@
+[
+  {
+    "id": "comment-001",
+    "article_id": "article-001",
+    "contact_id": "contact-001",
+    "body": "Comment 1: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-002",
+    "article_id": "article-002",
+    "contact_id": "contact-002",
+    "body": "Comment 2: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-003",
+    "article_id": "article-003",
+    "contact_id": "contact-003",
+    "body": "Comment 3: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-004",
+    "article_id": "article-004",
+    "contact_id": "contact-004",
+    "body": "Comment 4: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-005",
+    "article_id": "article-005",
+    "contact_id": "contact-005",
+    "body": "Comment 5: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-006",
+    "article_id": "article-006",
+    "contact_id": "contact-006",
+    "body": "Comment 6: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-007",
+    "article_id": "article-007",
+    "contact_id": "contact-007",
+    "body": "Comment 7: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-008",
+    "article_id": "article-008",
+    "contact_id": "contact-008",
+    "body": "Comment 8: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-009",
+    "article_id": "article-009",
+    "contact_id": "contact-009",
+    "body": "Comment 9: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-010",
+    "article_id": "article-010",
+    "contact_id": "contact-010",
+    "body": "Comment 10: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-011",
+    "article_id": "article-011",
+    "contact_id": "contact-011",
+    "body": "Comment 11: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-012",
+    "article_id": "article-012",
+    "contact_id": "contact-012",
+    "body": "Comment 12: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-013",
+    "article_id": "article-013",
+    "contact_id": "contact-013",
+    "body": "Comment 13: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-014",
+    "article_id": "article-014",
+    "contact_id": "contact-014",
+    "body": "Comment 14: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-015",
+    "article_id": "article-015",
+    "contact_id": "contact-015",
+    "body": "Comment 15: ملاحظة عربية",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-016",
+    "article_id": "article-016",
+    "contact_id": "contact-016",
+    "body": "Comment 16: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-017",
+    "article_id": "article-017",
+    "contact_id": "contact-017",
+    "body": "Comment 17: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-018",
+    "article_id": "article-018",
+    "contact_id": "contact-018",
+    "body": "Comment 18: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-019",
+    "article_id": "article-019",
+    "contact_id": "contact-019",
+    "body": "Comment 19: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-020",
+    "article_id": "article-020",
+    "contact_id": "contact-020",
+    "body": "Comment 20: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-021",
+    "article_id": "article-021",
+    "contact_id": "contact-021",
+    "body": "Comment 21: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-022",
+    "article_id": "article-022",
+    "contact_id": "contact-022",
+    "body": "Comment 22: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-023",
+    "article_id": "article-023",
+    "contact_id": "contact-023",
+    "body": "Comment 23: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-024",
+    "article_id": "article-024",
+    "contact_id": "contact-024",
+    "body": "Comment 24: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-025",
+    "article_id": "article-025",
+    "contact_id": "contact-025",
+    "body": "Comment 25: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-026",
+    "article_id": "article-026",
+    "contact_id": "contact-026",
+    "body": "Comment 26: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-027",
+    "article_id": "article-027",
+    "contact_id": "contact-027",
+    "body": "Comment 27: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-028",
+    "article_id": "article-028",
+    "contact_id": "contact-028",
+    "body": "Comment 28: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-029",
+    "article_id": "article-029",
+    "contact_id": "contact-029",
+    "body": "Comment 29: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-030",
+    "article_id": "article-030",
+    "contact_id": "contact-030",
+    "body": "Comment 30: ملاحظة عربية",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-031",
+    "article_id": "article-031",
+    "contact_id": "contact-031",
+    "body": "Comment 31: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-032",
+    "article_id": "article-032",
+    "contact_id": "contact-032",
+    "body": "Comment 32: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-033",
+    "article_id": "article-033",
+    "contact_id": "contact-033",
+    "body": "Comment 33: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-034",
+    "article_id": "article-034",
+    "contact_id": "contact-034",
+    "body": "Comment 34: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-035",
+    "article_id": "article-035",
+    "contact_id": "contact-035",
+    "body": "Comment 35: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-036",
+    "article_id": "article-036",
+    "contact_id": "contact-036",
+    "body": "Comment 36: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-037",
+    "article_id": "article-037",
+    "contact_id": "contact-037",
+    "body": "Comment 37: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-038",
+    "article_id": "article-038",
+    "contact_id": "contact-038",
+    "body": "Comment 38: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-039",
+    "article_id": "article-039",
+    "contact_id": "contact-039",
+    "body": "Comment 39: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-040",
+    "article_id": "article-040",
+    "contact_id": "contact-040",
+    "body": "Comment 40: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-041",
+    "article_id": "article-041",
+    "contact_id": "contact-001",
+    "body": "Comment 41: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-042",
+    "article_id": "article-042",
+    "contact_id": "contact-002",
+    "body": "Comment 42: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-043",
+    "article_id": "article-043",
+    "contact_id": "contact-003",
+    "body": "Comment 43: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-044",
+    "article_id": "article-044",
+    "contact_id": "contact-004",
+    "body": "Comment 44: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-045",
+    "article_id": "article-045",
+    "contact_id": "contact-005",
+    "body": "Comment 45: ملاحظة عربية",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-046",
+    "article_id": "article-001",
+    "contact_id": "contact-006",
+    "body": "Comment 46: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-047",
+    "article_id": "article-002",
+    "contact_id": "contact-007",
+    "body": "Comment 47: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-048",
+    "article_id": "article-003",
+    "contact_id": "contact-008",
+    "body": "Comment 48: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-049",
+    "article_id": "article-004",
+    "contact_id": "contact-009",
+    "body": "Comment 49: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-050",
+    "article_id": "article-005",
+    "contact_id": "contact-010",
+    "body": "Comment 50: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-051",
+    "article_id": "article-006",
+    "contact_id": "contact-011",
+    "body": "Comment 51: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-052",
+    "article_id": "article-007",
+    "contact_id": "contact-012",
+    "body": "Comment 52: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-053",
+    "article_id": "article-008",
+    "contact_id": "contact-013",
+    "body": "Comment 53: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-054",
+    "article_id": "article-009",
+    "contact_id": "contact-014",
+    "body": "Comment 54: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-055",
+    "article_id": "article-010",
+    "contact_id": "contact-015",
+    "body": "Comment 55: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-056",
+    "article_id": "article-011",
+    "contact_id": "contact-016",
+    "body": "Comment 56: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-057",
+    "article_id": "article-012",
+    "contact_id": "contact-017",
+    "body": "Comment 57: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-058",
+    "article_id": "article-013",
+    "contact_id": "contact-018",
+    "body": "Comment 58: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-059",
+    "article_id": "article-014",
+    "contact_id": "contact-019",
+    "body": "Comment 59: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-060",
+    "article_id": "article-015",
+    "contact_id": "contact-020",
+    "body": "Comment 60: ملاحظة عربية",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-061",
+    "article_id": "article-016",
+    "contact_id": "contact-021",
+    "body": "Comment 61: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-062",
+    "article_id": "article-017",
+    "contact_id": "contact-022",
+    "body": "Comment 62: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-063",
+    "article_id": "article-018",
+    "contact_id": "contact-023",
+    "body": "Comment 63: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-064",
+    "article_id": "article-019",
+    "contact_id": "contact-024",
+    "body": "Comment 64: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-065",
+    "article_id": "article-020",
+    "contact_id": "contact-025",
+    "body": "Comment 65: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-066",
+    "article_id": "article-021",
+    "contact_id": "contact-026",
+    "body": "Comment 66: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-067",
+    "article_id": "article-022",
+    "contact_id": "contact-027",
+    "body": "Comment 67: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-068",
+    "article_id": "article-023",
+    "contact_id": "contact-028",
+    "body": "Comment 68: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-069",
+    "article_id": "article-024",
+    "contact_id": "contact-029",
+    "body": "Comment 69: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-070",
+    "article_id": "article-025",
+    "contact_id": "contact-030",
+    "body": "Comment 70: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-071",
+    "article_id": "article-026",
+    "contact_id": "contact-031",
+    "body": "Comment 71: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-072",
+    "article_id": "article-027",
+    "contact_id": "contact-032",
+    "body": "Comment 72: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-073",
+    "article_id": "article-028",
+    "contact_id": "contact-033",
+    "body": "Comment 73: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-074",
+    "article_id": "article-029",
+    "contact_id": "contact-034",
+    "body": "Comment 74: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-075",
+    "article_id": "article-030",
+    "contact_id": "contact-035",
+    "body": "Comment 75: ملاحظة عربية",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-076",
+    "article_id": "article-031",
+    "contact_id": "contact-036",
+    "body": "Comment 76: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-077",
+    "article_id": "article-032",
+    "contact_id": "contact-037",
+    "body": "Comment 77: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-078",
+    "article_id": "article-033",
+    "contact_id": "contact-038",
+    "body": "Comment 78: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-079",
+    "article_id": "article-034",
+    "contact_id": "contact-039",
+    "body": "Comment 79: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-080",
+    "article_id": "article-035",
+    "contact_id": "contact-040",
+    "body": "Comment 80: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-081",
+    "article_id": "article-036",
+    "contact_id": "contact-001",
+    "body": "Comment 81: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-082",
+    "article_id": "article-037",
+    "contact_id": "contact-002",
+    "body": "Comment 82: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-083",
+    "article_id": "article-038",
+    "contact_id": "contact-003",
+    "body": "Comment 83: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-084",
+    "article_id": "article-039",
+    "contact_id": "contact-004",
+    "body": "Comment 84: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-085",
+    "article_id": "article-040",
+    "contact_id": "contact-005",
+    "body": "Comment 85: ملاحظة عربية",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-086",
+    "article_id": "article-041",
+    "contact_id": "contact-006",
+    "body": "Comment 86: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-087",
+    "article_id": "article-042",
+    "contact_id": "contact-007",
+    "body": "Comment 87: manual test note",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-088",
+    "article_id": "article-043",
+    "contact_id": "contact-008",
+    "body": "Comment 88: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-089",
+    "article_id": "article-044",
+    "contact_id": "contact-009",
+    "body": "Comment 89: manual test note",
+    "approved": true,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "comment-090",
+    "article_id": "article-045",
+    "contact_id": "contact-010",
+    "body": "Comment 90: ملاحظة عربية",
+    "approved": false,
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  }
+]

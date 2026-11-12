@@ -165,7 +165,7 @@ explicit D14/D18 owner decision and corresponding criteria, not an implicit clai
       retry policy and caller signals are tested on React 18 and React 19 against the packed package.
 - [x] Session callbacks/controls remain outside automatic query identities; binary identity guard,
       binary/stream dehydration exclusions, SSR behavior and consumer-owned streams remain intact.
-- [x] Tracked `examples/query-ssr-next` shows explicit advanced upload, interruption/reconciliation/
+- [x] Tracked `examples/frontends/query-ssr-next` shows explicit advanced upload, interruption/reconciliation/
       resume, progress and cancellation through public imports; Chromium drives it in dev and production.
 - [x] Node 22 and 24 run deterministic protocol and real loopback/backpressure/security checks.
       Chromium proves browser behavior; Next SSR has no browser-global access at module evaluation

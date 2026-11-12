@@ -64,7 +64,7 @@ bulkCreate: false, bulkDelete: false }` — one line instead of seven for a read
   package's tests currently live) covering every fix and every improvement above, including a
   regression test per bug (parse failure, store mutation, composed-builtin override, double retry,
   missing-path validation).
-- `examples/next` updated only if an existing example resource is a natural fit for demonstrating
+- `examples/frontends/next` updated only if an existing example resource is a natural fit for demonstrating
   `readOnly` or `pagination`; do not add a resource solely to showcase a feature.
 - Docs: `docs/context.md`, `docs/conventions.md` (pagination + readOnly + corrected builtins table
   note), `docs/architecture.md` if the mock-bridge operations plumbing changes its shape,

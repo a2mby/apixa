@@ -34,7 +34,7 @@ delete:  { method: "DELETE", path: "/:id", response: type<void>() }
 
 - Reshape under `packages/core/src/` — no new packages, no new dependencies.
 - Root tests for marker inference and rejection of `{} as T` on markers.
-- Local Next example (`examples/next`) updated to `type<T>()` when implementing.
+- Local Next example (`examples/frontends/next`) updated to `type<T>()` when implementing.
 - Living docs, README, `CHANGELOG.md` (create if missing), and `docs/story.md`.
 
 ### Docs

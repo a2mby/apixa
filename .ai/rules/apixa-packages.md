@@ -1,0 +1,29 @@
+---
+description: Rules when editing packages/core or examples in Apixa
+globs: packages/**/*,examples/**/*,tests/**/*
+alwaysApply: false
+---
+
+# Core and examples
+
+## Prefer reshape over new packages
+
+Reuse folders under `packages/core/src/` (`api/`, `operation/`, `request/`, `http/`, `transport/`, `errors/`, `types/`). Do not add workspace packages without an active version scope item.
+
+## Public API
+
+- Prefer `defineApi` as the documented entry; v0.2.0 default-first resources are the active DX.
+- Keep `index.ts` exports small: define API, types, errors, Fetch/transport.
+- Unexport or remove production `mocks`, auth product surface, and logging middleware unless the active scope includes them.
+
+## Types and ops
+
+- Infer types from definitions.
+- Default-first builtins; optional `operations` merges overrides. Custom names coexist.
+- Custom operation with the same name wins over a convention.
+
+## Examples and tests
+
+- Only maintain the Next examples, **`examples/frontends/query-ssr-next`** (tracked) and the local `examples/frontends/next` (see `apixa-examples` rule). Do not edit other `examples/*`.
+- Tests under root `tests/` (e.g. `tests/core/`); use injectable/fake `Transport`.
+- No flaky live-network as the primary suite.

@@ -23,7 +23,7 @@
 
 ## File touch list
 
-- `examples/laravel-backend/**` (official skeleton, lockfile, environment references, README)
+- `examples/backends/laravel-backend/**` (official skeleton, lockfile, environment references, README)
 - `.gitignore` (allow only the requested additional example)
 - `README.md` (discovery link)
 - `docs/context.md`, `docs/roadmap.md`, `docs/story.md`

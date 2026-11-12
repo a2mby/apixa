@@ -69,7 +69,7 @@ Tick an item only with verified evidence (test name, command output or script re
 
 - [x] Public API changes are additions only, recorded in `docs/public-api.md`; snapshot reviewed after `node scripts/verify-public-api.mjs --update`
 - [x] `docs/architecture.md` (transfer section), `docs/public-api.md`, README and Core README document events, limits per runtime and the honesty rules, marking implemented vs planned
-- [x] `examples/next` shows one transfer scenario (progress + abort); no other example touched
+- [x] `examples/frontends/next` shows one transfer scenario (progress + abort); no other example touched
 - [x] `docs/story.md`, `docs/roadmap.md`, `docs/context.md` and `versions/README.md` reflect the implemented state
 
 ## Verification gate

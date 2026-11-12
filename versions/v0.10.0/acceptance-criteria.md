@@ -61,7 +61,7 @@ Check every item before calling v0.10.0 done.
 
 ## Example and docs
 
-- [x] `examples/next` demonstrates a built-in available with no `operations` entry (e.g. `exists`,
+- [x] `examples/frontends/next` demonstrates a built-in available with no `operations` entry (e.g. `exists`,
       `patch`) and one fully custom function operation (`archive`).
 - [x] `docs/conventions.md` documents the full builtin table (16 names) and the function-operation
       shape.

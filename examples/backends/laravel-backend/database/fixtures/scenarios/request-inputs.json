@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "executable": false,
+  "requires": "Author-owned endpoint or controlled client harness; seeding does not implement this behavior.",
+  "cases": [
+    {
+      "id": "create-contact",
+      "input": {
+        "name": "Manual contact",
+        "active": false,
+        "score": 0
+      },
+      "expected": "valid request under the author-defined schema"
+    },
+    {
+      "id": "nullable-profile",
+      "input": {
+        "payload": {
+          "bio": null,
+          "tags": [],
+          "emptyObject": {}
+        }
+      },
+      "expected": "preserve null and empty values"
+    },
+    {
+      "id": "unicode-search",
+      "input": {
+        "query": {
+          "name": "أحمد"
+        }
+      },
+      "expected": "matching Unicode records"
+    },
+    {
+      "id": "bulk-create",
+      "input": {
+        "items": [
+          {
+            "name": "First"
+          },
+          {
+            "name": "Second"
+          }
+        ]
+      },
+      "expected": "encode two distinct inputs"
+    },
+    {
+      "id": "missing-required",
+      "input": {
+        "email": "only@example.test"
+      },
+      "expected": "author endpoint validation failure"
+    },
+    {
+      "id": "invalid-uuid",
+      "input": {
+        "id": "not-a-uuid"
+      },
+      "expected": "reject invalid UUID without changing state"
+    },
+    {
+      "id": "path-sensitive-id",
+      "input": {
+        "id": "a/b ?#%"
+      },
+      "expected": "test client encoding and explicit backend route contract"
+    },
+    {
+      "id": "multipart-nested",
+      "input": {
+        "payload": {
+          "address": {
+            "city": "Amman"
+          },
+          "tags": ["a", "b"]
+        },
+        "file_fixture": "unicode"
+      },
+      "expected": "nested fields and exact bytes"
+    },
+    {
+      "id": "over-file-limit",
+      "input": {
+        "file_fixture": "over-limit",
+        "max_size_bytes": 1024
+      },
+      "expected": "reject one byte over the configured limit"
+    },
+    {
+      "id": "too-many-files",
+      "input": {
+        "file_fixtures": ["ascii", "one-byte", "binary", "png"],
+        "max_files": 3
+      },
+      "expected": "reject aggregate count"
+    },
+    {
+      "id": "rejected-filename",
+      "input": {
+        "submitted_filename": "../unsafe.txt",
+        "file_fixture": "ascii"
+      },
+      "expected": "generate in request only; never create an unsafe filesystem path"
+    }
+  ]
+}

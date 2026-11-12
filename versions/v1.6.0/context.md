@@ -34,7 +34,7 @@ Facts, from reading the code and CI, not assumptions:
    TanStack 5.90.1 in a packed consumer, but they check types, a Vite build and SSR, never an executed
    hook that uploads, downloads or reports progress. v1.3.0, v1.4.0 and v1.5.0 each recorded this gap.
 2. **The maintained Next scenarios are not on `main`.** `.gitignore` ignores `examples/**` except
-   `examples/query-ssr-next`. `examples/next` (50 source files, the file upload/download/progress/
+   `examples/frontends/query-ssr-next`. `examples/frontends/next` (50 source files, the file upload/download/progress/
    validation scenarios, `react-hook-form` in its manifest) exists only locally, while `AGENTS.md`
    calls it "the only maintained example". The tracked, CI-driven Next app (`query-ssr-next`) has no
    file scenario. The contradiction is real and needs one decision (see O1).

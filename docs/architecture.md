@@ -179,7 +179,7 @@ Server -> Client payload. Unchanged by design: resource-wide mutation invalidati
 `invalidate` option), a stream held in the query cache is the app's to consume (Core's `timeout` bounds it), and flat
 reads through a hook are cached queries. Evidence: `tests/react/framework-files-*.test.tsx`, `query-identity-binary`,
 `ssr-binary-dehydrate`, the packed React 18/19 runtime (`scripts/file-consumer-runtime.mjs`) and the Chromium-driven
-`examples/query-ssr-next` `/files` scenario.
+`examples/frontends/query-ssr-next` `/files` scenario.
 
 ## File validation and safety (v1.4.0, implemented)
 
@@ -423,8 +423,11 @@ packages/mocking/          # datasets entry (lazy loadDataset + eager records), 
 packages/react/            # @apixa/react: native Query reads + separate Mutation writes, provider, QueryClient
 packages/internal/shared/  # private, never published: framework-neutral keys + operation classification
 datasets/                  # version-controlled JSON fixtures
-examples/next/             # primary playground (uses mocking + react)
-examples/query-ssr-next/   # tracked App Router prefetch/hydration example
+examples/
+  backends/laravel-backend/           # independent Laravel/PostgreSQL/MongoDB playground (no app endpoints)
+  frontends/query-ssr-next/           # maintained Next.js App Router example (prefetch, hydration, files)
+  frontends/next/                     # local, untracked Next.js playground
+  templates/{laravel,next,react}/     # empty starter placeholders
 src/                       # the `apixa` facade: re-export entries only
 tests/                     # vitest — Core + mocking + react + facade + shared
 ```
@@ -448,9 +451,9 @@ architecture contract above.
 - Living context: [context.md](./context.md)
 - Public API contract and migration map: [public-api.md](./public-api.md)
 - Roadmap: [roadmap.md](./roadmap.md)
-- Latest coding contract: [../versions/v0.8.0/](../versions/v0.8.0/) (shipped; see [versions/README.md](../versions/README.md))
+- Latest coding contract: [../versions/v1.8.1/](../versions/v1.8.1/) (active; see [versions/README.md](../versions/README.md))
 
-## Advanced transfers (v1.7.0, unreleased)
+## Advanced transfers (v1.7.0; implemented, not npm-published)
 
 Advanced uploads are optional operation strategies inside Core's existing `transfer/` area.
 `runOperation` builds the logical request, runs its request middleware and whole-source validation,

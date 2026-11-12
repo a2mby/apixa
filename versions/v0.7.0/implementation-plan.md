@@ -57,7 +57,7 @@ Smallest path to a thin, plugin-ready Core. Reshape existing files; no new packa
 | `packages/core/src/index.ts`          | exports                                          |
 | `packages/mocking/**`                 | `declare module` for mock keys; fix tests        |
 | `tests/core/**`, `tests/mocking/**`   | update + minimal new cases                       |
-| `examples/next/lib/api.ts`            | only if types break mock usage                   |
+| `examples/frontends/next/lib/api.ts`            | only if types break mock usage                   |
 | `CHANGELOG.md`, `README.md`, `docs/*` | honesty + migration                              |
 
 ## Done when

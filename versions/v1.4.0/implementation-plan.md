@@ -89,7 +89,7 @@ Deviations (each within the contract's intent):
   change retry behavior), but the fetch transport bounds their body with the same limit: a declared or
   counted oversize error body is dropped (`data: null`) instead of being buffered. The contract was
   silent on this; leaving error bodies unbounded would have been a safety gap, so it was closed.
-- The `examples/next` scenario is untracked in this checkout and was type-checked but not driven in a
+- The `examples/frontends/next` scenario is untracked in this checkout and was type-checked but not driven in a
   browser; the packed-consumer and Chromium scripts drive the behavior.
 
 ## Batches
@@ -153,7 +153,7 @@ Deviations (each within the contract's intent):
 
 - `verify-unified-consumer.mjs` (Node + Next SSR), `verify-browser.mjs` (Chromium: size/MIME rejection
   with no request reaching the server, stream limit), `verify-edge.mjs` (Vercel Edge, workerd).
-  `examples/next` one scenario. Docs: architecture ("File validation and safety", trust-boundary
+  `examples/frontends/next` one scenario. Docs: architecture ("File validation and safety", trust-boundary
   section), `public-api.md`, READMEs, story; `node scripts/verify-public-api.mjs --update` and review.
   Tick criteria only with evidence; run complete `pnpm verify`.
 
@@ -165,7 +165,7 @@ Deviations (each within the contract's intent):
 `packages/mocking/src/index.ts` (re-exports, if any); `src/index.ts`; `tests/core/{file-validation-*,
 file-rules-*,response-limits,stream-limits,validation-*}.test.ts`, `tests/react/file-validation.test.tsx`,
 `tests/helpers/*`; `tests/facade/*`; `scripts/verify-*.mjs`, `scripts/lib/type-consumer-fixtures.mjs`,
-`scripts/spike-file-validation.mjs`; `examples/next/**`; docs and `versions/v1.4.0/*`.
+`scripts/spike-file-validation.mjs`; `examples/frontends/next/**`; docs and `versions/v1.4.0/*`.
 
 ## Testing strategy
 

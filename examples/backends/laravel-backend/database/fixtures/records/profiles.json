@@ -1,0 +1,416 @@
+[
+  {
+    "id": "profile-001",
+    "contact_id": "contact-001",
+    "payload": {
+      "displayName": "Ada Lovelace",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Amman",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": false,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-002",
+    "contact_id": "contact-002",
+    "payload": {
+      "displayName": "Grace Hopper",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Paris",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": true,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false,
+      "optionalNote": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-003",
+    "contact_id": "contact-003",
+    "payload": {
+      "displayName": "أحمد بني يونس",
+      "bio": "",
+      "address": {
+        "city": "Amman",
+        "postalCode": null
+      },
+      "preferences": {
+        "newsletter": false,
+        "theme": "dark"
+      },
+      "tags": [],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-004",
+    "contact_id": "contact-004",
+    "payload": {
+      "displayName": "Zoë García",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Paris",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": true,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false,
+      "optionalNote": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-005",
+    "contact_id": "contact-005",
+    "payload": {
+      "displayName": "李明",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Amman",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": false,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-006",
+    "contact_id": "contact-006",
+    "payload": {
+      "displayName": "Emoji 🚀",
+      "bio": "",
+      "address": {
+        "city": "Paris",
+        "postalCode": null
+      },
+      "preferences": {
+        "newsletter": true,
+        "theme": "dark"
+      },
+      "tags": [],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false,
+      "optionalNote": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-007",
+    "contact_id": "contact-007",
+    "payload": {
+      "displayName": "ada lowercase",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Amman",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": false,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-008",
+    "contact_id": "contact-008",
+    "payload": {
+      "displayName": "Name with spaces",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Paris",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": true,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false,
+      "optionalNote": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-009",
+    "contact_id": "contact-009",
+    "payload": {
+      "displayName": "Ada Lovelace",
+      "bio": "",
+      "address": {
+        "city": "Amman",
+        "postalCode": null
+      },
+      "preferences": {
+        "newsletter": false,
+        "theme": "dark"
+      },
+      "tags": [],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-010",
+    "contact_id": "contact-010",
+    "payload": {
+      "displayName": "Grace Hopper",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Paris",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": true,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false,
+      "optionalNote": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-011",
+    "contact_id": "contact-011",
+    "payload": {
+      "displayName": "أحمد بني يونس",
+      "bio": "Profile notes\nسطر ثانٍ",
+      "address": {
+        "city": "Amman",
+        "postalCode": "11118"
+      },
+      "preferences": {
+        "newsletter": false,
+        "theme": "dark"
+      },
+      "tags": ["first", "second"],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "profile-012",
+    "contact_id": "contact-012",
+    "payload": {
+      "displayName": "Zoë García",
+      "bio": "Long-text fixture: A predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\nA predictable paragraph for serialization and response-size checks.\n",
+      "address": {
+        "city": "Paris",
+        "postalCode": null
+      },
+      "preferences": {
+        "newsletter": true,
+        "theme": "dark"
+      },
+      "tags": [],
+      "history": [
+        {
+          "year": 2024,
+          "active": true
+        },
+        {
+          "year": 2025,
+          "active": false
+        }
+      ],
+      "emptyObject": {},
+      "emptyArray": [],
+      "nullable": null,
+      "zero": 0,
+      "enabled": false,
+      "optionalNote": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  }
+]

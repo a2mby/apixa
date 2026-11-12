@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "skills": ".agents/skills",
+  "rules": ".ai/rules",
+  "roles": ".ai/agents",
+  "adapters": ["cursor", "codex", "claude", "gemini", "opencode"],
+  "nativeFiles": [
+    ".claude/settings.json",
+    ".claude/settings.local.json",
+    ".claude/commands",
+    ".codex/config.toml",
+    ".codex/hooks.json",
+    ".cursor/mcp.json",
+    ".cursor/hooks.json",
+    ".mcp.json",
+    ".gemini/settings.json",
+    "opencode.json",
+    "opencode.jsonc"
+  ],
+  "adopt": {
+    ".cursor/rules/apixa-docs.mdc": "391b343e7146d08eed6521d87480406f4944ba36cb149cd8b962a057002f7877",
+    ".cursor/rules/apixa-packages.mdc": "5481c31f141e5e1d5ae0ba873a3b762aebaf076a244e1a87df460c304b21ddb1",
+    ".cursor/rules/apixa-core.mdc": "9bca9a77cf6890e311b3f0cb2c60d8623fc3d253bfbcd7a41921c22bdb4c8bce",
+    ".cursor/rules/apixa-git-push-format.mdc": "eef76011b643d41119bb4b77cb95d3fbb39b137a061c77b14941dfccbc08e3fd",
+    ".cursor/rules/apixa-examples.mdc": "511f00fed1d2af1075e39492b6c5ace7076a276c134307aa381a45db7ffd5cb5",
+    ".cursor/rules/apixa-architecture.mdc": "a9ccbf7523527279a42b98347cac9f9b609251fccc8f90deb0502bfc147d9372",
+    ".cursor/commands/plan-change.md": "4e9fbf94da2aee7db447b6d4f9d7bd8dbe9d496eb9fc567cc591dea451a09ab9",
+    ".cursor/commands/start-version.md": "5f1bccfbd94d8f389e6d9ee2c27dbfb7360cb63bf40b9743e2e4d5b718069158",
+    ".cursor/commands/ship-changes.md": "8dced3af67430465db514cb5b60fc64530b96800d2d19669ffbebf2492ed61c6",
+    ".cursor/commands/implement-version.md": "d0f04c35912c5d4dfe9eea6b006fed05be249aaa9c4a3cc12176c40be8af6056",
+    ".cursor/commands/git-push.md": "dba0cb39d560fec74c8c78f7d13b032aee4d1b5c2337e405647e53d7b427b856",
+    ".cursor/commands/check-structure.md": "27df4c1a9fec04d7fd642b73f0e4bf44dd32fedc3d156f533671a1aef2f60fea",
+    "AGENTS.md": "880f56a4292607b15b762c8f2a0f171465bf552682c0ac66c418f7c2d7da0589",
+    "CLAUDE.md": "6147e2bb45dd0046454905a189e24dce8b5e7ab6fd784de0d47db39f06510c72"
+  }
+}

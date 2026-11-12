@@ -1,0 +1,272 @@
+[
+  {
+    "id": "task-001",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-001",
+    "title": "Task 1",
+    "status": "in_progress",
+    "version": 1,
+    "priority": 1,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-002",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-002",
+    "title": "Task 2",
+    "status": "done",
+    "version": 1,
+    "priority": 2,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-003",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-003",
+    "title": "Task 3",
+    "status": "pending",
+    "version": 1,
+    "priority": 3,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-004",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-004",
+    "title": "Task 4",
+    "status": "in_progress",
+    "version": 1,
+    "priority": 0,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-005",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-005",
+    "title": "Task 5",
+    "status": "done",
+    "version": 1,
+    "priority": 1,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-006",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-006",
+    "title": "Task 6",
+    "status": "pending",
+    "version": 1,
+    "priority": 2,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-007",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-007",
+    "title": "Task 7",
+    "status": "in_progress",
+    "version": 1,
+    "priority": 3,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-008",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-008",
+    "title": "Task 8",
+    "status": "done",
+    "version": 1,
+    "priority": 0,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-009",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-009",
+    "title": "Task 9",
+    "status": "pending",
+    "version": 1,
+    "priority": 1,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-010",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-010",
+    "title": "Task 10",
+    "status": "in_progress",
+    "version": 1,
+    "priority": 2,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-011",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-011",
+    "title": "Task 11",
+    "status": "done",
+    "version": 1,
+    "priority": 3,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-012",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-012",
+    "title": "Task 12",
+    "status": "pending",
+    "version": 1,
+    "priority": 0,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-013",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-013",
+    "title": "Task 13",
+    "status": "in_progress",
+    "version": 1,
+    "priority": 1,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-014",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-014",
+    "title": "Task 14",
+    "status": "done",
+    "version": 1,
+    "priority": 2,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-015",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-015",
+    "title": "Task 15",
+    "status": "pending",
+    "version": 1,
+    "priority": 3,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-016",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-016",
+    "title": "Task 16",
+    "status": "in_progress",
+    "version": 1,
+    "priority": 0,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-017",
+    "workspace_id": "ws-2",
+    "contact_id": "contact-017",
+    "title": "Task 17",
+    "status": "done",
+    "version": 1,
+    "priority": 1,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "task-018",
+    "workspace_id": "ws-1",
+    "contact_id": "contact-018",
+    "title": "Task 18",
+    "status": "pending",
+    "version": 1,
+    "priority": 2,
+    "metadata": {
+      "notes": [],
+      "dueAt": null
+    },
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  }
+]

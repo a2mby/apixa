@@ -92,10 +92,10 @@ try {
     assert.equal(manifest.engines?.node, ">=22", `${name} engines`);
     assert.equal(manifest.type, "module", `${name} is ESM only`);
     assert.notEqual(manifest.private, true);
-    // A bare `npm publish` must never move `latest` or hide a scoped package.
+    // The root package publishes to `latest` explicitly; it is the only tarball shipped.
     assert.deepEqual(
       manifest.publishConfig,
-      { access: "public", tag: "next" },
+      { access: "public", tag: "latest" },
       `${name} publishConfig`,
     );
     assert.equal(manifest.license, "MIT");

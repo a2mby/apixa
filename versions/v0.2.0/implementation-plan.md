@@ -73,7 +73,7 @@ Files: `tests/core/default-operations.test.ts`, `tests/core/config-merge.test.ts
 
 ### 5. Examples and docs
 
-Files: `examples/basic`, `examples/next/lib/api.ts`, `README.md`, living docs, `docs/story.md`
+Files: `examples/frontends/basic`, `examples/frontends/next/lib/api.ts`, `README.md`, living docs, `docs/story.md`
 
 - Minimal path-first definition first; advanced overrides second.
 
@@ -87,7 +87,7 @@ Files: `examples/basic`, `examples/next/lib/api.ts`, `README.md`, living docs, `
 | `packages/core/src/api/resource-client.ts` | Build defaults + overrides                                   |
 | `packages/core/src/request/execute.ts`     | Resource-level merge                                         |
 | `tests/core/*.test.ts`                     | New + updated cases                                          |
-| `examples/basic`, `examples/next`          | Minimal definitions                                          |
+| `examples/frontends/basic`, `examples/frontends/next`          | Minimal definitions                                          |
 | `README.md`, `docs/*`                      | Honest DX                                                    |
 
 ## Non-steps

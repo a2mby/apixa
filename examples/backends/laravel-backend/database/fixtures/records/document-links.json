@@ -1,0 +1,98 @@
+[
+  {
+    "id": "document-link-001",
+    "document_id": "document-001",
+    "contact_id": "contact-001",
+    "label": "Shared link 1",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-002",
+    "document_id": "document-002",
+    "contact_id": "contact-002",
+    "label": "Shared link 2",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-003",
+    "document_id": "document-003",
+    "contact_id": "contact-003",
+    "label": "Shared link 3",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-004",
+    "document_id": "document-004",
+    "contact_id": "contact-004",
+    "label": "Shared link 4",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-005",
+    "document_id": "document-005",
+    "contact_id": "contact-005",
+    "label": "Shared link 5",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-006",
+    "document_id": "document-006",
+    "contact_id": "contact-006",
+    "label": "Shared link 6",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-007",
+    "document_id": "document-001",
+    "contact_id": "contact-003",
+    "label": "Shared link 7",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-008",
+    "document_id": "document-002",
+    "contact_id": "contact-004",
+    "label": "Shared link 8",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-009",
+    "document_id": "document-003",
+    "contact_id": "contact-005",
+    "label": "Shared link 9",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-010",
+    "document_id": "document-004",
+    "contact_id": "contact-006",
+    "label": "Shared link 10",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-011",
+    "document_id": "document-005",
+    "contact_id": "contact-007",
+    "label": "Shared link 11",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  },
+  {
+    "id": "document-link-012",
+    "document_id": "document-006",
+    "contact_id": "contact-008",
+    "label": "Shared link 12",
+    "created_at": "2026-01-01T12:00:00+00:00",
+    "updated_at": "2026-01-01T12:00:00+00:00"
+  }
+]
