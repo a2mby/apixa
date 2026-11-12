@@ -116,7 +116,7 @@ Location: [`tests/mocking/`](../../tests/mocking/) (and any Core tests that asse
 | `packages/mocking/src/core-augmentation.ts` / `data/*` | Trim redundant id merges                                 |
 | `packages/mocking/README.md`                           | New syntax                                               |
 | `tests/mocking/**`                                     | Update + add cases                                       |
-| `examples/frontends/next/lib/api.ts` (+ call sites)              | Migrate                                                  |
+| `examples/frontends/next/lib/api.ts` (+ call sites)    | Migrate                                                  |
 | `CHANGELOG.md`, docs as needed                         | Breaking honesty                                         |
 | `docs/story.md`                                        | Completion when done                                     |
 

@@ -164,7 +164,7 @@ recorded and owner sign-off is obtained; prior milestone gaps remain separately 
 | `src/core/index.ts`, `src/mocking/index.ts`                                                                                                                            | Specialized facade re-exports if needed; curated root unchanged by default.                                                   |
 | `tests/core/mock-files.test.ts`, `mock-downloads.test.ts`, `mock-handlers.test.ts`, `file-validation-mock.test.ts`, `transfer-mock.test.ts`; new focused storage tests | Default and new behavior, concurrency and injected failure matrix.                                                            |
 | `tests/mocking/**`, `tests/facade/**`, `scripts/lib/type-consumer-fixtures.mjs`, relevant `scripts/verify-*.mjs`                                                       | Dataset/adapter, declarations, packed package and runtime evidence.                                                           |
-| READMEs, `docs/architecture.md`, `docs/public-api.md`, `docs/story.md`, `versions/v1.5.0/*`; optionally `examples/frontends/next/**`                                             | Honest usage, compatibility notes and recorded evidence.                                                                      |
+| READMEs, `docs/architecture.md`, `docs/public-api.md`, `docs/story.md`, `versions/v1.5.0/*`; optionally `examples/frontends/next/**`                                   | Honest usage, compatibility notes and recorded evidence.                                                                      |
 
 ## Testing strategy and completion gate
 

@@ -161,17 +161,17 @@ function UsersPage() {
 
 ## Suggested file touch list
 
-| Path                                                         | Action                                                                                                           |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `packages/tanstack-query/**`                                 | New package (types, keys, controller, hook, advanced, README)                                                    |
-| `package.json` (root)                                        | Include build/typecheck for new package                                                                          |
-| `pnpm-workspace.yaml`                                        | Already `packages/*` — verify                                                                                    |
-| `tests/tanstack-query/**`                                    | New unit + hook + type tests                                                                                     |
-| `examples/frontends/next/lib/users.ts`                                 | Resource query setup / remove hand keys as needed                                                                |
-| `examples/frontends/next/app/test/page.tsx` and/or components          | Migrate to `useResourceQuery` (Next only; respect gitignore for local scaffolding)                               |
-| `docs/context.md`, `docs/architecture.md`, `docs/roadmap.md` | Honesty when shipping                                                                                            |
-| `CHANGELOG.md`, `docs/story.md`                              | Ship notes                                                                                                       |
-| `packages/core/**`                                           | **No feature changes** unless a blocking type export is missing (prefer infer from public `ResourceClient` only) |
+| Path                                                          | Action                                                                                                           |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `packages/tanstack-query/**`                                  | New package (types, keys, controller, hook, advanced, README)                                                    |
+| `package.json` (root)                                         | Include build/typecheck for new package                                                                          |
+| `pnpm-workspace.yaml`                                         | Already `packages/*` — verify                                                                                    |
+| `tests/tanstack-query/**`                                     | New unit + hook + type tests                                                                                     |
+| `examples/frontends/next/lib/users.ts`                        | Resource query setup / remove hand keys as needed                                                                |
+| `examples/frontends/next/app/test/page.tsx` and/or components | Migrate to `useResourceQuery` (Next only; respect gitignore for local scaffolding)                               |
+| `docs/context.md`, `docs/architecture.md`, `docs/roadmap.md`  | Honesty when shipping                                                                                            |
+| `CHANGELOG.md`, `docs/story.md`                               | Ship notes                                                                                                       |
+| `packages/core/**`                                            | **No feature changes** unless a blocking type export is missing (prefer infer from public `ResourceClient` only) |
 
 ## Done when
 

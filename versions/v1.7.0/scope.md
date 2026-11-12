@@ -27,15 +27,15 @@ issue #103. Actual verification and remaining sign-off gates are in acceptance c
 
 ## Affected components
 
-| Component                            | Responsibility during subsequent implementation                                                                                                 |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core` (private)            | Definitions, optional orchestration in existing `transfer/`, request lifecycle, validation/security seams, typed state and errors as justified. |
-| `packages/mocking` (private)         | Compatibility and minimal parity only if needed; no provider or session engine.                                                                 |
-| `packages/react` (private)           | Existing hooks consume Core operations; source changes only for demonstrated integration defects.                                               |
-| `packages/internal/shared` (private) | No planned production changes; only reusable framework-neutral Core-based algorithms if proven necessary.                                       |
-| `src/` (`apixa`)                     | Approved re-exports only, through existing entry points; no client implementation.                                                              |
-| Root `tests/`, `scripts/`, docs      | Protocol simulations, typing, packed/runtime verification and implemented usage.                                                                |
-| `examples/frontends/query-ssr-next`            | Tracked Next transfer/recovery scenario driven by Chromium. `examples/frontends/next` remains a local playground; no other example apps touched.          |
+| Component                            | Responsibility during subsequent implementation                                                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/core` (private)            | Definitions, optional orchestration in existing `transfer/`, request lifecycle, validation/security seams, typed state and errors as justified.  |
+| `packages/mocking` (private)         | Compatibility and minimal parity only if needed; no provider or session engine.                                                                  |
+| `packages/react` (private)           | Existing hooks consume Core operations; source changes only for demonstrated integration defects.                                                |
+| `packages/internal/shared` (private) | No planned production changes; only reusable framework-neutral Core-based algorithms if proven necessary.                                        |
+| `src/` (`apixa`)                     | Approved re-exports only, through existing entry points; no client implementation.                                                               |
+| Root `tests/`, `scripts/`, docs      | Protocol simulations, typing, packed/runtime verification and implemented usage.                                                                 |
+| `examples/frontends/query-ssr-next`  | Tracked Next transfer/recovery scenario driven by Chromium. `examples/frontends/next` remains a local playground; no other example apps touched. |
 
 No new workspace/public package or mandatory runtime dependency. No package-version changes.
 

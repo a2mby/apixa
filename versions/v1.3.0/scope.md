@@ -16,7 +16,7 @@
 | Types             | `onTransfer` typed through builtins, custom operations, `ctx.request()`, `useResourceQuery`, `useResource`, `useResourceMutation`, packed npm declarations; result inference unchanged                           |
 | Errors            | Interrupted-transfer classification into existing `AbortError` / `TimeoutError` / `NetworkError`; a new error class only if Batch 0 proves one is needed                                                         |
 | Tests             | Characterization first, runtime, compile-time, mock and live, reliability, React 18/19, packed npm consumers, Chromium, Node, Next, Vercel Edge, workerd                                                         |
-| Docs and example  | `docs/architecture.md`, `docs/public-api.md`, README, Core README; one `examples/frontends/next` transfer scenario; story and roadmap                                                                                      |
+| Docs and example  | `docs/architecture.md`, `docs/public-api.md`, README, Core README; one `examples/frontends/next` transfer scenario; story and roadmap                                                                            |
 
 ## Out of scope
 
@@ -42,7 +42,7 @@
 | `packages/react` (private)   | **no source change expected**: `onTransfer` rides on existing option types; type/runtime verification only. Any change needs a reason                                                                                                                                                         |
 | `apixa` facade (`src/`)      | explicit re-exports of additions; `tests/facade/curated-root-exports.json` and the snapshot                                                                                                                                                                                                   |
 | `scripts/`                   | `verify-type-consumers.mjs`, `verify-unified-consumer.mjs`, `verify-edge.mjs`, `verify-browser.mjs`, fixtures                                                                                                                                                                                 |
-| `examples/frontends/next`              | one transfer scenario; no other example touched                                                                                                                                                                                                                                               |
+| `examples/frontends/next`    | one transfer scenario; no other example touched                                                                                                                                                                                                                                               |
 
 No new workspace packages and no new dependencies.
 

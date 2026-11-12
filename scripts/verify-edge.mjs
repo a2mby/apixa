@@ -212,7 +212,7 @@ function expectAdvanced(out, label) {
 
 try {
   // ---- Pack and install the facade exactly as a consumer would -----------------------------------------------------
-  const version = "1.0.0-rc.0";
+  const version = "2.0.0";
   const tarballs = {};
   for (const [name, dir] of [["apixa", "."]]) {
     run("pnpm", ["--dir", dir, "pack", "--pack-destination", packs], root, true);
