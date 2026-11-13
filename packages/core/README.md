@@ -78,16 +78,18 @@ Opt-in `retry` on api / resource / operation / call. Defaults: methods `GET`/`HE
 
 ```ts
 const refresh: MiddlewareHooks = {
-  onError: async (error, ctx) => {
-    if (isHttpError(error) && error.status === 401 && ctx.replay) {
-      await refreshSession();
-      return ctx.replay();
-    }
-  },
+  onError: [
+    async (error, ctx) => {
+      if (isHttpError(error) && error.status === 401 && ctx.replay) {
+        await refreshSession();
+        return ctx.replay();
+      }
+    },
+  ],
 };
 ```
 
-Configure `middleware: [refresh]` on the API, resource, or operation layer. Each entry may provide `onRequest(request)`, `onResponse(response)`, and/or `onError(error, { request, replay })`.
+Configure `middleware: refresh` (`{ onRequest?, onResponse?, onError? }`) on the API, resource, or operation layer, composed `root → resource → operation` in array order within each hook list.
 
 ## Response processing, query options, transforms, and pagination
 

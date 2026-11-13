@@ -200,13 +200,13 @@ describe("handler transactions and concurrency", () => {
           path: "/docs",
           fileFields: ["file"],
           mock: [{ id: 1, file: "" }],
-          middleware: [
-            {
-              onResponse: () => {
+          middleware: {
+            onResponse: [
+              () => {
                 throw Error("after commit");
               },
-            },
-          ],
+            ],
+          },
         },
       },
     });

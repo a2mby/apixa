@@ -104,7 +104,9 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     const anyUsers = api.users as any;
 
     const all = await api.users.getAll();
-    expect(await anyUsers.findFirst({ query: { name: all[0]!.name } })).toMatchObject({ id: all[0]!.id });
+    expect(await anyUsers.findFirst({ query: { name: all[0]!.name } })).toMatchObject({
+      id: all[0]!.id,
+    });
     expect(await anyUsers.findFirst({ query: { name: "no-such-name" } })).toBeNull();
   });
 

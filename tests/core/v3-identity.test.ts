@@ -111,7 +111,11 @@ describe("resource identity", () => {
       name: "Mouse",
     });
 
-    for (const empty of [{ status: 404, body: { error: "not found" } }, { body: [] }, { body: null }]) {
+    for (const empty of [
+      { status: 404, body: { error: "not found" } },
+      { body: [] },
+      { body: null },
+    ]) {
       nextResponse = empty;
       await expect(api.products.getBy("name", "Missing")).resolves.toBeNull();
     }

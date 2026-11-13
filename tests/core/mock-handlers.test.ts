@@ -365,26 +365,26 @@ describe("lifecycle", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transforms: { request: { keys: "snake_case" } },
-      middleware: [
-        {
-          onRequest: (request: ApiRequest) => {
+      middleware: {
+        onRequest: [
+          (request: ApiRequest) => {
             order.push("root:onRequest");
             request.query = { ...request.query, added: "by-middleware" };
           },
-          onResponse: () => void order.push("root:onResponse"),
-        },
-      ],
+        ],
+        onResponse: [() => void order.push("root:onResponse")],
+      },
       resources: {
         users: {
           path: "/users",
           mock: users(),
-          middleware: [{ onRequest: () => void order.push("resource:onRequest") }],
+          middleware: { onRequest: [() => void order.push("resource:onRequest")] },
           operations: {
             tag: {
               kind: "write",
               method: "POST",
               path: "/tag",
-              middleware: [{ onRequest: () => void order.push("op:onRequest") }],
+              middleware: { onRequest: [() => void order.push("op:onRequest")] },
               mock: ({ body, query }) => {
                 order.push("handler");
                 seen = { body, query };
@@ -412,7 +412,7 @@ describe("lifecycle", () => {
     const seen: string[] = [];
     const api = defineApi({
       baseURL: "https://x.dev",
-      middleware: [{ onError: (error: unknown) => void seen.push((error as Error).message) }],
+      middleware: { onError: [(error: unknown) => void seen.push((error as Error).message)] },
       resources: {
         users: {
           path: "/users",
@@ -437,7 +437,7 @@ describe("lifecycle", () => {
   it("can be recovered by error middleware", async () => {
     const api = defineApi({
       baseURL: "https://x.dev",
-      middleware: [{ onError: () => "fallback" }],
+      middleware: { onError: [() => "fallback"] },
       resources: {
         users: {
           path: "/users",

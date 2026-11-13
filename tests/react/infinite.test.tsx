@@ -15,16 +15,16 @@ import { deferred, newClient, wrap } from "../helpers/query.js";
 import { readsDuringRender } from "../helpers/render.js";
 
 type Post = { id: string };
-type CursorPage = { items: Post[]; nextCursor: string | null };
-type NumberPage = { items: Post[]; page: number; totalPages: number };
+type CursorPage = { data: Post[]; nextCursor: string | null };
+type NumberPage = { data: Post[]; total: number; page: number; pageSize: number };
 
 const ALL = Array.from({ length: 7 }, (_, i) => ({ id: String(i + 1) }));
 
 function cursorApi(options: { gate?: () => Promise<void> } = {}) {
   const requests: TransportRequest[] = [];
   const api = defineApi<{
-    posts: { entity: Post; list: CursorPage; query: { cursor?: string | null; limit: number } };
-    pages: { entity: Post; list: NumberPage; query: { page: number } };
+    posts: { entity: Post };
+    pages: { entity: Post };
   }>()({
     baseURL: "https://api.example.com",
     transport: createFakeTransport(async (request) => {
@@ -42,7 +42,28 @@ function cursorApi(options: { gate?: () => Promise<void> } = {}) {
         body: { items: ALL.slice(start, end), nextCursor: end < ALL.length ? String(end) : null },
       };
     }),
-    resources: { posts: { path: "/posts" }, pages: { path: "/pages" } },
+    resources: {
+      posts: {
+        path: "/posts",
+        pagination: {
+          type: "cursor",
+          fields: { data: "items", nextCursor: "nextCursor" },
+          params: { pageSize: "limit" },
+        },
+      },
+      pages: {
+        path: "/pages",
+        pagination: {
+          type: "page",
+          parseList: (body: { items: Post[]; page: number; totalPages: number }) => ({
+            data: body.items,
+            page: body.page,
+            pageSize: 3,
+            total: body.totalPages * 3,
+          }),
+        },
+      },
+    },
   });
   const urls = () => requests.map((r) => new URL(r.url).pathname + new URL(r.url).search);
   return { api, requests, urls };
@@ -51,7 +72,7 @@ function cursorApi(options: { gate?: () => Promise<void> } = {}) {
 const cursorPaging = {
   initialPageParam: null as string | null,
   getNextPageParam: (last: CursorPage) => last.nextCursor,
-  query: (cursor: string | null) => ({ cursor, limit: 3 }),
+  query: (cursor: string | null) => ({ ...(cursor !== null ? { cursor } : {}), pageSize: 3 }),
 };
 
 describe("infinite mode of useResourceQuery", () => {
@@ -75,7 +96,7 @@ describe("infinite mode of useResourceQuery", () => {
     await act(() => result.current.fetchNextPage());
     await act(() => result.current.fetchNextPage());
     await waitFor(() => expect(result.current.hasNextPage).toBe(false));
-    expect(result.current.data!.pages.flatMap((p) => p.items)).toEqual(ALL);
+    expect(result.current.data!.pages.flatMap((p) => p.data)).toEqual(ALL);
     expect(result.current.data!.pageParams).toEqual([null, "3", "6"]);
     expect(urls()).toEqual([
       "/posts?limit=3", // Core omits a null query value
@@ -96,7 +117,8 @@ describe("infinite mode of useResourceQuery", () => {
             queryKey: ["pages"],
             infinite: {
               initialPageParam: 2,
-              getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
+              getNextPageParam: (last) =>
+                last.page * last.pageSize < last.total ? last.page + 1 : undefined,
               getPreviousPageParam: (first) => (first.page > 1 ? first.page - 1 : undefined),
               query: (page) => ({ page }),
             },
@@ -184,7 +206,7 @@ describe("infinite mode of useResourceQuery", () => {
     );
     await waitFor(() => expect(both.result.current.infinite.data).toBeDefined());
     await waitFor(() => expect(both.result.current.list.data).toBeDefined());
-    expect(client.getQueryData(["posts", "list"])).toHaveProperty("items");
+    expect(client.getQueryData(["posts", "list"])).toHaveProperty("data");
     expect(client.getQueryData(["posts", "infinite", "getAll"])).toHaveProperty("pages");
     expect(both.result.current.infinite.keys.infinite()).toEqual(["posts", "infinite", "getAll"]);
   });
@@ -253,11 +275,11 @@ describe("infinite mode of useResourceQuery", () => {
     await waitFor(() => expect(result.current.status).toBe("success"));
     act(() => {
       result.current.cache.set((old) => ({
-        pages: old!.pages.map((p) => ({ ...p, items: p.items.slice(1) })),
+        pages: old!.pages.map((p) => ({ ...p, data: p.data.slice(1) })),
         pageParams: old!.pageParams,
       }));
     });
-    await waitFor(() => expect(result.current.data!.pages[0]!.items[0]).toEqual({ id: "2" }));
+    await waitFor(() => expect(result.current.data!.pages[0]!.data[0]).toEqual({ id: "2" }));
     expect(() =>
       result.current.cache.set((old) => ({ pages: old!.pages, pageParams: [] })),
     ).toThrow(/equal length/);
@@ -287,7 +309,7 @@ describe("infinite mode of useResourceQuery", () => {
         ),
       { wrapper: wrap(browser) },
     );
-    expect(result.current.data!.pages[0]!.items).toEqual(ALL.slice(0, 3));
+    expect(result.current.data!.pages[0]!.data).toEqual(ALL.slice(0, 3));
     expect(requests).toHaveLength(1);
 
     // Hook-level prefetch of another infinite list, and of the observed one (fresh: no request).
@@ -385,10 +407,10 @@ describe("infinite mode of useResourceQuery", () => {
     void (() =>
       useResourceQuery(api.posts, {
         queryKey: ["posts"],
-        // @ts-expect-error limit must be a number (no overload accepts this config)
+        // @ts-expect-error pageSize must be a number (no overload accepts this config)
         infinite: {
           ...cursorPaging,
-          query: (cursor) => ({ cursor, limit: "10" }),
+          query: (cursor) => ({ ...(cursor !== null ? { cursor } : {}), pageSize: "10" }),
         },
       }));
   });

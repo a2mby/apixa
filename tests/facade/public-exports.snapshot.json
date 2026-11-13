@@ -306,61 +306,31 @@
     ]
   },
   "@apixa/mocking/datasets/comments": {
-    "values": [
-      "comments"
-    ],
-    "types": [
-      "Comment"
-    ]
+    "values": ["comments"],
+    "types": ["Comment"]
   },
   "@apixa/mocking/datasets/companies": {
-    "values": [
-      "companies"
-    ],
-    "types": [
-      "Company"
-    ]
+    "values": ["companies"],
+    "types": ["Company"]
   },
   "@apixa/mocking/datasets/orders": {
-    "values": [
-      "orders"
-    ],
-    "types": [
-      "Order"
-    ]
+    "values": ["orders"],
+    "types": ["Order"]
   },
   "@apixa/mocking/datasets/posts": {
-    "values": [
-      "posts"
-    ],
-    "types": [
-      "Post"
-    ]
+    "values": ["posts"],
+    "types": ["Post"]
   },
   "@apixa/mocking/datasets/products": {
-    "values": [
-      "products"
-    ],
-    "types": [
-      "Product"
-    ]
+    "values": ["products"],
+    "types": ["Product"]
   },
   "@apixa/mocking/datasets/users": {
-    "values": [
-      "users"
-    ],
-    "types": [
-      "User"
-    ]
+    "values": ["users"],
+    "types": ["User"]
   },
   "@apixa/mocking/node": {
-    "values": [
-      "findDatasetDirs",
-      "getDataset",
-      "listDatasets",
-      "loadDataset",
-      "resolveDatasetDir"
-    ],
+    "values": ["findDatasetDirs", "getDataset", "listDatasets", "loadDataset", "resolveDatasetDir"],
     "types": [
       "Dataset",
       "DatasetFieldSchema",
@@ -977,61 +947,31 @@
     ]
   },
   "apixa/mocking/datasets/comments": {
-    "values": [
-      "comments"
-    ],
-    "types": [
-      "Comment"
-    ]
+    "values": ["comments"],
+    "types": ["Comment"]
   },
   "apixa/mocking/datasets/companies": {
-    "values": [
-      "companies"
-    ],
-    "types": [
-      "Company"
-    ]
+    "values": ["companies"],
+    "types": ["Company"]
   },
   "apixa/mocking/datasets/orders": {
-    "values": [
-      "orders"
-    ],
-    "types": [
-      "Order"
-    ]
+    "values": ["orders"],
+    "types": ["Order"]
   },
   "apixa/mocking/datasets/posts": {
-    "values": [
-      "posts"
-    ],
-    "types": [
-      "Post"
-    ]
+    "values": ["posts"],
+    "types": ["Post"]
   },
   "apixa/mocking/datasets/products": {
-    "values": [
-      "products"
-    ],
-    "types": [
-      "Product"
-    ]
+    "values": ["products"],
+    "types": ["Product"]
   },
   "apixa/mocking/datasets/users": {
-    "values": [
-      "users"
-    ],
-    "types": [
-      "User"
-    ]
+    "values": ["users"],
+    "types": ["User"]
   },
   "apixa/mocking/node": {
-    "values": [
-      "findDatasetDirs",
-      "getDataset",
-      "listDatasets",
-      "loadDataset",
-      "resolveDatasetDir"
-    ],
+    "values": ["findDatasetDirs", "getDataset", "listDatasets", "loadDataset", "resolveDatasetDir"],
     "types": [
       "Dataset",
       "DatasetFieldSchema",

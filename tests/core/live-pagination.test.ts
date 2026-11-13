@@ -279,7 +279,12 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const p1 = await api.paged.getAll({ query: { page: 1, pageSize: 10 } });
     expect(p1).toEqual({ data: [{ id: "1", name: "Pen" }], total: 1, page: 1, pageSize: 10 });
-    expectTypeOf(p1).toEqualTypeOf<{ data: Product[]; total: number; page: number; pageSize: number }>();
+    expectTypeOf(p1).toEqualTypeOf<{
+      data: Product[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
 
     const p2 = await api.flat.getAll();
     expect(p2).toEqual([{ id: "1", name: "Pen" }]);
@@ -287,12 +292,22 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const p3 = await api.shorthand.getAll({ query: { page: 2, pageSize: 10 } });
     expect(p3).toEqual({ data: [{ id: "1", name: "Pen" }], total: 31, page: 2, pageSize: 10 });
-    expectTypeOf(p3).toEqualTypeOf<{ data: Product[]; total: number; page: number; pageSize: number }>();
+    expectTypeOf(p3).toEqualTypeOf<{
+      data: Product[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
     expect(seen.find((u) => u.includes("/shorthand"))).toContain("per_page=10");
 
     const p4 = await api.noTypeObj.getAll({ query: { page: 2 } });
     expect(p4).toEqual({ data: [{ id: "1", name: "Pen" }], total: 31, page: 2, pageSize: 10 });
-    expectTypeOf(p4).toEqualTypeOf<{ data: Product[]; total: number; page: number; pageSize: number }>();
+    expectTypeOf(p4).toEqualTypeOf<{
+      data: Product[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
   });
 
   it("allows getAll to opt out of or override resource-level pagination", async () => {
@@ -361,7 +376,12 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const many = await live.products.getMany(["1", "2"], { query: { page: 2, pageSize: 10 } });
     expect(many).toEqual({ data: [{ id: "1", name: "Pen" }], total: 31, page: 2, pageSize: 10 });
-    expectTypeOf(many).toEqualTypeOf<{ data: Product[]; total: number; page: number; pageSize: number }>();
+    expectTypeOf(many).toEqualTypeOf<{
+      data: Product[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
     expect(seen[0]).toContain("per_page=10");
 
     const found = await live.products.search({ query: { q: "pen", cursor: "0", pageSize: 5 } });
@@ -469,6 +489,44 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
       total: 1,
       page: 1,
       pageSize: 10,
+    });
+  });
+
+  it("preserves literal pagination.params wire keys under transforms.request while transforming filters", async () => {
+    const seen: string[] = [];
+    const api = defineApi<{ laravel: { entity: Product }; strapi: { entity: Product } }>()({
+      baseURL: "https://api.example.com",
+      transforms: { request: { keys: "camelCase" } },
+      transport: createFakeTransport((request) => {
+        seen.push(request.url);
+        if (request.url.includes("/strapi")) {
+          return {
+            body: {
+              data: [{ id: "1", name: "Pen" }],
+              meta: { pagination: { page: 2, pageSize: 10, pageCount: 4, total: 31 } },
+            },
+          };
+        }
+        return { body: laravelBody };
+      }),
+      resources: {
+        laravel: { path: "/laravel", pagination: "laravel" },
+        strapi: { path: "/strapi", pagination: "strapi" },
+      },
+    });
+
+    await api.laravel.getAll({ query: { page: 2, pageSize: 10, min_price: 5 } });
+    expect(Object.fromEntries(new URL(seen[0]!).searchParams)).toEqual({
+      minPrice: "5",
+      page: "2",
+      per_page: "10",
+    });
+
+    await api.strapi.getAll({ query: { page: 2, pageSize: 10, min_price: 5 } });
+    expect(Object.fromEntries(new URL(seen[1]!).searchParams)).toEqual({
+      minPrice: "5",
+      "pagination[page]": "2",
+      "pagination[pageSize]": "10",
     });
   });
 });

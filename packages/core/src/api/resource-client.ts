@@ -57,7 +57,6 @@ function pick<T>(...values: Array<T | undefined>): T | undefined {
 function prepareLayers(where: string, layers: Array<LayerOptions | undefined>) {
   const present = layers.filter((l): l is LayerOptions => l !== undefined);
   const retry = pick<RetryOption>(...present.map((l) => l.retry));
-  const hooks = present.flatMap((layer) => layer.middleware ?? []);
   const rawUnwrap = pick(...present.map((l) => l.response?.unwrap));
   const rawParse = pick(...present.map((l) => l.response?.parse));
   const rawValidate = pick(...present.map((l) => l.response?.validate));
@@ -65,9 +64,9 @@ function prepareLayers(where: string, layers: Array<LayerOptions | undefined>) {
     headers: present.map((l) => l.headers).filter((h): h is HeadersSource => h !== undefined),
     timeout: pick(...present.map((l) => l.timeout)),
     retry: resolveRetryConfig(retry, `${where}.retry`),
-    onRequest: hooks.flatMap((entry) => (entry.onRequest ? [entry.onRequest] : [])),
-    onResponse: hooks.flatMap((entry) => (entry.onResponse ? [entry.onResponse] : [])),
-    onError: hooks.flatMap((entry) => (entry.onError ? [entry.onError] : [])),
+    onRequest: present.flatMap((layer) => layer.middleware?.onRequest ?? []),
+    onResponse: present.flatMap((layer) => layer.middleware?.onResponse ?? []),
+    onError: present.flatMap((layer) => layer.middleware?.onError ?? []),
     requestTransform: pick(...present.map((l) => l.transforms?.request)),
     responseTransform: pick(...present.map((l) => l.transforms?.response)),
     responseUnwrap: rawUnwrap === false ? undefined : rawUnwrap,
@@ -539,13 +538,7 @@ function builtinOperation(
           );
         };
       } else {
-        call.fromHttp = (data, _status, response) => {
-          if (Array.isArray(data) || isRecord(data)) return data;
-          throw new ResponseShapeError(
-            `${response.request.resource}.${response.request.operation}: expected an array or object response.`,
-            { status: response.status, data: response.data, response },
-          );
-        };
+        call.fromHttp = (data, _status, response) => toArray(data, response);
       }
     } else if (name === "count") {
       call.fromHttp = (data, _status, response) => {

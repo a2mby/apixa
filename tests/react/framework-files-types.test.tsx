@@ -31,17 +31,24 @@ describe("hook typing with files", () => {
         useResourceQuery(api.docs, {
           queryKey: ["a"],
           operation: "download",
-          args: [{
+          args: [
+            {
               onTransfer: (e) => {
                 expectTypeOf(e).toEqualTypeOf<TransferEvent>();
               },
-            params: { id: "1" } }],
+              params: { id: "1" },
+            },
+          ],
         }),
       ).result.current;
       expectTypeOf(blob.data).toEqualTypeOf<Blob | undefined>();
       expectTypeOf<IsAny<typeof blob>>().toEqualTypeOf<false>();
       const raw = renderHook(() =>
-        useResourceQuery(api.docs, { queryKey: ["b"], operation: "raw", args: [{ params: { id: "1" } }] }),
+        useResourceQuery(api.docs, {
+          queryKey: ["b"],
+          operation: "raw",
+          args: [{ params: { id: "1" } }],
+        }),
       ).result.current;
       expectTypeOf(raw.data).toEqualTypeOf<ArrayBuffer | undefined>();
       const note = renderHook(() =>

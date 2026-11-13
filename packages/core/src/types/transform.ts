@@ -127,30 +127,29 @@ type TransformObject<
   ExcludePat extends string,
   PreservePat extends string,
 > = {
-  [K in keyof T as K extends string
-    ? K extends TopName<ExcludePat>
-      ? K
-      : ConvertKey<K, C>
-    : K]: K extends string
+  [
+    K in keyof T as K extends string ? (K extends TopName<ExcludePat> ? K : ConvertKey<K, C>) : K
+  ]: K extends string
     ? K extends TopName<ExcludePat> | TopName<PreservePat>
       ? T[K]
       : TransformWithRule<T[K], NextRule<C, ExcludePat, PreservePat, K>>
     : T[K];
 };
 
-type TransformWithRule<T, R> = RuleCase<R> extends infer C extends KeyCase
-  ? IsAny<T> extends true
-    ? T
-    : T extends Opaque
+type TransformWithRule<T, R> =
+  RuleCase<R> extends infer C extends KeyCase
+    ? IsAny<T> extends true
       ? T
-      : T extends readonly (infer E)[]
-        ? T extends unknown[]
-          ? TransformWithRule<E, R>[]
-          : readonly TransformWithRule<E, R>[]
-        : T extends object
-          ? TransformObject<T, C, ExcludedKeys<R>, PreservedKeys<R>>
-          : T
-  : T;
+      : T extends Opaque
+        ? T
+        : T extends readonly (infer E)[]
+          ? T extends unknown[]
+            ? TransformWithRule<E, R>[]
+            : readonly TransformWithRule<E, R>[]
+          : T extends object
+            ? TransformObject<T, C, ExcludedKeys<R>, PreservedKeys<R>>
+            : T
+    : T;
 
 /** Recursively rename keys of plain object types (and inside arrays) to convention `C`. */
 export type TransformKeys<

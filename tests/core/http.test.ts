@@ -224,7 +224,10 @@ describe("v3 query and body serialization", () => {
 
   it("supports configurable null, empty array, and boolean query encoding", async () => {
     const seen: string[] = [];
-    const make = (query: Record<string, unknown>, queryArrayFormat: "repeat" | "brackets" | "comma" = "repeat") =>
+    const make = (
+      query: Record<string, unknown>,
+      queryArrayFormat: "repeat" | "brackets" | "comma" = "repeat",
+    ) =>
       defineApi({
         baseURL: "https://api.example.com",
         queryArrayFormat,
@@ -236,17 +239,16 @@ describe("v3 query and body serialization", () => {
         resources: { items: { path: "/items" } },
       });
 
-    const emptyMode = make({ nulls: "empty", emptyArrays: "empty", booleans: "number" }, "brackets");
-    await emptyMode.items.getAll({ query: { q: null, tags: [], active: true, archived: false } });
-    expect(seen[0]).toBe(
-      "https://api.example.com/items?q=&tags%5B%5D=&active=1&archived=0",
+    const emptyMode = make(
+      { nulls: "empty", emptyArrays: "empty", booleans: "number" },
+      "brackets",
     );
+    await emptyMode.items.getAll({ query: { q: null, tags: [], active: true, archived: false } });
+    expect(seen[0]).toBe("https://api.example.com/items?q=&tags%5B%5D=&active=1&archived=0");
 
     const nullMode = make({ nulls: "null", emptyArrays: "empty" }, "comma");
     await nullMode.items.getAll({ query: { q: null, tags: ["a", null], empty: [] } });
-    expect(seen[1]).toBe(
-      "https://api.example.com/items?q=null&tags=a%2Cnull&empty=",
-    );
+    expect(seen[1]).toBe("https://api.example.com/items?q=null&tags=a%2Cnull&empty=");
   });
 
   it("validates client-wide query options at construction", () => {
@@ -305,9 +307,7 @@ describe("v3 query and body serialization", () => {
       code: "SERIALIZATION",
       path: "$.self",
     });
-    await expect(
-      api.items.getAll({ query: { at: new Date("bad") } }),
-    ).rejects.toMatchObject({
+    await expect(api.items.getAll({ query: { at: new Date("bad") } })).rejects.toMatchObject({
       name: "SerializationError",
       path: "$.at",
     });

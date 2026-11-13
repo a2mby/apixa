@@ -88,7 +88,7 @@ describe("custom declarative operations on a mocked resource", () => {
     const seen: string[] = [];
     const api = defineApi({
       baseURL: "https://x.dev",
-      middleware: [{ onError: (error) => void seen.push((error as MockError).code) }],
+      middleware: { onError: [(error) => void seen.push((error as MockError).code)] },
       resources: {
         users: {
           path: "/users",

@@ -173,7 +173,18 @@ function walk(
     active.add(value);
     try {
       return value.map((item, i) =>
-        walk(item, to, cache, maxDepth, exclude, preserve, active, `${path}[${i}]`, segments, depth + 1),
+        walk(
+          item,
+          to,
+          cache,
+          maxDepth,
+          exclude,
+          preserve,
+          active,
+          `${path}[${i}]`,
+          segments,
+          depth + 1,
+        ),
       );
     } finally {
       active.delete(value);

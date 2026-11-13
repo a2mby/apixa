@@ -210,15 +210,15 @@ describe("request reliability", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       retry: { retries: 1, baseDelayMs: 1, jitter: false },
-      middleware: [
-        {
-          onRequest: (request) => {
+      middleware: {
+        onRequest: [
+          (request) => {
             middlewareCalls += 1;
             request.headers.set("X-Trace", "1");
             return request;
           },
-        },
-      ],
+        ],
+      },
       transport: createFakeTransport((request) => {
         seen.push(request.headers.get("x-trace") ?? "");
         if (seen.length === 1) throw new NetworkError("temporary");
@@ -236,14 +236,14 @@ describe("request reliability", () => {
     const seen: unknown[] = [];
     const api = defineApi({
       baseURL: "https://api.example.com",
-      middleware: [
-        {
-          onError: (error) => {
+      middleware: {
+        onError: [
+          (error) => {
             seen.push(error);
             throw error;
           },
-        },
-      ],
+        ],
+      },
       transport: createFakeTransport(() => ({ status: 500, body: { detail: "boom" } })),
       resources: { users: { path: "/users" } },
     });

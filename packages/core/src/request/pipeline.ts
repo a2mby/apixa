@@ -249,6 +249,53 @@ function transformQuery(
   return applyTransform(query, rule) as QueryParams;
 }
 
+function buildLiveQuery(
+  query: QueryParams | undefined,
+  params: PaginationParams | undefined,
+  rule: KeyTransformConfig | undefined,
+): QueryParams | undefined {
+  if (!query) return undefined;
+  if (!params) return transformQuery(query, rule);
+  if (!rule) return renamePaginationQuery(query, params);
+  const rest: QueryParams = {};
+  const renamed: QueryParams = {};
+  for (const [key, value] of Object.entries(query)) {
+    if (Object.hasOwn(params, key)) {
+      renamed[params[key as keyof PaginationParams]!] = value;
+    } else {
+      rest[key] = value;
+    }
+  }
+  return { ...(transformQuery(rest, rule) ?? {}), ...renamed };
+}
+
+function transformedKeyName(key: string, rule: KeyTransformConfig): string {
+  const out = applyTransform({ [key]: true }, rule);
+  return isRecordValue(out) ? (Object.keys(out)[0] ?? key) : key;
+}
+
+function normalizeMockPaginatedQuery(
+  query: Record<string, unknown> | undefined,
+  rule: KeyTransformConfig | undefined,
+): Record<string, unknown> | undefined {
+  if (!query || !rule) return query;
+  const pagingMap = new Map<string, "page" | "pageSize" | "cursor">([
+    [transformedKeyName("page", rule), "page"],
+    [transformedKeyName("pageSize", rule), "pageSize"],
+    [transformedKeyName("cursor", rule), "cursor"],
+  ]);
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(query)) {
+    const canonical = pagingMap.get(k);
+    if (canonical) {
+      if (k === canonical || !Object.hasOwn(query, canonical)) out[canonical] = v;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 function isRecordValue(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -480,15 +527,14 @@ export async function runOperation(
     const method = call.method ?? op.method;
     const pathTemplate = call.path ?? op.path;
     const path = interpolatePath(pathTemplate, call.params);
-    const query = transformQuery(
+    const query =
       call.paginated && !mocked
-        ? renamePaginationQuery(
+        ? buildLiveQuery(
             call.query ?? options.query,
             op.pagination ? op.pagination.params : resource.livePagination?.params,
+            op.requestTransform,
           )
-        : (call.query ?? options.query),
-      op.requestTransform,
-    );
+        : transformQuery(call.query ?? options.query, op.requestTransform);
     const origin = mocked ? client.base.origin : requestOrigin(client.base);
     const headerWork = delegated
       ? Promise.resolve(new Headers(delegated.headers))
@@ -759,21 +805,29 @@ export async function runOperation(
             if (op.pagination && Array.isArray(result.data)) {
               result = {
                 ...result,
-                data: paginateList(mockSource.label, result.data, op.pagination.mode, wire.query),
+                data: paginateList(
+                  mockSource.label,
+                  result.data,
+                  op.pagination.mode,
+                  normalizeMockPaginatedQuery(wire.query, op.requestTransform),
+                ),
               };
             }
           } else {
+            const paginationMode =
+              op.pagination?.mode ?? (call.routed ? resource.pagination : undefined);
+            const mockWire = paginationMode
+              ? { ...wire, query: normalizeMockPaginatedQuery(wire.query, op.requestTransform) }
+              : wire;
             const intent = call.intent
-              ? call.intent(wire)
+              ? call.intent(mockWire)
               : routeToIntent(
                   mockRequest.method,
                   relative,
-                  wire.query,
-                  wire.body,
+                  mockWire.query,
+                  mockWire.body,
                   mockSource.label,
                 );
-            const paginationMode =
-              op.pagination?.mode ?? (call.routed ? resource.pagination : undefined);
             result =
               op.fileFields?.length || containsBinary(intent.body)
                 ? await runMockWithFiles(
@@ -952,8 +1006,8 @@ export async function runOperation(
       const skipHooks = isEmptyBody || isAllowed404;
 
       try {
-        if (!mocked) {
-          if (!skipHooks && isJsonLike) {
+        if (!skipHooks && isJsonLike) {
+          if (!mocked) {
             const parsePage = op.pagination ? op.pagination.parse : resource.livePagination?.parse;
             if (call.paginated && parsePage) {
               const page = parsePage(data, status);
@@ -972,8 +1026,15 @@ export async function runOperation(
                 }
               }
             }
+          } else if (op.responseTransform) {
+            if (call.paginated && isRecordValue(data) && Array.isArray(data.data)) {
+              data = { ...data, data: applyTransform(data.data, op.responseTransform) };
+            } else {
+              data = applyTransform(data, op.responseTransform);
+            }
           }
-          if (!skipHooks && op.responseParse) {
+
+          if (op.responseParse) {
             try {
               data = await op.responseParse(data, hookCtx);
             } catch (err) {
@@ -986,22 +1047,17 @@ export async function runOperation(
               });
             }
           }
-          if (call.fromHttp && (isJsonLike || call.allow404)) {
-            data = call.fromHttp(data, status, sourceResponse);
-          }
-        } else if (isJsonLike && op.responseTransform) {
-          if (call.paginated && isRecordValue(data) && Array.isArray(data.data)) {
-            data = { ...data, data: applyTransform(data.data, op.responseTransform) };
-          } else {
-            data = applyTransform(data, op.responseTransform);
-          }
+        }
+
+        if (!mocked && call.fromHttp && isJsonLike) {
+          data = call.fromHttp(data, status, sourceResponse);
         }
 
         if (call.shape && isJsonLike) {
           data = call.shape(data);
         }
 
-        if (!skipHooks && op.responseValidate) {
+        if (!skipHooks && isJsonLike && op.responseValidate) {
           try {
             const validated = await op.responseValidate(data, hookCtx);
             if (validated !== undefined) data = validated;

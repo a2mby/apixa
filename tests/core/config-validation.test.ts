@@ -69,13 +69,23 @@ describe("configuration fails early with descriptive errors", () => {
     ],
     [
       "invalid middleware shape",
-      { ...base, middleware: [{ onRequset: () => undefined }], resources: {} },
+      { ...base, middleware: { onRequset: [() => undefined] }, resources: {} },
       /unknown option "onRequset"/,
     ],
     [
+      "array middleware shape",
+      { ...base, middleware: [], resources: {} },
+      /middleware must be an object/,
+    ],
+    [
+      "non-array hook list",
+      { ...base, middleware: { onResponse: () => undefined }, resources: {} },
+      /middleware\.onResponse must be an array of functions/,
+    ],
+    [
       "non-function hook",
-      { ...base, middleware: [{ onResponse: 1 }], resources: {} },
-      /middleware\[0\]\.onResponse must be a function/,
+      { ...base, middleware: { onResponse: [1] }, resources: {} },
+      /middleware\.onResponse\[0\] must be a function/,
     ],
     [
       "invalid transform name",
@@ -94,12 +104,18 @@ describe("configuration fails early with descriptive errors", () => {
     ],
     [
       "pagination on non-list builtin",
-      { ...base, resources: { u: { path: "/u", operations: { getById: { pagination: "page" } } } } },
+      {
+        ...base,
+        resources: { u: { path: "/u", operations: { getById: { pagination: "page" } } } },
+      },
       /pagination is only supported on list operations/,
     ],
     [
       "slice combined with getAll pagination",
-      { ...base, resources: { u: { path: "/u", slice: 5, operations: { getAll: { pagination: "page" } } } } },
+      {
+        ...base,
+        resources: { u: { path: "/u", slice: 5, operations: { getAll: { pagination: "page" } } } },
+      },
       /slice cannot be combined with pagination/,
     ],
     [

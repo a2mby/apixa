@@ -195,9 +195,11 @@ describe("maxResponseSize across response types", () => {
       async () =>
         chunkedResponse(parts, { headers: { "content-type": type } });
     await expect(
-      limited(1000, stub("application/pdf"), { responseAccept: ["application/pdf"] }).docs.download({
-        params: { id: "1" },
-      }),
+      limited(1000, stub("application/pdf"), { responseAccept: ["application/pdf"] }).docs.download(
+        {
+          params: { id: "1" },
+        },
+      ),
     ).resolves.toBeDefined();
     await expect(
       limited(1000, stub("Image/PNG; x=y"), { responseAccept: ["image/*"] }).docs.download({

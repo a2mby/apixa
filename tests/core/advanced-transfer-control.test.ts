@@ -166,7 +166,7 @@ it("overall deadline also bounds stalled outer operation middleware", async () =
   const server = protocolServer();
   const api = server.client(
     {},
-    { middleware: [{ onRequest: () => new Promise<never>(() => {}) }] },
+    { middleware: { onRequest: [() => new Promise<never>(() => {})] } },
   );
   await expect(api.files.create({ document: source() }, { timeout: 20 })).rejects.toBeInstanceOf(
     TimeoutError,

@@ -138,7 +138,10 @@ describe.each(cases)("$name is independent", ({ name, call, http, mock }) => {
           body:
             name === "count"
               ? 3
-              : name === "getAll" || name === "getMany" || name === "findFirst" || name === "createMany"
+              : name === "getAll" ||
+                  name === "getMany" ||
+                  name === "findFirst" ||
+                  name === "createMany"
                 ? [{ id: 1 }]
                 : { id: 1 },
         };
@@ -185,7 +188,7 @@ describe("HTTP-specific strategies", () => {
     let errors = 0;
     const api = defineApi({
       baseURL: "https://api.example.com",
-      middleware: [{ onError: () => void errors++ }],
+      middleware: { onError: [() => void errors++] },
       transport: createFakeTransport(() => ({ status: 404, body: { message: "nope" } })),
       resources: { users: { path: "/users" } },
     });

@@ -152,8 +152,10 @@ export interface MockResourceConfig {
 
 /** Resource object of the flat compatibility form: handlers get the generic row context. */
 export interface MockFlatResourceConfig extends Omit<MockResourceConfig, "operations"> {
-  operations?: MockPreset | (Partial<Record<AllBuiltinOpName, MockOperationValue>> &
-    Record<string, MockOperationValue | MockPreset>);
+  operations?:
+    | MockPreset
+    | (Partial<Record<AllBuiltinOpName, MockOperationValue>> &
+        Record<string, MockOperationValue | MockPreset>);
 }
 
 /** Per-resource input: dataset id string, or full config object. */
@@ -254,10 +256,9 @@ export type TypedFlatResources<T extends Record<string, DatasetId>> = {
 
 /** Reports unknown keys on the root and on each resource. */
 export type ValidateMockRoot<C> = C extends { resources: infer Res }
-  ? Exact<C, MockRootConfig> &
-      {
-        resources: { [K in keyof Res]: ValidateResource<Res[K]> };
-      }
+  ? Exact<C, MockRootConfig> & {
+      resources: { [K in keyof Res]: ValidateResource<Res[K]> };
+    }
   : { [K in keyof C]: ValidateResource<C[K]> };
 
 type ValidateResource<R> = R extends string
@@ -274,14 +275,14 @@ type ValidateResource<R> = R extends string
         ? Ops extends MockPreset
           ? unknown
           : {
-            operations: {
-              [O in keyof Ops]: O extends AllBuiltinOpName | "preset"
-                ? unknown
-                : Ops[O] extends true
-                  ? never
-                  : unknown;
-            };
-          }
+              operations: {
+                [O in keyof Ops]: O extends AllBuiltinOpName | "preset"
+                  ? unknown
+                  : Ops[O] extends true
+                    ? never
+                    : unknown;
+              };
+            }
         : unknown);
 
 // ---------------------------------------------------------------------------------------------
@@ -324,8 +325,12 @@ type OpsOf<R> = R extends { operations: infer Ops }
   ? Ops extends MockPreset
     ? {}
     : Ops extends Record<string, unknown>
-    ? { [K in keyof Ops as K extends "preset" ? never : Ops[K] extends false ? never : K]-?: Exclude<Ops[K], false | undefined> }
-    : {}
+      ? {
+          [
+            K in keyof Ops as K extends "preset" ? never : Ops[K] extends false ? never : K
+          ]-?: Exclude<Ops[K], false | undefined>;
+        }
+      : {}
   : {};
 
 type FnOnly<Op> = Op extends (...args: never[]) => unknown ? Op : never;

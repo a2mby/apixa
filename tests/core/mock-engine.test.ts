@@ -338,7 +338,9 @@ describe("mock routing never falls back to the network", () => {
     expect(await api.users.getAll({ query: { username: "user001" } })).toHaveLength(1);
     expect(await api.users.count()).toBe(100);
     expect(await api.users.byName(usersDataset[0]!.name)).toHaveLength(1);
-    const unsupported = await api.users.archive({}, { params: { id: "1" } }).catch((e: unknown) => e);
+    const unsupported = await api.users
+      .archive({}, { params: { id: "1" } })
+      .catch((e: unknown) => e);
     expect(unsupported).toMatchObject({ code: "MOCK_UNSUPPORTED", status: 501 });
     expect(hits).toEqual([]);
   });

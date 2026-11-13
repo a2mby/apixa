@@ -73,9 +73,15 @@ describe("configuration-driven client inference", () => {
       },
     });
     expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<string>();
-    expectTypeOf(api.users.getById).parameter(1).toMatchTypeOf<{ params: { orgId: string | number } }>();
-    expectTypeOf(api.users.exists).parameter(1).toMatchTypeOf<{ params: { orgId: string | number } }>();
-    expectTypeOf(api.users.getMany).parameter(1).toMatchTypeOf<{ params: { orgId: string | number } }>();
+    expectTypeOf(api.users.getById)
+      .parameter(1)
+      .toMatchTypeOf<{ params: { orgId: string | number } }>();
+    expectTypeOf(api.users.exists)
+      .parameter(1)
+      .toMatchTypeOf<{ params: { orgId: string | number } }>();
+    expectTypeOf(api.users.getMany)
+      .parameter(1)
+      .toMatchTypeOf<{ params: { orgId: string | number } }>();
     if (false) {
       // @ts-expect-error legacy type path does not supply parameters
       api.users.getById({ legacy: "old", id: "1" });
@@ -88,7 +94,12 @@ describe("configuration-driven client inference", () => {
       resources: {
         users: {
           path: "/users",
-          operations: { preset: ["getAll", "getById", "getMany"], create: true, createMany: { path: "/batch" }, deleteMany: false },
+          operations: {
+            preset: ["getAll", "getById", "getMany"],
+            create: true,
+            createMany: { path: "/batch" },
+            deleteMany: false,
+          },
         },
       },
     });
@@ -116,7 +127,10 @@ describe("configuration-driven client inference", () => {
     const writeOnly = defineApi({
       baseURL: "https://api.example.com",
       resources: {
-        users: { path: "/users", operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"] },
+        users: {
+          path: "/users",
+          operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"],
+        },
       },
     });
     expectTypeOf(writeOnly.users.create).parameter(0).toEqualTypeOf<unknown>();

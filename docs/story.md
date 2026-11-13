@@ -2,6 +2,20 @@
 
 Project log. Newest entry first.
 
+## 2026-11-14 — Align list metadata with strict collection responses
+
+Restricted builtin list inference to array-shaped metadata, falling back to the entity array
+for envelope metadata. Regression coverage protects unpaginated and explicitly disabled
+pagination, array key transforms, and a single pagination envelope (PR #120).
+
+## 2026-11-13 — v3.0.0-rc.0 middleware hook objects and pipeline parity audit
+
+Finalized `middleware: { onRequest, onResponse, onError }` across client, resource, and operation
+levels (deterministic `root -> resource -> operation` array composition, rejecting legacy array
+syntax at compile and runtime), enforced strict array returns for unpaginated `getAll` (Bugbot #3),
+and aligned live/mock response parsing, unwrapping, key transforms, and pagination behavior across
+TypeScript, runtime, mocks, and HTTP.
+
 ## 2026-11-13 — v3.0.0-rc.0 Core architecture overhaul release candidate
 
 Completed Phases 2–6 of [v3.0.0](../versions/v3.0.0/) ([#112](https://github.com/a2mby/apixa/issues/112))

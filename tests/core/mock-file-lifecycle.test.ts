@@ -20,7 +20,9 @@ describe("replacement and ownership", () => {
     const api = setup();
     const a = (await api.docs.create({ file: blob("one") } as never)) as unknown as Doc;
     const old = a.file;
-    const updated = (await api.docs.update(a.id, { body: { file: blob("two") } as never })) as unknown as Doc;
+    const updated = (await api.docs.update(a.id, {
+      body: { file: blob("two") } as never,
+    })) as unknown as Doc;
     expect(updated.file).not.toBe(old);
     expect(mockFiles(api)!.has(old)).toBe(false);
     expect(mockFiles(api)!.get(updated.file)!.text()).toBe("two");
@@ -71,9 +73,11 @@ describe("L6: low-level delete is deliberate (v1.5.0 contract)", () => {
     expect(files.has(a.file)).toBe(false);
     expect(files.get(a.file)).toBeUndefined();
     expect(((await api.docs.getById(a.id)) as unknown as Doc).file).toBe(a.file);
-    const replaced = (await api.docs.update(a.id, { body: {
-      file: blob("fresh"),
-    } as never })) as unknown as Doc;
+    const replaced = (await api.docs.update(a.id, {
+      body: {
+        file: blob("fresh"),
+      } as never,
+    })) as unknown as Doc;
     expect(files.get(replaced.file)!.text()).toBe("fresh");
     await api.docs.delete(a.id);
     expect(files.size).toBe(0);

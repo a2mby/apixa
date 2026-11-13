@@ -119,21 +119,22 @@ describe("v0.7.0 thin core", () => {
 
   it("types getAll list/query from ResourceState", () => {
     type User = { id: string; name: string };
-    type Page = { data: User[]; total: number };
+    type Page = { data: User[]; total: number; page: number; pageSize: number };
     type Api = {
       users: {
         path: "/users";
         entity: User;
-        list: Page;
         query: { active?: boolean };
       };
     };
 
     const api = defineApi<Api>()({
       baseURL: "https://api.example.com",
-      transport: createFakeTransport(() => ({ body: { data: [], total: 0 } })),
+      transport: createFakeTransport(() => ({
+        body: { data: [], total: 0, page: 1, pageSize: 20 },
+      })),
       resources: {
-        users: { path: "/users" },
+        users: { path: "/users", pagination: "page" },
       },
     });
 

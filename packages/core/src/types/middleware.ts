@@ -25,14 +25,14 @@ export type ErrorMiddleware = (
   context: { request?: ApiRequest; replay?: () => Promise<unknown> },
 ) => unknown | Promise<unknown>;
 
-/** General middleware: any of the three stages in one object. */
+/** Middleware hooks grouped by lifecycle stage. */
 export interface MiddlewareHooks {
-  onRequest?: RequestMiddleware;
-  onResponse?: ResponseMiddleware;
-  onError?: ErrorMiddleware;
+  onRequest?: readonly RequestMiddleware[];
+  onResponse?: readonly ResponseMiddleware[];
+  onError?: readonly ErrorMiddleware[];
 }
 
-/** Middleware runs root → resource → operation and in array order at each level. */
+/** Middleware runs root → resource → operation, and in array order within each hook list. */
 export interface MiddlewareOptions {
-  middleware?: readonly MiddlewareHooks[];
+  middleware?: MiddlewareHooks;
 }

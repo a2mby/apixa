@@ -59,7 +59,12 @@ describe("operation selection", () => {
       resources: {
         users: {
           path: "/users",
-          operations: { preset: ["getAll", "getById", "getMany"], create: true, createMany: { path: "/batch" }, deleteMany: false },
+          operations: {
+            preset: ["getAll", "getById", "getMany"],
+            create: true,
+            createMany: { path: "/batch" },
+            deleteMany: false,
+          },
         },
       },
     });
@@ -72,13 +77,29 @@ describe("operation selection", () => {
     const left = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", operations: { preset: ["create", "update", "delete"], getMany: true, createMany: true, deleteMany: true } },
+        users: {
+          path: "/users",
+          operations: {
+            preset: ["create", "update", "delete"],
+            getMany: true,
+            createMany: true,
+            deleteMany: true,
+          },
+        },
       },
     });
     const right = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", operations: { deleteMany: true, createMany: true, getMany: true, preset: ["create", "update", "delete"] } },
+        users: {
+          path: "/users",
+          operations: {
+            deleteMany: true,
+            createMany: true,
+            getMany: true,
+            preset: ["create", "update", "delete"],
+          },
+        },
       },
     });
     expect(Object.keys(left.users).sort()).toEqual(Object.keys(right.users).sort());
@@ -92,7 +113,10 @@ describe("operation selection", () => {
     const write = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"] },
+        users: {
+          path: "/users",
+          operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"],
+        },
       },
     });
     expect(write.users).toHaveProperty("create");

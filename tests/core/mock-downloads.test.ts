@@ -110,7 +110,7 @@ describe("mock downloads from the virtual file store", () => {
   it("full: true carries Content-Type, Content-Length and Content-Disposition", async () => {
     const api = makeApi();
     const doc = await upload(api, "résumé.png");
-    const res = await api.docs.download({ ...({ full: true }), params: { id: doc.id } });
+    const res = await api.docs.download({ ...{ full: true }, params: { id: doc.id } });
     expect(res.status).toBe(200);
     expect(res.raw).toBeUndefined();
     expect(res.headers.get("content-type")).toBe("image/png");
@@ -129,16 +129,19 @@ describe("mock downloads from the virtual file store", () => {
     expect(buffer).toBeInstanceOf(ArrayBuffer);
     expect(new Uint8Array(buffer)).toEqual(PNG);
     expect(await api.docs.note({ params: { id: doc.id } })).toBe(new TextDecoder().decode(PNG));
-    const asBuffer = await api.docs.download({ ...({ responseType: "arrayBuffer" }), params: { id: doc.id } });
+    const asBuffer = await api.docs.download({
+      ...{ responseType: "arrayBuffer" },
+      params: { id: doc.id },
+    });
     expect(new Uint8Array(asBuffer)).toEqual(PNG);
-    const asText = await api.docs.download({ ...({ responseType: "text" }), params: { id: doc.id } });
+    const asText = await api.docs.download({ ...{ responseType: "text" }, params: { id: doc.id } });
     expect(asText).toBe(new TextDecoder().decode(PNG));
   });
 
   it("serializes JSON results for a binary responseType, like a server would", async () => {
     const api = makeApi();
     const doc = await upload(api);
-    const res = await api.docs.info({ ...({ full: true }), params: { id: doc.id } });
+    const res = await api.docs.info({ ...{ full: true }, params: { id: doc.id } });
     expect(res.headers.get("content-type")).toBe("application/json");
     expect(JSON.parse(await res.data.text())).toEqual({ id: doc.id, name: "With file" });
   });
@@ -176,7 +179,9 @@ describe("mock downloads from the virtual file store", () => {
     const a = makeApi();
     const b = makeApi();
     const doc = await upload(a);
-    await expect(b.docs.download({ params: { id: doc.id } })).rejects.toMatchObject({ code: "MOCK_NOT_FOUND" });
+    await expect(b.docs.download({ params: { id: doc.id } })).rejects.toMatchObject({
+      code: "MOCK_NOT_FOUND",
+    });
     expect(mockFiles(a).size).toBe(1);
     expect(mockFiles(b).size).toBe(0);
 
@@ -204,8 +209,8 @@ describe("mock downloads from the virtual file store", () => {
     const doc = await upload(api);
     const controller = new AbortController();
     controller.abort();
-    await expect(api.docs.download({ ...({ signal: controller.signal }), params: { id: doc.id } })).rejects.toBeInstanceOf(
-      AbortError,
-    );
+    await expect(
+      api.docs.download({ ...{ signal: controller.signal }, params: { id: doc.id } }),
+    ).rejects.toBeInstanceOf(AbortError);
   });
 });

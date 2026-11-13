@@ -535,15 +535,15 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
         transport: createFakeTransport(() => ({ status: 200, body: envelope })),
         transforms: { response: { keys: "camelCase" } },
         response: { unwrap: "data" },
-        middleware: [
-          {
-            onResponse: (res) => {
+        middleware: {
+          onResponse: [
+            (res) => {
               middlewareSource = res.source;
               middlewareData = res.data;
               return { ...res, data: { ...(res.data as Record<string, unknown>), patched: true } };
             },
-          },
-        ],
+          ],
+        },
         resources: { users: { path: "/users" } },
       });
 
@@ -552,6 +552,186 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
       expect(middlewareData).toEqual({ userId: 42, displayName: "Ada" });
       expect(full.source).toEqual(envelope);
       expect(full.data).toEqual({ userId: 42, displayName: "Ada", patched: true });
+    });
+  });
+
+  describe("Bugbot #3 & response pipeline audit regressions", () => {
+    it("rejects unpaginated getAll plain objects with ResponseShapeError while allowing arrays and configured pagination", async () => {
+      const api = defineApi({
+        baseURL: "https://api.example.com",
+        transport: createFakeTransport((req) => {
+          if (req.url.endsWith("/envelope")) {
+            return { body: { data: [{ id: "1" }], nextCursor: "n1" } };
+          }
+          if (req.url.endsWith("/sliced")) {
+            return { body: { items: [{ id: "1" }] } };
+          }
+          if (req.url.endsWith("/laravel")) {
+            return {
+              body: {
+                data: [{ id: "1" }],
+                links: { next: null },
+                meta: { current_page: 1, per_page: 10, total: 1, last_page: 1 },
+              },
+            };
+          }
+          return { body: [{ id: "1" }] };
+        }),
+        resources: {
+          envelope: { path: "/envelope" },
+          sliced: { path: "/sliced", slice: 1 },
+          plain: { path: "/plain" },
+          laravel: { path: "/laravel", pagination: "laravel" },
+        },
+      });
+
+      await expect(api.envelope.getAll()).rejects.toBeInstanceOf(ResponseShapeError);
+      await expect(api.sliced.getAll()).rejects.toBeInstanceOf(ResponseShapeError);
+      await expect(api.plain.getAll()).resolves.toEqual([{ id: "1" }]);
+      await expect(api.laravel.getAll()).resolves.toEqual({
+        data: [{ id: "1" }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+      });
+    });
+
+    it("skips unwrap, transforms, response.parse, response.validate, and builtin fromHttp on non-JSON responseType", async () => {
+      let unwrapCalls = 0;
+      let parseCalls = 0;
+      let validateCalls = 0;
+      const fetchImpl = (async (input: RequestInfo | URL) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        if (url.endsWith("/missing")) {
+          return new Response("missing-text", {
+            status: 404,
+            headers: { "content-type": "text/plain" },
+          });
+        }
+        return new Response("hello_world", {
+          status: 200,
+          headers: { "content-type": "text/plain" },
+        });
+      }) as typeof fetch;
+
+      const api = defineApi({
+        baseURL: "https://api.example.com",
+        transport: createFetchTransport(fetchImpl),
+        transforms: { response: { keys: "camelCase" } },
+        response: {
+          unwrap: () => {
+            unwrapCalls++;
+            return null;
+          },
+          parse: () => {
+            parseCalls++;
+            return null;
+          },
+          validate: () => {
+            validateCalls++;
+            return null;
+          },
+        },
+        resources: {
+          files: {
+            path: "/files",
+            operations: {
+              textOp: { kind: "read", method: "GET", path: "/note", responseType: "text" },
+            },
+          },
+        },
+      });
+
+      const textRes = await api.files.textOp();
+      expectTypeOf(textRes).toEqualTypeOf<string>();
+      expect(textRes).toBe("hello_world");
+
+      const getByIdText = await api.files.getById("1", { responseType: "text" });
+      expectTypeOf(getByIdText).toEqualTypeOf<string>();
+      expect(getByIdText).toBe("hello_world");
+
+      const getByIdBlob = await api.files.getById("1", { responseType: "blob" });
+      expectTypeOf(getByIdBlob).toEqualTypeOf<Blob>();
+      expect(getByIdBlob).toBeInstanceOf(Blob);
+      expect(await getByIdBlob.text()).toBe("hello_world");
+
+      const getByText = await api.files.getBy("slug", "intro", { responseType: "text" });
+      expectTypeOf(getByText).toEqualTypeOf<string>();
+      expect(getByText).toBe("hello_world");
+
+      await expect(api.files.exists("missing")).resolves.toBe(false);
+
+      expect(unwrapCalls).toBe(0);
+      expect(parseCalls).toBe(0);
+      expect(validateCalls).toBe(0);
+    });
+
+    it("runs response.parse on mocked builtins and custom mock handlers while keeping TS contracts aligned", async () => {
+      const api = defineApi({
+        baseURL: "/api",
+        resources: {
+          users: {
+            path: "/users",
+            mock: [{ id: 1, first_name: "Ada" }],
+            operations: {
+              getById: {
+                response: {
+                  parse: (data) => {
+                    const row = data as { id: number; first_name: string };
+                    return { id: row.id, displayName: row.first_name.toUpperCase() };
+                  },
+                },
+              },
+              summary: {
+                kind: "read",
+                method: "GET",
+                path: "/summary",
+                mock: ({ records }) => ({ count: records.length }),
+                response: {
+                  parse: (data) => `users:${(data as { count: number }).count}`,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const user = await api.users.getById(1);
+      expectTypeOf(user).toEqualTypeOf<{ id: number; displayName: string }>();
+      expect(user).toEqual({ id: 1, displayName: "ADA" });
+
+      const summary = await api.users.summary();
+      expectTypeOf(summary).toEqualTypeOf<string>();
+      expect(summary).toBe("users:1");
+    });
+
+    it("does not let root/resource response.unwrap strip pagination metadata before Laravel parsePage", async () => {
+      const api = defineApi<{
+        items: { entity: { id: string; itemName: string } };
+      }>()({
+        baseURL: "https://api.example.com",
+        transport: createFakeTransport(() => ({
+          body: {
+            data: [{ id: "1", item_name: "Pen" }],
+            links: { next: null },
+            meta: { current_page: 2, per_page: 10, total: 31, last_page: 4 },
+          },
+        })),
+        response: { unwrap: "data" },
+        transforms: { response: { keys: "camelCase" } },
+        resources: {
+          items: { path: "/items", pagination: "laravel" },
+        },
+      });
+
+      const page = await api.items.getAll({ query: { page: 2, pageSize: 10 } });
+      expect(page).toEqual({
+        data: [{ id: "1", itemName: "Pen" }],
+        total: 31,
+        page: 2,
+        pageSize: 10,
+      });
     });
   });
 });

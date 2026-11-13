@@ -146,7 +146,9 @@ describe("replacement", () => {
     const created = (await api.docs.create({ file: blob("original") } as never)) as unknown as Doc;
     const broken = blob("new");
     broken.arrayBuffer = () => Promise.reject(new Error("disk error"));
-    await expect(api.docs.update(created.id, { body: { file: broken } as never })).rejects.toThrow();
+    await expect(
+      api.docs.update(created.id, { body: { file: broken } as never }),
+    ).rejects.toThrow();
     const row = (await api.docs.getById(created.id)) as unknown as Doc;
     expect(row.file).toBe(created.file);
     expect(mockFiles(api)!.get(created.file)!.text()).toBe("original");
@@ -164,16 +166,18 @@ describe("replacement", () => {
         release = r;
       });
     const pending = api.docs
-      .update(created.id, { ...({ signal: controller.signal }), body: { file: slow } as never })
+      .update(created.id, { ...{ signal: controller.signal }, body: { file: slow } as never })
       .catch((e: unknown) => e);
     await new Promise((r) => setTimeout(r, 5));
     controller.abort();
     release(new TextEncoder().encode("slow").buffer as ArrayBuffer);
     expect(((await pending) as Error).name).toBe("AbortError");
     expect(mockFiles(api)!.get(created.file)!.text()).toBe("original");
-    const replaced = (await api.docs.update(created.id, { body: {
-      file: blob("final"),
-    } as never })) as unknown as Doc;
+    const replaced = (await api.docs.update(created.id, {
+      body: {
+        file: blob("final"),
+      } as never,
+    })) as unknown as Doc;
     expect(mockFiles(api)!.has(created.file)).toBe(false);
     expect(mockFiles(api)!.get(replaced.file)!.text()).toBe("final");
     await expectConsistent(api);
@@ -185,9 +189,11 @@ describe("replacement", () => {
       files: [blob("a"), blob("b")],
     } as never)) as unknown as Doc;
     const [a, b] = created.files!;
-    const updated = (await api.docs.update(created.id, { body: {
-      files: [a!, blob("c")],
-    } as never })) as unknown as Doc;
+    const updated = (await api.docs.update(created.id, {
+      body: {
+        files: [a!, blob("c")],
+      } as never,
+    })) as unknown as Doc;
     expect(mockFiles(api)!.has(a!)).toBe(true);
     expect(mockFiles(api)!.has(b!)).toBe(false);
     expect(updated.files![0]).toBe(a);

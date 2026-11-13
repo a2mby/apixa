@@ -28,7 +28,10 @@ describe("defineApi type architecture", () => {
       resources: {
         users: { path: "/users", operations: { getById: false, createMany: false } },
         ro: { path: "/ro", operations: "read" },
-        wo: { path: "/wo", operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"] },
+        wo: {
+          path: "/wo",
+          operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"],
+        },
         none: { path: "/none", operations: ["getAll"] },
         groups: { path: "/g", operations: ["getMany", "createMany", "deleteMany"] },
         explicit: { path: "/e", operations: { preset: [], getById: true } },
@@ -150,8 +153,9 @@ describe("defineApi type architecture", () => {
       userId: number;
       userProfile: { phoneNumber: string };
     }>();
-    expectTypeOf<Parameters<typeof api.users.patch>[1]["body"]>()
-      .toEqualTypeOf<Partial<{ userId: number; userProfile: { phoneNumber: string } }>>();
+    expectTypeOf<Parameters<typeof api.users.patch>[1]["body"]>().toEqualTypeOf<
+      Partial<{ userId: number; userProfile: { phoneNumber: string } }>
+    >();
   });
 
   it("rejects invalid configurations at compile time", () => {

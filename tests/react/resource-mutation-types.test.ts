@@ -55,9 +55,7 @@ describe("resource-wide useResourceMutation types", () => {
       void users.states.deleteMany;
 
       const org = useResourceMutation(api.org, { queryKey: ["org"] });
-      expectTypeOf(org.update)
-        .parameter(0)
-        .toEqualTypeOf<string>();
+      expectTypeOf(org.update).parameter(0).toEqualTypeOf<string>();
       expectTypeOf(org).not.toHaveProperty("getAll");
     }
     expect(true).toBe(true);
@@ -139,7 +137,10 @@ describe("resource-wide useResourceMutation types", () => {
     const writeOnly = defineApi<{ org: { entity: User } }>()({
       baseURL: "https://api.example.com",
       resources: {
-        org: { path: "/orgs/:orgId/users", operations: ["create", "update", "patch", "createMany", "deleteMany"] },
+        org: {
+          path: "/orgs/:orgId/users",
+          operations: ["create", "update", "patch", "createMany", "deleteMany"],
+        },
       },
     });
     const mutation = createResourceMutationController(writeOnly.org, { queryKey: ["org"] });

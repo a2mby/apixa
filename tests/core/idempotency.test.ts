@@ -154,15 +154,17 @@ describe("Core idempotency keys", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transport,
-      middleware: [
-        {
-          onRequest: (request) => {
+      middleware: {
+        onRequest: [
+          (request) => {
             middlewareKeys.push(request.headers.get("idempotency-key"));
           },
-          onError: (error, { replay }) =>
+        ],
+        onError: [
+          (error, { replay }) =>
             error instanceof HttpError && error.status === 401 ? replay?.() : undefined,
-        },
-      ],
+        ],
+      },
       resources: {
         users: {
           path: "/users",
@@ -197,7 +199,13 @@ describe("Core idempotency keys", () => {
         users: {
           path: "/users",
           operations: {
-            archive: { kind: "write", method: "POST", path: "/:id/archive", hasBody: false, idempotency: true },
+            archive: {
+              kind: "write",
+              method: "POST",
+              path: "/:id/archive",
+              hasBody: false,
+              idempotency: true,
+            },
           },
         },
       },
