@@ -67,9 +67,7 @@ export interface ResponseOptions<T = unknown> {
    * `undefined` keeps it unchanged. Non-`ApiError` throws are wrapped in `ValidationError`.
    * Pass `false` to disable an inherited validator.
    */
-  validate?:
-    | { bivariant(data: unknown, ctx: ResponseHookContext): unknown }["bivariant"]
-    | false;
+  validate?: { bivariant(data: unknown, ctx: ResponseHookContext): unknown }["bivariant"] | false;
 }
 
 /** Settings shared by root, resource, and operation levels (most specific wins). */
@@ -225,7 +223,7 @@ export interface OperationDefinition extends LayerOptions {
   kind?: OperationKind;
   /** Path relative to the resource `path`, or an absolute URL on the API origin. */
   path?: string;
-  /** Override body presence. Default: `true` for POST / PUT / PATCH (and `deleteMany`). */
+  /** Override body presence. Default: `true` for POST / PUT / PATCH / DELETE (and `deleteMany`), `false` for GET / HEAD / OPTIONS (and builtin `delete`). */
   hasBody?: boolean;
   /**
    * Custom operations only: what this operation does on a **mocked** resource, as

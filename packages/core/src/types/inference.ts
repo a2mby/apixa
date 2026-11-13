@@ -521,14 +521,16 @@ type InferQuery<Op> = Op extends { query: infer Q } ? Q : QueryParams;
 type DefaultMethod<Name extends string> = Name extends keyof Conventions
   ? Conventions[Name]["method"]
   : never;
-type BodyMethod = "POST" | "PUT" | "PATCH";
+type BodyMethod = "POST" | "PUT" | "PATCH" | "DELETE";
 type HasBody<Name extends string, Op> = Op extends { hasBody: infer H }
   ? H
   : Name extends "deleteMany"
     ? true
-    : (Op extends { method: infer M } ? M : DefaultMethod<Name>) extends BodyMethod
-      ? true
-      : false;
+    : Name extends "delete"
+      ? false
+      : (Op extends { method: infer M } ? M : DefaultMethod<Name>) extends BodyMethod
+        ? true
+        : false;
 type InferBody<Op> = Op extends { body: infer B } ? B : unknown;
 
 export type CallResult<Data, O> = [O] extends [undefined]
@@ -641,14 +643,21 @@ export type MaybeOpName<R> = {
   [Name in AllBuiltinOpName]: [Selected<R, Name>] extends [true] | [false] ? never : Name;
 }[AllBuiltinOpName];
 
-type EffectiveOpDef<Name extends AllBuiltinOpName, R, Meta, Root extends RootTypes> = Name extends "getAll"
+type EffectiveOpDef<
+  Name extends AllBuiltinOpName,
+  R,
+  Meta,
+  Root extends RootTypes,
+> = Name extends "getAll"
   ? ApplyOpPagination<
       ApplyPayload<
         ApplyResponseParser<
           ApplyResponseType<
             MergeOp<
               EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
-              SanitizeRuntimeOp<Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never>
+              SanitizeRuntimeOp<
+                Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+              >
             >
           >,
           Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
@@ -773,36 +782,58 @@ type BuiltinFn<
         ? SpecialClientFn<Name, R, Meta, Root>
         : CustomCall<R, Name, EffectiveOpDef<Name, R, Meta, Root>>;
 
-type FirstPathParam<Path extends string> = Path extends `http://${infer Rest}` | `https://${infer Rest}`
-  ? Rest extends `${string}/${infer Tail}` ? FirstPathParam<`/${Tail}`> : never
-  : Path extends `${string}:${infer Param}/${string}` ? Param
-    : Path extends `${string}:${infer Param}` ? Param : never;
+type FirstPathParam<Path extends string> = Path extends
+  `http://${infer Rest}` | `https://${infer Rest}`
+  ? Rest extends `${string}/${infer Tail}`
+    ? FirstPathParam<`/${Tail}`>
+    : never
+  : Path extends `${string}:${infer Param}/${string}`
+    ? Param
+    : Path extends `${string}:${infer Param}`
+      ? Param
+      : never;
 
-type CallWithOptions<Args extends unknown[], Params extends string, Query, Result> =
-  [Params] extends [never]
-    ? <O extends RequestOptions<Query> | undefined = undefined>(
-        ...args: [...Args, options?: O | RequestOptions<Query>]
-      ) => Promise<CallResult<Result, O>>
-    : <O extends RequestOptions<Query> & { params: { [K in Params]: string | number } }>(
-        ...args: [...Args, options: O]
-      ) => Promise<CallResult<Result, O>>;
+type CallWithOptions<Args extends unknown[], Params extends string, Query, Result> = [
+  Params,
+] extends [never]
+  ? <O extends RequestOptions<Query> | undefined = undefined>(
+      ...args: [...Args, options?: O | RequestOptions<Query>]
+    ) => Promise<CallResult<Result, O>>
+  : <O extends RequestOptions<Query> & { params: { [K in Params]: string | number } }>(
+      ...args: [...Args, options: O]
+    ) => Promise<CallResult<Result, O>>;
 
-type IdentityCall<Name extends "getById" | "delete", R, Meta, Root extends RootTypes,
-  Op = EffectiveOpDef<Name, R, Meta, Root>> = CallWithOptions<
-    [id: IdOf<R, Meta, Root>],
-    Exclude<PathParamName<FullPath<R, Name, Op>>, FirstPathParam<EffectivePath<Name, Op>>>,
-    InferQuery<Op>,
-    InferResponse<Op>
-  >;
-
-type IdentityMutationCall<Name extends "update" | "patch", R, Meta, Root extends RootTypes,
+type IdentityCall<
+  Name extends "getById" | "delete",
+  R,
+  Meta,
+  Root extends RootTypes,
   Op = EffectiveOpDef<Name, R, Meta, Root>,
-  Params extends string = Exclude<PathParamName<FullPath<R, Name, Op>>, FirstPathParam<EffectivePath<Name, Op>>>> =
-  <O extends RequestOptions<InferQuery<Op>> & { body: InferBody<Op> } &
-    ([Params] extends [never] ? {} : { params: { [K in Params]: string | number } })>(
-    id: IdOf<R, Meta, Root>,
-    options: O,
-  ) => Promise<CallResult<InferResponse<Op>, O>>;
+> = CallWithOptions<
+  [id: IdOf<R, Meta, Root>],
+  Exclude<PathParamName<FullPath<R, Name, Op>>, FirstPathParam<EffectivePath<Name, Op>>>,
+  InferQuery<Op>,
+  InferResponse<Op>
+>;
+
+type IdentityMutationCall<
+  Name extends "update" | "patch",
+  R,
+  Meta,
+  Root extends RootTypes,
+  Op = EffectiveOpDef<Name, R, Meta, Root>,
+  Params extends string = Exclude<
+    PathParamName<FullPath<R, Name, Op>>,
+    FirstPathParam<EffectivePath<Name, Op>>
+  >,
+> = <
+  O extends RequestOptions<InferQuery<Op>> & { body: InferBody<Op> } & ([Params] extends [never]
+      ? {}
+      : { params: { [K in Params]: string | number } }),
+>(
+  id: IdOf<R, Meta, Root>,
+  options: O,
+) => Promise<CallResult<InferResponse<Op>, O>>;
 
 type ListCall<R, Meta, Root extends RootTypes, Op = EffectiveOpDef<"getAll", R, Meta, Root>> =
   HasBody<"getAll", Op> extends true
@@ -811,7 +842,11 @@ type ListCall<R, Meta, Root extends RootTypes, Op = EffectiveOpDef<"getAll", R, 
           body: InferBody<Op>,
           options?: O | RequestOptions<InferQuery<Op>>,
         ) => Promise<CallResult<InferResponse<Op>, O>>
-      : <O extends RequestOptions<InferQuery<Op>> & { params: PathParamsOf<FullPath<R, "getAll", Op>> }>(
+      : <
+          O extends RequestOptions<InferQuery<Op>> & {
+            params: PathParamsOf<FullPath<R, "getAll", Op>>;
+          },
+        >(
           body: InferBody<Op>,
           options: O,
         ) => Promise<CallResult<InferResponse<Op>, O>>
@@ -819,7 +854,11 @@ type ListCall<R, Meta, Root extends RootTypes, Op = EffectiveOpDef<"getAll", R, 
       ? <O extends RequestOptions<InferQuery<Op>> | undefined = undefined>(
           options?: O | RequestOptions<InferQuery<Op>>,
         ) => Promise<CallResult<InferResponse<Op>, O>>
-      : <O extends RequestOptions<InferQuery<Op>> & { params: PathParamsOf<FullPath<R, "getAll", Op>> }>(
+      : <
+          O extends RequestOptions<InferQuery<Op>> & {
+            params: PathParamsOf<FullPath<R, "getAll", Op>>;
+          },
+        >(
           options: O,
         ) => Promise<CallResult<InferResponse<Op>, O>>;
 
@@ -852,9 +891,20 @@ type CustomClientFn<R, Meta, Root extends RootTypes, Name extends CustomOpName<R
     >
   : StripCtx<FnOf<ResourceOpsOf<R>[Name]>>;
 
-type CustomCall<R, Name extends string, Op> = CallWithOptions<
-  HasBody<Name, Op> extends true ? [body: InferBody<Op>] : [],
-  PathParamName<FullPath<R, Name, Op>>,
+type CustomCall<
+  R,
+  Name extends string,
+  Op,
+  Params extends string = PathParamName<FullPath<R, Name, Op>>,
+> = CallWithOptions<
+  HasBody<Name, Op> extends true
+    ? [Params] extends [never]
+      ? [unknown] extends [InferBody<Op>]
+        ? [body?: InferBody<Op>]
+        : [body: InferBody<Op>]
+      : [body: InferBody<Op>]
+    : [],
+  Params,
   InferQuery<Op>,
   InferResponse<Op>
 >;
@@ -1216,12 +1266,8 @@ type ValidateResource<R, Meta, Root extends RootTypes> = Exact<R, ResourceDefini
   (R extends { fileFields: infer F }
     ? { fileFields: ValidateFileFields<F, EntityOf<R, Meta, Root>> }
     : unknown) &
-  (R extends { transforms: infer T }
-    ? { transforms: ValidateTransformsConfig<T> }
-    : unknown) &
-  (R extends { response: infer Resp }
-    ? { response: ValidateResponseOptions<Resp> }
-    : unknown) &
+  (R extends { transforms: infer T } ? { transforms: ValidateTransformsConfig<T> } : unknown) &
+  (R extends { response: infer Resp } ? { response: ValidateResponseOptions<Resp> } : unknown) &
   ValidateResourcePagination<R>;
 
 /** Compile-time checks applied on top of the inferred config (`Config & ValidateConfig<…>`). */
@@ -1237,9 +1283,7 @@ export type ValidateConfig<Meta, Config> = Exact<Config, ApiRootConfig> &
         };
       }
     : unknown) &
-  (Config extends { transforms: infer T }
-    ? { transforms: ValidateTransformsConfig<T> }
-    : unknown) &
+  (Config extends { transforms: infer T } ? { transforms: ValidateTransformsConfig<T> } : unknown) &
   (Config extends { response: infer Resp }
     ? { response: ValidateResponseOptions<Resp> }
     : unknown) &

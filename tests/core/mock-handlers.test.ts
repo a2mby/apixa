@@ -142,6 +142,7 @@ describe("custom writes", () => {
               kind: "write",
               method: "DELETE",
               path: "/purge",
+              hasBody: false,
               mock: ({ store }) => {
                 for (const u of store.list({ active: false })) store.delete(u.id);
               },
@@ -173,7 +174,10 @@ describe("custom writes", () => {
 
   it("patches one record, and built-in reads see it", async () => {
     const api = make();
-    expect(await api.users.archive({ params: { id: "1" } })).toMatchObject({ id: "1", archived: true });
+    expect(await api.users.archive({ params: { id: "1" } })).toMatchObject({
+      id: "1",
+      archived: true,
+    });
     expect(await api.users.getById("1")).toMatchObject({ archived: true });
     expect((await api.users.getAll())[1]).not.toHaveProperty("archived");
   });
@@ -192,7 +196,9 @@ describe("custom writes", () => {
 
   it("fails like the store: not found, duplicate id", async () => {
     const api = make();
-    await expect(api.users.archive({ params: { id: "zz" } })).rejects.toMatchObject({ code: "MOCK_NOT_FOUND" });
+    await expect(api.users.archive({ params: { id: "zz" } })).rejects.toMatchObject({
+      code: "MOCK_NOT_FOUND",
+    });
     await expect(api.users.clash()).rejects.toMatchObject({ code: "MOCK_DUPLICATE_ID" });
     expect(await api.users.count()).toBe(3);
   });
@@ -930,10 +936,12 @@ describe("types", () => {
       expectTypeOf(
         apis.inline.users.updateName({ name: "A" }, { params: { orgId: "a", userId: "1" } }),
       ).toEqualTypeOf<Promise<{ id: number; name: string; nickname?: string }>>();
-      expectTypeOf(apis.named.products.getPrice({ params: { productId: "p1" } })).toEqualTypeOf<Promise<{ price: number }>>();
-      expectTypeOf(apis.provided.members.getMember({ params: { teamId: "t1", memberId: "m1" } })).toEqualTypeOf<
-        Promise<{ active: boolean }>
+      expectTypeOf(apis.named.products.getPrice({ params: { productId: "p1" } })).toEqualTypeOf<
+        Promise<{ price: number }>
       >();
+      expectTypeOf(
+        apis.provided.members.getMember({ params: { teamId: "t1", memberId: "m1" } }),
+      ).toEqualTypeOf<Promise<{ active: boolean }>>();
     };
     expect(check).toBeTypeOf("function");
   });

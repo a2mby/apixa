@@ -3,11 +3,7 @@ import { ConfigError, ResponseShapeError, ValidationError } from "../errors/inde
 import { extractPathParamNames, joinPath } from "../http/path.js";
 import { MockStore, normalizeMockSource, type BuiltinIntent } from "../mock/index.js";
 import { DEFAULT_MULTIPART, type MultipartRuntime } from "../http/multipart.js";
-import {
-  BUILTIN_CONVENTIONS,
-  expandOperations,
-  isBuiltinName,
-} from "../operation/index.js";
+import { BUILTIN_CONVENTIONS, expandOperations, isBuiltinName } from "../operation/index.js";
 import type { BuiltinConventionName, OperationInput } from "../operation/index.js";
 import {
   resolveRetryConfig,
@@ -49,7 +45,7 @@ import { applyResourceSliceToListResult, type ResourceSlice } from "../utils/sli
 
 type Fn = (...args: unknown[]) => Promise<unknown>;
 
-const BODY_METHODS = new Set(["POST", "PUT", "PATCH"]);
+const BODY_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /** Most specific defined value wins; `false` retry at a lower level disables inherited retry. */
 function pick<T>(...values: Array<T | undefined>): T | undefined {

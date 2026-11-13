@@ -112,7 +112,9 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
         baseURL: "https://api.example.com",
         transport: createFakeTransport((req) => {
           if (req.url.endsWith("/users")) {
-            return { body: { payload: { list: [{ id: 1, full_name: "Ada" }] }, meta: { count: 1 } } };
+            return {
+              body: { payload: { list: [{ id: 1, full_name: "Ada" }] }, meta: { count: 1 } },
+            };
           }
           if (req.url.endsWith("/users/1")) {
             return { body: { data: { item: { id: 1, full_name: "Ada" } } } };
@@ -134,7 +136,8 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
               getAll: {
                 response: {
                   unwrap: "payload.list",
-                  validate: (value) => (value as Array<{ id: number; fullName: string }>).map((u) => ({ ...u })),
+                  validate: (value) =>
+                    (value as Array<{ id: number; fullName: string }>).map((u) => ({ ...u })),
                 },
               },
             },
@@ -164,7 +167,15 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
     });
 
     it("rejects unsafe or malformed response.unwrap paths at construction", () => {
-      for (const badPath of ["", ".data", "data.", "a..b", "__proto__.x", "constructor", "a.prototype.b"]) {
+      for (const badPath of [
+        "",
+        ".data",
+        "data.",
+        "a..b",
+        "__proto__.x",
+        "constructor",
+        "a.prototype.b",
+      ]) {
         expect(() =>
           defineApi({
             baseURL: "https://api.example.com",
@@ -315,6 +326,92 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
       expect(valErr).toBeInstanceOf(ValidationError);
       expect(valErr).toMatchObject({ status: 200, data: rawBody });
     });
+
+    it("still applies builtin fromHttp shaping and checks after inherited response.parse", async () => {
+      const parseCalls: string[] = [];
+      const api = defineApi<{
+        users: { entity: { id: number; parsed?: boolean } };
+      }>()({
+        baseURL: "https://api.example.com",
+        transport: createFakeTransport((req) => {
+          const url = new URL(req.url);
+          if (url.pathname === "/users/999") return { status: 404, body: { error: "missing" } };
+          if (url.pathname === "/users/count") {
+            return { status: 200, body: url.searchParams.get("bad") ? "nope" : "42" };
+          }
+          if (url.pathname === "/users/1") return { status: 200, body: { id: "1" } };
+          if (url.pathname === "/users" && url.searchParams.get("empty") === "1") {
+            return { status: 200, body: [] };
+          }
+          if (url.pathname === "/users" && url.searchParams.get("bad") === "1") {
+            return { status: 200, body: "not-a-list" };
+          }
+          if (url.pathname === "/users") {
+            return { status: 200, body: [{ id: "1" }, { id: "2" }] };
+          }
+          return { status: 200, body: [] };
+        }),
+        response: {
+          parse: (data, ctx) => {
+            parseCalls.push(ctx.operation);
+            if (Array.isArray(data)) {
+              return data.map((row) =>
+                typeof row === "object" && row !== null
+                  ? {
+                      ...(row as Record<string, unknown>),
+                      id: Number((row as { id: string }).id),
+                      parsed: true,
+                    }
+                  : row,
+              );
+            }
+            if (typeof data === "object" && data !== null && "id" in data) {
+              return { ...data, id: Number((data as { id: string }).id), parsed: true };
+            }
+            return data;
+          },
+        },
+        resources: {
+          users: {
+            path: "/users",
+            operations: {
+              count: {
+                response: {
+                  parse: (data) =>
+                    typeof data === "string" && /^\d+$/.test(data) ? Number(data) : data,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      await expect(api.users.exists(1)).resolves.toBe(true);
+      await expect(api.users.exists(999)).resolves.toBe(false);
+      await expect(api.users.findFirst({ query: { id: 1 } })).resolves.toEqual({
+        id: 1,
+        parsed: true,
+      });
+      await expect(api.users.findFirst({ query: { empty: "1" } })).resolves.toBeNull();
+      await expect(api.users.getBy("id", 1)).resolves.toEqual({ id: 1, parsed: true });
+      await expect(api.users.getById(1)).resolves.toEqual({ id: 1, parsed: true });
+      await expect(api.users.getAll()).resolves.toEqual([
+        { id: 1, parsed: true },
+        { id: 2, parsed: true },
+      ]);
+      await expect(api.users.count()).resolves.toBe(42);
+      await expect(api.users.count({ query: { bad: "1" } })).rejects.toBeInstanceOf(
+        ResponseShapeError,
+      );
+      await expect(api.users.getMany([1], { query: { bad: "1" } })).rejects.toBeInstanceOf(
+        ResponseShapeError,
+      );
+      expect(parseCalls).toContain("exists");
+      expect(parseCalls).toContain("findFirst");
+      expect(parseCalls).toContain("getBy");
+      expect(parseCalls).toContain("getById");
+      expect(parseCalls).toContain("getAll");
+    });
   });
 
   describe("Decision 26: safe key transforms (cycles, DAG, maxDepth, exclude/preserve)", () => {
@@ -412,7 +509,12 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
       }>();
 
       // Ensure exported v3 response & transform types remain usable
-      const _cfg: KeyTransformConfig = { keys: "camelCase", exclude: ["x"], preserve: ["y"], maxDepth: 8 };
+      const _cfg: KeyTransformConfig = {
+        keys: "camelCase",
+        exclude: ["x"],
+        preserve: ["y"],
+        maxDepth: 8,
+      };
       const _resOpts: ResponseOptions = { unwrap: "data", validate: (v) => v };
       expect(_cfg.maxDepth).toBe(8);
       expect(_resOpts.unwrap).toBe("data");

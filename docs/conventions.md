@@ -149,9 +149,10 @@ const api = defineApi({
 - Request middleware sees `request.query` already transformed by `transforms.request`. Mutations to
   `request.query` or `request.url` stay synchronized across transport, mocks, URLs, and response/error
   `request` metadata.
-- `getMany` and `findFirst` expect an array response; unpaginated `getAll` expects an array (or configured
-  paginated object when `pagination` is active). Invalid shapes raise `ResponseShapeError`, whose
-  `data` and `response` retain the parsed source and response details; an empty array is valid.
+- `getMany` and `findFirst` expect an array response; unpaginated `getAll` expects an array or plain
+  list/page object (supporting custom `list` envelopes via `ResourceState.list`), and configured
+  `pagination` expects an object. Invalid shapes raise `ResponseShapeError`, whose `data` and
+  `response` retain the parsed source and response details; an empty array is valid.
 - An operation whose body type is unknown (e.g. a custom POST) may be called without a body.
 - Clients are frozen. To use a different base URL, build another client, or use `defineApis()`.
 

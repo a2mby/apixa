@@ -71,7 +71,11 @@ import type {
 } from "../types/middleware.js";
 import type { ResolvedRetryConfig } from "../types/retry.js";
 import type { KeyTransformConfig } from "../types/transform.js";
-import { renamePaginationQuery, type PageResult, type ResolvedPagination } from "../api/pagination.js";
+import {
+  renamePaginationQuery,
+  type PageResult,
+  type ResolvedPagination,
+} from "../api/pagination.js";
 import type { PaginationParams } from "../types/definition.js";
 import type {
   ApiRequest,
@@ -260,10 +264,12 @@ async function applyUnwrap(
       return await unwrap(data, ctx);
     } catch (err) {
       if (err instanceof ApiError) throw err;
-      throw new ResponseShapeError(
-        `${ctx.resource}.${ctx.operation}: response.unwrap failed.`,
-        { status: ctx.status, data: sourceResponse.source, response: sourceResponse, cause: err },
-      );
+      throw new ResponseShapeError(`${ctx.resource}.${ctx.operation}: response.unwrap failed.`, {
+        status: ctx.status,
+        data: sourceResponse.source,
+        response: sourceResponse,
+        cause: err,
+      });
     }
   }
   const segments = parseUnwrapPath(unwrap);
@@ -704,8 +710,7 @@ export async function runOperation(
       responseHeaders = advanced.headers;
       raw = advanced.raw;
       data = advanced.data;
-      source =
-        "source" in advanced ? (advanced as ApiResponse<unknown>).source : advanced.data;
+      source = "source" in advanced ? (advanced as ApiResponse<unknown>).source : advanced.data;
     } else if (resource.mock) {
       // Mocked resources execute the resolved operation against the store. They never reach a
       // transport, whatever the URL looks like after middleware.
@@ -754,18 +759,19 @@ export async function runOperation(
             if (op.pagination && Array.isArray(result.data)) {
               result = {
                 ...result,
-                data: paginateList(
-                  mockSource.label,
-                  result.data,
-                  op.pagination.mode,
-                  wire.query,
-                ),
+                data: paginateList(mockSource.label, result.data, op.pagination.mode, wire.query),
               };
             }
           } else {
             const intent = call.intent
               ? call.intent(wire)
-              : routeToIntent(mockRequest.method, relative, wire.query, wire.body, mockSource.label);
+              : routeToIntent(
+                  mockRequest.method,
+                  relative,
+                  wire.query,
+                  wire.body,
+                  mockSource.label,
+                );
             const paginationMode =
               op.pagination?.mode ?? (call.routed ? resource.pagination : undefined);
             result =
@@ -802,15 +808,9 @@ export async function runOperation(
         },
         op.fileRules,
         !op.mockHandler &&
-          [
-            "getAll",
-            "getById",
-            "getMany",
-            "getBy",
-            "findFirst",
-            "exists",
-            "count",
-          ].includes(op.name),
+          ["getAll", "getById", "getMany", "getBy", "findFirst", "exists", "count"].includes(
+            op.name,
+          ),
       );
       status = managed.status;
       responseHeaders = managed.responseHeaders;
@@ -986,11 +986,7 @@ export async function runOperation(
               });
             }
           }
-          if (
-            call.fromHttp &&
-            (isJsonLike || call.allow404) &&
-            (!op.responseParse || (call.allow404 && status === 404))
-          ) {
+          if (call.fromHttp && (isJsonLike || call.allow404)) {
             data = call.fromHttp(data, status, sourceResponse);
           }
         } else if (isJsonLike && op.responseTransform) {
@@ -1157,7 +1153,10 @@ function applyIdempotency(
   return key;
 }
 
-function serializeCustomQuery(serializer: (query: QueryParams) => string, query: QueryParams): string {
+function serializeCustomQuery(
+  serializer: (query: QueryParams) => string,
+  query: QueryParams,
+): string {
   let out: unknown;
   try {
     out = serializer(query);

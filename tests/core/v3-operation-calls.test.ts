@@ -25,7 +25,9 @@ describe("v3 operation calls", () => {
 
   it("preserves body-bearing list overrides with body first and params in options", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
-    type State = { users: { operations: { getAll: { body: { active: boolean }; response: unknown[] } } } };
+    type State = {
+      users: { operations: { getAll: { body: { active: boolean }; response: unknown[] } } };
+    };
     const api = defineApi<State>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
@@ -40,7 +42,9 @@ describe("v3 operation calls", () => {
       },
     });
     await api.users.getAll({ active: true }, { params: { orgId: "acme" } });
-    expect(requests).toEqual([{ url: "https://api.example.com/orgs/acme/users", body: '{"active":true}' }]);
+    expect(requests).toEqual([
+      { url: "https://api.example.com/orgs/acme/users", body: '{"active":true}' },
+    ]);
   });
 
   it("keeps identity and bodies first while path parameters stay in options", async () => {
@@ -78,8 +82,9 @@ describe("v3 operation calls", () => {
       }),
       resources: { users: { path: "/orgs/:orgId/users" } },
     });
-    await expect(api.users.findFirst({ params: { orgId: "acme" }, query: { email: "a@b.c" } }))
-      .resolves.toEqual({ id: 7, email: "a@b.c" });
+    await expect(
+      api.users.findFirst({ params: { orgId: "acme" }, query: { email: "a@b.c" } }),
+    ).resolves.toEqual({ id: 7, email: "a@b.c" });
     expect(url).toBe("https://api.example.com/orgs/acme/users?email=a%40b.c");
   });
 
@@ -149,8 +154,16 @@ describe("v3 operation calls", () => {
     await api.users.archive({ reason: "duplicate" }, { params: { orgId: "acme", id: 7 } });
     await api.users.stats({ params: { orgId: "acme", range: "week" }, query: { active: true } });
     expect(requests).toEqual([
-      { method: "POST", url: "https://api.example.com/orgs/acme/users/7/archive", body: '{"reason":"duplicate"}' },
-      { method: "GET", url: "https://api.example.com/orgs/acme/users/stats/week?active=true", body: undefined },
+      {
+        method: "POST",
+        url: "https://api.example.com/orgs/acme/users/7/archive",
+        body: '{"reason":"duplicate"}',
+      },
+      {
+        method: "GET",
+        url: "https://api.example.com/orgs/acme/users/stats/week?active=true",
+        body: undefined,
+      },
     ]);
   });
 
@@ -175,9 +188,64 @@ describe("v3 operation calls", () => {
     ).resolves.toEqual([{ id: 1, name: "Ada" }]);
     await api.users.deleteMany([1, 2], { params: { orgId: "acme" } });
     expect(requests).toEqual([
-      { method: "GET", url: "https://api.example.com/orgs/acme/users/count?active=true", body: undefined },
-      { method: "POST", url: "https://api.example.com/orgs/acme/users/bulk", body: '[{"name":"Ada"}]' },
+      {
+        method: "GET",
+        url: "https://api.example.com/orgs/acme/users/count?active=true",
+        body: undefined,
+      },
+      {
+        method: "POST",
+        url: "https://api.example.com/orgs/acme/users/bulk",
+        body: '[{"name":"Ada"}]',
+      },
       { method: "DELETE", url: "https://api.example.com/orgs/acme/users/bulk", body: "[1,2]" },
+    ]);
+  });
+
+  it("defaults custom DELETE operations to hasBody: true while keeping builtin delete bodyless", async () => {
+    type State = {
+      users: {
+        entity: { id: number; name: string };
+        operations: {
+          purge: { body: { reason: string }; response: { deleted: number } };
+          clearFlag: { response: { ok: boolean } };
+        };
+      };
+    };
+    const requests: Array<{ method: string; url: string; body: unknown }> = [];
+    const api = defineApi<State>()({
+      baseURL: "https://api.example.com",
+      transport: createFakeTransport((request) => {
+        requests.push({ method: request.method, url: request.url, body: request.body });
+        return { body: request.url.includes("/flag") ? { ok: true } : { deleted: 2 } };
+      }),
+      resources: {
+        users: {
+          path: "/orgs/:orgId/users",
+          operations: {
+            purge: { method: "DELETE", path: "/purge" },
+            clearFlag: { method: "DELETE", path: "/:id/flag", hasBody: false },
+          },
+        },
+      },
+    });
+
+    await expect(
+      api.users.purge({ reason: "inactive" }, { params: { orgId: "acme" } }),
+    ).resolves.toEqual({ deleted: 2 });
+    await expect(api.users.clearFlag({ params: { orgId: "acme", id: 7 } })).resolves.toEqual({
+      ok: true,
+    });
+    await api.users.delete(7, { params: { orgId: "acme" } });
+
+    expect(requests).toEqual([
+      {
+        method: "DELETE",
+        url: "https://api.example.com/orgs/acme/users/purge",
+        body: '{"reason":"inactive"}',
+      },
+      { method: "DELETE", url: "https://api.example.com/orgs/acme/users/7/flag", body: undefined },
+      { method: "DELETE", url: "https://api.example.com/orgs/acme/users/7", body: undefined },
     ]);
   });
 });
