@@ -402,14 +402,7 @@ describe("read preset", () => {
       },
     });
 
-    for (const name of [
-      "create",
-      "update",
-      "patch",
-      "delete",
-      "createMany",
-      "deleteMany",
-    ]) {
+    for (const name of ["create", "update", "patch", "delete", "createMany", "deleteMany"]) {
       expect(Object.keys(api.users)).not.toContain(name);
     }
     expect(Object.keys(api.users)).toContain("getAll");

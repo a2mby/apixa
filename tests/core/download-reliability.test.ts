@@ -78,7 +78,9 @@ describe("cancellation and timeouts while the body is being read", () => {
   it("a timeout during the body read is a TimeoutError", async () => {
     const { transport } = stub((_n, signal) => slowBody(signal, "hang"));
     const api = client(transport);
-    const error = await api.docs.download({ params: { id: "1" }, timeout: 30 }).catch((e: unknown) => e);
+    const error = await api.docs
+      .download({ params: { id: "1" }, timeout: 30 })
+      .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(TimeoutError);
   });
 
@@ -104,9 +106,9 @@ describe("cancellation and timeouts while the body is being read", () => {
     const api = client(transport);
     const controller = new AbortController();
     controller.abort();
-    await expect(api.docs.download({ params: { id: "1" }, signal: controller.signal })).rejects.toBeInstanceOf(
-      AbortError,
-    );
+    await expect(
+      api.docs.download({ params: { id: "1" }, signal: controller.signal }),
+    ).rejects.toBeInstanceOf(AbortError);
     expect(calls).toHaveLength(0);
   });
 });
@@ -155,7 +157,9 @@ describe("failures and retries", () => {
         }),
     );
     const api = client(transport, {}, { retry: { retries: 1, baseDelayMs: 1, jitter: false } });
-    const error = (await api.docs.download({ params: { id: "1" } }).catch((e: unknown) => e)) as HttpError;
+    const error = (await api.docs
+      .download({ params: { id: "1" } })
+      .catch((e: unknown) => e)) as HttpError;
     expect(error).toBeInstanceOf(HttpError);
     expect(error.data).toEqual({ message: "down" });
     expect(error.retryable).toBe(false);

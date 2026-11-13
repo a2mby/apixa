@@ -4,9 +4,7 @@ export type PathParams = Record<string, string | number>;
 
 export type QueryScalar = string | number | boolean | Date | null | undefined;
 export type QueryValue =
-  | QueryScalar
-  | readonly QueryValue[]
-  | { readonly [key: string]: QueryValue };
+  QueryScalar | readonly QueryValue[] | { readonly [key: string]: QueryValue };
 
 export type QueryParams = Record<string, QueryValue>;
 

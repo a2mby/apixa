@@ -2,6 +2,12 @@
 
 Project log. Newest entry first.
 
+## 2026-11-14 — Align list metadata with strict collection responses
+
+Restricted builtin list inference to array-shaped metadata, falling back to the entity array
+for envelope metadata. Regression coverage protects unpaginated and explicitly disabled
+pagination, array key transforms, and a single pagination envelope (PR #120).
+
 ## 2026-11-13 — v3.0.0-rc.0 middleware hook objects and pipeline parity audit
 
 Finalized `middleware: { onRequest, onResponse, onError }` across client, resource, and operation

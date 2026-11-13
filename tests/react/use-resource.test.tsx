@@ -379,16 +379,26 @@ describe("default query identity", () => {
       }),
       resources: { users: { path: "/organizations/:orgId/users" } },
     });
-    renderHook(() => useResource(api.users, { queryKey: ["nested"], query: { args: [{ params: { orgId: "acme" } }] } }), {
-      wrapper: wrap(client),
-    });
+    renderHook(
+      () =>
+        useResource(api.users, {
+          queryKey: ["nested"],
+          query: { args: [{ params: { orgId: "acme" } }] },
+        }),
+      {
+        wrapper: wrap(client),
+      },
+    );
     await waitFor(() =>
       expect(requests.some((url) => url.includes("/organizations/acme/users"))).toBe(true),
     );
     if (false as boolean) {
       // @ts-expect-error nested path parameter is required
       useResource(api.users, { queryKey: ["nested"] });
-      useResource(api.users, { queryKey: ["nested"], query: { args: [{ params: { orgId: "acme" } }] } });
+      useResource(api.users, {
+        queryKey: ["nested"],
+        query: { args: [{ params: { orgId: "acme" } }] },
+      });
     }
   });
 });

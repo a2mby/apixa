@@ -109,7 +109,10 @@ export async function runBuiltin(
     case "getById":
       return { status: 200, data: store.get(intent.id) };
     case "getMany":
-      return { status: 200, data: paginate(store, source.label, store.getMany(intent.ids), pagination, q) };
+      return {
+        status: 200,
+        data: paginate(store, source.label, store.getMany(intent.ids), pagination, q),
+      };
     case "getBy":
       return { status: 200, data: store.getBy(intent.field!, intent.value) };
     case "findFirst":

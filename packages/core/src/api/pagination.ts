@@ -204,12 +204,7 @@ function number(resource: string, opName: string, path: string, value: unknown):
   return value;
 }
 
-function fromFields(
-  resource: string,
-  opName: string,
-  mode: Mode,
-  fields: PaginationFields,
-) {
+function fromFields(resource: string, opName: string, mode: Mode, fields: PaginationFields) {
   const merged = { ...OWN_FIELDS[mode], ...fields };
   return (body: unknown): PageResult => {
     const pick = (key: keyof PaginationFields): unknown => {

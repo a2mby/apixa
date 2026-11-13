@@ -153,12 +153,16 @@ describe("fileFields type contract", () => {
     type J = ReturnType<typeof jsonCreate>["users"];
     expectTypeOf<Parameters<J["create"]>[0]["avatar"]>().toEqualTypeOf<string>();
     // Other eligible operations keep file inputs.
-    expectTypeOf<Parameters<J["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
+    expectTypeOf<Parameters<J["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<
+      File | Blob | undefined
+    >();
   });
 
   it("accepts dataFormat multipart on a write builtin", () => {
     type S = ReturnType<typeof snake>["users"];
-    expectTypeOf<Parameters<S["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
+    expectTypeOf<Parameters<S["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<
+      File | Blob | undefined
+    >();
   });
 
   it("rejects invalid configuration at compile time", () => {

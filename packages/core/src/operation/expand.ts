@@ -31,11 +31,13 @@ export function expandOperations(
   }
   const enabled = new Map<string, boolean>();
   for (const [name, convention] of Object.entries(BUILTIN_CONVENTIONS)) {
-    const on = selection === undefined || (Array.isArray(selection)
-      ? selection.includes(name as never)
-      : selection === "all" ||
-        (selection === "crud" && !convention.extended) ||
-        (selection === "read" && convention.access === "read"));
+    const on =
+      selection === undefined ||
+      (Array.isArray(selection)
+        ? selection.includes(name as never)
+        : selection === "all" ||
+          (selection === "crud" && !convention.extended) ||
+          (selection === "read" && convention.access === "read"));
     enabled.set(name, on);
   }
 

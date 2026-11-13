@@ -61,17 +61,13 @@ function diagnostics(code: string): string[] {
 describe("defineMockApi autocomplete (TypeScript language service)", () => {
   it("suggests the root config in a blank call", () => {
     const names = complete("defineMockApi({ | });");
-    expect(names).toEqual(
-      expect.arrayContaining(["resources", "operations"]),
-    );
+    expect(names).toEqual(expect.arrayContaining(["resources", "operations"]));
     expect(names).not.toContain("baseURL");
   });
 
   it("suggests the resource config inside resources.<name>", () => {
     const names = complete("defineMockApi({ resources: { users: { | } } });");
-    expect(names).toEqual(
-      expect.arrayContaining(["type", "slice", "pagination", "operations"]),
-    );
+    expect(names).toEqual(expect.arrayContaining(["type", "slice", "pagination", "operations"]));
   });
 
   it("suggests dataset ids for `type`", () => {

@@ -432,7 +432,13 @@ describe("native query parity and read operations", () => {
       scope: ["tenant", "acme"],
       args: [{ params: { orgId: "acme" } }],
     });
-    expect(list.queryKey).toEqual(["tenant", "acme", "users", "list", [{ params: { orgId: "acme" } }]]);
+    expect(list.queryKey).toEqual([
+      "tenant",
+      "acme",
+      "users",
+      "list",
+      [{ params: { orgId: "acme" } }],
+    ]);
     expect(await queryClient.fetchQuery(list)).toEqual([ada]);
     const detail = createResourceQueryOptions(api.users, {
       queryKey: ["users"],

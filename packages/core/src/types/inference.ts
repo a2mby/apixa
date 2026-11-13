@@ -270,13 +270,15 @@ type FileFieldCandidates<E> = {
       : never;
 }[keyof E & string];
 
-/** `getAll` element list: metadata `list`, else entity array. */
+/** `getAll` items: array metadata `list`, else entity array; pagination owns the envelope. */
 export type ListOf<R, Meta = {}, Root extends RootTypes = RootTypes> = Meta extends {
   list: infer L;
 }
   ? [undefined] extends [L]
     ? EntityOf<R, Meta, Root>[]
-    : TransformKeys<L, ResponseTransform<R, Root>>
+    : [L] extends [readonly unknown[]]
+      ? TransformKeys<L, ResponseTransform<R, Root>>
+      : EntityOf<R, Meta, Root>[]
   : EntityOf<R, Meta, Root>[];
 
 export type QueryOf<Meta> = Meta extends { query: infer Q }

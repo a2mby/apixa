@@ -1,9 +1,4 @@
-import {
-  defineApi,
-  BUILTIN_CONVENTIONS,
-  expandOperations,
-  validatePagination,
-} from "@apixa/core";
+import { defineApi, BUILTIN_CONVENTIONS, expandOperations, validatePagination } from "@apixa/core";
 import { isDatasetId, listDatasetIds, type DatasetId } from "./catalog.js";
 import { MockApiError } from "./errors.js";
 import { createResource } from "./resource.js";
@@ -60,9 +55,16 @@ function assertOperations(operations: unknown, label: string): void {
   if (typeof operations === "string" || Array.isArray(operations)) {
     if (
       (typeof operations === "string" && ["crud", "read", "all"].includes(operations)) ||
-      (Array.isArray(operations) && operations.every((name) => typeof name === "string" && Object.hasOwn(BUILTIN_CONVENTIONS, name)))
-    ) return;
-    throw new MockApiError("INVALID_CONFIG", `${label}: operations must be a preset or list of builtin names.`);
+      (Array.isArray(operations) &&
+        operations.every(
+          (name) => typeof name === "string" && Object.hasOwn(BUILTIN_CONVENTIONS, name),
+        ))
+    )
+      return;
+    throw new MockApiError(
+      "INVALID_CONFIG",
+      `${label}: operations must be a preset or list of builtin names.`,
+    );
   }
   if (!isPlainObject(operations)) {
     throw new MockApiError(
@@ -73,7 +75,10 @@ function assertOperations(operations: unknown, label: string): void {
   for (const [name, value] of Object.entries(operations)) {
     if (name === "preset") {
       if (typeof value !== "string" && !Array.isArray(value))
-        throw new MockApiError("INVALID_CONFIG", `${label}: preset must be a preset or list of builtin names.`);
+        throw new MockApiError(
+          "INVALID_CONFIG",
+          `${label}: preset must be a preset or list of builtin names.`,
+        );
       assertOperations(value, label);
       continue;
     }
@@ -196,8 +201,15 @@ export function defineMockApi(config: unknown): unknown {
       }
     }
     rootOperations = config.operations;
-    if (rootOperations !== undefined && typeof rootOperations !== "string" && !Array.isArray(rootOperations))
-      throw new MockApiError("INVALID_CONFIG", "defineMockApi().operations must be a preset or list of builtin names.");
+    if (
+      rootOperations !== undefined &&
+      typeof rootOperations !== "string" &&
+      !Array.isArray(rootOperations)
+    )
+      throw new MockApiError(
+        "INVALID_CONFIG",
+        "defineMockApi().operations must be a preset or list of builtin names.",
+      );
     assertOperations(rootOperations, "defineMockApi()");
     resources = config.resources as Record<string, unknown>;
   } else {
@@ -213,11 +225,14 @@ export function defineMockApi(config: unknown): unknown {
   for (const [name, input] of entries) {
     const resource = typeof input === "string" ? { type: input } : input;
     assertResource(name, resource);
-    const selected = resource.operations === undefined
-      ? rootOperations
-      : isPlainObject(resource.operations) && !Object.hasOwn(resource.operations, "preset") && rootOperations !== undefined
-        ? { preset: rootOperations, ...resource.operations }
-        : resource.operations;
+    const selected =
+      resource.operations === undefined
+        ? rootOperations
+        : isPlainObject(resource.operations) &&
+            !Object.hasOwn(resource.operations, "preset") &&
+            rootOperations !== undefined
+          ? { preset: rootOperations, ...resource.operations }
+          : resource.operations;
     adapters[name] = createResource(name, resource.type as DatasetId, {
       slice: resource.slice,
       storage: resource.storage,

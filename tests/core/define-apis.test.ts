@@ -8,7 +8,11 @@ type Product = { id: string; title: string };
 
 function recorder(
   body: (request: TransportRequest) => unknown = (r) =>
-    r.url.includes("/products") ? { data: [], nextCursor: null } : r.url.endsWith("/123") ? { id: 123, name: "Ada" } : [],
+    r.url.includes("/products")
+      ? { data: [], nextCursor: null }
+      : r.url.endsWith("/123")
+        ? { id: 123, name: "Ada" }
+        : [],
 ) {
   const seen: TransportRequest[] = [];
   return { seen, transport: createFakeTransport((r) => (seen.push(r), { body: body(r) })) };

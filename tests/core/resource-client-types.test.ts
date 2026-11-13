@@ -1,5 +1,5 @@
-import { defineApi } from "@apixa/core";
-import { describe, expectTypeOf, it } from "vitest";
+import { defineApi, ResponseShapeError } from "@apixa/core";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import type { CreateBodyOf } from "../helpers/types.js";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -21,6 +21,56 @@ type TypedUsersApi = {
 };
 
 describe("resource client TypeScript surface", () => {
+  it("does not let envelope list metadata override the builtin array contract", async () => {
+    type Page = { data: User[]; total: number };
+    const api = defineApi<{
+      users: { entity: User; list: Page };
+      unknownUsers: { list: Page };
+      disabled: { entity: User; list: Page };
+    }>()({
+      baseURL: "https://api.example.com",
+      transport: createFakeTransport(() => ({ body: { data: [], total: 0 } })),
+      resources: {
+        users: { path: "/users" },
+        unknownUsers: { path: "/unknown" },
+        disabled: {
+          path: "/disabled",
+          pagination: "page",
+          operations: { getAll: { pagination: false } },
+        },
+      },
+    });
+    expectTypeOf(api.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
+    expectTypeOf(api.unknownUsers.getAll).returns.resolves.toEqualTypeOf<unknown[]>();
+    expectTypeOf(api.disabled.getAll).returns.resolves.toEqualTypeOf<User[]>();
+    await expect(api.users.getAll()).rejects.toBeInstanceOf(ResponseShapeError);
+  });
+
+  it("keeps array list metadata and applies response transforms", async () => {
+    const api = defineApi<{ users: { list: { user_id: number }[] } }>()({
+      baseURL: "https://api.example.com",
+      transport: createFakeTransport(() => ({ body: [{ user_id: 1 }] })),
+      transforms: { response: { keys: "camelCase" } },
+      resources: { users: { path: "/users" } },
+    });
+    const users = await api.users.getAll();
+    expectTypeOf(users).toEqualTypeOf<{ userId: number }[]>();
+    expect(users).toEqual([{ userId: 1 }]);
+  });
+
+  it("wraps array items once when pagination is enabled", async () => {
+    type Page = { data: User[]; total: number; page: number; pageSize: number };
+    const page: Page = { data: [], total: 0, page: 1, pageSize: 20 };
+    const api = defineApi<{ users: { entity: User; list: Page } }>()({
+      baseURL: "https://api.example.com",
+      transport: createFakeTransport(() => ({ body: page })),
+      resources: { users: { path: "/users", pagination: "page" } },
+    });
+    const users = await api.users.getAll();
+    expectTypeOf(users).toEqualTypeOf<Page>();
+    expect(users).toEqual(page);
+  });
+
   it("embeds builtin ops on a path-only resource", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",

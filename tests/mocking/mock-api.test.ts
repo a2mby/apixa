@@ -116,7 +116,10 @@ describe("defineMockApi: configuration", () => {
       );
     }
     await expectCode(
-      () => defineMockApi({ a: { type: "users-mock", pagination: { type: "cursor", preset: "laravel" } } }),
+      () =>
+        defineMockApi({
+          a: { type: "users-mock", pagination: { type: "cursor", preset: "laravel" } },
+        }),
       "INVALID_CONFIG",
       /has no "cursor" mapping/,
     );
@@ -126,7 +129,10 @@ describe("defineMockApi: configuration", () => {
   it("supports unified preset shorthands and object pagination forms in defineMockApi", async () => {
     const api = defineMockApi({
       shorthand: { type: "users-mock", pagination: "laravel" },
-      cursorPreset: { type: "users-mock", pagination: { type: "cursor", preset: "laravel-paginator" } },
+      cursorPreset: {
+        type: "users-mock",
+        pagination: { type: "cursor", preset: "laravel-paginator" },
+      },
       noTypeObj: { type: "users-mock", pagination: { preset: "strapi" } },
     });
     const p1 = await api.shorthand.getAll({ page: 1, pageSize: 2 });
@@ -252,12 +258,14 @@ describe("defineMockApi: seeding and source data", () => {
       companyId: "1",
     });
     await api.users.patch("1", { body: { name: "Changed" } });
-    await api.users.update("2", { body: {
-      name: "Replaced",
-      email: "r@example.com",
-      username: "r",
-      companyId: "1",
-    } });
+    await api.users.update("2", {
+      body: {
+        name: "Replaced",
+        email: "r@example.com",
+        username: "r",
+        companyId: "1",
+      },
+    });
     await api.users.delete("1");
 
     expect(usersPreset).toEqual(before);
@@ -394,9 +402,11 @@ describe("defineMockApi: CRUD", () => {
 
   it("update replaces the record and keeps its id", async () => {
     const api = defineMockApi({ products: { type: "products-mock", seed: { limit: 3 } } });
-    const replaced = await api.products.update("2", { body: {
-      title: "Only title",
-    } as never });
+    const replaced = await api.products.update("2", {
+      body: {
+        title: "Only title",
+      } as never,
+    });
     expect(replaced).toEqual({ id: "2", title: "Only title" });
     expect(await api.products.getById("2")).toEqual({ id: "2", title: "Only title" });
 

@@ -73,9 +73,7 @@ export async function readBody(
   if (!failed && responseType === "json") {
     const text = await response.text();
     if (!normalizedType && !text) return null;
-    const label = normalizedType
-      ? `content-type "${contentType}"`
-      : "missing content-type";
+    const label = normalizedType ? `content-type "${contentType}"` : "missing content-type";
     const preview =
       text.length > RAW_TEXT_PREVIEW_LENGTH ? `${text.slice(0, RAW_TEXT_PREVIEW_LENGTH)}…` : text;
     throw new ParseError(
