@@ -23,5 +23,5 @@ Only check a criterion when implementation and verification evidence exist.
 - [x] All affected public types, React integrations, maintained examples and packed consumers migrate.
 - [x] Advanced transfers, streaming, browser, SSR, Edge and optional dependency behavior remain covered.
 - [x] README, reference, configuration, operations, middleware, pagination, changelog and migration guide match the implemented API.
-- [ ] Full verification, publish dry run, reproducible real HTTP checks and Node 22/24 CI pass.
-- [ ] Release candidate is ready; no npm publication has occurred.
+- [x] Full verification, publish dry run, reproducible real HTTP checks and Node 22/24 CI pass.
+- [x] Release candidate is ready; no npm publication has occurred.
