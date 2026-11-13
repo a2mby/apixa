@@ -57,7 +57,7 @@ function client(
     },
   } as never) as never as {
     docs: {
-      download(id: string, options?: Record<string, unknown>): Promise<Blob>;
+      download(options: { params: { id: string } } & Record<string, unknown>): Promise<Blob>;
       export(body?: unknown, options?: Record<string, unknown>): Promise<Blob>;
       upload(body?: unknown, options?: Record<string, unknown>): Promise<Blob>;
     };
@@ -69,7 +69,7 @@ describe("cancellation and timeouts while the body is being read", () => {
     const { transport } = stub((_n, signal) => slowBody(signal, "hang"));
     const api = client(transport);
     const controller = new AbortController();
-    const pending = api.docs.download("1", { signal: controller.signal });
+    const pending = api.docs.download({ params: { id: "1" }, signal: controller.signal });
     setTimeout(() => controller.abort(), 20);
     const error = await pending.catch((e: unknown) => e);
     expect(error).toBeInstanceOf(AbortError);
@@ -78,7 +78,7 @@ describe("cancellation and timeouts while the body is being read", () => {
   it("a timeout during the body read is a TimeoutError", async () => {
     const { transport } = stub((_n, signal) => slowBody(signal, "hang"));
     const api = client(transport);
-    const error = await api.docs.download("1", { timeout: 30 }).catch((e: unknown) => e);
+    const error = await api.docs.download({ params: { id: "1" }, timeout: 30 }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(TimeoutError);
   });
 
@@ -95,7 +95,7 @@ describe("cancellation and timeouts while the body is being read", () => {
         },
       },
     });
-    const error = await api.docs.download("1").catch((e: unknown) => e);
+    const error = await api.docs.download({ params: { id: "1" } }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(TimeoutError);
   });
 
@@ -104,7 +104,7 @@ describe("cancellation and timeouts while the body is being read", () => {
     const api = client(transport);
     const controller = new AbortController();
     controller.abort();
-    await expect(api.docs.download("1", { signal: controller.signal })).rejects.toBeInstanceOf(
+    await expect(api.docs.download({ params: { id: "1" }, signal: controller.signal })).rejects.toBeInstanceOf(
       AbortError,
     );
     expect(calls).toHaveLength(0);
@@ -115,7 +115,7 @@ describe("failures and retries", () => {
   it("a stream that fails mid-body is a NetworkError", async () => {
     const { transport } = stub((_n, signal) => slowBody(signal, "fail"));
     const error = await client(transport)
-      .docs.download("1")
+      .docs.download({ params: { id: "1" } })
       .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(NetworkError);
   });
@@ -127,7 +127,7 @@ describe("failures and retries", () => {
         : new Response(BYTES, { status: 200, headers: { "content-type": "application/pdf" } }),
     );
     const api = client(transport, {}, { retry: { retries: 1, baseDelayMs: 1, jitter: false } });
-    const blob = await api.docs.download("1");
+    const blob = await api.docs.download({ params: { id: "1" } });
     expect(calls).toHaveLength(2);
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(BYTES);
   });
@@ -142,7 +142,7 @@ describe("failures and retries", () => {
         : new Response(BYTES, { status: 200 }),
     );
     const api = client(transport, {}, { retry: { retries: 1, baseDelayMs: 1, jitter: false } });
-    expect(await api.docs.download("1")).toBeInstanceOf(Blob);
+    expect(await api.docs.download({ params: { id: "1" } })).toBeInstanceOf(Blob);
     expect(calls).toHaveLength(2);
   });
 
@@ -155,7 +155,7 @@ describe("failures and retries", () => {
         }),
     );
     const api = client(transport, {}, { retry: { retries: 1, baseDelayMs: 1, jitter: false } });
-    const error = (await api.docs.download("1").catch((e: unknown) => e)) as HttpError;
+    const error = (await api.docs.download({ params: { id: "1" } }).catch((e: unknown) => e)) as HttpError;
     expect(error).toBeInstanceOf(HttpError);
     expect(error.data).toEqual({ message: "down" });
     expect(error.retryable).toBe(false);
@@ -170,7 +170,7 @@ describe("failures and retries", () => {
       response.blob = () => (reads++, original());
       return response;
     });
-    await client(transport).docs.download("1");
+    await client(transport).docs.download({ params: { id: "1" } });
     expect(reads).toBe(1);
     expect(calls).toHaveLength(1);
   });

@@ -78,7 +78,11 @@ export function makeApi(extra: { resource?: Record<string, unknown> } = {}) {
         headers: { "content-length": "12", "content-type": "application/octet-stream" },
       });
     }
-    if (method === "GET") return Response.json([{ id: "1", name: "one" }]);
+    if (method === "GET") {
+      return Response.json(
+        path === "/v1/docs" ? [{ id: "1", name: "one" }] : { id: "1", name: "one" },
+      );
+    }
     const n = await drain(init.body);
     return Response.json(
       { id: "2", name: "made", photo: `ref-${n}` },

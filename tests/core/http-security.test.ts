@@ -6,6 +6,9 @@ function recorder() {
   const seen: TransportRequest[] = [];
   const transport = createFakeTransport((request) => {
     seen.push(request);
+    const pathname = new URL(request.url).pathname;
+    if (pathname.endsWith("/count")) return { body: 1 };
+    if (pathname.endsWith("/users")) return { body: [] };
     return { body: { id: 1 } };
   });
   return { seen, transport };
@@ -37,7 +40,7 @@ describe("URL construction", () => {
     });
     await api.users.getById("a/b c", { query: { tags: ["x", "y"], q: "hi there" } });
     expect(seen[0]!.url).toBe(
-      "https://api.example.com/v1/users/a%2Fb%20c?tags[]=x&tags[]=y&q=hi%20there",
+      "https://api.example.com/v1/users/a%2Fb%20c?tags%5B%5D=x&tags%5B%5D=y&q=hi%20there",
     );
   });
 
@@ -113,11 +116,12 @@ describe("origin protection — credentials never reach another origin", () => {
       },
     });
     await expect(api.users.count()).rejects.toBeInstanceOf(SecurityError);
-    await expect(
-      api.users.getBy("https://untrusted.example/collect", "123"),
-    ).rejects.toBeInstanceOf(SecurityError);
+    await api.users.getBy("https://untrusted.example/collect", "123");
+    expect(seen.map((r) => r.url)).toEqual([
+      "https://api.example.com/users?https%3A%2F%2Funtrusted.example%2Fcollect=123",
+    ]);
     await expect(api.users.leak()).rejects.toMatchObject({ code: "SECURITY" });
-    expect(seen).toEqual([]);
+    expect(seen).toHaveLength(1);
   });
 
   it("checks the final URL after request middleware rewrites it", async () => {
@@ -126,7 +130,7 @@ describe("origin protection — credentials never reach another origin", () => {
       baseURL: "https://api.example.com",
       headers: secret,
       transport,
-      requestMiddleware: [(request) => ({ ...request, url: "https://evil.example/steal" })],
+      middleware: [{ onRequest: (request) => ({ ...request, url: "https://evil.example/steal" }) }],
       resources: { users: { path: "/users" } },
     });
     await expect(api.users.getAll()).rejects.toBeInstanceOf(SecurityError);
@@ -138,8 +142,10 @@ describe("origin protection — credentials never reach another origin", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport,
-      requestMiddleware: [
-        (request) => ({ ...request, url: request.url.replace("/users", "/v2/users") }),
+      middleware: [
+        {
+          onRequest: (request) => ({ ...request, url: request.url.replace("/users", "/v2/users") }),
+        },
       ],
       resources: { users: { path: "/users" } },
     });

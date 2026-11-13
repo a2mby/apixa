@@ -153,7 +153,7 @@ describe("handler transactions and concurrency", () => {
       },
     });
     const row = await api.a.create({ file: new Blob(["shared"]) });
-    await api.b.patch(1, { file: row.file } as never);
+    await api.b.patch(1, { body: { file: row.file } as never });
     resetMock(api.a);
     expect(mockFiles(api).get(row.file)?.text()).toBe("shared");
     await Promise.all([
@@ -200,9 +200,11 @@ describe("handler transactions and concurrency", () => {
           path: "/docs",
           fileFields: ["file"],
           mock: [{ id: 1, file: "" }],
-          responseMiddleware: [
-            () => {
-              throw Error("after commit");
+          middleware: [
+            {
+              onResponse: () => {
+                throw Error("after commit");
+              },
             },
           ],
         },

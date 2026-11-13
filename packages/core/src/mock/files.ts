@@ -412,7 +412,7 @@ const exactBuffer = (bytes: Uint8Array): ArrayBuffer =>
  */
 export async function finalizeMockResponse(
   data: unknown,
-  responseType: "json" | "text" | "blob" | "arrayBuffer",
+  responseType: "json" | "auto" | "text" | "blob" | "arrayBuffer",
 ): Promise<{ data: unknown; headers: Headers }> {
   const headers = new Headers();
   if (data === null || data === undefined) {
@@ -431,11 +431,11 @@ export async function finalizeMockResponse(
     }
     headers.set("content-type", type || "application/octet-stream");
   } else if (typeof data === "string") {
-    if (responseType === "json") return { data, headers };
+    if (responseType === "json" || responseType === "auto") return { data, headers };
     bytes = textEncoder.encode(data);
     headers.set("content-type", "text/plain;charset=UTF-8");
   } else {
-    if (responseType === "json") return { data, headers };
+    if (responseType === "json" || responseType === "auto") return { data, headers };
     bytes = textEncoder.encode(JSON.stringify(data));
     headers.set("content-type", "application/json");
   }

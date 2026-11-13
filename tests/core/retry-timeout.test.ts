@@ -16,14 +16,15 @@ const resources = { users: { path: "/users" } } as const;
 function sequence(...steps: Array<{ status?: number; headers?: HeadersInit } | Error>) {
   let i = 0;
   const calls = { count: 0 };
-  const transport = createFakeTransport(() => {
+  const transport = createFakeTransport((request) => {
     calls.count++;
     const step = steps[Math.min(i++, steps.length - 1)]!;
     if (step instanceof Error) throw step;
+    const okBody = request.method === "GET" ? [] : { id: 1 };
     return {
       status: step.status ?? 200,
       headers: step.headers,
-      body: step.status && step.status >= 400 ? { e: 1 } : [],
+      body: step.status && step.status >= 400 ? { e: 1 } : okBody,
     };
   });
   return { transport, calls };

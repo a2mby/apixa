@@ -18,10 +18,10 @@ export type BuiltinOpName = Extract<
   "getAll" | "getById" | "create" | "update" | "delete"
 >;
 
-/** The 11 builtins beyond the original 5 (the `extended` group). */
+/** The 8 builtins beyond the original 5 (the `extended` group). */
 export type ExtendedBuiltinOpName = Exclude<BuiltinConventionName, BuiltinOpName>;
 
-/** All 16 builtins. */
+/** All 13 builtins. */
 export type AllBuiltinOpName = BuiltinOpName | ExtendedBuiltinOpName;
 
 /** A request issued by a custom operation through `ctx.request()`. */

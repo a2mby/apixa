@@ -2,7 +2,7 @@ import {
   defineApi,
   BUILTIN_CONVENTIONS,
   expandOperations,
-  type OperationGroupName,
+  validatePagination,
 } from "@apixa/core";
 import { isDatasetId, listDatasetIds, type DatasetId } from "./catalog.js";
 import { MockApiError } from "./errors.js";
@@ -29,8 +29,7 @@ export type {
   TypedOperations,
 } from "./mock-types.js";
 
-const SELECTION_KEYS = ["defaultOperations", "readOnly", "writeOnly", "operationGroups"] as const;
-const ROOT_OPTIONS = ["resources", ...SELECTION_KEYS];
+const ROOT_OPTIONS = ["resources", "operations"];
 const RESOURCE_OPTIONS = [
   "type",
   "slice",
@@ -41,18 +40,9 @@ const RESOURCE_OPTIONS = [
   "fixtures",
   "fileFields",
   "fileLimits",
-  ...SELECTION_KEYS,
 ];
-const GROUPS: readonly OperationGroupName[] = ["read", "write", "many", "extended"];
 const EXPECTED_SHAPE =
   'defineMockApi() expects { resources: { users: { type: "users-mock" } } } (or the shorthand { users: "users-mock" }).';
-
-type Settings = {
-  defaultOperations?: boolean;
-  readOnly?: boolean;
-  writeOnly?: boolean;
-  operationGroups?: Partial<Record<OperationGroupName, boolean>>;
-};
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -65,45 +55,15 @@ function isRootForm(config: Record<string, unknown>): boolean {
   return typeof resources.type !== "string";
 }
 
-function assertSettings(settings: Record<string, unknown>, label: string): void {
-  for (const key of ["defaultOperations", "readOnly", "writeOnly"] as const) {
-    const value = settings[key];
-    if (value !== undefined && typeof value !== "boolean") {
-      throw new MockApiError(
-        "INVALID_CONFIG",
-        `${label}: ${key} must be a boolean (got ${String(value)}).`,
-      );
-    }
-  }
-  if (settings.readOnly === true && settings.writeOnly === true) {
-    throw new MockApiError(
-      "INVALID_CONFIG",
-      `${label}: readOnly and writeOnly cannot both be true.`,
-    );
-  }
-  const groups = settings.operationGroups;
-  if (groups === undefined) return;
-  if (!isPlainObject(groups)) {
-    throw new MockApiError("INVALID_CONFIG", `${label}: operationGroups must be an object.`);
-  }
-  for (const [group, choice] of Object.entries(groups)) {
-    if (!GROUPS.includes(group as OperationGroupName)) {
-      throw new MockApiError(
-        "INVALID_CONFIG",
-        `${label}: unknown operation group "${group}". Supported groups: ${GROUPS.join(", ")}.`,
-      );
-    }
-    if (choice !== undefined && typeof choice !== "boolean") {
-      throw new MockApiError(
-        "INVALID_CONFIG",
-        `${label}: operationGroups.${group} must be a boolean (got ${String(choice)}).`,
-      );
-    }
-  }
-}
-
 function assertOperations(operations: unknown, label: string): void {
   if (operations === undefined) return;
+  if (typeof operations === "string" || Array.isArray(operations)) {
+    if (
+      (typeof operations === "string" && ["crud", "read", "all"].includes(operations)) ||
+      (Array.isArray(operations) && operations.every((name) => typeof name === "string" && Object.hasOwn(BUILTIN_CONVENTIONS, name)))
+    ) return;
+    throw new MockApiError("INVALID_CONFIG", `${label}: operations must be a preset or list of builtin names.`);
+  }
   if (!isPlainObject(operations)) {
     throw new MockApiError(
       "INVALID_CONFIG",
@@ -111,6 +71,12 @@ function assertOperations(operations: unknown, label: string): void {
     );
   }
   for (const [name, value] of Object.entries(operations)) {
+    if (name === "preset") {
+      if (typeof value !== "string" && !Array.isArray(value))
+        throw new MockApiError("INVALID_CONFIG", `${label}: preset must be a preset or list of builtin names.`);
+      assertOperations(value, label);
+      continue;
+    }
     if (value === undefined || value === false || typeof value === "function") continue;
     if (value === true) {
       if (Object.hasOwn(BUILTIN_CONVENTIONS, name)) continue;
@@ -176,36 +142,19 @@ function assertResource(name: string, resource: unknown): asserts resource is Mo
   }
   if (slice !== undefined) assertSliceConfig(slice, label);
   if (seed !== undefined) assertSeed(seed, label);
-  if (
-    pagination !== undefined &&
-    typeof pagination !== "boolean" &&
-    pagination !== "page" &&
-    pagination !== "cursor"
-  ) {
-    throw new MockApiError(
-      "INVALID_CONFIG",
-      `${label}: pagination must be true, false, "page" or "cursor" (got ${String(pagination)}).`,
-    );
+  if (pagination !== undefined) {
+    try {
+      validatePagination(label, pagination);
+    } catch (error) {
+      const translated = new MockApiError("INVALID_CONFIG", (error as Error).message);
+      (translated as { cause?: unknown }).cause = error;
+      throw translated;
+    }
   }
-  assertSettings(resource as Record<string, unknown>, label);
+  if (slice !== undefined && pagination !== undefined && pagination !== false) {
+    throw new MockApiError("INVALID_CONFIG", `${label}: slice cannot be combined with pagination.`);
+  }
   assertOperations(operations, label);
-}
-
-function pickSettings(source: Record<string, unknown>): Settings {
-  const out: Settings = {};
-  for (const key of SELECTION_KEYS) {
-    if (source[key] !== undefined) (out as Record<string, unknown>)[key] = source[key];
-  }
-  return out;
-}
-
-/** Resource settings win over root settings; operation groups merge group by group. */
-function mergeSettings(root: Settings, resource: Settings): Settings {
-  const merged: Settings = { ...root, ...resource };
-  if (root.operationGroups || resource.operationGroups) {
-    merged.operationGroups = { ...root.operationGroups, ...resource.operationGroups };
-  }
-  return merged;
 }
 
 /**
@@ -213,18 +162,15 @@ function mergeSettings(root: Settings, resource: Settings): Settings {
  * changes in memory. Performs no network requests and needs no `defineApi()`. Every call gets
  * its own isolated state; the source datasets are never mutated.
  *
- * The config mirrors `defineApi`: `resources` holds one entry per client property, and the
- * operation settings (`defaultOperations`, `readOnly`, `writeOnly`, `operationGroups`) may be set
- * on the root (shared by every resource) or on a resource (wins over the root). Resolution is
- * Core's own `expandOperations`: defaults → `defaultOperations` → `readOnly`/`writeOnly` →
- * `extended` → `read`/`write` → `many` → individual `operations` entries.
+ * `operations` selects a preset or list at the root, and a resource can replace the selection
+ * or add named overrides. The same selector is used by Core.
  *
  * @example
  * const api = defineMockApi({
- *   readOnly: true,
+ *   operations: "read",
  *   resources: {
- *     users: { type: "users-mock", operations: { getBySlug: false } },
- *     products: { type: "products-mock", pagination: true, readOnly: false },
+ *     users: { type: "users-mock", operations: { count: false } },
+ *     products: { type: "products-mock", pagination: true, operations: "crud" },
  *   },
  * });
  * const { data, total } = await api.products.getAll({ page: 1, pageSize: 10 });
@@ -238,7 +184,7 @@ export function defineMockApi<
 export function defineMockApi(config: unknown): unknown {
   if (!isPlainObject(config)) throw new MockApiError("INVALID_CONFIG", EXPECTED_SHAPE);
 
-  let root: Settings = {};
+  let rootOperations: unknown;
   let resources: Record<string, unknown>;
   if (isRootForm(config)) {
     for (const key of Object.keys(config)) {
@@ -249,8 +195,10 @@ export function defineMockApi(config: unknown): unknown {
         );
       }
     }
-    assertSettings(config, "defineMockApi()");
-    root = pickSettings(config);
+    rootOperations = config.operations;
+    if (rootOperations !== undefined && typeof rootOperations !== "string" && !Array.isArray(rootOperations))
+      throw new MockApiError("INVALID_CONFIG", "defineMockApi().operations must be a preset or list of builtin names.");
+    assertOperations(rootOperations, "defineMockApi()");
     resources = config.resources as Record<string, unknown>;
   } else {
     resources = config;
@@ -265,8 +213,11 @@ export function defineMockApi(config: unknown): unknown {
   for (const [name, input] of entries) {
     const resource = typeof input === "string" ? { type: input } : input;
     assertResource(name, resource);
-    const raw = resource as unknown as Record<string, unknown>;
-    const settings = mergeSettings(root, pickSettings(raw));
+    const selected = resource.operations === undefined
+      ? rootOperations
+      : isPlainObject(resource.operations) && !Object.hasOwn(resource.operations, "preset") && rootOperations !== undefined
+        ? { preset: rootOperations, ...resource.operations }
+        : resource.operations;
     adapters[name] = createResource(name, resource.type as DatasetId, {
       slice: resource.slice,
       storage: resource.storage,
@@ -275,10 +226,7 @@ export function defineMockApi(config: unknown): unknown {
       fileLimits: resource.fileLimits,
       seed: resource.seed,
       pagination: resource.pagination,
-      operations: expandOperations(
-        resource.operations as unknown as Parameters<typeof expandOperations>[0],
-        settings,
-      ),
+      operations: expandOperations(selected as Parameters<typeof expandOperations>[0]),
     });
   }
   const definitions = Object.fromEntries(

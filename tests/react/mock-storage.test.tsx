@@ -28,7 +28,7 @@ it("uses fixture-backed resources and managed file mutations through unchanged h
     wrapper: wrap(newClient()),
   });
   await act(async () => {
-    await result.current.patch(1, { file: new File(["changed"], "new.txt") });
+    await result.current.patch(1, { body: { file: new File(["changed"], "new.txt") } });
   });
   const row = await api.docs.getById(1);
   expect(mockFiles(api).get(row.file)?.text()).toBe("changed");

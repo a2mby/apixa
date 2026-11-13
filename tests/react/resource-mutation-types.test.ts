@@ -17,7 +17,7 @@ const api = defineApi<{ users: { entity: User }; org: { entity: User } }>()({
       path: "/users",
       operations: {
         deleteMany: false,
-        archive: { kind: "write", method: "POST", path: "/:id/archive" },
+        archive: { kind: "write", method: "POST", path: "/:id/archive", hasBody: false },
         stats: {
           kind: "read",
           run: async (ctx, range: "day" | "week") =>
@@ -42,7 +42,7 @@ describe("resource-wide useResourceMutation types", () => {
       expectTypeOf(users.create).returns.resolves.toEqualTypeOf<User>();
       expectTypeOf(users.update).parameter(0).toEqualTypeOf<string>();
       expectTypeOf(users.delete).returns.resolves.toEqualTypeOf<void>();
-      expectTypeOf(users.archive).parameter(0).toEqualTypeOf<string>();
+      expectTypeOf(users.archive).parameter(0).toMatchTypeOf<{ params: { id: string | number } }>();
       expectTypeOf(users).not.toHaveProperty("stats");
       expectTypeOf(users.patch).parameters.toEqualTypeOf<[id: string, name: string]>();
       expectTypeOf(users.operations.create).toEqualTypeOf(users.create);
@@ -57,7 +57,7 @@ describe("resource-wide useResourceMutation types", () => {
       const org = useResourceMutation(api.org, { queryKey: ["org"] });
       expectTypeOf(org.update)
         .parameter(0)
-        .toEqualTypeOf<{ orgId: string | number; id: string | number }>();
+        .toEqualTypeOf<string>();
       expectTypeOf(org).not.toHaveProperty("getAll");
     }
     expect(true).toBe(true);
@@ -139,7 +139,7 @@ describe("resource-wide useResourceMutation types", () => {
     const writeOnly = defineApi<{ org: { entity: User } }>()({
       baseURL: "https://api.example.com",
       resources: {
-        org: { path: "/orgs/:orgId/users", writeOnly: true, operations: { delete: false } },
+        org: { path: "/orgs/:orgId/users", operations: ["create", "update", "patch", "createMany", "deleteMany"] },
       },
     });
     const mutation = createResourceMutationController(writeOnly.org, { queryKey: ["org"] });

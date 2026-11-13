@@ -72,7 +72,7 @@ for (const name of ["loadDataset", "listDatasets", "getDataset", "findDatasetDir
 }
 
 const api = defineMockApi({
-  resources: { users: { type: "users-mock", slice: 5, readOnly: true }, products: "products-mock" },
+  resources: { users: { type: "users-mock", slice: 5, operations: "read" }, products: "products-mock" },
 });
 assert.equal((await api.users.getAll()).length, 5);
 assert.equal(await api.users.count(), users.length); // slice caps the list result only
@@ -198,10 +198,10 @@ await api.b.getAll().catch((e) => console.log("named:" + e.code));`,
     `import { defineApi } from "apixa/core";
 const api = defineApi({ baseURL: "https://x.test", resources: { u: { path: "/u", mock: [{ id: "1", active: true }, { id: "2", active: false }], operations: {
   getActive: { kind: "read", method: "GET", path: "/active", mock: ({ records }) => records.filter((r) => r.active) },
-  archive: { kind: "write", method: "POST", path: "/:id/archive", mock: ({ store, params }) => store.patch(params.id, { active: false }) },
+  archive: { kind: "write", method: "POST", path: "/:id/archive", hasBody: false, mock: ({ store, params }) => store.patch(params.id, { active: false }) },
   stats: { kind: "read", method: "GET", path: "/stats" },
 } } } });
-await api.u.archive("1");
+await api.u.archive({ params: { id: "1" } });
 console.log("handler:" + (await api.u.getActive()).length + ":" + (await api.u.getById("1")).active);
 await api.u.stats().catch((e) => console.log("unsupported:" + e.code));`,
   );
@@ -213,9 +213,9 @@ await api.u.stats().catch((e) => console.log("unsupported:" + e.code));`,
     `import { defineApi } from "apixa/core";
 const api = defineApi({ baseURL: "https://x.test", resources: { u: { path: "/u", mock: [{ id: "1", name: "A", active: true }], operations: {
   getActive: { kind: "read", method: "GET", path: "/active", mock: ({ records }) => records.filter((r) => r.active).map((r) => r.name.toUpperCase()) },
-  archive: { kind: "write", method: "POST", path: "/:id/archive", mock: async ({ store, params }) => store.patch(params.id, { active: false }) },
+  archive: { kind: "write", method: "POST", path: "/:id/archive", hasBody: false, mock: async ({ store, params }) => store.patch(params.id, { active: false }) },
 } } } });
-export const run = async () => [await api.u.getActive(), await api.u.archive("1")];
+export const run = async () => [await api.u.getActive(), await api.u.archive({ params: { id: "1" } })];
 `,
   );
   writeFileSync(

@@ -89,7 +89,7 @@ const api = defineApi({
 });
 
 console.log("Before:", await api.users.getAll());
-await api.users.patch("1", { name: "Ada updated" });
+await api.users.patch("1", { body: { name: "Ada updated" } });
 console.log("Updated:", await api.users.getById("1"));
 resetMock(api);
 console.log("Reset:", await api.users.getById("1"));
@@ -301,43 +301,43 @@ Sources: [Core conventions](conventions.md), [configuration tests](../tests/core
 
 ## Operation selection and classification — SELECT
 
-Sources: [selection order](conventions.md#selection-order), [operation selection tests](../tests/core/operation-selection.test.ts), [classification tests](../tests/core/operation-classification.test.ts).
+Sources: [selection](conventions.md#selection), [operation selection tests](../tests/core/operation-selection.test.ts), [classification tests](../tests/core/operation-classification.test.ts).
 
-- [ ] **SELECT-001 — Sixteen defaults** · `M/E`
-  - Do: Create a path-only resource and inspect all nine read and seven write names listed in the conventions table.
-  - Expect: All sixteen current builtins exist; generated names do not prove the backend implements their routes.
+- [ ] **SELECT-001 — Thirteen defaults** · `M/E`
+  - Do: Create a path-only resource and inspect all seven read and six write names listed in the conventions table.
+  - Expect: All thirteen current builtins exist (`getBySlug`, `upsert`, and `search` were removed in v3); generated names do not prove the backend implements their routes.
 
 - [ ] **SELECT-002 — Disable then re-enable** · `M/E`
-  - Do: Set `defaultOperations: false`, then enable only `getAll` and `create` using individual entries.
+  - Do: Set `operations: ["getAll", "create"]`.
   - Expect: Only selected builtins appear in runtime/types; explicit entries have the final say.
 
-- [ ] **SELECT-003 — Read-only and write-only** · `M/E`
-  - Do: Try each shorthand independently and then the contradictory pair.
-  - Expect: Each shorthand removes the opposite class; the contradictory pair is rejected. These flags are not backend authorization.
+- [ ] **SELECT-003 — Preset and explicit list** · `M/E`
+  - Do: Select `"read"` on one resource and a list of write operations on another.
+  - Expect: Each resource exposes only its selected methods; selection is not backend authorization.
 
-- [ ] **SELECT-004 — Overlapping groups** · `M/E`
-  - Do: Combine `extended`, `read`, `write` and `many` with conflicting values, then reorder object properties.
-  - Expect: Documented group specificity determines the same set regardless of property order; an individual operation still wins.
+- [ ] **SELECT-004 — Preset and overrides** · `M/E`
+  - Do: Combine a preset with enabled and disabled named operations, then reorder object properties.
+  - Expect: Named entries override the selected preset regardless of property order.
 
 - [ ] **SELECT-005 — Root selection versus resource** · `M/E`
-  - Do: Set root selection defaults and override them on one resource while leaving another unchanged.
+  - Do: Set root selection defaults on `defineMockApi` and override them on one resource while leaving another unchanged.
   - Expect: Each resource gets its resolved selection; one override does not mutate the root or its sibling.
 
 - [ ] **SELECT-006 — Partial override keeps siblings** · `T/E`
   - Do: Override only `getAll.path` or one builtin's headers and inspect another builtin.
   - Expect: Unmentioned builtins remain enabled with their own conventions and inherited configuration.
 
-- [ ] **SELECT-007 — Explicit custom kind** · `T/E`
-  - Do: Add declarative and function custom reads/writes; omit `kind` on another custom operation.
-  - Expect: Valid custom operations are classified explicitly; a missing kind fails before dispatch rather than being inferred from its name.
+- [ ] **SELECT-007 — Custom operation kind** · `T/E`
+  - Do: Add declarative and function custom reads/writes, omitting `kind` on a declarative operation.
+  - Expect: HTTP methods determine declarative classification; function operations require explicit kind.
 
 - [ ] **SELECT-008 — Kind and method disagreement** · `T/E`
   - Do: Declare a custom read using POST, a custom write using GET, and an explicit kind on a builtin.
-  - Expect: Invalid combinations fail configuration validation; builtin kind remains fixed by its convention.
+  - Expect: Inconsistent explicit kinds fail validation; builtin HTTP method overrides determine their classification.
 
 - [ ] **SELECT-009 — Dynamic booleans and autocomplete** · `E`
-  - Do: Compare literal selection flags with runtime boolean variables and request editor completions.
-  - Expect: Literal flags give exact methods; conditionally present methods are optional; known names are suggested alongside valid custom keys.
+  - Do: Compare literal selections with conditional presets and request editor completions.
+  - Expect: Literal selections give exact methods; conditionally present methods are optional; known names are suggested alongside valid custom keys.
 
 <a id="ops"></a>
 
@@ -358,32 +358,32 @@ Sources: [current builtin table](conventions.md#operation-customization), [built
   - Expect: POST targets the collection; the response and persistent/mock state reflect one accepted creation.
 
 - [ ] **OPS-004 — Update a record** · `M/T/H`
-  - Do: Call `update(id, body)` and inspect PUT request plus subsequent read.
+  - Do: Call `update(id, { body })` and inspect PUT request plus subsequent read.
   - Expect: PUT targets that ID with the intended body; only the intended record changes under the backend's update contract.
 
 - [ ] **OPS-005 — Delete a record** · `M/T/H`
   - Do: Call `delete(id)`, inspect DELETE, then read the record and its sibling.
   - Expect: Only the selected record is removed; empty response handling works and the sibling survives.
 
-- [ ] **OPS-006 — Read by slug** · `M/T/H`
-  - Do: Call `getBySlug` with a known slug containing characters needing encoding.
-  - Expect: The slug convention uses `/slug/:slug`; the value is encoded and the correct matching row is returned.
+- [ ] **OPS-006 — Removed builtin: read by slug (custom replacement)** · `M/T/H`
+  - Do: Verify `getBySlug` is no longer a default builtin in v3, and replace it when needed with a custom `GET /slug/:slug` operation called via `{ params: { slug } }`.
+  - Expect: `getBySlug` is absent by default; the custom route encodes `:slug` and returns the matching row.
 
 - [ ] **OPS-007 — Partial update** · `M/T/H`
-  - Do: Call `patch(id, partial)` changing one field.
+  - Do: Call `patch(id, { body: partial })` changing one field.
   - Expect: PATCH uses the detail path; a mock retains unspecified fields, and a real server is assessed against its declared patch contract.
 
-- [ ] **OPS-008 — Upsert existing and missing** · `M/T/H`
-  - Do: Call `upsert` once with an existing ID and once with a disposable missing ID.
-  - Expect: The configured PUT/detail convention is used; mock insert/update behavior is correct. Real creation-on-PUT requires explicit server support.
+- [ ] **OPS-008 — Removed builtin: upsert (custom replacement)** · `M/T/H`
+  - Do: Verify `upsert` is no longer a default builtin in v3, and use an explicit custom PUT operation when server upsert semantics exist.
+  - Expect: `upsert` is absent by default; custom write uses the configured PUT contract without inventing implicit creation-on-PUT.
 
 - [ ] **OPS-009 — Count matches** · `M/T/H`
   - Do: Count all rows and a known filtered subset.
   - Expect: GET uses the count operation's own definition; the reported count matches the selected universe rather than a sliced list page.
 
-- [ ] **OPS-010 — Search matches** · `M/T/H`
-  - Do: Search a known value with different case and a no-match term.
-  - Expect: The search operation uses its own route/query contract; mocks perform documented case-insensitive substring matching and return an empty result for no match.
+- [ ] **OPS-010 — Removed builtin: search (use getAll query or custom)** · `M/T/H`
+  - Do: Verify `search` is no longer a default builtin in v3, and query filtered/searched records via `getAll({ query })` or an explicit custom operation.
+  - Expect: `search` is absent by default; filtering uses explicit query parameters or a custom operation contract.
 
 - [ ] **OPS-011 — Create many** · `M/T/H`
   - Do: Call `createMany` with two distinct inputs, then inspect state.
@@ -591,11 +591,11 @@ Sources: [transform tests](../tests/core/transforms.test.ts), [prototype safety]
 
 Sources: [middleware tests](../tests/core/middleware.test.ts), [polish/replay tests](../tests/core/v1-polish.test.ts), [file pipeline tests](../tests/core/file-validation-pipeline.test.ts).
 
-Current middleware uses `middleware: { onRequest, onResponse, onError }` and the request/response arrays, as defined in [public middleware types](../packages/core/src/types/middleware.ts). Around-style `(ctx, next)` examples belong to history; the current negative tests reject that shape.
+Current middleware uses ordered `middleware: MiddlewareHooks[]` (`{ onRequest, onResponse, onError }`) arrays across root, resource, and operation levels, as defined in [public middleware types](../packages/core/src/types/middleware.ts). Around-style `(ctx, next)` and legacy `requestMiddleware` / `responseMiddleware` properties were removed in v3; negative tests reject those shapes.
 
 - [ ] **MID-001 — Ordered stage hooks** · `T`
-  - Do: Install middleware.onRequest/onResponse hooks plus requestMiddleware/responseMiddleware arrays at root, resource and operation levels; record their order and per-call metadata.
-  - Expect: Each stage runs root → resource → operation, hook before its level’s array entries; request/response callbacks receive ApiRequest/ApiResponse, and returning void keeps the current value.
+  - Do: Install `middleware: [{ onRequest, onResponse, onError }]` arrays at root, resource and operation levels; record their order and per-call metadata.
+  - Expect: Each stage runs root → resource → operation in array order; request/response callbacks receive `ApiRequest` / `ApiResponse`, and returning void keeps the current value.
 
 - [ ] **MID-002 — Header enrichment and response mapping** · `T`
   - Do: Add a request header and map a successful response without changing its envelope contract.
@@ -911,8 +911,8 @@ Sources: [uploads](../packages/core/README.md#file-uploads), [file request tests
   - Do: Compare `fileFields: ["avatar"]` with an advanced declaration and reject a misspelled entity field.
   - Expect: Valid forms infer correctly; unsupported entity field names fail in the typed definition.
 
-- [ ] **FILE-004 — Create, update, patch and upsert** · `T/H`
-  - Do: Send the same file-bearing logical entity through each supported single-entity write.
+- [ ] **FILE-004 — Create, update and patch** · `T/H`
+  - Do: Send the same file-bearing logical entity through each supported single-entity write (`create`, `update`, `patch`).
   - Expect: Each operation preserves its method/path semantics and automatically serializes binary data; no special upload-only API is required.
 
 - [ ] **FILE-005 — Bulk and custom writes** · `T/H`

@@ -57,7 +57,7 @@ describe("file fixtures and existing lazy datasets", () => {
       size: 5,
       lastModified: 12,
     });
-    expect(await (await api.docs.download(1)).text()).toBe("hello");
+    expect(await (await api.docs.download({ params: { id: 1 } })).text()).toBe("hello");
   });
   it("keeps ordinary strings unchanged, even strings looking like proposed URI tokens", async () => {
     const api = defineApi({

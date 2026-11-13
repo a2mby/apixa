@@ -58,7 +58,7 @@ describe("custom declarative operations on a mocked resource", () => {
     await unsupported(() => api.users.purge(), "purge");
     await unsupported(() => api.users.replace({ name: "x" }), "replace");
     await unsupported(() => api.users.update2({ name: "x" }), "update2");
-    await unsupported(() => api.users.archive("1"), "archive");
+    await unsupported(() => api.users.archive(undefined, { params: { id: "1" } }), "archive");
   });
 
   it("leave the store untouched", async () => {
@@ -79,7 +79,7 @@ describe("custom declarative operations on a mocked resource", () => {
   it("never reach the transport", async () => {
     const { api, sent } = build();
     await api.users.stats().catch(() => undefined);
-    await api.users.archive("1").catch(() => undefined);
+    await api.users.archive(undefined, { params: { id: "1" } }).catch(() => undefined);
     await api.users.getAll();
     expect(sent).toEqual([]);
   });
@@ -88,7 +88,7 @@ describe("custom declarative operations on a mocked resource", () => {
     const seen: string[] = [];
     const api = defineApi({
       baseURL: "https://x.dev",
-      middleware: { onError: (error) => void seen.push((error as MockError).code) },
+      middleware: [{ onError: (error) => void seen.push((error as MockError).code) }],
       resources: {
         users: {
           path: "/users",

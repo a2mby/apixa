@@ -1,4 +1,4 @@
-import { defineApi, type ApiResponse } from "@apixa/core";
+import { defineApi, ParseError, type ApiResponse } from "@apixa/core";
 import { createFetchTransport } from "../../packages/core/src/transport/fetch.js";
 import { describe, expect, it } from "vitest";
 
@@ -26,7 +26,15 @@ function makeApi(init: Parameters<typeof respond>[0], transforms = {}) {
   const api = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
     baseURL: "https://api.example.com",
     transport,
-    resources: { docs: { path: "/docs", transforms } },
+    resources: {
+      docs: {
+        path: "/docs",
+        transforms,
+        operations: {
+          raw: { method: "GET", path: "/:id/raw", responseType: "auto" },
+        },
+      },
+    },
   });
   return { api, calls };
 }
@@ -60,21 +68,23 @@ describe("responseType (per call), existing behavior", () => {
     expect(new Uint8Array(read)).toEqual(BYTES);
   });
 
-  it("json default: content-type JSON, text/*, and JSON-looking fallbacks", async () => {
+  it("json default is strict; auto negotiates text/* and JSON-looking fallbacks", async () => {
     const a = makeApi({ body: '{"id":"1"}', headers: { "content-type": "application/json" } });
     expect(await a.api.docs.getById("1")).toEqual({ id: "1" });
     const b = makeApi({ body: "plain", headers: { "content-type": "text/plain" } });
-    expect(await b.api.docs.getById("1")).toBe("plain");
+    await expect(b.api.docs.getById("1")).rejects.toBeInstanceOf(ParseError);
+    expect(await b.api.docs.raw({ params: { id: "1" } })).toBe("plain");
     const c = makeApi({
       body: '{"id":"2"}',
       headers: { "content-type": "application/octet-stream" },
     });
-    expect(await c.api.docs.getById("1")).toEqual({ id: "2" });
+    await expect(c.api.docs.getById("1")).rejects.toBeInstanceOf(ParseError);
+    expect(await c.api.docs.raw({ params: { id: "1" } })).toEqual({ id: "2" });
     const d = makeApi({
       body: "not json",
       headers: { "content-type": "application/octet-stream" },
     });
-    expect(await d.api.docs.getById("1")).toBe("not json");
+    expect(await d.api.docs.raw({ params: { id: "1" } })).toBe("not json");
   });
 
   it("default JSON 204 is null", async () => {
@@ -170,14 +180,14 @@ function build(init: Parameters<typeof respond>[0], resource: Record<string, unk
 describe("operation-level responseType", () => {
   it("a declarative operation reads its body with its own responseType", async () => {
     const { api, calls } = build({ body: BYTES, headers: { "content-type": "application/pdf" } });
-    const blob = await api.docs.download("1");
+    const blob = await api.docs.download({ params: { id: "1" } });
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.type).toBe("application/pdf");
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(BYTES);
     expect(new URL(calls[0]!.url).pathname).toBe("/docs/1/file");
-    expect(await (await build({ body: BYTES }).api.docs.raw("1")).byteLength).toBe(BYTES.length);
-    expect(await build({ body: "hi" }).api.docs.note("1")).toBe("hi");
-    expect(await build({ body: BYTES }).api.docs.tail("1")).toBeInstanceOf(ReadableStream);
+    expect(await (await build({ body: BYTES }).api.docs.raw({ params: { id: "1" } })).byteLength).toBe(BYTES.length);
+    expect(await build({ body: "hi" }).api.docs.note({ params: { id: "1" } })).toBe("hi");
+    expect(await build({ body: BYTES }).api.docs.tail({ params: { id: "1" } })).toBeInstanceOf(ReadableStream);
   });
 
   it("works for write operations and overrides of builtins", async () => {
@@ -190,7 +200,7 @@ describe("operation-level responseType", () => {
 
   it("a per-call responseType wins over the operation's", async () => {
     const { api } = build({ body: "plain" });
-    expect(await api.docs.download("1", { responseType: "text" })).toBe("plain");
+    expect(await api.docs.download({ ...({ responseType: "text" }), params: { id: "1" } })).toBe("plain");
   });
 
   it("no responseType: JSON behavior is unchanged", async () => {
@@ -225,14 +235,14 @@ describe("empty (204/205) bodies", () => {
     "%i: explicit text/blob/arrayBuffer give an empty typed value",
     async (status) => {
       const { api } = build({ status });
-      expect(await api.docs.note("1")).toBe("");
-      const blob = await api.docs.download("1");
+      expect(await api.docs.note({ params: { id: "1" } })).toBe("");
+      const blob = await api.docs.download({ params: { id: "1" } });
       expect(blob).toBeInstanceOf(Blob);
       expect(blob.size).toBe(0);
-      const buffer = await api.docs.raw("1");
+      const buffer = await api.docs.raw({ params: { id: "1" } });
       expect(buffer).toBeInstanceOf(ArrayBuffer);
       expect(buffer.byteLength).toBe(0);
-      expect(await api.docs.tail("1")).toBeNull();
+      expect(await api.docs.tail({ params: { id: "1" } })).toBeNull();
       expect(await api.docs.getById("1")).toBeNull(); // default JSON stays null
     },
   );
@@ -245,13 +255,13 @@ describe("failed downloads", () => {
       body: '{"message":"gone"}',
       headers: { "content-type": "application/json" },
     });
-    const error = await json.api.docs.download("1").catch((e: unknown) => e);
+    const error = await json.api.docs.download({ params: { id: "1" } }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(HttpError);
     expect((error as HttpError).status).toBe(404);
     expect((error as HttpError).data).toEqual({ message: "gone" });
 
     const text = build({ status: 500, body: "boom", headers: { "content-type": "text/plain" } });
-    expect(((await text.api.docs.raw("1").catch((e: unknown) => e)) as HttpError).data).toBe(
+    expect(((await text.api.docs.raw({ params: { id: "1" } }).catch((e: unknown) => e)) as HttpError).data).toBe(
       "boom",
     );
 
@@ -260,7 +270,7 @@ describe("failed downloads", () => {
       body: '{"a":1}',
       headers: { "content-type": "application/json" },
     });
-    expect(((await stream.api.docs.tail("1").catch((e: unknown) => e)) as HttpError).data).toEqual({
+    expect(((await stream.api.docs.tail({ params: { id: "1" } }).catch((e: unknown) => e)) as HttpError).data).toEqual({
       a: 1,
     });
   });
@@ -277,9 +287,9 @@ describe("binary data bypasses JSON shaping", () => {
     const seen: unknown[] = [];
     const { api } = build(
       { body: BYTES },
-      { responseMiddleware: [(r: { data: unknown }) => void seen.push(r.data)] },
+      { middleware: [{ onResponse: (r: { data: unknown }) => void seen.push(r.data) }] },
     );
-    const out = await api.docs.download("1");
+    const out = await api.docs.download({ params: { id: "1" } });
     expect(seen).toHaveLength(1);
     expect(seen[0]).toBe(out);
   });

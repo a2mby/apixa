@@ -129,7 +129,11 @@ export type InferUpdateId<R extends ResourceLike> = R extends {
 export type InferUpdateBody<R extends ResourceLike> = R extends {
   update: (...args: infer A) => Promise<unknown>;
 }
-  ? A[1]
+  ? [OperationKindsOf<R>] extends [never]
+    ? A[1]
+    : A[1] extends { body: infer Body }
+      ? Body
+      : A[1]
   : never;
 export type InferDeleteId<R extends ResourceLike> = R extends {
   delete: (...args: infer A) => Promise<unknown>;

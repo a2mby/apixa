@@ -63,7 +63,7 @@ function makeApi(storage: Record<string, unknown> = { disk: "react" }) {
       getById(id: number): Promise<Pet>;
       getAll(): Promise<Pet[]>;
       create(body: unknown, options?: object): Promise<Pet>;
-      picture(id: number, options?: object): Promise<Blob>;
+      picture(options: { params: { id: number } } & Record<string, unknown>): Promise<Blob>;
     };
   };
 }
@@ -78,7 +78,7 @@ describe("mocks, fixtures and validation through the hooks", () => {
       () =>
         useResourceQuery(
           api.pets as never,
-          { queryKey: ["pets"], operation: "picture", args: [1] } as never,
+          { queryKey: ["pets"], operation: "picture", args: [{ params: { id: 1 } }] } as never,
         ),
       { wrapper: wrap(newClient()) },
     );
@@ -136,7 +136,11 @@ describe("mocks, fixtures and validation through the hooks", () => {
       () =>
         useResourceQuery(
           api.pets as never,
-          { queryKey: ["pets"], operation: "picture", args: [1, { maxResponseSize: 2 }] } as never,
+          {
+            queryKey: ["pets"],
+            operation: "picture",
+            args: [{ params: { id: 1 }, maxResponseSize: 2 }],
+          } as never,
         ),
       { wrapper: wrap(newClient()) },
     );

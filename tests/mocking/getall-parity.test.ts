@@ -83,14 +83,14 @@ describe("getAll: defineMockApi follows the Core mocked contract", () => {
     expect((await mock.getAll()).map((u) => u.id)).toEqual(["3", "4", "5"]);
   });
 
-  it("count, search and findFirst agree on the same query", async () => {
+  it("count, getAll and findFirst agree on the same query", async () => {
     const { core, mock } = pair();
     expect(await mock.count({ companyId: "1" })).toBe(
       await core.count({ query: { companyId: "1" } }),
     );
-    expect(await mock.search({ name: "an" })).toEqual(await core.search({ query: { name: "an" } }));
-    expect(await mock.findFirst({ companyId: "2" })).toEqual(
-      await core.findFirst({ companyId: "2" }),
+    expect(await mock.getAll({ name: "an" })).toEqual(await core.getAll({ query: { name: "an" } }));
+    expect(await mock.findFirst({ query: { companyId: "2" } })).toEqual(
+      await core.findFirst({ query: { companyId: "2" } }),
     );
   });
 

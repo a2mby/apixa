@@ -99,7 +99,7 @@ describe("mock downloads from the virtual file store", () => {
   it("round-trips an uploaded file through a declarative operation", async () => {
     const api = makeApi();
     const doc = await upload(api);
-    const blob = await api.docs.download(doc.id);
+    const blob = await api.docs.download({ params: { id: doc.id } });
     expectTypeOf(blob).toEqualTypeOf<Blob>();
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.type).toBe("image/png");
@@ -110,7 +110,7 @@ describe("mock downloads from the virtual file store", () => {
   it("full: true carries Content-Type, Content-Length and Content-Disposition", async () => {
     const api = makeApi();
     const doc = await upload(api, "résumé.png");
-    const res = await api.docs.download(doc.id, { full: true });
+    const res = await api.docs.download({ ...({ full: true }), params: { id: doc.id } });
     expect(res.status).toBe(200);
     expect(res.raw).toBeUndefined();
     expect(res.headers.get("content-type")).toBe("image/png");
@@ -125,20 +125,20 @@ describe("mock downloads from the virtual file store", () => {
   it("is coerced to the requested responseType, per operation and per call", async () => {
     const api = makeApi();
     const doc = await upload(api);
-    const buffer = await api.docs.raw(doc.id);
+    const buffer = await api.docs.raw({ params: { id: doc.id } });
     expect(buffer).toBeInstanceOf(ArrayBuffer);
     expect(new Uint8Array(buffer)).toEqual(PNG);
-    expect(await api.docs.note(doc.id)).toBe(new TextDecoder().decode(PNG));
-    const asBuffer = await api.docs.download(doc.id, { responseType: "arrayBuffer" });
+    expect(await api.docs.note({ params: { id: doc.id } })).toBe(new TextDecoder().decode(PNG));
+    const asBuffer = await api.docs.download({ ...({ responseType: "arrayBuffer" }), params: { id: doc.id } });
     expect(new Uint8Array(asBuffer)).toEqual(PNG);
-    const asText = await api.docs.download(doc.id, { responseType: "text" });
+    const asText = await api.docs.download({ ...({ responseType: "text" }), params: { id: doc.id } });
     expect(asText).toBe(new TextDecoder().decode(PNG));
   });
 
   it("serializes JSON results for a binary responseType, like a server would", async () => {
     const api = makeApi();
     const doc = await upload(api);
-    const res = await api.docs.info(doc.id, { full: true });
+    const res = await api.docs.info({ ...({ full: true }), params: { id: doc.id } });
     expect(res.headers.get("content-type")).toBe("application/json");
     expect(JSON.parse(await res.data.text())).toEqual({ id: doc.id, name: "With file" });
   });
@@ -163,7 +163,7 @@ describe("mock downloads from the virtual file store", () => {
       return original(...args);
     }) as typeof original;
     try {
-      await api.docs.download(doc.id);
+      await api.docs.download({ params: { id: doc.id } });
     } finally {
       URL.createObjectURL = original;
     }
@@ -176,27 +176,27 @@ describe("mock downloads from the virtual file store", () => {
     const a = makeApi();
     const b = makeApi();
     const doc = await upload(a);
-    await expect(b.docs.download(doc.id)).rejects.toMatchObject({ code: "MOCK_NOT_FOUND" });
+    await expect(b.docs.download({ params: { id: doc.id } })).rejects.toMatchObject({ code: "MOCK_NOT_FOUND" });
     expect(mockFiles(a).size).toBe(1);
     expect(mockFiles(b).size).toBe(0);
 
     await a.docs.delete(doc.id);
     expect(mockFiles(a).size).toBe(0);
-    await expect(a.docs.download(doc.id)).rejects.toBeInstanceOf(MockError);
+    await expect(a.docs.download({ params: { id: doc.id } })).rejects.toBeInstanceOf(MockError);
 
     const again = await upload(a);
-    await expect(a.docs.download(again.id)).resolves.toBeInstanceOf(Blob);
+    await expect(a.docs.download({ params: { id: again.id } })).resolves.toBeInstanceOf(Blob);
     resetMock(a);
     expect(mockFiles(a).size).toBe(0);
-    await expect(a.docs.download(again.id)).rejects.toBeInstanceOf(MockError);
+    await expect(a.docs.download({ params: { id: again.id } })).rejects.toBeInstanceOf(MockError);
   });
 
   it("handlers get fresh copies: mutating a download does not change the stored file", async () => {
     const api = makeApi();
     const doc = await upload(api);
-    const buffer = await api.docs.raw(doc.id);
+    const buffer = await api.docs.raw({ params: { id: doc.id } });
     new Uint8Array(buffer).fill(0);
-    expect(new Uint8Array(await api.docs.raw(doc.id))).toEqual(PNG);
+    expect(new Uint8Array(await api.docs.raw({ params: { id: doc.id } }))).toEqual(PNG);
   });
 
   it("cancellation before the handler rejects with AbortError", async () => {
@@ -204,7 +204,7 @@ describe("mock downloads from the virtual file store", () => {
     const doc = await upload(api);
     const controller = new AbortController();
     controller.abort();
-    await expect(api.docs.download(doc.id, { signal: controller.signal })).rejects.toBeInstanceOf(
+    await expect(api.docs.download({ ...({ signal: controller.signal }), params: { id: doc.id } })).rejects.toBeInstanceOf(
       AbortError,
     );
   });

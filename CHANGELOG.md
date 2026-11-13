@@ -1,7 +1,51 @@
 # Changelog
 
-`apixa@1.0.0-rc.0` is the published baseline. This file tracks the `1.0.0-rc` line and earlier; it
-retains the release-candidate migration record and post-RC fixes. Later repository milestones
+`apixa@2.0.0` is the current published `latest` release on npm. `apixa@3.0.0-rc.0` is the prepared
+release candidate in this repository (not published to npm).
+
+## [3.0.0-rc.0] — Coordinated Core architecture overhaul
+
+See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) for upgrade examples.
+
+### Breaking changes & removals
+
+- **Built-in consolidation (16 → 13):** Removed `getBySlug`, `upsert`, and `search` from generated
+  resource clients, presets (`"all"`, `"crud"`, `"read"`), and `MockStore` built-ins.
+- **Stable `{ body }` on detail writes:** `update(id, { body, ...options })` and
+  `patch(id, { body, ...options })` now take `options.body` instead of a positional body argument
+  across Core, `apixa/react` mutations/optimistic updaters, and `defineMockApi`. Passing no `body`
+  is a TypeScript error and a runtime `ValidationError`.
+- **Unified `middleware`:** Consolidated `middleware`, `requestMiddleware`, `responseMiddleware`, and
+  `errorMiddleware` into `middleware: MiddlewareHooks[]` (`{ onRequest?, onResponse?, onError? }`)
+  at root, resource, and operation layers.
+- **Declarative custom operation arguments & `kind` derivation:** Declarative HTTP operations derive
+  `kind` from `method` (rejecting mismatched `kind`); reads take `(options?)`, writes default to
+  `hasBody: true` unless `hasBody: false` is set.
+- **Strict `slice` and `ResponseShapeError`:** `slice` now uses standard `Array.prototype.slice`
+  semantics and throws `ConfigError` when combined with `pagination`. Invalid collection shapes
+  raise `ResponseShapeError` instead of coercing to `[]`.
+
+### Added
+
+- **Query serialization config:** Client-wide `queryArrayFormat` (`"repeat"` | `"comma"` |
+  `"brackets"`) and `query` (`{ nulls, emptyArrays, booleans }`) with nested bracket encoding and
+  `SerializationError` on invalid values or depth > 64.
+- **Response pipeline & `source` preservation:** Layered `response: { unwrap, parse, validate }`
+  (with `false` opt-out per layer) and `ApiResponse.source` preserving raw parsed payloads.
+- **Transform guards & `TransformError`:** `KeyTransformConfig` (`exclude`, `preserve`, `maxDepth`)
+  with cycle/collision/depth detection raising `TransformError`.
+- **Per-operation pagination:** `pagination` on `getAll`, `getMany`, and declarative custom reads
+  (including `pagination: false` shadowing resource-level pagination).
+- **Root & Core type exports:** Exported `LayerOptions`, `QueryOptions`, `ResponseOptions`,
+  `ResponseHookContext`, `ApiState`, `ApiStateOf`, `ResourceState`, `OperationState`,
+  `PageResult`, `ResolvedPagination`, `PaginationMode`, `PaginationQueryOf`, `KeyTransformConfig`,
+  `TransformKeys`, `ConvertKey`, `MockStorageOptions`, `MockFileFilter`, `MockFileFixture`,
+  `MockFileFixtures`, `MockFixtureRef`, `OperationMockHandler`, `OperationMockContext`,
+  `MockStoreHandle`, `MockFilesHandle`, `ExtendedBuiltinOpName`, `RetryHookContext`.
+
+---
+
+`apixa@1.0.0-rc.0` is the historical baseline for the `1.0.0-rc` notes below; `apixa@2.0.0` was the first published stable release. Later repository milestones
 (v1.1.0 files, v1.2.0 downloads, v1.3.0 progress/streaming, v1.4.0 validation, v1.5.0 mock storage,
 v1.6.0 framework files, v1.7.0 advanced transfers, v1.8.0 hardening, v1.8.1 Laravel playground) are
 documented by their frozen contracts in [`versions/`](./versions/) and the dated log in

@@ -4,6 +4,7 @@ import type {
   HandlerCapture,
   HandlerOverlay,
   InferredApiInput,
+  StructuralApiInput,
   ValidateConfig,
 } from "../types/inference.js";
 import type { ApiStateOf } from "../types/definition.js";
@@ -14,12 +15,13 @@ import { buildClient } from "./client.js";
  * runtime config decides which resources and operations exist.
  */
 export function defineApi<T extends ApiStateOf<T>>(): <
-  const Config extends ApiInput<T>,
+  const Config extends StructuralApiInput,
   const M extends Record<string, unknown> = {},
   const RP extends Record<string, unknown> = {},
   const OP extends Record<string, Record<string, unknown>> = {},
 >(
   config: Config &
+    NoInfer<ApiInput<T>> &
     ValidateConfig<T, NoInfer<Config>> &
     HandlerCapture<M, RP, OP> &
     HandlerOverlay<T, M, RP, OP>,
@@ -27,12 +29,13 @@ export function defineApi<T extends ApiStateOf<T>>(): <
 
 /** Inferred: types come from the runtime config (and its mock data). */
 export function defineApi<
-  const Config extends InferredApiInput,
+  const Config extends StructuralApiInput,
   const M extends Record<string, unknown> = {},
   const RP extends Record<string, unknown> = {},
   const OP extends Record<string, Record<string, unknown>> = {},
 >(
   config: Config &
+    NoInfer<InferredApiInput> &
     ValidateConfig<{}, NoInfer<Config>> &
     HandlerCapture<M, RP, OP> &
     HandlerOverlay<{}, M, RP, OP>,

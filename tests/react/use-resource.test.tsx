@@ -25,6 +25,7 @@ function makeApi() {
         users = [...users, created];
         return { body: created };
       }
+      if (request.method === "POST" && url.pathname === "/audit") return { body: { ok: true } };
       if (request.method === "POST" && url.pathname.endsWith("/archive"))
         return { body: { ok: 1 } };
       if (url.pathname === "/users/stats") return { body: { total: users.length } };
@@ -40,9 +41,9 @@ function makeApi() {
         path: "/users",
         operations: {
           stats: { kind: "read", method: "GET", path: "/stats" },
-          archive: { kind: "write", method: "POST", path: "/:id/archive" },
+          archive: { kind: "write", method: "POST", path: "/:id/archive", hasBody: false },
           refetch: { kind: "read", method: "GET", path: "/refetch" },
-          status: { kind: "write", method: "POST", path: "/status" },
+          status: { kind: "write", method: "POST", path: "/status", hasBody: false },
         },
       },
       audit: { path: "/audit", operations: { getAll: false } },
@@ -116,7 +117,7 @@ describe("useResource", () => {
     );
     expect(Object.keys(result.current.states)).not.toContain("getById");
     expect(Object.keys(result.current.states)).toContain("archive");
-    await act(() => result.current.archive("1"));
+    await act(() => result.current.archive({ params: { id: "1" } }));
     await waitFor(() => expect(result.current.states.archive.isSuccess).toBe(true));
     expect(result.current.states.create.isIdle).toBe(true);
   });
@@ -378,7 +379,7 @@ describe("default query identity", () => {
       }),
       resources: { users: { path: "/organizations/:orgId/users" } },
     });
-    renderHook(() => useResource(api.users, { queryKey: ["nested"], query: { args: ["acme"] } }), {
+    renderHook(() => useResource(api.users, { queryKey: ["nested"], query: { args: [{ params: { orgId: "acme" } }] } }), {
       wrapper: wrap(client),
     });
     await waitFor(() =>
@@ -387,7 +388,7 @@ describe("default query identity", () => {
     if (false as boolean) {
       // @ts-expect-error nested path parameter is required
       useResource(api.users, { queryKey: ["nested"] });
-      useResource(api.users, { queryKey: ["nested"], query: { args: ["acme"] } });
+      useResource(api.users, { queryKey: ["nested"], query: { args: [{ params: { orgId: "acme" } }] } });
     }
   });
 });

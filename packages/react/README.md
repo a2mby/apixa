@@ -24,7 +24,7 @@ Install `npm install apixa @tanstack/react-query` (TanStack Query >=5.90.1 withi
 > **Troubleshooting:** if `@tanstack/react-query` is missing or not resolvable from `node_modules/apixa`, `useResourceQuery` and `useResource` (and `useResourceMutation`) lose their inferred types. Apixa types the result as `ApixaMissingPeer_Install_tanstack_react_query`, so reading `.data` is a compile error; install the package and it goes away. With `skipLibCheck: false` TypeScript also reports TS2307 inside `node_modules/apixa`; `skipLibCheck: true` hides that message.
 > Wrap the app in `ApixaProvider`, or keep using TanStack's own `QueryClientProvider`: the hooks work under either, and there is exactly one cache, TanStack's.
 
-Transfer events work through the hooks as plain call options: `useResourceQuery(api.files, { queryKey, operation: "download", args: [id, { onTransfer }] })`.
+Transfer events work through the hooks as plain call options: `useResourceQuery(api.files, { queryKey, operation: "download", args: [{ params: { id }, onTransfer }] })`.
 `onTransfer` is not part of the query key (like `signal`), so changing the callback never refetches.
 
 ### Files through the hooks (v1.6.0)
@@ -106,7 +106,7 @@ With no `operation`, `getAll` must be a guaranteed Core method. An explicitly se
 The returned value includes **every native `UseQueryResult` field** (`isFetching`, `isRefetching`, `failureCount`, `dataUpdatedAt`, `fetchStatus`, `refetch`, etc.) and `users.query`, the native result itself. Native fields are lazy getters over TanStack's tracked result, so a component re-renders only for the fields it reads — the same render count as calling `useQuery` directly. Apixa also adds `keys`, `controller`, `invalidate()`, `invalidateLists()`, and `invalidateDetail(id)`.
 
 **Every enabled read is inherited automatically**, with its Core name and exact signature:
-`users.getById(id)`, `users.count()`, `users.search(options)`, `users.stats()` (a custom
+`users.getById(id)`, `users.count()`, `users.findFirst({ query })`, `users.stats()` (a custom
 `kind: "read"` operation), and so on. Each is an imperative `QueryClient.fetchQuery` against the
 same key a reactive query of that operation uses; none fetches until called. Only the default
 `getAll` (or the selected `operation`) is observed. All reads are also under
@@ -140,7 +140,7 @@ For conditional reads use `enabled: Boolean(id)` (or a TanStack callback). `init
 
 ## Other read operations
 
-`operation` selects the actual Core method. The nine standard reads are `getAll`, `getById`, `getBySlug`, `getMany`, `getBy`, `findFirst`, `search`, `count`, and `exists`. `args` is its exact parameter tuple, with no reordering.
+`operation` selects the actual Core method. The seven standard reads are `getAll`, `getById`, `getMany`, `getBy`, `findFirst`, `count`, and `exists`. `args` is its exact parameter tuple, with no reordering.
 
 ```tsx
 const detail = useResourceQuery(api.users, {
@@ -148,9 +148,9 @@ const detail = useResourceQuery(api.users, {
   operation: "getById",
   args: ["42"],
 });
-const matches = useResourceQuery(api.users, {
+const firstMatch = useResourceQuery(api.users, {
   queryKey: ["users"],
-  operation: "search",
+  operation: "findFirst",
   args: [{ query: { name: "Ada" } }],
 });
 const count = useResourceQuery(api.users, {
@@ -377,7 +377,7 @@ const users = useResourceMutation(api.users, {
 });
 
 await users.create(body);
-await users.update(id, body);
+await users.update(id, { body });
 await users.archive(id);
 await users.exportUser(id);
 
@@ -432,7 +432,7 @@ const users = useResourceMutation(api.users, {
     update: {
       optimistic: {
         detail: ([id]) => id, // every cached variant of this detail
-        update: (current, [, changes]) => ({ ...current, ...changes }), // typed: User → User
+        update: (current, [, { body }]) => ({ ...current, ...body }), // typed: User → User
       },
     },
     create: {
@@ -484,7 +484,8 @@ and rollback context.
 `states.<op>.context` and the callbacks infer `onMutate`'s (awaited) return. **TypeScript limit:**
 when `onMutate` has an unannotated parameter _and_ a sibling callback reads the context,
 TypeScript fixes the config before it sees `onMutate`'s return, and that callback's context is
-`{}`. Annotate the parameter (`async ([id, body]: OperationParameters<typeof api.users, "update">)`)
+`{}`. Annotate the parameter (`async ([id, options]: OperationParameters<typeof api.users, "update">)`
+)
 or omit it.
 
 For a standalone native `UseMutationResult`, call TanStack’s `useMutation` with a Core
@@ -530,7 +531,7 @@ off `useResourceQuery`. Use `useResource` for the old all-in-one shape (`users.c
 
 `createResourceController` remains in the advanced entry, composing the query and mutation
 controllers. Conventional `createOptions`, `updateOptions`, and `deleteOptions` use exact Core
-argument tuples as mutation variables. For example, `mutateAsync([id, body])` for `update`. The advanced entry also exports `ResourceMutationStore`,
+argument tuples as mutation variables. For example, `mutateAsync([id, { body }])` for `update`. The advanced entry also exports `ResourceMutationStore`,
 `applyInvalidation`, and `describeOperations` for custom integrations.
 
 ## Query and mutation DX additions (v1.0.0 release candidate; implemented)

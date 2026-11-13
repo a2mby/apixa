@@ -264,7 +264,7 @@ assert.equal(root.getOperationMetadata(api.users), core.getOperationMetadata(api
 // Registration through the facade reaches the Core the app runs; datasets load lazily.
 const mocked = root.defineApi({ baseURL: "https://example.test", resources: { users: { path: "/users", mock: "users-mock" } } });
 assert.ok((await mocked.users.getAll()).length > 0, "registered named dataset");
-const mockApi = root.defineMockApi({ resources: { users: { type: "users-mock", readOnly: true } } });
+const mockApi = root.defineMockApi({ resources: { users: { type: "users-mock", operations: "read" } } });
 assert.ok((await mockApi.users.getAll()).length > 0, "defineMockApi from the root");
 assert.ok((await mocking.loadDataset("users-mock")).length > 0);
 
@@ -301,12 +301,12 @@ const downloads = root.defineApi({
   transport: root.createFetchTransport(fetchStub),
   resources: { docs: { path: "/docs", operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } },
 });
-const full = await downloads.docs.file("1", { full: true });
+const full = await downloads.docs.file({ params: { id: "1" }, full: true });
 assert.ok(full.data instanceof Blob && full.data.type === "application/pdf", "operation-level responseType yields a Blob");
 assert.deepEqual(new Uint8Array(await full.data.arrayBuffer()), bytes, "byte-exact download");
 assert.equal(root.parseContentDisposition(full.headers).filename, "résumé.pdf", "Content-Disposition filename*");
 assert.ok((await downloads.docs.getById("1", { responseType: "arrayBuffer" })) instanceof ArrayBuffer, "per-call responseType");
-const gone = await downloads.docs.file("missing").catch((e) => e);
+const gone = await downloads.docs.file({ params: { id: "missing" } }).catch((e) => e);
 assert.ok(gone instanceof root.HttpError && gone.status === 404 && gone.data.message === "gone", "failed download keeps a readable body");
 const served = root.defineApi({
   baseURL: "https://example.test",
@@ -315,11 +315,11 @@ const served = root.defineApi({
   } } },
 });
 const stored = await served.docs.create({ id: "2", name: "Up", file: new File([bytes], "up.bin", { type: "application/octet-stream" }) });
-const mockRes = await served.docs.download(stored.id, { full: true });
+const mockRes = await served.docs.download({ params: { id: stored.id }, full: true });
 assert.deepEqual(new Uint8Array(await mockRes.data.arrayBuffer()), bytes, "mock download serves the uploaded bytes");
 assert.equal(root.parseContentDisposition(mockRes.headers).filename, "up.bin", "mock Content-Disposition");
 root.mockFiles(served).clear();
-await assert.rejects(() => served.docs.download(stored.id), (e) => e.code === "MOCK_NOT_FOUND", "reset removes the bytes");
+await assert.rejects(() => served.docs.download({ params: { id: stored.id } }), (e) => e.code === "MOCK_NOT_FOUND", "reset removes the bytes");
 
 // v1.3.0 transfer events through the packed package, over a real loopback socket.
 {
@@ -527,7 +527,7 @@ globalThis.__done = (async () => {
   const users = await api.users.getAll();
   const http = defineApi({ baseURL: "https://edge.test", transport: { request: async () => ({ status: 500, headers: new Headers(), raw: new Response(null), body: "{}" }) }, resources: { users: { path: "/users" } } });
   const error = await http.users.getAll().catch((e) => e);
-  const mock = defineMockApi({ resources: { users: { type: "users-mock", readOnly: true } } });
+  const mock = defineMockApi({ resources: { users: { type: "users-mock", operations: "read" } } });
   return JSON.stringify({ users, http: error instanceof HttpError, named: (await mock.users.getAll()).length > 0 });
 })();`,
       resolveDir: consumer,
@@ -1036,7 +1036,7 @@ export default async function Page() {
     resources: { docs: { path: "/docs", fileFields: { photo: { maxSize: 10, accept: ["image/*"] } }, fileLimits: { maxFiles: 5 }, operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob", maxResponseSize: 1000 } } } },
   });
   const events = [];
-  const res = await live.docs.file("1", { full: true, onTransfer: (e) => events.push(e.direction + ":" + e.phase + ":" + e.loaded) });
+  const res = await live.docs.file({ params: { id: "1" }, full: true, onTransfer: (e) => events.push(e.direction + ":" + e.phase + ":" + e.loaded) });
   const mocked = defineApi({
     baseURL: "https://example.test",
     resources: { docs: { path: "/docs", fileFields: ["file"], mock: [{ id: "1", name: "Seed", file: null }], operations: {
@@ -1044,7 +1044,7 @@ export default async function Page() {
     } } },
   });
   const doc = await mocked.docs.create({ id: "2", name: "Up", file: new File(["mock-bytes"], "m.txt", { type: "text/plain" }) });
-  const buffer = await mocked.docs.file(doc.id);
+  const buffer = await mocked.docs.file({ params: { id: doc.id } });
   return <p>{["live", res.data.size, parseContentDisposition(res.headers).filename, await res.data.text(), "mock", buffer.byteLength, new TextDecoder().decode(buffer), events.join("~")].join("|")}</p>;
 }
 `,

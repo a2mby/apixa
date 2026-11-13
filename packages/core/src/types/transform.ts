@@ -2,12 +2,29 @@ import type { KeyCase } from "../transform/keys.js";
 
 export type { KeyCase };
 
+/** Key transform rule for one direction (`request` or `response`). */
+export interface KeyTransformConfig {
+  keys: KeyCase;
+  /**
+   * Key names or dot-paths excluded from key transformation (neither the matched key itself nor
+   * its nested descendants are transformed).
+   */
+  exclude?: readonly string[];
+  /**
+   * Key names or dot-paths whose nested value keys are preserved untouched while the matched key
+   * itself is still converted.
+   */
+  preserve?: readonly string[];
+  /** Maximum nesting depth walked before throwing `TransformError`. Default: `64`. */
+  maxDepth?: number;
+}
+
 /** Per-direction key conventions. */
 export interface TransformsConfig {
   /** Convert outgoing body / query keys to the backend convention at the serialization stage. */
-  request?: { keys: KeyCase };
+  request?: KeyTransformConfig;
   /** Convert incoming response keys to the public convention before response middleware. */
-  response?: { keys: KeyCase };
+  response?: KeyTransformConfig;
 }
 
 type Sep = "_" | "-";
@@ -72,17 +89,71 @@ type Opaque =
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
-/** Recursively rename keys of plain object types (and inside arrays) to convention `C`. */
-export type TransformKeys<T, C extends KeyCase | undefined> = C extends KeyCase
+type RuleCase<R> = R extends KeyCase
+  ? R
+  : R extends { keys: infer C extends KeyCase }
+    ? C
+    : undefined;
+
+type LiteralListMember<L> = L extends readonly (infer S extends string)[]
+  ? string extends S
+    ? never
+    : S
+  : never;
+
+type ExcludedKeys<R> = R extends { exclude: infer E } ? LiteralListMember<E> : never;
+type PreservedKeys<R> = R extends { preserve: infer P } ? LiteralListMember<P> : never;
+
+type StripDot<S extends string> = S extends `$.${infer Rest}` ? Rest : S;
+type TopName<P extends string> = P extends `${string}.${string}` ? never : P;
+type SubPaths<Patterns extends string, K extends string> = {
+  [P in Patterns]: StripDot<P> extends `${K}.${infer Rest}` ? Rest : never;
+}[Patterns];
+
+type NextRule<
+  C extends KeyCase,
+  ExcludePat extends string,
+  PreservePat extends string,
+  K extends string,
+> = {
+  keys: C;
+  exclude: (TopName<ExcludePat> | SubPaths<ExcludePat, K>)[];
+  preserve: (TopName<PreservePat> | SubPaths<PreservePat, K>)[];
+};
+
+type TransformObject<
+  T,
+  C extends KeyCase,
+  ExcludePat extends string,
+  PreservePat extends string,
+> = {
+  [K in keyof T as K extends string
+    ? K extends TopName<ExcludePat>
+      ? K
+      : ConvertKey<K, C>
+    : K]: K extends string
+    ? K extends TopName<ExcludePat> | TopName<PreservePat>
+      ? T[K]
+      : TransformWithRule<T[K], NextRule<C, ExcludePat, PreservePat, K>>
+    : T[K];
+};
+
+type TransformWithRule<T, R> = RuleCase<R> extends infer C extends KeyCase
   ? IsAny<T> extends true
     ? T
     : T extends Opaque
       ? T
       : T extends readonly (infer E)[]
         ? T extends unknown[]
-          ? TransformKeys<E, C>[]
-          : readonly TransformKeys<E, C>[]
+          ? TransformWithRule<E, R>[]
+          : readonly TransformWithRule<E, R>[]
         : T extends object
-          ? { [K in keyof T as K extends string ? ConvertKey<K, C> : K]: TransformKeys<T[K], C> }
+          ? TransformObject<T, C, ExcludedKeys<R>, PreservedKeys<R>>
           : T
   : T;
+
+/** Recursively rename keys of plain object types (and inside arrays) to convention `C`. */
+export type TransformKeys<
+  T,
+  C extends KeyCase | KeyTransformConfig | undefined,
+> = TransformWithRule<T, C>;

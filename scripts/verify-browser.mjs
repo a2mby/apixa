@@ -752,12 +752,14 @@ async function verifyPresignedSecurity() {
             providers++;
             return { Authorization: "Bearer backend-secret" };
           },
-          middleware: {
-            onRequest(r) {
-              middleware++;
-              r.headers.set("x-api-key", "backend-secret");
+          middleware: [
+            {
+              onRequest(r) {
+                middleware++;
+                r.headers.set("x-api-key", "backend-secret");
+              },
             },
-          },
+          ],
           resources: {
             objects: {
               path: "/objects",

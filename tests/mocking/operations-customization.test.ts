@@ -19,12 +19,9 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
       "getAll",
       "getBy",
       "getById",
-      "getBySlug",
       "getMany",
       "patch",
-      "search",
       "update",
-      "upsert",
     ]);
   });
 
@@ -43,27 +40,7 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     expect(await (api.users as any).count()).toBe(all.length);
   });
 
-  it("getBySlug finds a record by its slug field", async () => {
-    const api = defineMockApi({
-      users: { type: "users-mock", operations: { getBySlug: true } },
-    });
-    const anyUsers = api.users as any;
-
-    const created = await api.users.create({
-      name: "Ada",
-      email: "ada@example.com",
-      username: "ada",
-      companyId: "1",
-      slug: "ada-lovelace",
-    } as never);
-
-    const found = await anyUsers.getBySlug("ada-lovelace");
-    expect(found.id).toBe(created.id);
-
-    await expect(anyUsers.getBySlug("missing")).rejects.toMatchObject({ code: "NOT_FOUND" });
-  });
-
-  it("getBy is a general lookup by any field name", async () => {
+  it("getBy is a general lookup by any field name and returns null when missing", async () => {
     const api = defineMockApi({ users: "users-mock" });
     const anyUsers = api.users as any;
 
@@ -72,22 +49,7 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     const found = await anyUsers.getBy("username", target.username);
     expect(found.id).toBe(target.id);
 
-    await expect(anyUsers.getBy("username", "no-such-username")).rejects.toMatchObject({
-      code: "NOT_FOUND",
-    });
-  });
-
-  it("search filters rows by substring match across the given fields", async () => {
-    const api = defineMockApi({
-      users: { type: "users-mock", operations: { search: true } },
-    });
-    const anyUsers = api.users as any;
-
-    const all = await api.users.getAll();
-    const target = all[0]!;
-    const results = await anyUsers.search({ name: target.name });
-    expect(results.every((row: { name: string }) => row.name === target.name)).toBe(true);
-    expect(results.some((row: { id: string }) => row.id === target.id)).toBe(true);
+    await expect(anyUsers.getBy("username", "no-such-username")).resolves.toBeNull();
   });
 
   it("createMany and deleteMany operate on many records in one call", async () => {
@@ -142,8 +104,8 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     const anyUsers = api.users as any;
 
     const all = await api.users.getAll();
-    expect(await anyUsers.findFirst({ name: all[0]!.name })).toMatchObject({ id: all[0]!.id });
-    expect(await anyUsers.findFirst({ name: "no-such-name" })).toBeNull();
+    expect(await anyUsers.findFirst({ query: { name: all[0]!.name } })).toMatchObject({ id: all[0]!.id });
+    expect(await anyUsers.findFirst({ query: { name: "no-such-name" } })).toBeNull();
   });
 
   it("a custom function operation can read and write the resource's in-memory rows", async () => {
@@ -201,16 +163,13 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
   });
 
   it('mirrors the same operations surface on a Core mock: "<dataset-id>" resource', async () => {
-    // Operation generation (Core's resource-client pipeline) is transport-agnostic: a
-    // `mock: "<id>"` resource gets exactly the same `operations` surface as a live one —
-    // `mock` only swaps the transport, not which methods exist.
     const api = defineApi({
       baseURL: "https://api.example.com",
       resources: {
         users: {
           path: "/users",
           mock: "users-mock",
-          operations: { patch: {}, count: {}, search: {}, exists: {} },
+          operations: { patch: {}, count: {}, findFirst: {}, exists: {} },
         },
       },
     });
@@ -218,36 +177,29 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     expect(typeof api.users.patch).toBe("function");
     expect(typeof api.users.count).toBe("function");
 
-    // `patch` reuses the already-supported `/:id` route (the generic mock REST store already
-    // treats PATCH as a merge, same as `update`), so it works against the mock bridge for free.
     const all = await api.users.getAll();
     const first = (all as Array<{ id: string; name: string }>)[0]!;
-    const patched = await api.users.patch(first.id, { name: "Patched" });
+    const patched = await api.users.patch(first.id, { body: { name: "Patched" } });
     expect((patched as { name: string }).name).toBe("Patched");
 
-    // `count` / `search` are simulated by the mock bridge too (v0.11.0) — closing the gap where
-    // these previously 404'd against it; `getBySlug` / `createMany` / `deleteMany` get the same
-    // treatment, same as `defineMockApi` already offered.
     expect(await api.users.count()).toBe(100);
-    const matches = (await api.users.search({ query: { username: "user001" } })) as Array<{
+    const match = (await api.users.findFirst({ query: { username: "user001" } })) as {
       username: string;
-    }>;
-    expect(matches).toHaveLength(1);
-    expect(matches[0]!.username).toBe("user001");
+    } | null;
+    expect(match?.username).toBe("user001");
 
-    // `exists` makes its own conventional GET, which the mock bridge handles.
     expect(await api.users.exists(first.id)).toBe(true);
     expect(await api.users.exists("no-such-id")).toBe(false);
   });
 
-  it('simulates getBySlug, createMany, and deleteMany on a Core mock: "<dataset-id>" resource', async () => {
+  it('simulates getBy, createMany, and deleteMany on a Core mock: "<dataset-id>" resource', async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       resources: {
         companies: {
           path: "/companies",
           mock: "companies-mock",
-          operations: { getBySlug: {}, createMany: {}, deleteMany: {} },
+          operations: { getBy: {}, createMany: {}, deleteMany: {} },
         },
       },
     });
@@ -260,7 +212,7 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
     ])) as Array<{ id: string; slug: string }>;
     expect(created).toHaveLength(2);
 
-    const bySlug = await (api.companies as any).getBySlug("acme");
+    const bySlug = await (api.companies as any).getBy("slug", "acme");
     expect((bySlug as { slug: string }).slug).toBe("acme");
 
     await (api.companies as any).deleteMany(created.map((c) => c.id));

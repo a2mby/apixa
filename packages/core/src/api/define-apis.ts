@@ -5,6 +5,7 @@ import type {
   ApisHandlerOverlay,
   ApisInput,
   InferredApisInput,
+  StructuralApisInput,
   ValidateApisConfig,
 } from "../types/inference.js";
 import { buildClient } from "./client.js";
@@ -35,24 +36,26 @@ function build(configs: unknown): unknown {
  * by the same engine as `defineApi()` — separate base URLs, headers, transports, mock stores.
  */
 export function defineApis<Defs extends { [K in keyof Defs]: object }>(): <
-  const Configs extends ApisInput<Defs>,
+  const Configs extends StructuralApisInput,
   const M extends Record<string, Record<string, unknown>> = {},
   const RP extends Record<string, Record<string, unknown>> = {},
   const OP extends Record<string, Record<string, Record<string, unknown>>> = {},
 >(
   configs: Configs &
+    NoInfer<ApisInput<Defs>> &
     ValidateApisConfig<Defs, NoInfer<Configs>> &
     ApisHandlerCapture<M, RP, OP> &
     ApisHandlerOverlay<Defs, M, RP, OP>,
 ) => ApisClient<Defs, Configs>;
 
 export function defineApis<
-  const Configs extends InferredApisInput,
+  const Configs extends StructuralApisInput,
   const M extends Record<string, Record<string, unknown>> = {},
   const RP extends Record<string, Record<string, unknown>> = {},
   const OP extends Record<string, Record<string, Record<string, unknown>>> = {},
 >(
   configs: Configs &
+    NoInfer<InferredApisInput> &
     ValidateApisConfig<{}, NoInfer<Configs>> &
     ApisHandlerCapture<M, RP, OP> &
     ApisHandlerOverlay<{}, M, RP, OP>,

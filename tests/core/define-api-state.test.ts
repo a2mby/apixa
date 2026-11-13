@@ -17,8 +17,10 @@ describe("defineApi<T> entity-only state typing", () => {
     const api = defineApi<AppApi>()({
       baseURL: "https://api.example.com",
       headers: { Accept: "application/json", Authorization: "Bearer t" },
-      transport: createFakeTransport(() => ({
-        body: [{ id: "1", name: "Ada", email: "ada@example.com" }],
+      transport: createFakeTransport((request) => ({
+        body: request.url.endsWith("/users/1")
+          ? { id: "1", name: "Ada", email: "ada@example.com" }
+          : [{ id: "1", name: "Ada", email: "ada@example.com" }],
       })),
       resources: {
         users: { path: "/users" },
@@ -26,7 +28,7 @@ describe("defineApi<T> entity-only state typing", () => {
     });
 
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
-    expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<Partial<User>>();
+    expectTypeOf<Parameters<typeof api.users.update>[1]["body"]>().toEqualTypeOf<Partial<User>>();
 
     const users = await api.users.getAll();
     expectTypeOf(users).toEqualTypeOf<User[]>();

@@ -11,10 +11,15 @@ import {
   MockError,
   HttpError,
   NetworkError,
+  ParseError,
+  ResponseShapeError,
+  SerializationError,
   TimeoutError,
+  TransformError,
   ValidationError,
   fileValidationError,
 } from "../errors/index.js";
+import { parseUnwrapPath } from "../api/validate.js";
 import {
   assertSameOrigin,
   buildQueryString,
@@ -37,6 +42,7 @@ import {
   type ResolvedFileRules,
 } from "../validation/index.js";
 import {
+  paginateList,
   routeToIntent,
   runBuiltin,
   runMockHandler,
@@ -50,8 +56,13 @@ import {
   type MockStore,
   type PaginationMode,
 } from "../mock/index.js";
-import { transformKeys, type KeyCase } from "../transform/keys.js";
-import type { DataFormat, QueryArrayFormat } from "../types/definition.js";
+import { transformKeys } from "../transform/keys.js";
+import type {
+  DataFormat,
+  QueryArrayFormat,
+  QueryOptions,
+  ResponseHookContext,
+} from "../types/definition.js";
 import type { HeadersSource, HttpMethod, PathParams, QueryParams } from "../types/http.js";
 import type {
   ErrorMiddleware,
@@ -59,6 +70,9 @@ import type {
   ResponseMiddleware,
 } from "../types/middleware.js";
 import type { ResolvedRetryConfig } from "../types/retry.js";
+import type { KeyTransformConfig } from "../types/transform.js";
+import { renamePaginationQuery, type PageResult, type ResolvedPagination } from "../api/pagination.js";
+import type { PaginationParams } from "../types/definition.js";
 import type {
   ApiRequest,
   ApiResponse,
@@ -81,6 +95,7 @@ export interface ClientRuntime {
   base: BaseUrl;
   transport: Transport;
   queryArrayFormat: QueryArrayFormat;
+  query?: QueryOptions;
   querySerializer?: (query: QueryParams) => string;
   /** Virtual file store shared by this client's mocked resources. */
   files: MockFileStorage;
@@ -92,6 +107,11 @@ export interface ResourceRuntime {
   path: string;
   mock?: { store: MockStore; source: MockSource; files: MockFileStorage };
   pagination?: PaginationMode;
+  /** Live pagination mapping (query renames and body parsing); mocks never use it. */
+  livePagination?: {
+    params?: PaginationParams;
+    parse?: (body: unknown, status: number) => PageResult;
+  };
 }
 
 /** Everything a call needs that does not depend on its arguments — resolved once. */
@@ -105,8 +125,11 @@ export interface PreparedOperation {
     | "onRequest"
     | "onResponse"
     | "onError"
-    | "requestKeys"
-    | "responseKeys"
+    | "requestTransform"
+    | "responseTransform"
+    | "responseUnwrap"
+    | "responseParse"
+    | "responseValidate"
   >;
   presigned?: PresignedPolicy;
   name: string;
@@ -122,10 +145,15 @@ export interface PreparedOperation {
   onRequest: readonly RequestMiddleware[];
   onResponse: readonly ResponseMiddleware[];
   onError: readonly ErrorMiddleware[];
-  requestKeys?: KeyCase;
-  responseKeys?: KeyCase;
+  requestTransform?: KeyTransformConfig;
+  responseTransform?: KeyTransformConfig;
+  responseUnwrap?: string | ((source: unknown, ctx: ResponseHookContext) => unknown);
+  responseParse?: (data: unknown, ctx: ResponseHookContext) => unknown;
+  responseValidate?: (data: unknown, ctx: ResponseHookContext) => unknown;
   /** Custom declarative operation: how it behaves on a mocked resource (absent → unsupported). */
   mockHandler?: (context: MockHandlerContext) => unknown;
+  /** Resolved pagination for this operation (`getAll`, `getMany`, or custom declarative operation). */
+  pagination?: ResolvedPagination;
   /** How the response body is read; absent → JSON. A per-call `responseType` option wins. */
   responseType?: ResponseType;
   /** Default transfer observer; a per-call `onTransfer` option wins. */
@@ -185,9 +213,11 @@ export interface CallInput {
    * Builtin-specific shaping of an HTTP result (after response key transforms, before response
    * middleware). Mocked builtins already return their final shape and skip this.
    */
-  fromHttp?: (data: unknown, status: number) => unknown;
+  fromHttp?: (data: unknown, status: number, response: ApiResponse<unknown>) => unknown;
   /** Response shaping for both HTTP and mock (e.g. `slice` on `getAll`), before response middleware. */
   shape?: (data: unknown) => unknown;
+  /** Map a live list response to the page contract (before response key transforms). */
+  paginated?: boolean;
 }
 
 const REQUEST_KEYS = ["method", "url", "headers", "signal", "meta"] as const;
@@ -198,12 +228,61 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return proto === Object.prototype || proto === null;
 }
 
+function applyTransform(value: unknown, rule: KeyTransformConfig | undefined): unknown {
+  if (!rule) return value;
+  return transformKeys(value, rule.keys, {
+    exclude: rule.exclude,
+    preserve: rule.preserve,
+    maxDepth: rule.maxDepth,
+  });
+}
+
 function transformQuery(
   query: QueryParams | undefined,
-  to: KeyCase | undefined,
+  rule: KeyTransformConfig | undefined,
 ): QueryParams | undefined {
-  if (!query || !to) return query;
-  return transformKeys(query, to) as QueryParams;
+  if (!query || !rule) return query;
+  return applyTransform(query, rule) as QueryParams;
+}
+
+function isRecordValue(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+async function applyUnwrap(
+  data: unknown,
+  unwrap: string | ((source: unknown, ctx: ResponseHookContext) => unknown),
+  ctx: ResponseHookContext,
+  sourceResponse: ApiResponse<unknown>,
+): Promise<unknown> {
+  if (typeof unwrap === "function") {
+    try {
+      return await unwrap(data, ctx);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ResponseShapeError(
+        `${ctx.resource}.${ctx.operation}: response.unwrap failed.`,
+        { status: ctx.status, data: sourceResponse.source, response: sourceResponse, cause: err },
+      );
+    }
+  }
+  const segments = parseUnwrapPath(unwrap);
+  if (!segments) {
+    throw new ConfigError(
+      `${ctx.resource}.${ctx.operation}: invalid response.unwrap path ${JSON.stringify(unwrap)}.`,
+    );
+  }
+  let current: unknown = data;
+  for (const segment of segments) {
+    if (!isRecordValue(current) || !Object.hasOwn(current, segment)) {
+      throw new ResponseShapeError(
+        `${ctx.resource}.${ctx.operation}: expected response envelope property "${unwrap}" (missing "${segment}").`,
+        { status: ctx.status, data: sourceResponse.source, response: sourceResponse },
+      );
+    }
+    current = current[segment];
+  }
+  return current;
 }
 
 /** Transfer-event state for one logical call: one channel per attempt, only when observed. */
@@ -395,10 +474,15 @@ export async function runOperation(
     const method = call.method ?? op.method;
     const pathTemplate = call.path ?? op.path;
     const path = interpolatePath(pathTemplate, call.params);
-    const query = transformQuery(call.query ?? options.query, op.requestKeys);
-    const qs = client.querySerializer
-      ? normalizeQs(client.querySerializer(query ?? {}))
-      : buildQueryString(query, client.queryArrayFormat);
+    const query = transformQuery(
+      call.paginated && !mocked
+        ? renamePaginationQuery(
+            call.query ?? options.query,
+            op.pagination ? op.pagination.params : resource.livePagination?.params,
+          )
+        : (call.query ?? options.query),
+      op.requestTransform,
+    );
     const origin = mocked ? client.base.origin : requestOrigin(client.base);
     const headerWork = delegated
       ? Promise.resolve(new Headers(delegated.headers))
@@ -411,7 +495,7 @@ export async function runOperation(
 
     request = {
       method,
-      url: delegated ? delegated.url : buildUrl(client.base, path, qs, origin),
+      url: delegated ? delegated.url : buildUrl(client.base, path, "", origin),
       ...(delegated ? { delegated: true } : {}),
       path,
       baseURL: client.base.raw,
@@ -440,13 +524,38 @@ export async function runOperation(
       assertPresigned(request.url, op.presigned!, request.headers);
       if (request.url !== delegated.url || request.method !== method || request.body !== call.body)
         throw new ConfigError("Presigned middleware cannot change signed request identity.");
+    } else {
+      // The URL supplied by middleware may change the destination path and add query values.
+      // Structured request.query wins on key conflicts, and is the source used by mocks too.
+      const hashAt = request.url.indexOf("#");
+      const fragment = hashAt < 0 ? "" : request.url.slice(hashAt);
+      const beforeFragment = hashAt < 0 ? request.url : request.url.slice(0, hashAt);
+      const queryAt = beforeFragment.indexOf("?");
+      const destination = queryAt < 0 ? beforeFragment : beforeFragment.slice(0, queryAt);
+      if (queryAt >= 0) {
+        const fromUrl: Record<string, string | string[]> = Object.create(null);
+        for (const [key, value] of new URLSearchParams(beforeFragment.slice(queryAt + 1))) {
+          const previous = fromUrl[key];
+          fromUrl[key] =
+            previous === undefined
+              ? value
+              : Array.isArray(previous)
+                ? [...previous, value]
+                : [previous, value];
+        }
+        request.query = { ...fromUrl, ...request.query };
+      }
+      const qs = client.querySerializer
+        ? normalizeQs(serializeCustomQuery(client.querySerializer, request.query ?? {}))
+        : buildQueryString(request.query, client.queryArrayFormat, client.query);
+      request.url = `${destination}${qs}${fragment}`;
     }
     if (call.preserveBody && request.body !== call.body)
       throw new ValidationError("Transfer part middleware cannot replace the binary body.");
     const hasBody = call.hasBody ?? op.hasBody;
     const wireBody =
-      hasBody && op.requestKeys && !delegated
-        ? transformKeys(request.body, op.requestKeys)
+      hasBody && op.requestTransform && !delegated
+        ? applyTransform(request.body, op.requestTransform)
         : request.body;
 
     // One shared checkpoint for live and mocked calls, before serialization and execution: a
@@ -478,6 +587,7 @@ export async function runOperation(
     let responseHeaders: Headers;
     let raw: Response | undefined;
     let data: unknown;
+    let source: unknown;
     let finalRequest: ApiRequest | undefined;
 
     if (op.transfer) {
@@ -502,7 +612,7 @@ export async function runOperation(
           resource: resource.name,
           operation: op.name,
           params: call.params,
-          query,
+          query: request.query,
           request: async <T>(
             init: import("../types/builtins.js").OperationFnRequestInit & {
               kind: "read" | "write";
@@ -594,15 +704,17 @@ export async function runOperation(
       responseHeaders = advanced.headers;
       raw = advanced.raw;
       data = advanced.data;
+      source =
+        "source" in advanced ? (advanced as ApiResponse<unknown>).source : advanced.data;
     } else if (resource.mock) {
       // Mocked resources execute the resolved operation against the store. They never reach a
       // transport, whatever the URL looks like after middleware.
       const mockRequest = request;
-      const { store, source, files } = resource.mock;
+      const { store, source: mockSource, files } = resource.mock;
       if (responseType === "stream") {
         throw new MockError(
           "MOCK_UNSUPPORTED",
-          `${source.label}: ${resource.name}.${op.name} cannot use responseType "stream" on a mocked resource; use "blob", "arrayBuffer", "text" or "json".`,
+          `${mockSource.label}: ${resource.name}.${op.name} cannot use responseType "stream" on a mocked resource; use "blob", "arrayBuffer", "text" or "json".`,
         );
       }
       const wire = {
@@ -612,7 +724,7 @@ export async function runOperation(
       const relative = interpolatePath(call.relativePath ?? op.relativePath, call.params);
       const managed = await runManagedMock(
         store,
-        source,
+        mockSource,
         files,
         resource.name,
         op.fileFields ?? [],
@@ -625,7 +737,7 @@ export async function runOperation(
             if (!op.mockHandler) {
               throw new MockError(
                 "MOCK_UNSUPPORTED",
-                `${source.label}: custom operation "${resource.name}.${op.name}" (${mockRequest.method} ${relative || "/"}) has no mock behavior. ` +
+                `${mockSource.label}: custom operation "${resource.name}.${op.name}" (${mockRequest.method} ${relative || "/"}) has no mock behavior. ` +
                   `Add a \`mock\` handler to the operation, or implement it as a function operation ({ kind, run }) that uses ctx.request().`,
               );
             }
@@ -639,22 +751,35 @@ export async function runOperation(
               signal,
               files,
             });
+            if (op.pagination && Array.isArray(result.data)) {
+              result = {
+                ...result,
+                data: paginateList(
+                  mockSource.label,
+                  result.data,
+                  op.pagination.mode,
+                  wire.query,
+                ),
+              };
+            }
           } else {
             const intent = call.intent
               ? call.intent(wire)
-              : routeToIntent(mockRequest.method, relative, wire.query, wire.body, source.label);
+              : routeToIntent(mockRequest.method, relative, wire.query, wire.body, mockSource.label);
+            const paginationMode =
+              op.pagination?.mode ?? (call.routed ? resource.pagination : undefined);
             result =
               op.fileFields?.length || containsBinary(intent.body)
                 ? await runMockWithFiles(
                     store,
-                    source,
+                    mockSource,
                     intent,
-                    resource.pagination,
+                    paginationMode,
                     files,
                     op.fileFields ?? [],
                     { resource: resource.name, signal },
                   )
-                : await runBuiltin(store, source, intent, resource.pagination);
+                : await runBuiltin(store, mockSource, intent, paginationMode);
           }
           return result;
         },
@@ -680,11 +805,9 @@ export async function runOperation(
           [
             "getAll",
             "getById",
-            "getBySlug",
             "getMany",
             "getBy",
             "findFirst",
-            "search",
             "exists",
             "count",
           ].includes(op.name),
@@ -692,6 +815,7 @@ export async function runOperation(
       status = managed.status;
       responseHeaders = managed.responseHeaders;
       data = managed.data;
+      source = managed.data;
       const channel = nextChannel(session, 0);
       if (channel) {
         // Nothing crosses a wire on a mock: never invent bytes. Binary and text results have a real
@@ -727,6 +851,7 @@ export async function runOperation(
       responseHeaders = response.headers;
       raw = response.raw;
       data = response.body;
+      source = response.body;
       if (responseLimits && response.status >= 200 && response.status < 300) {
         // The transport may have enforced these already; custom transports might not, so check the
         // head and any fully read body here too (a stream is counted below).
@@ -742,7 +867,12 @@ export async function runOperation(
           }
           throw head;
         }
-        if (maxResponse !== undefined && responseType !== "stream" && responseType !== "json") {
+        if (
+          maxResponse !== undefined &&
+          responseType !== "stream" &&
+          responseType !== "json" &&
+          responseType !== "auto"
+        ) {
           const size = bodyByteSize(data);
           if (size !== undefined && size > maxResponse) throw responseTooLarge(maxResponse, size);
         }
@@ -788,16 +918,7 @@ export async function runOperation(
           });
         }
       }
-      // Binary bodies are never key-transformed or shaped as JSON (`allow404` shaping is
-      // status-only, so it still applies).
-      if (op.responseKeys && responseType === "json") data = transformKeys(data, op.responseKeys);
-      if (call.fromHttp && (responseType === "json" || call.allow404))
-        data = call.fromHttp(data, status);
     }
-
-    if (resource.mock && op.responseKeys && responseType === "json")
-      data = transformKeys(data, op.responseKeys);
-    if (call.shape && responseType === "json") data = call.shape(data);
 
     if (delegated) {
       request.url = new URL(delegated.url).origin + new URL(delegated.url).pathname;
@@ -806,19 +927,131 @@ export async function runOperation(
       request.body = undefined;
       raw = new Response(null, { status, headers: responseHeaders });
     }
-    let response: ApiResponse<unknown> = {
-      data,
+
+    const effectiveRequest = finalRequest ?? request;
+    const hookCtx: ResponseHookContext = {
       status,
       headers: responseHeaders,
-      request: finalRequest ?? request,
+      request: effectiveRequest,
+      resource: resource.name,
+      operation: op.name,
+    };
+    const sourceResponse: ApiResponse<unknown> = {
+      data: source,
+      source,
+      status,
+      headers: responseHeaders,
+      request: effectiveRequest,
+      raw,
+    };
+
+    if (!op.transfer) {
+      const isJsonLike = responseType === "json" || responseType === "auto";
+      const isEmptyBody = (status === 204 || status === 205) && source === null;
+      const isAllowed404 = call.allow404 === true && status === 404;
+      const skipHooks = isEmptyBody || isAllowed404;
+
+      try {
+        if (!mocked) {
+          if (!skipHooks && isJsonLike) {
+            const parsePage = op.pagination ? op.pagination.parse : resource.livePagination?.parse;
+            if (call.paginated && parsePage) {
+              const page = parsePage(data, status);
+              data = op.responseTransform
+                ? { ...page, data: applyTransform(page.data, op.responseTransform) }
+                : page;
+            } else {
+              if (op.responseUnwrap) {
+                data = await applyUnwrap(data, op.responseUnwrap, hookCtx, sourceResponse);
+              }
+              if (op.responseTransform) {
+                if (call.paginated && isRecordValue(data) && Array.isArray(data.data)) {
+                  data = { ...data, data: applyTransform(data.data, op.responseTransform) };
+                } else {
+                  data = applyTransform(data, op.responseTransform);
+                }
+              }
+            }
+          }
+          if (!skipHooks && op.responseParse) {
+            try {
+              data = await op.responseParse(data, hookCtx);
+            } catch (err) {
+              if (err instanceof ApiError) throw err;
+              throw new ValidationError(`${resource.name}.${op.name}: response.parse failed.`, {
+                status,
+                data: source,
+                response: sourceResponse,
+                cause: err,
+              });
+            }
+          }
+          if (
+            call.fromHttp &&
+            (isJsonLike || call.allow404) &&
+            (!op.responseParse || (call.allow404 && status === 404))
+          ) {
+            data = call.fromHttp(data, status, sourceResponse);
+          }
+        } else if (isJsonLike && op.responseTransform) {
+          if (call.paginated && isRecordValue(data) && Array.isArray(data.data)) {
+            data = { ...data, data: applyTransform(data.data, op.responseTransform) };
+          } else {
+            data = applyTransform(data, op.responseTransform);
+          }
+        }
+
+        if (call.shape && isJsonLike) {
+          data = call.shape(data);
+        }
+
+        if (!skipHooks && op.responseValidate) {
+          try {
+            const validated = await op.responseValidate(data, hookCtx);
+            if (validated !== undefined) data = validated;
+          } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new ValidationError(`${resource.name}.${op.name}: response.validate failed.`, {
+              status,
+              data: source,
+              response: sourceResponse,
+              cause: err,
+            });
+          }
+        }
+      } catch (err) {
+        if (
+          err instanceof ApiError &&
+          (err instanceof ResponseShapeError ||
+            err instanceof ParseError ||
+            err instanceof ValidationError ||
+            err instanceof TransformError)
+        ) {
+          err.status ??= status;
+          err.data ??= source;
+          err.response ??= sourceResponse;
+        }
+        throw err;
+      }
+    }
+
+    let response: ApiResponse<unknown> = {
+      data,
+      source,
+      status,
+      headers: responseHeaders,
+      request: effectiveRequest,
       raw,
     };
     for (const hook of op.onResponse) {
       const next = op.transfer
         ? await waitForSignal(Promise.resolve(hook(response)), signal)
         : await hook(response);
-      if (next !== undefined)
-        response = assertResponse(next, `response middleware for ${resource.name}.${op.name}`);
+      if (next !== undefined) {
+        const prevSource = response.source;
+        const checked = assertResponse(next, `response middleware for ${resource.name}.${op.name}`);
+        response = "source" in checked ? checked : { ...checked, source: prevSource };
+      }
     }
     return options.full ? response : response.data;
   } catch (thrown) {
@@ -922,6 +1155,24 @@ function applyIdempotency(
   }
   headers.set(header, key);
   return key;
+}
+
+function serializeCustomQuery(serializer: (query: QueryParams) => string, query: QueryParams): string {
+  let out: unknown;
+  try {
+    out = serializer(query);
+  } catch (cause) {
+    if (cause instanceof ApiError) throw cause;
+    throw new SerializationError(
+      "Custom querySerializer failed to encode query parameters.",
+      { path: "$" },
+      { cause },
+    );
+  }
+  if (typeof out !== "string") {
+    throw new SerializationError("Custom querySerializer must return a string.", { path: "$" });
+  }
+  return out;
 }
 
 function normalizeQs(value: string): string {

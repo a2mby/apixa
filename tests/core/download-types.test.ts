@@ -98,7 +98,7 @@ describe("binary response types", () => {
       Promise<ReadableStream<Uint8Array> | null>
     >();
     expectTypeOf<ReturnType<Api["report"]>>().toEqualTypeOf<Promise<Blob>>();
-    expectTypeOf<Parameters<Api["download"]>[0]>().toEqualTypeOf<string>();
+    expectTypeOf<Parameters<Api["download"]>[0]["params"]>().toMatchTypeOf<{ id: string | number }>();
     expectTypeOf<IsAny<Awaited<ReturnType<Api["download"]>>>>().toEqualTypeOf<false>();
     // "json" and absent keep the existing derivation
     expectTypeOf<Awaited<ReturnType<Api["plain"]>>>().toEqualTypeOf<unknown>();

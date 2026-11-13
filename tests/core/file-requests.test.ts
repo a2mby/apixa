@@ -24,12 +24,21 @@ const file = (name: string, content = "x", type = "text/plain") =>
 function setup(
   resource: Record<string, unknown> = {},
   root: Record<string, unknown> = {},
-  respond: (n: number) => { status?: number; body?: unknown } = () => ({ body: { id: "1" } }),
+  respond: (n: number, request: TransportRequest) => { status?: number; body?: unknown } = (
+    _n,
+    request,
+  ) => ({
+    body:
+      request.url.endsWith("/bulk") ||
+      (request.method === "GET" && request.url === "https://api.example.com/users")
+        ? []
+        : { id: "1" },
+  }),
 ) {
   const seen: TransportRequest[] = [];
   const transport = createFakeTransport((request) => {
     seen.push(request);
-    return respond(seen.length);
+    return respond(seen.length, request);
   });
   const api = defineApi<AppApi>()({
     baseURL: "https://api.example.com",
@@ -74,11 +83,11 @@ describe("automatic multipart on builtin writes", () => {
     expect(await sent.text()).toBe("PNG");
   });
 
-  it.each(["update", "patch", "upsert"])(
+  it.each(["update", "patch"])(
     "%s sends multipart when a file is present",
     async (op) => {
       const { api, seen } = setup();
-      await api.users[op]!("7", { avatar: file("a.txt") });
+      await api.users[op]!("7", { body: { avatar: file("a.txt") } });
       expect(seen[0]!.method).toBe(op === "patch" ? "PATCH" : "PUT");
       expect(seen[0]!.body).toBeInstanceOf(FormData);
     },
@@ -86,7 +95,7 @@ describe("automatic multipart on builtin writes", () => {
 
   it("keeps JSON when no binary value is present", async () => {
     const { api, seen } = setup();
-    await api.users.update!("7", { firstName: "Ada" });
+    await api.users.update!("7", { body: { firstName: "Ada" } });
     expect(seen[0]!.body).toBe('{"firstName":"Ada"}');
     expect(seen[0]!.headers.get("content-type")).toBe("application/json");
   });
@@ -133,7 +142,7 @@ describe("dataFormat, aliases and multipart options", () => {
 
   it("dataFormat multipart forces multipart without files", async () => {
     const { api, seen } = setup({ operations: { update: { dataFormat: "multipart" } } });
-    await api.users.update!("1", { firstName: "Ada" });
+    await api.users.update!("1", { body: { firstName: "Ada" } });
     expect(entries(form(seen[0]!))).toEqual([["firstName", "Ada"]]);
   });
 
@@ -184,7 +193,7 @@ describe("dataFormat, aliases and multipart options", () => {
         },
       },
     });
-    await api.users.attach!("1", { doc: file("d.txt") });
+    await api.users.attach!({ doc: file("d.txt") }, { params: { id: "1" } });
     await api.users.upload!(file("u.txt"));
     await api.users.form!();
     expect(seen.map((r) => r.body instanceof FormData)).toEqual([true, true, true]);
@@ -219,10 +228,12 @@ describe("pipeline behavior", () => {
     const { api } = setup(
       {},
       {
-        requestMiddleware: [
-          (request: ApiRequest) => {
-            seenBody = request.body as Record<string, unknown>;
-            return request;
+        middleware: [
+          {
+            onRequest: (request: ApiRequest) => {
+              seenBody = request.body as Record<string, unknown>;
+              return request;
+            },
           },
         ],
         transforms: { request: { keys: "snake_case" } },
@@ -241,7 +252,7 @@ describe("pipeline behavior", () => {
       {},
       (n) => (n < 3 ? { status: 503, body: { error: "x" } } : { body: { id: "1" } }),
     );
-    await api.users.update!("1", { avatar: file("a.txt", "AAA") });
+    await api.users.update!("1", { body: { avatar: file("a.txt", "AAA") } });
     expect(seen).toHaveLength(3);
     for (const request of seen) {
       expect(request.body).toBe(seen[0]!.body);

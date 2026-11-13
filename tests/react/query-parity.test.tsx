@@ -191,10 +191,6 @@ describe("native query parity and read operations", () => {
 
   it("executes every remaining builtin read directly with its Core argument tuple", async () => {
     const resource = {
-      getBySlug: vi.fn(async (slug: string, _options?: { signal?: AbortSignal }) => ({
-        ...ada,
-        id: slug,
-      })),
       getMany: vi.fn(async (ids: string[], _options?: { signal?: AbortSignal }) =>
         ids.map((id) => ({ ...ada, id })),
       ),
@@ -202,30 +198,18 @@ describe("native query parity and read operations", () => {
         async (_field: string, _value: string, _options?: { signal?: AbortSignal }) => ada,
       ),
       findFirst: vi.fn(
-        async (_query?: { active?: boolean }, _options?: { signal?: AbortSignal }) => ada,
+        async (_options?: { query?: { active?: boolean }; signal?: AbortSignal }) => ada,
       ),
-      search: vi.fn(async (_options?: { query?: { name: string }; signal?: AbortSignal }) => [ada]),
       exists: vi.fn(async (_id: string, _options?: { signal?: AbortSignal }) => true),
     };
     coreFixture(resource, {
-      getBySlug: 1,
       getMany: 1,
       getBy: 2,
-      findFirst: 1,
-      search: 0,
+      findFirst: 0,
       exists: 1,
     });
     const queryClient = client();
     const root = { queryKey: ["users"] };
-    expect(
-      await queryClient.fetchQuery(
-        createResourceQueryOptions(resource, {
-          ...root,
-          operation: "getBySlug",
-          args: ["ada"],
-        }),
-      ),
-    ).toMatchObject({ id: "ada" });
     expect(
       await queryClient.fetchQuery(
         createResourceQueryOptions(resource, {
@@ -249,19 +233,10 @@ describe("native query parity and read operations", () => {
         createResourceQueryOptions(resource, {
           ...root,
           operation: "findFirst",
-          args: [{ active: true }],
+          args: [{ query: { active: true } }],
         }),
       ),
     ).toEqual(ada);
-    expect(
-      await queryClient.fetchQuery(
-        createResourceQueryOptions(resource, {
-          ...root,
-          operation: "search",
-          args: [{ query: { name: "Ada" } }],
-        }),
-      ),
-    ).toEqual([ada]);
     expect(
       await queryClient.fetchQuery(
         createResourceQueryOptions(resource, {
@@ -455,15 +430,15 @@ describe("native query parity and read operations", () => {
     const list = createResourceQueryOptions(api.users, {
       queryKey: ["users"],
       scope: ["tenant", "acme"],
-      args: ["acme"],
+      args: [{ params: { orgId: "acme" } }],
     });
-    expect(list.queryKey).toEqual(["tenant", "acme", "users", "list", ["acme"]]);
+    expect(list.queryKey).toEqual(["tenant", "acme", "users", "list", [{ params: { orgId: "acme" } }]]);
     expect(await queryClient.fetchQuery(list)).toEqual([ada]);
     const detail = createResourceQueryOptions(api.users, {
       queryKey: ["users"],
       scope: ["tenant", "acme"],
       operation: "getById",
-      args: [{ orgId: "acme", id: "42" }],
+      args: ["42", { params: { orgId: "acme" } }],
     });
     expect(await queryClient.fetchQuery(detail)).toEqual(ada);
   });

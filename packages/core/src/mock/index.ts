@@ -3,6 +3,7 @@ export { normalizeMockSource, validateRecords, type MockSource, type Row } from 
 export {
   runBuiltin,
   routeToIntent,
+  paginateList,
   type BuiltinIntent,
   type MockResult,
   type PaginationMode,

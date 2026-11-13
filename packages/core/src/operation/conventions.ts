@@ -17,11 +17,8 @@ export const BUILTIN_CONVENTIONS = {
   create: { method: "POST", path: "", access: "write", extended: false, many: false },
   update: { method: "PUT", path: "/:id", access: "write", extended: false, many: false },
   delete: { method: "DELETE", path: "/:id", access: "write", extended: false, many: false },
-  getBySlug: { method: "GET", path: "/slug/:slug", access: "read", extended: true, many: false },
   patch: { method: "PATCH", path: "/:id", access: "write", extended: true, many: false },
-  upsert: { method: "PUT", path: "/:id", access: "write", extended: true, many: false },
   count: { method: "GET", path: "/count", access: "read", extended: true, many: false },
-  search: { method: "GET", path: "/search", access: "read", extended: true, many: false },
   createMany: { method: "POST", path: "/bulk", access: "write", extended: true, many: true },
   deleteMany: {
     method: "DELETE",

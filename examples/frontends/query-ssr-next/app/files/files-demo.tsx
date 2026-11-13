@@ -49,7 +49,7 @@ export function FilesDemo() {
       <button data-testid="send-stream" onClick={() => void run("send", (signal) => files.send(new ReadableStream({ start(c) { for (let i = 0; i < 4; i++) c.enqueue(new Uint8Array(500)); c.close(); } }), { signal, onTransfer }))}>
         Send a stream
       </button>
-      <button data-testid="download" onClick={() => void run("download", (signal) => filesApi.files.download("1", { signal, onTransfer }))}>
+      <button data-testid="download" onClick={() => void run("download", (signal) => filesApi.files.download({ params: { id: "1" }, signal, onTransfer }))}>
         Download
       </button>
       <button data-testid="cancel" onClick={() => controller.current?.abort()}>Cancel</button>

@@ -31,6 +31,7 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
     transport: (config.transport as Transport | undefined) ?? createFetchTransport(),
     queryArrayFormat:
       (config.queryArrayFormat as ClientRuntime["queryArrayFormat"] | undefined) ?? "repeat",
+    query: config.query as ClientRuntime["query"],
     querySerializer: config.querySerializer as ClientRuntime["querySerializer"],
     files: new MockFileStorage(),
   };
@@ -39,9 +40,8 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
     timeout: config.timeout as number | undefined,
     retry: config.retry as LayerOptions["retry"],
     middleware: config.middleware as LayerOptions["middleware"],
-    requestMiddleware: config.requestMiddleware as LayerOptions["requestMiddleware"],
-    responseMiddleware: config.responseMiddleware as LayerOptions["responseMiddleware"],
     transforms: config.transforms as LayerOptions["transforms"],
+    response: config.response as LayerOptions["response"],
   };
 
   const client: Record<string, Record<string, unknown>> = {};

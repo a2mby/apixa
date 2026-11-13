@@ -68,26 +68,18 @@ describe("mock file storage with dataset writes", () => {
       name: "Bob",
       avatar: file("1.txt", "1"),
     })) as User;
-    const second = (await api.users.patch!("2", { avatar: file("2.txt", "2") })) as User;
+    const second = (await api.users.patch!("2", { body: { avatar: file("2.txt", "2") } })) as User;
     expect(files.has(first.avatar!)).toBe(false);
     expect(files.get(second.avatar!)!.text()).toBe("2");
     expect(files.size).toBe(1);
     // patch without a file keeps the stored one
-    const kept = (await api.users.patch!("2", { name: "Bobby" })) as User;
+    const kept = (await api.users.patch!("2", { body: { name: "Bobby" } })) as User;
     expect(kept.avatar).toBe(second.avatar);
     expect(files.size).toBe(1);
     // update without the field drops the file
-    const dropped = (await api.users.update!("2", { name: "Robert" })) as User;
+    const dropped = (await api.users.update!("2", { body: { name: "Robert" } })) as User;
     expect(dropped.avatar).toBeUndefined();
     expect(files.size).toBe(0);
-  });
-
-  it("upsert creates and replaces", async () => {
-    const { api, files } = setup();
-    const a = (await api.users.upsert!("9", { name: "N", avatar: file("a") })) as User;
-    const b = (await api.users.upsert!("9", { name: "N", avatar: file("b") })) as User;
-    expect(files.has(a.avatar!)).toBe(false);
-    expect(files.has(b.avatar!)).toBe(true);
   });
 
   it("createMany stores files per record", async () => {
@@ -124,7 +116,7 @@ describe("mock file storage with dataset writes", () => {
     ).rejects.toMatchObject({
       code: "MOCK_DUPLICATE_ID",
     });
-    await expect(api.users.update!("nope", { avatar: file("x") })).rejects.toMatchObject({
+    await expect(api.users.update!("nope", { body: { avatar: file("x") } })).rejects.toMatchObject({
       code: "MOCK_NOT_FOUND",
     });
     await expect(

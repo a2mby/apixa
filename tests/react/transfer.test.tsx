@@ -53,15 +53,12 @@ describe("onTransfer through the React hooks", () => {
         useResourceQuery(api.docs, {
           queryKey: ["file"],
           operation: "download",
-          args: [
-            "1",
-            {
+          args: [{
               onTransfer: (event) => {
                 expectTypeOf(event).toEqualTypeOf<TransferEvent>();
                 events.push(event);
               },
-            },
-          ],
+            params: { id: "1" } }],
         }),
       { wrapper: wrap(newClient()) },
     );
@@ -87,14 +84,14 @@ describe("onTransfer through the React hooks", () => {
         one: useResourceQuery(api.docs, {
           queryKey: ["f"],
           operation: "download",
-          args: ["1", { onTransfer: a }],
+          args: [{ ...({ onTransfer: a }), params: { id: "1" } }],
         }),
         two: useResourceQuery(api.docs, {
           queryKey: ["f"],
           operation: "download",
-          args: ["1", { onTransfer: b }],
+          args: [{ ...({ onTransfer: b }), params: { id: "1" } }],
         }),
-        plain: useResourceQuery(api.docs, { queryKey: ["f"], operation: "download", args: ["1"] }),
+        plain: useResourceQuery(api.docs, { queryKey: ["f"], operation: "download", args: [{ params: { id: "1" } }] }),
       }),
       { wrapper: wrap(client) },
     );

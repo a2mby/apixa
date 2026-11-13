@@ -52,7 +52,7 @@ flowchart TD
 4. **Native promises** — no custom Promise wrappers in Core.
 5. **Framework-agnostic** — Core must not depend on React, Next.js, or TanStack Query.
 6. **Transport-backed** — HTTP runs through a `Transport` interface; Fetch is the default implementation and stays **inside Core** until a package split is justified.
-7. **Operations are add / remove / override, by name** — all 16 builtins are enabled by default. `defaultOperations`, read/write flags, groups, and individual entries resolve once at client construction. Each builtin has its own resolved request definition; custom functions use the shared `ctx.request()` pipeline. Runtime config controls the client shape and paths, while generic metadata controls payload types (see [conventions.md](./conventions.md#operation-customization)).
+7. **Operations are selected and overridden by name** — the `operations` preset, list and named overrides resolve once at client construction. Each builtin has its own resolved request definition; custom functions use the shared `ctx.request()` pipeline. Runtime config controls the client shape and paths, while generic metadata controls payload types (see [conventions.md](./conventions.md#operation-customization)).
 
 See also:
 
@@ -72,21 +72,26 @@ Every call then runs through `request/pipeline.ts`:
    operation < request.
 2. Resolve dynamic headers. Static, sync, and async providers run once per logical call and
    merge case-insensitively.
-3. Run request middleware (root → resource → operation; `middleware.onRequest` before
-   `requestMiddleware[]`).
-4. Apply request key transforms. Query keys convert when the URL is built; body keys convert
-   at serialization. Values are never rewritten, so `File` / `Blob` pass through untouched.
+3. Apply request key transforms (with optional `exclude` / `preserve` / `maxDepth`) to query and
+   body payloads before middleware runs, leaving `File` / `Blob` values untouched.
+4. Run unified `middleware` `onRequest` hooks (root → resource → operation, in array order). Request
+   middleware sees `request.query` and `request.body`; mutations to `request.query` or `request.url`
+   stay synchronized across live transport, mocks, URL serialization, and metadata.
 5. For HTTP only, check the final URL against the API origin after middleware. Any other
    origin is a `SecurityError`, and nothing is sent.
 6. Execute. For HTTP, transport attempts run with retry, exponential backoff with jitter, and
    `Retry-After`. Middleware does not re-run on retries. For a mocked resource, the resolved
-   builtin runs against its `MockStore`, or `ctx.request()` is routed by method and relative
-   path. No transport is involved. Writes carrying `File` / `Blob` values first move them into
-   the client's virtual file store (see "File handling"); records keep string references.
-7. Apply response key transforms and operation shaping (`exists`, `getMany`, `findFirst`,
-   `slice`).
-8. Run response middleware.
-9. Return the data, or the `ApiResponse` envelope when `{ full: true }` is passed.
+   builtin runs against its `MockStore`, custom declarative operations run their `mock` handler, or
+   `ctx.request()` is routed by method and relative path. No transport is involved. Writes carrying
+   `File` / `Blob` values first move them into the client's virtual file store (see "File handling");
+   records keep string references.
+7. Run response processing in order (skipped for non-JSON `responseType`): preserve raw parsed
+   payload as `source`, run `response.unwrap`, apply response key transforms (`TransformError` on
+   cycles/depth/collisions), resolve per-operation or resource `pagination`, run `response.parse` and
+   `response.validate` (`ValidationError` on non-`ApiError` throws), and apply builtin shaping
+   (`exists`, `getMany`, `findFirst`, `slice`, `ResponseShapeError` on invalid shapes).
+8. Run unified `middleware` `onResponse` hooks.
+9. Return the data, or the `ApiResponse` envelope (including `source`) when `{ full: true }` is passed.
 
 One controller per call combines the overall timeout and the caller's signal. A timeout covers
 retries and backoff, and is reported as `TimeoutError`, never as `AbortError`. On failure, error
@@ -221,7 +226,7 @@ Files travel inside the existing operations; there is no separate upload client.
 **Declaring file fields.** `fileFields: ["avatar", "documents"]` or
 `fileFields: { avatar: { name: "profile_image" } }` on a resource. Names are checked against the
 entity (compile time) and must be `string` / `string[]` fields (nullable allowed). Reads keep
-those types. Eligible writes (`create`, `update`, `patch`, `upsert`, `createMany`) accept
+those types. Eligible writes (`create`, `update`, `patch`, `createMany`) accept
 `File | Blob` and `readonly (File | Blob)[]` for them, preserving optionality and `null`. Explicit
 body types and `dataFormat: "json"` keep the entity types; custom operations are not rewritten.
 A stored `string` is not accepted as a file input — omit the key to keep the file.
@@ -451,7 +456,7 @@ architecture contract above.
 - Living context: [context.md](./context.md)
 - Public API contract and migration map: [public-api.md](./public-api.md)
 - Roadmap: [roadmap.md](./roadmap.md)
-- Latest coding contract: [../versions/v1.8.1/](../versions/v1.8.1/) (active; see [versions/README.md](../versions/README.md))
+- Latest coding contract: [../versions/v3.0.0/](../versions/v3.0.0/) (active; see [versions/README.md](../versions/README.md))
 
 ## Advanced transfers (v1.7.0; implemented, not npm-published)
 

@@ -42,12 +42,9 @@ describe("defineApi", () => {
       "getAll",
       "getBy",
       "getById",
-      "getBySlug",
       "getMany",
       "patch",
-      "search",
       "update",
-      "upsert",
     ]);
 
     expectTypeOf(api.users).toHaveProperty("update");
@@ -126,7 +123,7 @@ describe("defineApi", () => {
     expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<User["id"]>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<User["id"]>();
-    expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<Partial<User>>();
+    expectTypeOf<Parameters<typeof api.users.update>[1]["body"]>().toEqualTypeOf<Partial<User>>();
 
     const created = await api.users.create({ name: "Ada", email: "ada@example.com" });
     const user = await api.users.getById("1");

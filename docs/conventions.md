@@ -26,7 +26,7 @@ Shared rules for building Apixa Core, writing docs, and shipping version milesto
 A resource's `operations` accepts, per key, `true`, `false`, a config object, or a
 `{ kind, run }` function definition:
 
-- **Config object** — the existing `{ method, path, headers, timeout, retry, hasBody }` shape.
+- **Config object** — `{ method, path, headers, timeout, retry, hasBody, middleware, transforms, response, pagination, ... }`.
 - **Custom function** — `{ kind: "read" | "write", run: (ctx, ...args) => Promise<T> }`.
   `ctx.request(init)` runs the call through Core's
   normal pipeline (headers inheritance, retry, middleware, error classification) instead of
@@ -34,55 +34,51 @@ A resource's `operations` accepts, per key, `true`, `false`, a config object, or
 - **`false`** — removes a builtin from the generated client. Removing a name that was never
   active is a no-op.
 - **`true`** — enables a builtin with its default method and path. A custom name needs a config
-  with `kind` and `method` or `{ kind, run }`; `true` alone cannot create an implementation.
+  with `method` or `{ kind, run }`; `true` alone cannot create an implementation.
 
 - **Built-in function override** — may remain a bare function; its kind is inherited from the
   built-in convention.
 
-**Read/write classification.** Builtins are fixed by their convention (`access` in
-`operation/conventions.ts`; overriding a builtin keeps it). Custom operations take
-`kind: "read" | "write"` on the config object or `{ kind, run }` form. Missing kinds
-are configuration errors. `kind` on a builtin name is also a configuration error. GET, HEAD,
-and OPTIONS require `"read"`; POST, PUT, PATCH, and DELETE require `"write"`. The same
-validation applies to every function-operation `ctx.request()` before dispatch. Every resource client carries the result as
-non-enumerable, frozen metadata under `OPERATION_METADATA` (`getOperationMetadata(resource)`):
+**Read/write classification.** Declarative HTTP operations derive their classification from the
+method (`GET`, `HEAD`, and `OPTIONS` -> `"read"`; `POST`, `PUT`, `PATCH`, and `DELETE` -> `"write"`),
+including method overrides on builtins; explicit `kind` on declarative operations is optional when
+consistent with the method and rejected if mismatched. Function operations still require `{ kind, run }`.
+The same validation applies to every function-operation `ctx.request()` before dispatch. Every resource
+client carries the result as non-enumerable, frozen metadata under `OPERATION_METADATA`
+(`getOperationMetadata(resource)`):
 `{ kind, builtin, implementation: "request" | "function", optionsIndex }`, where `optionsIndex` is
 the position of the trailing `RequestOptions` argument (`null` for function operations, whose
 signature Core does not own). It is typed per operation (`OperationKindsOf<typeof api.users>`) and
 integrations use it instead of guessing from names or HTTP verbs.
 
 A custom definition (object or function) with a builtin's name always overrides the convention.
-`operations` suggests the 16 known names below for autocomplete while still accepting arbitrary
+`operations` suggests the 13 known names below for autocomplete while still accepting arbitrary
 custom keys.
 
-Every builtin below — the original 5 and the 11 added in v0.10.0 — is **always-on** for any
-resource with a `path`, the same default-first behavior as the original 5 since v0.2.0. `false`
-removes one; removing a name that was never a builtin at all is a no-op. Calling a route-based one
-against a backend that hasn't implemented it 404s, the same as calling any unconfigured endpoint —
-Apixa doesn't pretend the route exists, it just doesn't require you to opt in by name first.
+Every builtin below is **always-on** for any resource with a `path`. `false` removes one; removing
+a name that was never a builtin at all is a no-op. Calling a route-based one against a backend
+that hasn't implemented it 404s, the same as calling any unconfigured endpoint — Apixa doesn't
+pretend the route exists, it just doesn't require you to opt in by name first. (`getBySlug`, `upsert`,
+and `search` were removed in v3; define custom operations when a backend exposes them.)
 
-| Name         | Method | Default path       | Basis                                                                        |
-| ------------ | ------ | ------------------ | ---------------------------------------------------------------------------- |
-| `getAll`     | GET    | _(resource path)_  | convention                                                                   |
-| `getById`    | GET    | `/:id`             | convention                                                                   |
-| `create`     | POST   | _(resource path)_  | convention                                                                   |
-| `update`     | PUT    | `/:id`             | convention                                                                   |
-| `delete`     | DELETE | `/:id`             | convention                                                                   |
-| `getBySlug`  | GET    | `/slug/:slug`      | convention                                                                   |
-| `patch`      | PATCH  | `/:id`             | convention — new method on an existing path                                  |
-| `upsert`     | PUT    | `/:id`             | convention — alias of `update`'s path                                        |
-| `count`      | GET    | `/count`           | convention                                                                   |
-| `search`     | GET    | `/search`          | convention                                                                   |
-| `createMany` | POST   | `/bulk`            | convention                                                                   |
-| `deleteMany` | DELETE | `/bulk`            | convention                                                                   |
-| `getMany`    | GET    | _(resource path)_  | own request with repeated `id` query values; accepts bare or paginated lists |
-| `exists`     | GET    | `/:id`             | own request; maps 404 → `false`                                              |
-| `findFirst`  | GET    | _(resource path)_  | own list request; returns first result or `null`                             |
-| `getBy`      | GET    | _(given per call)_ | own request; `getBy(field, value)` or `getBy("/path/:x", value)`             |
+| Name         | Method | Default path       | Basis                                                                 |
+| ------------ | ------ | ------------------ | --------------------------------------------------------------------- |
+| `getAll`     | GET    | _(resource path)_  | convention                                                            |
+| `getById`    | GET    | `/:id`             | convention                                                            |
+| `create`     | POST   | _(resource path)_  | convention                                                            |
+| `update`     | PUT    | `/:id`             | convention — `(id, { body, ...options })`                             |
+| `delete`     | DELETE | `/:id`             | convention                                                            |
+| `patch`      | PATCH  | `/:id`             | convention — `(id, { body, ...options })`                             |
+| `count`      | GET    | `/count`           | convention                                                            |
+| `createMany` | POST   | `/bulk`            | convention                                                            |
+| `deleteMany` | DELETE | `/bulk`            | convention                                                            |
+| `getMany`    | GET    | _(resource path)_  | own request with repeated identity-key query values; expects an array |
+| `exists`     | GET    | `/:id`             | own request; maps 404 → `false`                                       |
+| `findFirst`  | GET    | _(resource path)_  | own list request; returns first result or `null`                      |
+| `getBy`      | GET    | _(given per call)_ | own request; `getBy(field, value)` or `getBy("/path/:x", value)`      |
 
 `createMany` and `deleteMany` are the public names for the former bulk operations. Their default
-wire path remains `/bulk`; `deleteMany` sends its ID array in the DELETE body. The original
-`bulkCreate` and `bulkDelete` methods are no longer generated.
+wire path remains `/bulk`; `deleteMany` sends its ID array in the DELETE body.
 
 Each builtin uses its own resolved definition. Disabling or overriding `getAll` does not change
 `getMany` or `findFirst`; changing `getById` does not change `exists`. For `getMany`, changing the
@@ -91,26 +87,20 @@ HTTP method retains the ID query mapping and does not invent a request body. The
 specialized operations because no body mapping is defined. `getBy` accepts a configured path as
 a prefix, or a template containing `:field` and `:value`. Absolute operation paths may target
 the configured API origin; cross-origin paths are rejected before the request is sent.
-When a resource path has parameters, pass their named values after a specialized operation's
-usual arguments: `exists(id, { orgId })`, `getMany(ids, { orgId })`,
-`findFirst(query, { orgId })`, or `getBy(field, value, { orgId })`.
+When a resource path has parameters, pass their named values in `options.params`:
+`exists(id, { params: { orgId } })`, `getMany(ids, { params: { orgId } })`,
+`findFirst({ params: { orgId }, query })`, or `getBy(field, value, { params: { orgId } })`.
+Detail writes take `(id, { body, params?, ... })`: `update(id, { body })` and `patch(id, { body })`.
+Declarative custom reads take `({ params?, query?, ... })`; declarative custom writes default to
+`hasBody: true` (`(body, options?)`) unless `hasBody: false` is set.
 
-### Selection order
+### Selection
 
-With only `path`, all 16 builtins are enabled. `defaultOperations: false` starts with none.
-`readOnly: true` removes write operations; `writeOnly: true` removes read operations. The two flags
-cannot both be true. These settings select client methods; they do not enforce server permissions.
-
-`operationGroups` accepts `read`, `write`, `extended`, and `many`, each set to `true` or `false`.
-`read` covers nine read operations and `write` seven write operations. `extended` covers the 11
-operations beyond the original CRUD five. `many` covers `getMany`, `createMany`, and `deleteMany`.
-
-Selection resolves in this order: builtin defaults, `defaultOperations`, read/write flags,
-`extended`, `read` and `write`, `many`, then individual `operations` entries. `many` is more
-specific than the broad groups and wins when they overlap, regardless of property order.
-Individual entries always have the final say. This selection runs once when the client is built.
-Literal `true` and `false` settings give exact method types. If a setting is a variable `boolean`,
-the affected methods are optional in TypeScript because their runtime presence is conditional.
+With only `path`, all 13 builtins are enabled. `operations` selects a `"crud"`, `"read"`, or
+`"all"` preset, or an explicit array of builtin names. A bag can set `preset` to either form and
+add named overrides; those overrides take precedence regardless of property order. `preset` is
+reserved for selection. These settings select client methods; they do not enforce server permissions.
+Literal selections produce exact method types, while dynamic selections may make methods optional.
 
 ```ts
 const api = defineApi({
@@ -118,9 +108,11 @@ const api = defineApi({
   resources: {
     users: {
       path: "/users",
-      readOnly: true,
-      operationGroups: { extended: false, many: true },
-      operations: { create: true, createMany: { path: "/batch" }, deleteMany: false },
+      operations: {
+        preset: ["getAll", "getById", "getMany"],
+        create: true,
+        createMany: { path: "/batch" },
+      },
     },
   },
 });
@@ -132,19 +124,34 @@ const api = defineApi({
 - Resources live only under `resources`. Root-level resource objects are rejected with a
   migration hint, and unknown keys at any level are rejected both in TypeScript and at
   construction (`ConfigError`).
-- `headers`, `timeout`, `retry`, `middleware`, `requestMiddleware`, `responseMiddleware`, and
+- `headers`, `timeout`, `retry`, `middleware`, `response`, and
   `transforms` are accepted at the root, resource, and operation levels. The most specific
-  value wins. Headers also accept a per-call value and may be static, a sync provider, or an
-  async provider (evaluated on every logical call).
+  value wins (`false` disables an inherited `retry` or `response` hook). Headers also accept a
+  per-call value and may be static, a sync provider, or an async provider (evaluated on every logical call).
+- `queryArrayFormat` (`"repeat"` | `"comma"` | `"brackets"`) and `query`
+  (`{ nulls?: "omit" | "empty" | "null", emptyArrays?: "omit" | "empty", booleans?: "string" | "number" }`)
+  configure query string serialization client-wide on `defineApi`. Nested plain objects serialize with
+  bracket notation; circular, non-finite numbers, symbols, functions, or depth > 64 throw `SerializationError`.
 - `retry: 2` is shorthand for `{ retries: 2 }`. By default only `GET`, `HEAD`, and `OPTIONS` are
   retried. Writes need an explicit `methods` entry. A `Retry-After` longer than `maxDelayMs`
   stops retrying. `timeout` is one budget for the whole call, including backoff.
-- `transforms: { request: { keys }, response: { keys } }` supports `camelCase`, `snake_case`,
-  `PascalCase`, and `kebab-case`. Conversion is recursive over plain objects and arrays, leaves
-  values and special objects untouched, and never mutates its input. Colliding keys throw
+- `transforms: { request: KeyTransformConfig, response: KeyTransformConfig }` supports `camelCase`,
+  `snake_case`, `PascalCase`, and `kebab-case`, with optional `exclude`, `preserve`, and `maxDepth`
+  (default `64`). Conversion is recursive over plain objects and arrays, leaves values and special
+  objects untouched, and never mutates its input. Colliding keys, cycles, or depth overflow throw
   `TransformError`. TypeScript exposes the converted keys at every level (root, resource, operation).
-- Error middleware receives `{ request, replay }`. `replay()` re-runs the call once (fresh headers),
+- `response: { unwrap?, parse?, validate? }` extracts envelopes (dot-path or callback), parses, and
+  validates decoded payloads; `ApiResponse.source` keeps the raw parsed body prior to response stages.
+- Error middleware receives `(error, { request, replay })`. `replay()` re-runs the call once (fresh headers),
   e.g. refresh a token on 401 and `return replay()`; it is `undefined` inside a replay.
+- Register middleware as an array of `{ onRequest?, onResponse?, onError? }` objects under `middleware`.
+  Hooks run from client to resource to operation, in array order within each level.
+- Request middleware sees `request.query` already transformed by `transforms.request`. Mutations to
+  `request.query` or `request.url` stay synchronized across transport, mocks, URLs, and response/error
+  `request` metadata.
+- `getMany` and `findFirst` expect an array response; unpaginated `getAll` expects an array (or configured
+  paginated object when `pagination` is active). Invalid shapes raise `ResponseShapeError`, whose
+  `data` and `response` retain the parsed source and response details; an empty array is valid.
 - An operation whose body type is unknown (e.g. a custom POST) may be called without a body.
 - Clients are frozen. To use a different base URL, build another client, or use `defineApis()`.
 
@@ -159,19 +166,35 @@ const api = defineApi({
 | `mock: () => import(…)`       | resolved element type     | first use, once, retried on failure |
 | `mock: { data, idKey, seed }` | as above; `idKey` checked | `seed: { limit, offset }`           |
 
-- All 16 builtins run directly against the store; none calls another.
+- All 13 builtins run directly against the store; none calls another.
   - `getMany` returns results in request order and omits missing IDs.
-  - `findFirst` and `count` match exactly; `search` matches case-insensitive substrings.
+  - `findFirst` and `count` match flat fields by string equality.
   - `createMany` is atomic; `deleteMany` ignores missing IDs.
 - Overridden builtin paths keep their builtin semantics.
-- `ctx.request()` and declarative custom operations are routed by method and path relative to
-  the resource. Anything else throws `MockError` with code `MOCK_UNSUPPORTED`. No request is
-  ever sent.
+- `ctx.request()` and declarative custom operations with no `mock` handler are routed by method and
+  path relative to the resource. Anything else throws `MockError` with code `MOCK_UNSUPPORTED`. No
+  request is ever sent.
 - Each client has its own stores. `resetMock(api.users)` or `resetMock(api)` restores the
   seeded state.
-- `pagination: "page" | "cursor"` is one contract for live and mocked resources. The mock engine
-  produces `{ data, total, page, pageSize }` or `{ data, nextCursor }`; for a live resource it
-  only shapes types. `slice` is response slicing, not seeding.
+- `pagination` is one contract for live and mocked resources: `{ data, total, page, pageSize }`
+  or `{ data, nextCursor }`. It can be configured at the resource level or per list operation
+  (`getAll`, `getMany`, declarative custom reads); operation-level `pagination: false` opts out of
+  resource pagination. The mock engine produces the page envelope. For a live resource the string form
+  (`"page"` / `"cursor"`) declares that the server already returns it (types only, body
+  untouched). To map a backend's own shape, use an object: `{ type, preset }` (`laravel`, `laravel-paginator`, `strapi`, `payload`, `nestjs`),
+  `{ type, fields, params }` (dot paths for response fields; `params` renames the `page` /
+  `pageSize` / `cursor` query keys), or `{ type, parseList(body, { status }) }` which wins over
+  both. Fields are declared, never guessed; a missing or wrong-typed mapped field throws
+  `ParseError`. The mapping runs on live calls before response key transforms (which
+  then apply to the rows).
+  Import the types from `apixa`: `Page<T>`, `CursorPage<T>`, `PageResult<T>`, `ResolvedPagination`,
+  `PaginationMode`, `PaginationQueryOf`, `ResourcePagination`, `PaginationPreset`, `PaginationFields`,
+  and `PaginationParams`.
+  Per-preset state types name what `getAll` resolves to: `LaravelPagination<T>`,
+  `LaravelPaginatorPagination<T>`, `LaravelCursorPagination<T>`, `StrapiPagination<T>`,
+  `PayloadPagination<T>` and `NestjsPagination<T>` (all structurally `Page<T>` / `CursorPage<T>`).
+- `slice` applies native `Array.prototype.slice` semantics after a full list has been fetched; it
+  does not limit backend work or network transfer. Combining `slice` with `pagination` is a `ConfigError`.
 
 ## Types
 

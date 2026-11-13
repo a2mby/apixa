@@ -32,7 +32,7 @@ describe("transfer events through the hooks", () => {
         useResourceQuery(api.docs, {
           queryKey: ["d"],
           operation: "download",
-          args: ["1", { onTransfer: (e) => void events.push(e) }],
+          args: [{ onTransfer: (e) => void events.push(e), params: { id: "1" } }],
         }),
       { wrapper: wrap(newClient()) },
     );
@@ -172,10 +172,10 @@ describe("cancellation and timeout through the hooks", () => {
     let caught: unknown;
     await act(async () => {
       const pending = result.current
-        .download("1", {
+        .download({ ...({
           signal: controller.signal,
           onTransfer: (e: TransferEvent) => void events.push(e),
-        })
+        }), params: { id: "1" } })
         .catch((e: unknown) => e);
       setTimeout(() => controller.abort(), 8);
       caught = await pending;
@@ -207,7 +207,7 @@ describe("cancellation and timeout through the hooks", () => {
     let caught: unknown;
     await act(async () => {
       caught = await result.current
-        .download("1", { timeout: 30, onTransfer: (e: TransferEvent) => void events.push(e) })
+        .download({ ...({ timeout: 30, onTransfer: (e: TransferEvent) => void events.push(e) }), params: { id: "1" } })
         .catch((e: unknown) => e);
     });
     expect(caught).toBeInstanceOf(TimeoutError);
@@ -232,7 +232,7 @@ describe("cancellation and timeout through the hooks", () => {
         useResourceQuery(api.docs, {
           queryKey: ["d"],
           operation: "download",
-          args: ["1", { timeout: 30 }],
+          args: [{ ...({ timeout: 30 }), params: { id: "1" } }],
         }),
       { wrapper: wrap(newClient()) },
     );
@@ -247,11 +247,11 @@ describe("cancellation and timeout through the hooks", () => {
     });
     let mounted = true;
     const seen: string[] = [];
-    const pending = result.current.download("1", {
+    const pending = result.current.download({ ...({
       onTransfer: (e: TransferEvent) => {
         if (mounted) seen.push(e.phase); // the documented recipe: never set state once unmounted
       },
-    });
+    }), params: { id: "1" } });
     unmount();
     mounted = false;
     await expect(pending).resolves.toBeDefined();

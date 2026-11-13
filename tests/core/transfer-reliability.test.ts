@@ -35,7 +35,8 @@ describe("retries and transfer events", () => {
       return chunkedResponse([bytes(5)], { headers: { "content-length": "5" } });
     };
     const c = collector();
-    const blob = await transferClient(fetchImpl).docs.download("1", {
+    const blob = await transferClient(fetchImpl).docs.download({
+      params: { id: "1" },
       retry: RETRY,
       onTransfer: c.observer,
     });
@@ -67,7 +68,11 @@ describe("retries and transfer events", () => {
   it("when retries run out the last error says willRetry false and the call rejects", async () => {
     const c = collector();
     const error = await transferClient(async () => new Response("x", { status: 503 }))
-      .docs.download("1", { retry: { ...RETRY, retries: 1 }, onTransfer: c.observer })
+      .docs.download({
+        params: { id: "1" },
+        retry: { ...RETRY, retries: 1 },
+        onTransfer: c.observer,
+      })
       .catch((e) => e);
     expect(error).toBeInstanceOf(HttpError);
     const errors = c.events.filter((e) => e.phase === "error");
@@ -153,7 +158,7 @@ describe("timeouts, aborts and failures", () => {
       );
     const c = collector();
     const error = await transferClient(fetchImpl)
-      .docs.download("1", { timeout: 20, onTransfer: c.observer })
+      .docs.download({ params: { id: "1" }, timeout: 20, onTransfer: c.observer })
       .catch((e) => e);
     expect(error).toBeInstanceOf(TimeoutError);
     const last = c.events.at(-1)!;
@@ -180,7 +185,7 @@ describe("timeouts, aborts and failures", () => {
       );
     const c = collector();
     const error = await transferClient(fetchImpl)
-      .docs.download("1", { signal: controller.signal, onTransfer: c.observer })
+      .docs.download({ params: { id: "1" }, signal: controller.signal, onTransfer: c.observer })
       .catch((e) => e);
     expect(error.name).toBe("AbortError");
     expect(c.events.filter((e) => e.phase === "abort")).toHaveLength(1);
@@ -196,7 +201,7 @@ describe("timeouts, aborts and failures", () => {
       calls++;
       return new Response("x");
     })
-      .docs.download("1", { signal: controller.signal, onTransfer: c.observer })
+      .docs.download({ params: { id: "1" }, signal: controller.signal, onTransfer: c.observer })
       .catch((e) => e);
     expect(error.name).toBe("AbortError");
     expect(calls).toBe(0);
@@ -219,7 +224,8 @@ describe("timeouts, aborts and failures", () => {
   });
 
   it("a throwing observer never changes the result", async () => {
-    const blob = await transferClient(async () => chunkedResponse([bytes(3)])).docs.download("1", {
+    const blob = await transferClient(async () => chunkedResponse([bytes(3)])).docs.download({
+      params: { id: "1" },
       onTransfer() {
         throw new Error("observer bug");
       },
@@ -240,18 +246,24 @@ describe("middleware, custom transports, defaults", () => {
       async () => (++n === 1 ? new Response("x", { status: 503 }) : response()),
       {
         operation: {
-          requestMiddleware: [() => void requests++],
-          responseMiddleware: [
-            (res: { data: unknown }) => {
-              responses++;
-              seen = res.data;
+          middleware: [
+            { onRequest: () => void requests++ },
+            {
+              onResponse: (res: { data: unknown }) => {
+                responses++;
+                seen = res.data;
+              },
             },
           ],
         },
       },
     );
     const c = collector();
-    const blob = await client.docs.download("1", { retry: RETRY, onTransfer: c.observer });
+    const blob = await client.docs.download({
+      params: { id: "1" },
+      retry: RETRY,
+      onTransfer: c.observer,
+    });
     expect(requests).toBe(1);
     expect(responses).toBe(1);
     expect(seen).toBeInstanceOf(Blob);
@@ -291,17 +303,19 @@ describe("middleware, custom transports, defaults", () => {
     const client = transferClient(async () => response(), {
       operation: { onTransfer: op.observer },
     });
-    await client.docs.download("1");
+    await client.docs.download({ params: { id: "1" } });
     expect(op.events.length).toBeGreaterThan(0);
     const before = op.events.length;
-    await client.docs.download("1", { onTransfer: call.observer });
+    await client.docs.download({ params: { id: "1" }, onTransfer: call.observer });
     expect(call.events.length).toBeGreaterThan(0);
     expect(op.events.length).toBe(before);
   });
 
   it("onTransfer must be a function (call and operation)", async () => {
     const client = transferClient(async () => response());
-    await expect(client.docs.download("1", { onTransfer: "nope" })).rejects.toMatchObject({
+    await expect(
+      client.docs.download({ params: { id: "1" }, onTransfer: "nope" }),
+    ).rejects.toMatchObject({
       name: "ConfigError",
     });
     expect(() => transferClient(async () => response(), { operation: { onTransfer: 3 } })).toThrow(

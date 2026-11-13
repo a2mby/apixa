@@ -59,7 +59,7 @@ export const api = defineApi<{
         create: { idempotency: true },
       },
     },
-    posts: { path: "/posts", readOnly: true },
+    posts: { path: "/posts", operations: "read" },
   },
 });
 

@@ -220,7 +220,14 @@ describe("serializeBody format selection", () => {
     expect(headers.has("content-type")).toBe(false);
     const blob = new Blob(["x"]);
     expect(serializeBody(blob, new Headers())).toBe(blob);
-    expect(serializeBody("raw", new Headers())).toBe("raw");
+
+    const rawHeaders = new Headers();
+    expect(serializeBody("raw", rawHeaders)).toBe("raw");
+    expect(rawHeaders.get("content-type")).toBe("text/plain");
+
+    const jsonStringHeaders = new Headers();
+    expect(serializeBody("raw", jsonStringHeaders, { dataFormat: "json" })).toBe('"raw"');
+    expect(jsonStringHeaders.get("content-type")).toBe("application/json");
   });
 
   it("lets a real fetch Request generate the boundary", async () => {

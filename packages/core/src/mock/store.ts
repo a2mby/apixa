@@ -405,10 +405,11 @@ export class MockStore {
     return this.index.has(this.key(id));
   }
 
-  getBy(name: string, value: unknown): Row {
-    const row = this.rows.find((r) => String(own(r, name)) === String(value));
-    if (!row) throw this.fail("MOCK_NOT_FOUND", `no record with ${name} "${String(value)}"`);
-    return clone(row);
+  getBy(name: string, value: unknown): Row | null {
+    const row = this.rows.find(
+      (r) => own(r, name) !== undefined && String(own(r, name)) === String(value),
+    );
+    return row ? clone(row) : null;
   }
 
   findFirst(query?: Record<string, unknown>): Row | null {

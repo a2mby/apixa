@@ -3,6 +3,8 @@ export type ApiErrorCode =
   | "NETWORK"
   | "HTTP"
   | "PARSE"
+  /** Parsed data failed the operation's expected response structure. */
+  | "RESPONSE_SHAPE"
   | "VALIDATION"
   | "TIMEOUT"
   | "ABORT"

@@ -2,7 +2,7 @@
 REM Start the Laravel playground directly (Windows shared helper).
 setlocal EnableExtensions
 
-set "ROOT=%~dp0..\..\.."
+set "ROOT=%~dp0..\.."
 set "APP=%ROOT%\examples\backends\laravel-backend"
 
 if not defined LARAVEL_HOST set "LARAVEL_HOST=127.0.0.1"

@@ -2,6 +2,47 @@
 
 Project log. Newest entry first.
 
+## 2026-11-13 — v3.0.0-rc.0 Core architecture overhaul release candidate
+
+Completed Phases 2–6 of [v3.0.0](../versions/v3.0.0/) ([#112](https://github.com/a2mby/apixa/issues/112))
+and prepared `apixa@3.0.0-rc.0` without publishing to npm: consolidated the 13 built-in operations,
+derived declarative HTTP kinds, updated `update`/`patch` to `{ body }`, standardized `{ params }`
+and query/body serialization, unified `middleware[]`, implemented the explicit `response` pipeline
+with `source` preservation, added bounded/excluded key transforms, aligned live/mock per-operation
+`pagination`, migrated `apixa/react`, public types, `examples/frontends/query-ssr-next`, and all
+packed/browser/edge/SSR consumer suites, and added the v2-to-v3 migration guide and changelog.
+
+## 2026-11-13 — v3.0.0 operation classification and middleware
+
+Declarative HTTP operations now derive their read/write classification from the method; custom
+function operations still require an explicit kind. Client, resource and operation middleware use
+arrays of hook objects in a single ordered pipeline, and existing transfer tests use that syntax.
+
+## 2026-11-13 — v3.0.0 correctness regressions
+
+Added failing-first coverage for the three confirmed Core bugs. Slice now uses native array
+semantics and rejects pagination; invalid collection bodies raise `ResponseShapeError` with their
+source response; request middleware runs before final query serialization for live and mock calls.
+The configured Laravel backend also verified a middleware-modified pagination query over HTTP.
+
+## 2026-11-13 — Opened v3.0.0 Core overhaul
+
+Opened [v3.0.0](../versions/v3.0.0/) and [issue #112](https://github.com/a2mby/apixa/issues/112)
+for the approved coordinated Core redesign. Existing v1.9.0 pagination work remains in progress
+and will be carried forward where it fits the v3 contracts; no release or sign-off is implied.
+
+## 2026-11-13 — v1.9.0: more pagination presets
+
+Added `laravel-paginator` (page and cursor, checked against real `paginate()` / `cursorPaginate()` output of the playground backend), `strapi`, `payload` and `nestjs` presets next to `laravel`. Documented-shape tests cover each; Django REST and Spring are deliberately not presets (no page info in the body / 0-based).
+
+## 2026-11-13 — v1.9.0: live pagination implemented
+
+Added the object form of resource `pagination` (`preset: "laravel"`, `fields` + `params`, `parseList`) mapping a live backend's body to the page contract on `getAll`, with `ParseError` on missing fields and query-key renaming. The string form stays a type-only declaration for live resources. New `packages/core/src/api/pagination.ts`; tests in `tests/core/live-pagination.test.ts`; `pnpm verify` passed. The `nextjs-products` example still resolves published `apixa@2.0.0`, so it adopts the preset only after a release.
+
+## 2026-11-13 — Opened v1.9.0: DX and bug fixes
+
+Opened [`versions/v1.9.0/`](../versions/v1.9.0/) for developer-experience and bug fixes in the library. The first item comes from `examples/frontends/nextjs-products` against the Laravel backend: `pagination` shapes only types for live resources, so a real paginated body reached callers as a raw object. The contract adds a runtime mapping (apixa default shape, `laravel` preset, field-path object, `parseList`) with `ParseError` on missing fields. Contract and pointers only — no package implementation in this kickoff.
+
 ## 2026-11-12 — Release apixa 2.0.0
 
 Bumped the single public package `apixa` from `1.0.0-rc.0` to `2.0.0` (private workspace manifests kept in step). The release is published first to the `experimental` dist-tag, then `latest` is pointed at 2.0.0 so `npm install apixa` resolves without a scope. Local `pnpm verify` and `verify:publish` checks gate the publish; CI gates the merged SHA.

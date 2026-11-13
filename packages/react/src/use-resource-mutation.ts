@@ -31,7 +31,7 @@ export type { UseResourceMutationOptions } from "./mutation-types.js";
  *   queryKey: ["users"],
  *   mutations: { create: { onSuccess: (user) => toast(user.name) } },
  * });
- * await users.update("42", { name: "Grace" });
+ * await users.update("42", { body: { name: "Grace" } });
  * ```
  */
 export function useResourceMutation<R extends object, M extends object = {}>(

@@ -8,7 +8,14 @@ import type {
   MockFilesHandle,
   FileFieldOptions,
 } from "@apixa/core";
-import type { AllBuiltinOpName, KnownOpName, MaybeOpName, OperationGroupName } from "@apixa/core";
+import type {
+  AllBuiltinOpName,
+  KnownOpName,
+  MaybeOpName,
+  OperationPreset,
+  PaginationPreset,
+  ResourcePagination,
+} from "@apixa/core";
 import type { DatasetId, EntityOf, IdKeyOf } from "./catalog.js";
 import type { MockApiErrorCode, MockApiError } from "./errors.js";
 import type { MockSlice } from "./slice.js";
@@ -37,7 +44,7 @@ export type CursorPage<T> = {
   nextCursor: string | null;
 };
 
-export type PaginationConfig = boolean | "page" | "cursor";
+export type PaginationConfig = ResourcePagination;
 
 /** `create` / `update` input: the entity, with its id optional. */
 export type ResourceInput<T, IdKey extends keyof T> = Omit<T, IdKey> & Partial<Pick<T, IdKey>>;
@@ -81,21 +88,18 @@ export type MockOperationFn<T extends object = Record<string, unknown>> = {
 /** `false` removes a builtin, a function replaces it (or adds a custom operation), `true` keeps it. */
 export type MockOperationValue = boolean | MockOperationFn;
 
-/** The 16 builtins — the same names, defaults and groups as Core resources. */
+/** The 13 builtins — the same names, defaults and groups as Core resources. */
 export const MOCK_BUILTINS = [
   "getAll",
   "getById",
-  "getBySlug",
   "getMany",
   "getBy",
   "findFirst",
-  "search",
   "exists",
   "count",
   "create",
   "update",
   "patch",
-  "upsert",
   "delete",
   "createMany",
   "deleteMany",
@@ -105,17 +109,8 @@ export const MOCK_BUILTINS = [
 // Config shapes (what the author writes)
 // ---------------------------------------------------------------------------------------------
 
-/** Operation selection shared by the root and every resource (resource wins, then `operations`). */
-export interface MockOperationSelection {
-  /** `false` starts with no builtins (enable some through `operationGroups` / `operations`). */
-  defaultOperations?: boolean;
-  /** Removes the 7 write builtins (explicit groups / operations still win). */
-  readOnly?: boolean;
-  /** Removes the 9 read builtins (explicit groups / operations still win). */
-  writeOnly?: boolean;
-  /** Turn a whole group on or off: `read`, `write`, `many`, `extended`. */
-  operationGroups?: Partial<Record<OperationGroupName, boolean>>;
-}
+/** Selection shared by root and resource configuration. */
+export type MockOperationSelection = OperationPreset | readonly AllBuiltinOpName[];
 
 /**
  * Loose operations bag used as the config constraint. Values are `unknown` on purpose: the typed
@@ -123,8 +118,9 @@ export interface MockOperationSelection {
  * would compete with it for the handler's contextual type. Runtime validation enforces the shape.
  */
 export type MockOperations = Partial<Record<AllBuiltinOpName, unknown>> & Record<string, unknown>;
+type MockPreset = OperationPreset | readonly AllBuiltinOpName[];
 
-export interface MockResourceConfig extends MockOperationSelection {
+export interface MockResourceConfig {
   storage?: MockStorageOptions;
   fixtures?: MockFileFixtures;
   fileFields?: FileFieldsConfig;
@@ -151,13 +147,13 @@ export interface MockResourceConfig extends MockOperationSelection {
    * Enable, disable, override or add operations: `true` keeps/enables a builtin, `false` removes
    * it, a function replaces it (or defines a custom operation).
    */
-  operations?: MockOperations;
+  operations?: MockOperations | MockPreset;
 }
 
 /** Resource object of the flat compatibility form: handlers get the generic row context. */
 export interface MockFlatResourceConfig extends Omit<MockResourceConfig, "operations"> {
-  operations?: Partial<Record<AllBuiltinOpName, MockOperationValue>> &
-    Record<string, MockOperationValue>;
+  operations?: MockPreset | (Partial<Record<AllBuiltinOpName, MockOperationValue>> &
+    Record<string, MockOperationValue | MockPreset>);
 }
 
 /** Per-resource input: dataset id string, or full config object. */
@@ -167,7 +163,8 @@ export type MockApiResourceInput = DatasetId | MockFlatResourceConfig;
  * Root `defineMockApi` configuration. Mirrors `defineApi`: resources live under `resources`.
  * The root carries the operation-selection settings every resource inherits.
  */
-export interface MockRootConfig extends MockOperationSelection {
+export interface MockRootConfig {
+  operations?: MockPreset;
   resources: Record<string, MockResourceConfig>;
 }
 
@@ -184,17 +181,14 @@ export type MockApiConfig = Record<string, MockFlatResourceConfig>;
 type BuiltinArgs<N extends AllBuiltinOpName, T extends object, IdKey extends keyof T> = {
   getAll: [query?: GetAllQuery<T>];
   getById: [id: Id];
-  getBySlug: [slug: string];
   getMany: [ids: Id[]];
   getBy: [field: Extract<keyof T, string>, value: Id];
-  findFirst: [query?: Partial<T>];
-  search: [query?: Partial<T>];
+  findFirst: [options?: { query?: Partial<T> }];
   exists: [id: Id];
   count: [query?: Partial<T>];
   create: [input: ResourceInput<T, IdKey>];
-  update: [id: Id, input: ResourceInput<T, IdKey>];
-  patch: [id: Id, partial: Partial<T>];
-  upsert: [id: Id, input: ResourceInput<T, IdKey>];
+  update: [id: Id, options: { body: ResourceInput<T, IdKey> }];
+  patch: [id: Id, options: { body: Partial<T> }];
   delete: [id: Id];
   createMany: [inputs: ResourceInput<T, IdKey>[]];
   deleteMany: [ids: Id[]];
@@ -217,10 +211,8 @@ type CustomOperation<T extends object> = (
 export type TypedOperations<T extends object, IdKey extends keyof T> = {
   [N in AllBuiltinOpName]?: boolean | BuiltinOverride<N, T, IdKey>;
 } & {
-  [custom: string]: boolean | MockOperationFn<T>;
+  [custom: string]: boolean | MockOperationFn<T> | MockPreset;
 };
-
-type SelectionKeys = keyof MockOperationSelection;
 
 /** Reports unknown keys at the exact property. */
 type Exact<T, Shape> = {
@@ -236,7 +228,7 @@ type AdapterFileFields<E> = readonly FileKeys<E>[] | Partial<Record<FileKeys<E>,
 type TypedResource<Ty extends DatasetId> = {
   type: Ty;
   fileFields?: AdapterFileFields<EntityOf<Ty>>;
-  operations?: TypedOperations<EntityOf<Ty>, IdKeyOf<Ty>>;
+  operations?: MockPreset | TypedOperations<EntityOf<Ty>, IdKeyOf<Ty>>;
 };
 
 /**
@@ -260,10 +252,10 @@ export type TypedFlatResources<T extends Record<string, DatasetId>> = {
   [K in keyof T]: T[K] | TypedResource<T[K]>;
 };
 
-/** Reports unknown keys on the root and on each resource, and `readOnly` + `writeOnly` together. */
+/** Reports unknown keys on the root and on each resource. */
 export type ValidateMockRoot<C> = C extends { resources: infer Res }
   ? Exact<C, MockRootConfig> &
-      (C extends { readOnly: true; writeOnly: true } ? { writeOnly: never } : unknown) & {
+      {
         resources: { [K in keyof Res]: ValidateResource<Res[K]> };
       }
   : { [K in keyof C]: ValidateResource<C[K]> };
@@ -278,11 +270,12 @@ type ValidateResource<R> = R extends string
             : { fileFields: never }
           : Exact<F, Record<FileKeys<EntityOf<Ty>>, unknown>>
         : unknown) &
-      (R extends { readOnly: true; writeOnly: true } ? { writeOnly: never } : unknown) &
       (R extends { operations: infer Ops }
-        ? {
+        ? Ops extends MockPreset
+          ? unknown
+          : {
             operations: {
-              [O in keyof Ops]: O extends AllBuiltinOpName
+              [O in keyof Ops]: O extends AllBuiltinOpName | "preset"
                 ? unknown
                 : Ops[O] extends true
                   ? never
@@ -312,18 +305,15 @@ type BuiltinFn<
 > = N extends "getAll"
   ? GetAllFn<T, Paginated>
   : {
-      getBySlug: (slug: string) => Promise<T>;
       getById: (id: Id) => Promise<T>;
       getMany: (ids: Id[]) => Promise<T[]>;
-      getBy: (field: Extract<keyof T, string>, value: Id) => Promise<T>;
-      findFirst: (query?: Partial<T>) => Promise<T | null>;
-      search: (query?: Partial<T>) => Promise<T[]>;
+      getBy: (field: Extract<keyof T, string>, value: Id) => Promise<T | null>;
+      findFirst: (options?: { query?: Partial<T> }) => Promise<T | null>;
       exists: (id: Id) => Promise<boolean>;
       count: (query?: Partial<T>) => Promise<number>;
       create: (input: ResourceInput<Input, IdKey & keyof Input>) => Promise<T>;
-      update: (id: Id, input: ResourceInput<Input, IdKey & keyof Input>) => Promise<T>;
-      patch: (id: Id, partial: Partial<Input>) => Promise<T>;
-      upsert: (id: Id, input: ResourceInput<Input, IdKey & keyof Input>) => Promise<T>;
+      update: (id: Id, options: { body: ResourceInput<Input, IdKey & keyof Input> }) => Promise<T>;
+      patch: (id: Id, options: { body: Partial<Input> }) => Promise<T>;
       delete: (id: Id) => Promise<void>;
       createMany: (inputs: ResourceInput<Input, IdKey & keyof Input>[]) => Promise<T[]>;
       deleteMany: (ids: Id[]) => Promise<void>;
@@ -331,8 +321,10 @@ type BuiltinFn<
 
 /** Runtime operation entries that are not disabled. */
 type OpsOf<R> = R extends { operations: infer Ops }
-  ? Ops extends Record<string, unknown>
-    ? { [K in keyof Ops as Ops[K] extends false ? never : K]-?: Exclude<Ops[K], false | undefined> }
+  ? Ops extends MockPreset
+    ? {}
+    : Ops extends Record<string, unknown>
+    ? { [K in keyof Ops as K extends "preset" ? never : Ops[K] extends false ? never : K]-?: Exclude<Ops[K], false | undefined> }
     : {}
   : {};
 
@@ -370,12 +362,20 @@ type ClientFn<
     : Callable<FnOnly<OpsOf<Config>[N]>>
   : BuiltinFn<N, T, IdKey, Paginated, FileBody<T, Config>>;
 
-/** Literal `true` / `"page"` → page envelope, `"cursor"` → cursor envelope, else a plain list. */
-type PaginationOf<R> = R extends { readonly pagination: true | "page" }
-  ? "page"
-  : R extends { readonly pagination: "cursor" }
-    ? "cursor"
-    : undefined;
+/** `true` / `"page"` / preset → page envelope, `"cursor"` → cursor envelope, else a plain list. */
+type PaginationOf<R> = R extends { readonly pagination: infer P }
+  ? [P] extends [false | undefined]
+    ? undefined
+    : P extends true | "page" | PaginationPreset
+      ? "page"
+      : P extends "cursor"
+        ? "cursor"
+        : P extends { type: infer T extends "page" | "cursor" }
+          ? T
+          : P extends { preset: PaginationPreset }
+            ? "page"
+            : undefined
+  : undefined;
 
 /**
  * In-memory CRUD for one resource. Methods exist exactly when the resolved operation selection
@@ -397,22 +397,18 @@ export type MockResource<
   }
 >;
 
-type RootSelection<C> = Pick<C, Extract<keyof C, SelectionKeys>>;
+/** Resource selections replace the root preset; named entries extend it. */
+type EffectiveOperations<Root, R> = R extends { operations: infer Ops }
+  ? Ops extends MockPreset | { preset: unknown }
+    ? { operations: Ops }
+    : Root extends { operations: infer Preset }
+      ? { operations: Ops & { preset: Preset } }
+      : { operations: Ops }
+  : Root extends { operations: infer Preset }
+    ? { operations: Preset }
+    : {};
 
-type GroupsOf<Root, R> = "operationGroups" extends keyof Root | keyof R
-  ? {
-      operationGroups: Omit<
-        Root extends { operationGroups: infer G } ? G : {},
-        keyof (R extends { operationGroups: infer H } ? H : {})
-      > &
-        (R extends { operationGroups: infer H } ? H : {});
-    }
-  : {};
-
-/** Root settings overlaid by the resource's own (resource wins; groups merge per group). */
-export type EffectiveConfig<Root, R> = Omit<RootSelection<Root>, keyof R | "operationGroups"> &
-  Omit<R, "operationGroups"> &
-  GroupsOf<Root, R>;
+export type EffectiveConfig<Root, R> = Omit<R, "operations"> & EffectiveOperations<Root, R>;
 
 type ResourcesIn<C> = C extends { resources: infer Res } ? Res : C;
 type ResolvedResource<R> = R extends string ? { readonly type: R } : R;

@@ -11,7 +11,7 @@ import { MOCK_STORAGE_SCENARIO } from "./lib/mock-storage-scenario.mjs";
 // temporary project. Run after `pnpm build`.
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -48,7 +48,7 @@ export async function run() {
   out.afterCreate = (await inline.users.getAll()).length;
   const named = defineApi({ baseURL: "https://edge.test", resources: { users: { path: "/users", mock: "users-mock" } } });
   out.named = (await named.users.getAll()).length > 0;
-  const standalone = defineMockApi({ resources: { users: { type: "users-mock", readOnly: true } } });
+  const standalone = defineMockApi({ resources: { users: { type: "users-mock", operations: "read" } } });
   out.standalone = (await standalone.users.getAll()).length > 0;
   const live = defineApi({ baseURL: "https://upstream.test", headers: { authorization: "Bearer t" }, transport: createFetchTransport(async (url, init) => json([{ id: "9", auth: new Headers(init.headers).get("authorization"), url: String(url) }])), resources: { users: { path: "/users" } } });
   const [first] = await live.users.getAll();
@@ -64,15 +64,15 @@ export async function run() {
   out.aborted = aborted instanceof ApiError && !(aborted instanceof HttpError);
   const pdf = new Uint8Array([37, 80, 68, 70, 0, 255]);
   const downloader = defineApi({ baseURL: "https://upstream.test", transport: createFetchTransport(async () => new Response(pdf, { headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="r.pdf"' } })), resources: { docs: { path: "/docs", operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } } });
-  const download = await downloader.docs.file("1", { full: true });
+  const download = await downloader.docs.file({ params: { id: "1" }, full: true });
   out.download = { isBlob: download.data instanceof Blob, type: download.data.type, bytes: Array.from(new Uint8Array(await download.data.arrayBuffer())), filename: parseContentDisposition(download.headers).filename };
   const mockedDownload = defineApi({ baseURL: "https://edge.test", resources: { docs: { path: "/docs", fileFields: ["file"], mock: [{ id: "1", name: "Seed", file: null }], operations: { file: { kind: "read", method: "GET", path: "/:id/file", responseType: "arrayBuffer", mock: ({ params, store, files }) => files.get(store.get(params.id).file).bytes() } } } } });
   const uploaded = await mockedDownload.docs.create({ id: "2", name: "Up", file: new File([pdf], "u.pdf", { type: "application/pdf" }) });
-  out.mockDownload = Array.from(new Uint8Array(await mockedDownload.docs.file(uploaded.id)));
+  out.mockDownload = Array.from(new Uint8Array(await mockedDownload.docs.file({ params: { id: uploaded.id } })));
   // v1.3.0 transfer events: honest per-runtime behavior, never faked.
   const support = detectTransferSupport();
   const downEvents = [];
-  await downloader.docs.file("1", { onTransfer: (e) => downEvents.push(e.direction + ":" + e.phase + ":" + (e.loaded ?? "-")) });
+  await downloader.docs.file({ params: { id: "1" }, onTransfer: (e) => downEvents.push(e.direction + ":" + e.phase + ":" + (e.loaded ?? "-")) });
   const putter = defineApi({ baseURL: "https://upstream.test", transport: createFetchTransport(async (url, init) => { if (init.body instanceof ReadableStream) { const r = init.body.getReader(); while (!(await r.read()).done) {} } return new Response("ok"); }), resources: { docs: { path: "/docs", operations: { put: { kind: "write", method: "PUT", path: "/p", responseType: "text" } } } } });
   const upEvents = [];
   await putter.docs.put(new Blob([pdf]), { onTransfer: (e) => { if (e.direction === "upload") upEvents.push(e.phase + ":" + (e.loaded ?? "-") + ":" + (e.total ?? "-")); } });
@@ -212,7 +212,7 @@ function expectAdvanced(out, label) {
 
 try {
   // ---- Pack and install the facade exactly as a consumer would -----------------------------------------------------
-  const version = "2.0.0";
+  const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
   const tarballs = {};
   for (const [name, dir] of [["apixa", "."]]) {
     run("pnpm", ["--dir", dir, "pack", "--pack-destination", packs], root, true);

@@ -62,13 +62,7 @@ describe("defineMockApi autocomplete (TypeScript language service)", () => {
   it("suggests the root config in a blank call", () => {
     const names = complete("defineMockApi({ | });");
     expect(names).toEqual(
-      expect.arrayContaining([
-        "resources",
-        "defaultOperations",
-        "readOnly",
-        "writeOnly",
-        "operationGroups",
-      ]),
+      expect.arrayContaining(["resources", "operations"]),
     );
     expect(names).not.toContain("baseURL");
   });
@@ -76,7 +70,7 @@ describe("defineMockApi autocomplete (TypeScript language service)", () => {
   it("suggests the resource config inside resources.<name>", () => {
     const names = complete("defineMockApi({ resources: { users: { | } } });");
     expect(names).toEqual(
-      expect.arrayContaining(["type", "slice", "pagination", "operations", "readOnly"]),
+      expect.arrayContaining(["type", "slice", "pagination", "operations"]),
     );
   });
 
@@ -90,35 +84,35 @@ describe("defineMockApi autocomplete (TypeScript language service)", () => {
       'defineMockApi({ resources: { u: { type: "users-mock", operations: { | } } } });',
     );
     expect(names).toEqual(
-      expect.arrayContaining(["getById", "getBySlug", "getMany", "delete", "deleteMany", "upsert"]),
+      expect.arrayContaining(["getById", "getBy", "getMany", "delete", "deleteMany", "patch"]),
     );
   });
 
-  it("suggests the group names inside `operationGroups`", () => {
+  it("suggests the named operation presets", () => {
     const names = complete(
-      'defineMockApi({ resources: { u: { type: "users-mock", operationGroups: { | } } } });',
+      'defineMockApi({ resources: { u: { type: "users-mock", operations: "|" } } });',
     );
-    expect(names).toEqual(expect.arrayContaining(["read", "write", "many", "extended"]));
+    expect(names).toEqual(expect.arrayContaining(["crud", "read", "all"]));
   });
 
   it("offers exactly the enabled methods on the returned client", () => {
     const code = `const api = defineMockApi({
-      readOnly: true,
+      operations: "read",
       resources: {
-        users: { type: "users-mock", operations: { getBySlug: false } },
-        products: { type: "products-mock", readOnly: false, operations: { delete: false } },
+        users: { type: "users-mock", operations: { getBy: false } },
+        products: { type: "products-mock", operations: { preset: "all", delete: false } },
       },
     });
     const a = api.users.|;
     `;
     const users = complete(code);
     expect(users).toEqual(expect.arrayContaining(["getAll", "getById", "getMany", "count"]));
-    for (const gone of ["create", "update", "delete", "getBySlug"]) {
+    for (const gone of ["create", "update", "delete", "getBy"]) {
       expect(users).not.toContain(gone);
     }
 
     const products = complete(code.replace("api.users.|", "api.products.|"));
-    expect(products).toEqual(expect.arrayContaining(["create", "patch", "getBySlug"]));
+    expect(products).toEqual(expect.arrayContaining(["create", "patch", "getBy"]));
     expect(products).not.toContain("delete");
   });
 

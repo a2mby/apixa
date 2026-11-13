@@ -129,7 +129,9 @@ describe("transforms in defineApi", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transforms: { response: { keys: "camelCase" } },
-      transport: createFakeTransport(() => ({ body: { user_id: 1 } })),
+      transport: createFakeTransport((r) => ({
+        body: r.url.endsWith("/1") ? { user_id: 1 } : [{ user_id: 1 }],
+      })),
       resources: {
         a: { path: "/a" },
         b: { path: "/b", transforms: { response: { keys: "PascalCase" } } },
@@ -139,14 +141,14 @@ describe("transforms in defineApi", () => {
         },
       },
     });
-    expect(await api.a.getAll()).toEqual({ userId: 1 });
-    expect(await api.b.getAll()).toEqual({ UserId: 1 });
-    expect(await api.c.getAll()).toEqual({ "user-id": 1 });
+    expect(await api.a.getAll()).toEqual([{ userId: 1 }]);
+    expect(await api.b.getAll()).toEqual([{ UserId: 1 }]);
+    expect(await api.c.getAll()).toEqual([{ "user-id": 1 }]);
     expect(await api.c.getById(1)).toEqual({ userId: 1 });
   });
 
   it("does nothing when transforms are not configured", async () => {
-    const body = { user_id: 1, nested: { a_b: 2 } };
+    const body = [{ user_id: 1, nested: { a_b: 2 } }];
     const api = defineApi({
       baseURL: "https://x.dev",
       transport: createFakeTransport(() => ({ body })),
@@ -186,7 +188,7 @@ describe("transforms in defineApi", () => {
     void users[0]!.first_name;
     const created = await api.users.create({ firstName: "Ahmad", email: "ahmad@example.com" });
     expect(created).toEqual({ id: 3, firstName: "Ahmad", email: "ahmad@example.com" });
-    expect(await api.users.findFirst({ firstName: "Omar" })).toMatchObject({ id: 2 });
+    expect(await api.users.findFirst({ query: { firstName: "Omar" } })).toMatchObject({ id: 2 });
     expect(await api.users.getBy("firstName", "Ahmad")).toMatchObject({ id: 3 });
   });
 

@@ -44,6 +44,9 @@ describe("default-first operations", () => {
         if (request.method === "DELETE") {
           return { status: 204, body: null };
         }
+        if (request.method === "GET" && request.url === "https://api.example.com/users") {
+          return { body: [{ id: "1", name: "Ada", email: "ada@example.com" }] };
+        }
         return { body: { id: "1", name: "Ada", email: "ada@example.com" } };
       }),
       resources: {
@@ -64,12 +67,9 @@ describe("default-first operations", () => {
       "getAll",
       "getBy",
       "getById",
-      "getBySlug",
       "getMany",
       "patch",
-      "search",
       "update",
-      "upsert",
     ]);
 
     expectTypeOf(api.users).toHaveProperty("getAll");
@@ -81,7 +81,7 @@ describe("default-first operations", () => {
     await api.users.getAll();
     await api.users.getById("1");
     await api.users.create({ name: "Ada", email: "ada@example.com" });
-    await api.users.update("1", { name: "Ada Lovelace" });
+    await api.users.update("1", { body: { name: "Ada Lovelace" } });
     await api.users.delete("1");
 
     expect(calls).toEqual([
@@ -100,7 +100,11 @@ describe("default-first operations", () => {
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         calls.push(`${request.method} ${request.url}`);
-        return { body: [] };
+        return {
+          body: request.url.endsWith("/users/1")
+            ? { id: "1", name: "Ada", email: "ada@example.com" }
+            : [],
+        };
       }),
       resources: {
         users: {
@@ -124,17 +128,14 @@ describe("default-first operations", () => {
       "getAll",
       "getBy",
       "getById",
-      "getBySlug",
       "getMany",
       "patch",
-      "search",
       "update",
-      "upsert",
     ]);
 
     await api.users.getAll();
     await api.users.getById("1");
-    await api.users.update("1", { name: "Ada" });
+    await api.users.update("1", { body: { name: "Ada" } });
 
     expect(calls).toEqual([
       "GET https://api.example.com/users/active",

@@ -12,7 +12,7 @@ function isRow(value: unknown): value is Row {
   return value !== null && typeof value === "object" && !Array.isArray(value) && !isBlob(value);
 }
 
-const WRITES = new Set(["create", "createMany", "update", "patch", "upsert"]);
+const WRITES = new Set(["create", "createMany", "update", "patch"]);
 
 /**
  * Convert one builtin body on the engine's private record/file drafts. The enclosing managed

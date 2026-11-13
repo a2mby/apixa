@@ -16,6 +16,7 @@ function parseJson(text: string): unknown {
 
 export const RESPONSE_TYPES: readonly ResponseType[] = [
   "json",
+  "auto",
   "text",
   "blob",
   "arrayBuffer",
@@ -29,8 +30,8 @@ export function isResponseType(value: unknown): value is ResponseType {
 /**
  * Reads a body. `responseType` describes the body of a **successful** response: an error response
  * (non-2xx) is always read by content type, so `HttpError.data` is its JSON or text rather than a
- * `Blob`. An empty (204/205) body is `null` for JSON and `stream`, and an empty value of the
- * requested type for `text`, `blob` and `arrayBuffer`.
+ * `Blob`. An empty (204/205) body is `null` for `json`, `auto`, and `stream`, and an empty value
+ * of the requested type for `text`, `blob` and `arrayBuffer`.
  */
 export async function readBody(
   response: Response,
@@ -60,8 +61,8 @@ export async function readBody(
     }
   }
 
-  // json (default): prefer content-type, fall back to parse text
   const contentType = response.headers.get("content-type") ?? "";
+  const normalizedType = contentType.trim().toLowerCase();
 
   if (isJsonContentType(response.headers)) {
     const text = await response.text();
@@ -69,7 +70,21 @@ export async function readBody(
     return parseJson(text);
   }
 
-  if (contentType.startsWith("text/")) {
+  if (!failed && responseType === "json") {
+    const text = await response.text();
+    if (!normalizedType && !text) return null;
+    const label = normalizedType
+      ? `content-type "${contentType}"`
+      : "missing content-type";
+    const preview =
+      text.length > RAW_TEXT_PREVIEW_LENGTH ? `${text.slice(0, RAW_TEXT_PREVIEW_LENGTH)}…` : text;
+    throw new ParseError(
+      `Expected JSON response body, got ${label}${preview ? `: ${preview}` : ""}.`,
+    );
+  }
+
+  // "auto" or non-2xx error body: negotiate by content-type, falling back to JSON parse then text.
+  if (normalizedType.startsWith("text/")) {
     return response.text();
   }
 

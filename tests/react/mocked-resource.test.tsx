@@ -122,6 +122,7 @@ describe("TanStack Query over a mocked Core resource", () => {
                 kind: "write",
                 method: "POST",
                 path: "/:id/archive",
+                hasBody: false,
                 mock: ({ store, params }) => {
                   runs.archive++;
                   return store.patch(params.id, { active: false });
@@ -131,6 +132,7 @@ describe("TanStack Query over a mocked Core resource", () => {
                 kind: "write",
                 method: "POST",
                 path: "/explode",
+                hasBody: false,
                 mock: () => {
                   throw new Error("handler failed");
                 },
@@ -165,7 +167,7 @@ describe("TanStack Query over a mocked Core resource", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(((await result.current.getActive()) as unknown[]).length).toBe(1);
       await act(async () => {
-        await result.current.archive("1");
+        await result.current.archive({ params: { id: "1" } });
       });
       expect(runs.archive).toBe(1);
       expect(runs.getActive).toBe(1);

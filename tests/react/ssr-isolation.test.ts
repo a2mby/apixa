@@ -27,7 +27,7 @@ const apiFor = (token: string) =>
     baseURL: "https://x.dev",
     transport: server,
     headers: { authorization: `Bearer ${token}` },
-    resources: { users: { path: "/users" }, posts: { path: "/posts", readOnly: true } },
+    resources: { users: { path: "/users" }, posts: { path: "/posts", operations: "read" } },
   });
 
 async function render(token: string) {

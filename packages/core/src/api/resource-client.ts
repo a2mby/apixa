@@ -1,5 +1,5 @@
 import { attachMockFiles } from "../mock/transaction.js";
-import { ConfigError } from "../errors/index.js";
+import { ConfigError, ResponseShapeError, ValidationError } from "../errors/index.js";
 import { extractPathParamNames, joinPath } from "../http/path.js";
 import { MockStore, normalizeMockSource, type BuiltinIntent } from "../mock/index.js";
 import { DEFAULT_MULTIPART, type MultipartRuntime } from "../http/multipart.js";
@@ -7,7 +7,6 @@ import {
   BUILTIN_CONVENTIONS,
   expandOperations,
   isBuiltinName,
-  parseOperationArgs,
 } from "../operation/index.js";
 import type { BuiltinConventionName, OperationInput } from "../operation/index.js";
 import {
@@ -25,7 +24,7 @@ import {
   type ResolvedFieldRules,
 } from "../validation/index.js";
 import type { OperationFn, OperationFnContext, OperationFnRequestInit } from "../types/builtins.js";
-import { validateMethodKind } from "./validate.js";
+import { requiredKind, validateMethodKind } from "./validate.js";
 import type {
   FileFieldOptions,
   FileLimits,
@@ -33,15 +32,18 @@ import type {
   MultipartOptions,
   OperationDefinition,
   OperationRunDefinition,
+  OperationSelection,
+  ResourcePagination,
 } from "../types/definition.js";
+import { resolveOperationPagination, resolvePagination } from "./pagination.js";
 import {
   OPERATION_METADATA,
   registerIdempotencyGenerators,
   type OperationMetadata,
 } from "./metadata.js";
-import type { HeadersSource, PathParams, QueryParams } from "../types/http.js";
+import type { HeadersSource } from "../types/http.js";
 import type { RetryOption } from "../types/retry.js";
-import type { RequestOptions } from "../types/transport.js";
+import type { ApiResponse, RequestOptions } from "../types/transport.js";
 import { randomUUID } from "../utils/uuid.js";
 import { applyResourceSliceToListResult, type ResourceSlice } from "../utils/slice.js";
 
@@ -59,21 +61,22 @@ function pick<T>(...values: Array<T | undefined>): T | undefined {
 function prepareLayers(where: string, layers: Array<LayerOptions | undefined>) {
   const present = layers.filter((l): l is LayerOptions => l !== undefined);
   const retry = pick<RetryOption>(...present.map((l) => l.retry));
+  const hooks = present.flatMap((layer) => layer.middleware ?? []);
+  const rawUnwrap = pick(...present.map((l) => l.response?.unwrap));
+  const rawParse = pick(...present.map((l) => l.response?.parse));
+  const rawValidate = pick(...present.map((l) => l.response?.validate));
   return {
     headers: present.map((l) => l.headers).filter((h): h is HeadersSource => h !== undefined),
     timeout: pick(...present.map((l) => l.timeout)),
     retry: resolveRetryConfig(retry, `${where}.retry`),
-    onRequest: present.flatMap((l) => [
-      ...(l.middleware?.onRequest ? [l.middleware.onRequest] : []),
-      ...(l.requestMiddleware ?? []),
-    ]),
-    onResponse: present.flatMap((l) => [
-      ...(l.middleware?.onResponse ? [l.middleware.onResponse] : []),
-      ...(l.responseMiddleware ?? []),
-    ]),
-    onError: present.flatMap((l) => (l.middleware?.onError ? [l.middleware.onError] : [])),
-    requestKeys: pick(...present.map((l) => l.transforms?.request?.keys)),
-    responseKeys: pick(...present.map((l) => l.transforms?.response?.keys)),
+    onRequest: hooks.flatMap((entry) => (entry.onRequest ? [entry.onRequest] : [])),
+    onResponse: hooks.flatMap((entry) => (entry.onResponse ? [entry.onResponse] : [])),
+    onError: hooks.flatMap((entry) => (entry.onError ? [entry.onError] : [])),
+    requestTransform: pick(...present.map((l) => l.transforms?.request)),
+    responseTransform: pick(...present.map((l) => l.transforms?.response)),
+    responseUnwrap: rawUnwrap === false ? undefined : rawUnwrap,
+    responseParse: rawParse === false ? undefined : rawParse,
+    responseValidate: rawValidate === false ? undefined : rawValidate,
   };
 }
 
@@ -87,7 +90,7 @@ function stripUndefined<T extends object>(value: T | undefined): Partial<T> {
 function prepareFiles(
   def: Record<string, unknown>,
   declared: OperationDefinition | undefined,
-  requestKeys: ReturnType<typeof prepareLayers>["requestKeys"],
+  requestKeys: import("../transform/keys.js").KeyCase | undefined,
   where?: string,
 ): Pick<
   PreparedOperation,
@@ -162,18 +165,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function toArray(result: unknown): unknown[] {
+function toArray(result: unknown, response: ApiResponse<unknown>): unknown[] {
   if (Array.isArray(result)) return result;
-  if (result && typeof result === "object" && Array.isArray((result as { data?: unknown }).data)) {
-    return (result as { data: unknown[] }).data;
-  }
-  return [];
-}
-
-function splitTrailing(args: unknown[], hasResourceParams: boolean, fixed: number) {
-  const params = hasResourceParams ? (args[fixed] as PathParams | undefined) : undefined;
-  const options = args[hasResourceParams ? fixed + 1 : fixed] as RequestOptions | undefined;
-  return { params, options };
+  throw new ResponseShapeError(
+    `${response.request.resource}.${response.request.operation}: expected an array response.`,
+    { status: response.status, data: response.data, response },
+  );
 }
 
 export interface ResourceBuildInput {
@@ -193,15 +190,19 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   const runtime: ResourceRuntime = {
     name,
     path: resourcePath,
-    pagination: def.pagination as ResourceRuntime["pagination"],
   };
+  const livePagination = resolvePagination(name, def.pagination as ResourcePagination | undefined);
+  if (livePagination) {
+    runtime.pagination = livePagination.mode;
+    runtime.livePagination = livePagination;
+  }
   if (def.mock !== undefined) {
-    const source = normalizeMockSource(name, def.mock);
+    const source = normalizeMockSource(name, def.mock, def.idKey as string | undefined);
     runtime.mock = { source, store: new MockStore(source), files: client.files };
     const seedFiles = prepareFiles(
       def,
       undefined,
-      prepareLayers(name, [root, resourceLayer]).requestKeys,
+      prepareLayers(name, [root, resourceLayer]).requestTransform?.keys,
     );
     attachMockFiles(
       runtime.mock.store,
@@ -214,16 +215,9 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   }
   const slice = def.slice as ResourceSlice | undefined;
   const resourceParamNames = extractPathParamNames(resourcePath);
-  const hasResourceParams = resourceParamNames.length > 0;
 
   const operations = expandOperations(
-    def.operations as Record<string, OperationInput> | undefined,
-    {
-      defaultOperations: def.defaultOperations as boolean | undefined,
-      readOnly: def.readOnly as boolean | undefined,
-      writeOnly: def.writeOnly as boolean | undefined,
-      operationGroups: def.operationGroups as Record<string, boolean> | undefined,
-    },
+    def.operations as Record<string, OperationInput> | OperationSelection | undefined,
   );
 
   const out: Record<string, Fn> = {};
@@ -273,9 +267,16 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       path: joinPath(resourcePath, relativePath),
       relativePath,
       hasBody,
+      pagination: resolveOperationPagination(
+        name,
+        def.pagination as ResourcePagination | undefined,
+        opName,
+        declared.pagination,
+        convention !== undefined,
+      ),
       ...prepareLayers(where, [root, resourceLayer, declared]),
     };
-    Object.assign(op, prepareFiles(def, declared, op.requestKeys, where));
+    Object.assign(op, prepareFiles(def, declared, op.requestTransform?.keys, where));
     if (declared.transfer !== undefined) {
       op.transfer = declared.transfer;
       if (typeof declared.transfer.source === "string") {
@@ -311,18 +312,19 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       );
     }
     metadata[opName] = Object.freeze({
-      kind: convention?.access ?? declared.kind!,
+      kind: requiredKind(method),
       builtin: convention !== undefined,
       implementation: "request",
-      optionsIndex: optionsIndexOf(opName, op, hasResourceParams),
+      optionsIndex: optionsIndexOf(opName, op),
       idempotency: op.idempotency !== undefined,
     });
     const run = (call: CallInput) => runOperation(client, runtime, op, call);
     out[opName] = convention
       ? builtinOperation(opName as BuiltinConventionName, op, run, {
           resourceParamNames,
-          hasResourceParams,
           slice,
+          idKey: (def.idKey as string | undefined) ?? runtime.mock?.source.idKey ?? "id",
+          paginated: op.pagination !== undefined,
         })
       : declarativeOperation(op, run);
   }
@@ -339,29 +341,58 @@ function isRunDefinition(value: unknown): value is OperationRunDefinition {
   return isRecord(value) && typeof value.run === "function";
 }
 
-/** Mirrors the argument layouts below: special builtins take resource params after their own. */
-function optionsIndexOf(name: string, op: PreparedOperation, hasResourceParams: boolean): number {
-  const params = hasResourceParams ? 1 : 0;
-  if (name === "exists" || name === "getMany" || name === "findFirst") return 1 + params;
-  if (name === "getBy") return 2 + params;
-  return (extractPathParamNames(op.path).length > 0 ? 1 : 0) + (op.hasBody ? 1 : 0);
+/** Trailing `RequestOptions` slot index for every request-backed operation. */
+function optionsIndexOf(name: string, op: PreparedOperation): number {
+  if (!isBuiltinName(name)) return op.hasBody ? 1 : 0;
+  if (name === "getBy") return 2;
+  if (
+    name === "getAll" ||
+    name === "findFirst" ||
+    name === "count" ||
+    name === "create" ||
+    name === "createMany" ||
+    name === "deleteMany"
+  ) {
+    return op.hasBody ? 1 : 0;
+  }
+  return 1; // getById, delete, update, patch, exists, getMany
 }
 
 interface BuiltinContext {
   resourceParamNames: string[];
-  hasResourceParams: boolean;
   slice?: ResourceSlice;
+  idKey: string;
+  /** This operation resolves pagination, so live results map to the page contract. */
+  paginated?: boolean;
 }
 
-/** A declarative custom operation: `(params?, body?, options?)` by its path and method. */
+function expectPaginatedRecord(data: unknown, response: ApiResponse<unknown>) {
+  if (isRecord(data)) return data;
+  throw new ResponseShapeError(
+    `${response.request.resource}.${response.request.operation}: expected a paginated object response.`,
+    { status: response.status, data: response.data, response },
+  );
+}
+
+/** A declarative custom operation: body first when needed, then one options object. */
 function declarativeOperation(
   op: PreparedOperation,
   run: (call: CallInput) => Promise<unknown>,
 ): Fn {
-  const paramNames = extractPathParamNames(op.path);
+  const paginated = op.pagination !== undefined;
   return (...args) => {
-    const parsed = parseOperationArgs(paramNames, op.hasBody, args);
-    return run({ params: parsed.params, body: parsed.body, options: parsed.options });
+    const options = args[op.hasBody ? 1 : 0] as RequestOptions | undefined;
+    return run({
+      params: options?.params,
+      body: op.hasBody ? args[0] : undefined,
+      options,
+      ...(paginated
+        ? {
+            paginated: true,
+            fromHttp: (data, _status, response) => expectPaginatedRecord(data, response),
+          }
+        : {}),
+    });
   };
 }
 
@@ -377,17 +408,19 @@ function builtinOperation(
 ): Fn {
   const paramNames = extractPathParamNames(op.path);
   const idParam = paramNames.find((p) => !ctx.resourceParamNames.includes(p));
-  const keyName = (field: string) => (op.requestKeys ? convertKey(field, op.requestKeys) : field);
+  const keyName = (field: string) =>
+    op.requestTransform ? convertKey(field, op.requestTransform.keys) : field;
 
   switch (name) {
     case "exists":
-      return (id, ...rest) => {
-        const { params, options } = splitTrailing(rest, ctx.hasResourceParams, 0);
+      return (id, input) => {
+        const options = input as RequestOptions | undefined;
+        const params = options?.params;
         return run({
           params: { ...params, ...(idParam ? { [idParam]: id as string | number } : {}) },
           query: idParam
             ? options?.query
-            : { ...(options?.query ?? {}), id: id as string | number },
+            : { ...(options?.query ?? {}), [ctx.idKey]: id as string | number },
           options,
           allow404: true,
           fromHttp: (_data, status) => status !== 404,
@@ -395,48 +428,60 @@ function builtinOperation(
         });
       };
     case "getMany":
-      return (ids, ...rest) => {
-        const { params, options } = splitTrailing(rest, ctx.hasResourceParams, 0);
+      return (ids, input) => {
+        const options = input as RequestOptions | undefined;
+        const params = options?.params;
         return run({
           params,
-          query: { ...(options?.query ?? {}), id: ids as Array<string | number> },
+          query: { ...(options?.query ?? {}), [ctx.idKey]: ids as Array<string | number> },
           options,
-          fromHttp: toArray,
-          intent: () => ({ op: "getMany", ids }),
+          paginated: ctx.paginated,
+          fromHttp: (data, _status, response) =>
+            ctx.paginated ? expectPaginatedRecord(data, response) : toArray(data, response),
+          intent: (wire) => ({ op: "getMany", ids, query: wire.query }),
         });
       };
     case "findFirst":
-      return (query, ...rest) => {
-        const { params, options } = splitTrailing(rest, ctx.hasResourceParams, 0);
+      return (input) => {
+        const options = input as RequestOptions | undefined;
         return run({
-          params,
-          query: query as QueryParams | undefined,
+          params: options?.params,
+          query: options?.query,
           options,
-          fromHttp: (data) => toArray(data)[0] ?? null,
+          fromHttp: (data, _status, response) => toArray(data, response)[0] ?? null,
           intent: (wire) => ({ op: "findFirst", query: wire.query }),
         });
       };
     case "getBy":
-      return (fieldOrPath, value, ...rest) => {
-        const { params, options } = splitTrailing(rest, ctx.hasResourceParams, 0);
-        const field = String(fieldOrPath);
+      return (fieldOrName, value, input) => {
+        const options = input as RequestOptions | undefined;
+        const field = String(fieldOrName);
+        const wireField = keyName(field);
         const encoded = encodeURIComponent(String(value));
-        let path: string;
-        if (/:field\b|:value\b/.test(op.path)) {
-          path = op.path
-            .replace(/:field\b/g, encodeURIComponent(field))
-            .replace(/:value\b/g, encoded);
-        } else {
-          const dynamic = /:[A-Za-z0-9_]+/.test(field)
-            ? field.replace(/:[A-Za-z0-9_]+/, encoded)
-            : joinPath(field, encoded);
-          path = joinPath(op.path, dynamic);
-        }
+        const hasTemplate = /:field\b|:value\b/.test(op.path);
+        const path = hasTemplate
+          ? op.path
+              .replace(/:field\b/g, encodeURIComponent(wireField))
+              .replace(/:value\b/g, encoded)
+          : undefined;
         return run({
-          params,
-          path,
+          params: options?.params,
+          ...(path !== undefined ? { path } : {}),
+          query: hasTemplate
+            ? options?.query
+            : { ...(options?.query ?? {}), [wireField]: value as string | number },
           options,
-          intent: () => ({ op: "getBy", field: keyName(field), value }),
+          allow404: true,
+          fromHttp: (data, status, response) => {
+            if (status === 404 || data === null || data === undefined) return null;
+            if (Array.isArray(data)) return data[0] ?? null;
+            if (isRecord(data)) return data;
+            throw new ResponseShapeError(
+              `${response.request.resource}.${response.request.operation}: expected an object or array response.`,
+              { status: response.status, data: response.data, response },
+            );
+          },
+          intent: () => ({ op: "getBy", field: wireField, value }),
         });
       };
     default:
@@ -444,30 +489,88 @@ function builtinOperation(
   }
 
   return (...args) => {
-    const parsed = parseOperationArgs(paramNames, op.hasBody, args);
-    const params = parsed.params;
+    if (
+      (name === "update" || name === "patch") &&
+      op.hasBody &&
+      (!isRecord(args[1]) || !("body" in args[1]))
+    ) {
+      return Promise.reject(
+        new ValidationError(`${name}: the request body is required in options.body.`),
+      );
+    }
+    const isIdentity =
+      name === "getById" || name === "delete" || name === "update" || name === "patch";
+    let params: RequestOptions["params"];
+    let body: unknown;
+    let options: RequestOptions | undefined;
+    if (isIdentity) {
+      options = args[1] as RequestOptions | undefined;
+      body = (args[1] as (RequestOptions & { body?: unknown }) | undefined)?.body;
+      params = {
+        ...options?.params,
+        ...(idParam ? { [idParam]: args[0] as string | number } : {}),
+      };
+    } else {
+      body = op.hasBody ? args[0] : undefined;
+      options = args[op.hasBody ? 1 : 0] as RequestOptions | undefined;
+      params = options?.params;
+    }
     const id = idParam ? params?.[idParam] : undefined;
-    const call: CallInput = { params, body: parsed.body, options: parsed.options };
+    const call: CallInput = { params, body, options };
     call.intent = (wire): BuiltinIntent => {
       switch (name) {
         case "getAll":
         case "count":
-        case "search":
-          // A body-carrying override (e.g. `search: { method: "POST" }`) sends its filter as the body.
           return { op: name, query: wire.query ?? (isRecord(wire.body) ? wire.body : undefined) };
-        case "getBySlug":
-          return { op: name, slug: id };
         case "getById":
         case "delete":
           return { op: name, id };
         case "update":
         case "patch":
-        case "upsert":
           return { op: name, id, body: wire.body };
         default:
           return { op: name, body: wire.body };
       }
     };
+    if (name === "getAll") {
+      if (ctx.paginated) {
+        call.paginated = true;
+        call.fromHttp = (data, _status, response) => {
+          if (isRecord(data)) return data;
+          throw new ResponseShapeError(
+            `${response.request.resource}.${response.request.operation}: expected a paginated object response.`,
+            { status: response.status, data: response.data, response },
+          );
+        };
+      } else {
+        call.fromHttp = (data, _status, response) => {
+          if (Array.isArray(data) || isRecord(data)) return data;
+          throw new ResponseShapeError(
+            `${response.request.resource}.${response.request.operation}: expected an array or object response.`,
+            { status: response.status, data: response.data, response },
+          );
+        };
+      }
+    } else if (name === "count") {
+      call.fromHttp = (data, _status, response) => {
+        if (typeof data === "number" && Number.isFinite(data)) return data;
+        throw new ResponseShapeError(
+          `${response.request.resource}.${response.request.operation}: expected a numeric count response.`,
+          { status: response.status, data: response.data, response },
+        );
+      };
+    } else if (name === "createMany") {
+      call.fromHttp = (data, _status, response) => toArray(data, response);
+    } else if (name === "getById" || name === "create" || name === "update" || name === "patch") {
+      call.fromHttp = (data, status, response) => {
+        if ((status === 204 || status === 205) && data === null) return null;
+        if (isRecord(data)) return data;
+        throw new ResponseShapeError(
+          `${response.request.resource}.${response.request.operation}: expected an object response.`,
+          { status: response.status, data: response.data, response },
+        );
+      };
+    }
     if (name === "getAll" && ctx.slice !== undefined) {
       const slice = ctx.slice;
       call.shape = (data: unknown) => applyResourceSliceToListResult(data, slice);
@@ -495,7 +598,7 @@ function functionOperation(
     relativePath: "",
     hasBody: false,
     ...layers,
-    ...prepareFiles(def, undefined, layers.requestKeys),
+    ...prepareFiles(def, undefined, layers.requestTransform?.keys),
   };
   const ctx: OperationFnContext = {
     transfer: <T, F extends boolean = false>(

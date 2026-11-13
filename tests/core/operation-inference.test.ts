@@ -72,69 +72,66 @@ describe("configuration-driven client inference", () => {
         users: { path: "/orgs/:orgId/users", operations: { getById: { path: "/lookup/:id" } } },
       },
     });
-    expectTypeOf(api.users.getById)
-      .parameter(0)
-      .toEqualTypeOf<{ orgId: string | number; id: string | number }>();
-    expectTypeOf(api.users.exists).parameter(1).toEqualTypeOf<{ orgId: string | number }>();
-    expectTypeOf(api.users.getMany).parameter(1).toEqualTypeOf<{ orgId: string | number }>();
+    expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<string>();
+    expectTypeOf(api.users.getById).parameter(1).toMatchTypeOf<{ params: { orgId: string | number } }>();
+    expectTypeOf(api.users.exists).parameter(1).toMatchTypeOf<{ params: { orgId: string | number } }>();
+    expectTypeOf(api.users.getMany).parameter(1).toMatchTypeOf<{ params: { orgId: string | number } }>();
     if (false) {
       // @ts-expect-error legacy type path does not supply parameters
       api.users.getById({ legacy: "old", id: "1" });
     }
   });
 
-  it("mirrors defaults, flags, groups, and explicit overrides", () => {
+  it("mirrors selections and explicit overrides", () => {
     const api = defineApi<AppApi>()({
       baseURL: "https://api.example.com",
       resources: {
         users: {
           path: "/users",
-          readOnly: true,
-          operationGroups: { extended: false, many: true },
-          operations: { create: true, createMany: { path: "/batch" }, deleteMany: false },
+          operations: { preset: ["getAll", "getById", "getMany"], create: true, createMany: { path: "/batch" }, deleteMany: false },
         },
       },
     });
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(api.users.getMany).parameter(0).toEqualTypeOf<User["id"][]>();
     if (false) {
-      // @ts-expect-error readOnly removes update
-      api.users.update("1", {});
-      // @ts-expect-error extended group removes search
-      api.users.search();
+      // @ts-expect-error update is not selected
+      api.users.update("1", { body: {} });
+      // @ts-expect-error count is not selected
+      api.users.count();
       // @ts-expect-error explicit override removes deleteMany
       api.users.deleteMany([]);
     }
     const minimal = defineApi({
       baseURL: "https://api.example.com",
       resources: {
-        users: { path: "/users", defaultOperations: false, operations: { getAll: true } },
+        users: { path: "/users", operations: ["getAll"] },
       },
     });
     expectTypeOf(minimal.users.getAll).returns.resolves.toEqualTypeOf<unknown[]>();
     if (false) {
-      // @ts-expect-error defaultOperations false removes other builtins
+      // @ts-expect-error the list contains only getAll
       minimal.users.create({});
     }
     const writeOnly = defineApi({
       baseURL: "https://api.example.com",
       resources: {
-        users: { path: "/users", writeOnly: true },
+        users: { path: "/users", operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"] },
       },
     });
     expectTypeOf(writeOnly.users.create).parameter(0).toEqualTypeOf<unknown>();
     if (false) {
-      // @ts-expect-error writeOnly removes reads
+      // @ts-expect-error only writes are selected
       writeOnly.users.getAll();
     }
     const none = defineApi({
       baseURL: "https://api.example.com",
       resources: {
-        users: { path: "/users", defaultOperations: false, readOnly: true },
+        users: { path: "/users", operations: [] },
       },
     });
     if (false) {
-      // @ts-expect-error readOnly does not re-enable reads after defaultOperations false
+      // @ts-expect-error an empty list selects no operations
       none.users.getAll();
     }
   });
@@ -144,19 +141,19 @@ describe("configuration-driven client inference", () => {
     const readOnly = defineApi({
       baseURL: "https://api.example.com",
       resources: {
-        users: { path: "/users", readOnly: flag },
+        users: { path: "/users", operations: flag ? "read" : "all" },
       },
     });
     const defaults = defineApi({
       baseURL: "https://api.example.com",
       resources: {
-        users: { path: "/users", defaultOperations: flag },
+        users: { path: "/users", operations: flag ? "all" : ([] as const) },
       },
     });
     const grouped = defineApi({
       baseURL: "https://api.example.com",
       resources: {
-        users: { path: "/users", operationGroups: { many: flag } },
+        users: { path: "/users", operations: { getMany: flag } },
       },
     });
     const individual = defineApi({
@@ -167,11 +164,11 @@ describe("configuration-driven client inference", () => {
     });
     if (false) {
       readOnly.users.getAll();
-      // @ts-expect-error readOnly may remove create
+      // @ts-expect-error the read preset may remove create
       readOnly.users.create({});
-      // @ts-expect-error defaults may remove getAll
+      // @ts-expect-error the empty selection may remove getAll
       defaults.users.getAll();
-      // @ts-expect-error many group may remove getMany
+      // @ts-expect-error the override may remove getMany
       grouped.users.getMany([]);
       // @ts-expect-error individual false may remove create
       individual.users.create({});
@@ -199,7 +196,7 @@ describe("configuration-driven client inference", () => {
       defineApi({
         baseURL: "https://api.example.com",
         resources: {
-          // @ts-expect-error both flags cannot be enabled
+          // @ts-expect-error old selection flags are no longer accepted
           users: { path: "/users", readOnly: true, writeOnly: true },
         },
       });

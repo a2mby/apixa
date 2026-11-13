@@ -6,9 +6,12 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 type User = { id: number; name: string };
 type Product = { id: string; title: string };
 
-function recorder() {
+function recorder(
+  body: (request: TransportRequest) => unknown = (r) =>
+    r.url.includes("/products") ? { data: [], nextCursor: null } : r.url.endsWith("/123") ? { id: 123, name: "Ada" } : [],
+) {
   const seen: TransportRequest[] = [];
-  return { seen, transport: createFakeTransport((r) => (seen.push(r), { body: [] })) };
+  return { seen, transport: createFakeTransport((r) => (seen.push(r), { body: body(r) })) };
 }
 
 describe("defineApis", () => {
@@ -37,7 +40,7 @@ describe("defineApis", () => {
     const { googleApi } = apis;
     await googleApi.books.getAll();
     await apis.backend.users.getById(123);
-    await apis.backend.users.archive(1, {});
+    await apis.backend.users.archive({}, { params: { id: 1 } });
     expect(google.seen.map((r) => r.url)).toEqual(["https://www.googleapis.com/books/v1/volumes"]);
     expect(google.seen[0]!.headers.has("authorization")).toBe(false);
     expect(backend.seen.map((r) => r.url)).toEqual([
@@ -76,7 +79,7 @@ describe("defineApis", () => {
       commerce: { products: { entity: Product } };
     };
     const apis = defineApis<Defs>()({
-      backend: { baseURL: "/api", resources: { users: { path: "/users", readOnly: true } } },
+      backend: { baseURL: "/api", resources: { users: { path: "/users", operations: "read" } } },
       commerce: {
         baseURL: "https://api.example.com",
         resources: { products: { path: "/products" } },

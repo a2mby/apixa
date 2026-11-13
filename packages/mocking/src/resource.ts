@@ -1,4 +1,10 @@
-import { MockError, ValidationError, type MockSource, type PaginationMode } from "@apixa/core";
+import {
+  MockError,
+  ValidationError,
+  resolvePagination,
+  type MockSource,
+  type ResourcePagination,
+} from "@apixa/core";
 import { catalog, type DatasetId } from "./catalog.js";
 import { MockApiError, type MockApiErrorCode } from "./errors.js";
 import type { MockSlice } from "./slice.js";
@@ -51,7 +57,7 @@ function translate(error: unknown): never {
 export type ResourceOptions = {
   slice?: MockSlice;
   seed?: MockSource["seed"];
-  pagination?: boolean | PaginationMode;
+  pagination?: ResourcePagination;
   operations: Record<string, unknown>;
   storage?: import("@apixa/core").MockStorageOptions;
   fixtures?: import("@apixa/core").MockFileFixtures;
@@ -65,6 +71,7 @@ const PAGING_MESSAGE = /: (page|pageSize|cursor) must be/;
 /** Adapt calling conventions to Core's existing mocked-client engine. */
 export function createResource(name: string, type: DatasetId, options: ResourceOptions) {
   const entry = catalog[type];
+  const resolvedPagination = resolvePagination(name, options.pagination);
   const operations: Record<string, unknown> = {};
   const names = new Map<string, string>();
   for (const [op, choice] of Object.entries(options.operations)) {
@@ -139,10 +146,9 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
       },
       fileFields: options.fileFields,
       fileLimits: options.fileLimits,
-      pagination: options.pagination === true ? "page" : options.pagination || undefined,
+      pagination: options.pagination,
       slice: options.slice,
-      defaultOperations: false,
-      operations,
+      operations: { preset: [], ...operations },
     },
     wrap(core: Record<string, (...args: unknown[]) => Promise<unknown>>) {
       const resource: Record<string | symbol, unknown> = {};
@@ -152,7 +158,7 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
           try {
             if (
               internal === op &&
-              ["getById", "delete", "update", "patch", "upsert", "exists"].includes(op)
+              ["getById", "delete", "update", "patch", "exists"].includes(op)
             ) {
               const id = args[0];
               if ((typeof id !== "string" && typeof id !== "number") || id === "")
@@ -161,10 +167,34 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
                   `Mock resource "${name}": invalid ${entry.idKey} ${JSON.stringify(id) ?? String(id)} (expected a non-empty string or number)`,
                 );
             }
+            if (
+              internal === op &&
+              op === "getAll" &&
+              resolvedPagination &&
+              args[0] !== null &&
+              typeof args[0] === "object" &&
+              !Array.isArray(args[0])
+            ) {
+              const q = args[0] as Record<string, unknown>;
+              const checkPaging = (key: string, min: number) => {
+                const raw = q[key];
+                if (raw === undefined || raw === null || raw === "") return;
+                const n = typeof raw === "number" ? raw : Number(raw);
+                if (!Number.isInteger(n) || n < min) {
+                  throw new MockApiError(
+                    "INVALID_PAGINATION",
+                    `Mock resource "${name}": ${key} must be an integer >= ${min} (got ${String(raw)})`,
+                  );
+                }
+              };
+              checkPaging("pageSize", 1);
+              if (resolvedPagination.mode === "cursor") checkPaging("cursor", 0);
+              else checkPaging("page", 1);
+            }
             const forwarded =
               internal !== op
                 ? [{ args }]
-                : ["getAll", "count", "search"].includes(op)
+                : ["getAll", "count"].includes(op)
                   ? [{ query: args[0] }]
                   : args;
             const result = await core[internal]!(...forwarded);

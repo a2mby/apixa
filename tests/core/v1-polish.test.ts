@@ -42,15 +42,17 @@ describe("token refresh via error middleware replay()", () => {
         seen.push(r.headers.get("authorization")!);
         return token === "old" ? { status: 401 } : { body: [{ id: 1 }] };
       }),
-      middleware: {
-        onError: async (error, { replay }) => {
-          if (isHttpError(error) && error.status === 401 && replay) {
-            token = "new";
-            return replay();
-          }
-          throw error;
+      middleware: [
+        {
+          onError: async (error, { replay }) => {
+            if (isHttpError(error) && error.status === 401 && replay) {
+              token = "new";
+              return replay();
+            }
+            throw error;
+          },
         },
-      },
+      ],
       resources: { users: { path: "/users" } },
     });
     expect(await api.users.getAll()).toEqual([{ id: 1 }]);
@@ -62,7 +64,7 @@ describe("token refresh via error middleware replay()", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transport: createFakeTransport(() => (calls++, { status: 401 })),
-      middleware: { onError: async (e, { replay }) => (replay ? replay() : Promise.reject(e)) },
+      middleware: [{ onError: async (e, { replay }) => (replay ? replay() : Promise.reject(e)) }],
       resources: { users: { path: "/users" } },
     });
     await expect(api.users.getAll()).rejects.toBeInstanceOf(HttpError);
@@ -83,9 +85,9 @@ describe("unknown bodies are optional", () => {
         },
       },
     });
-    expectTypeOf(api.users.archive).parameter(1).toEqualTypeOf<unknown>();
-    await api.users.archive(1);
-    await api.users.archive(1, { reason: "x" });
+    expectTypeOf(api.users.archive).parameter(0).toEqualTypeOf<unknown>();
+    await api.users.archive(undefined, { params: { id: 1 } });
+    await api.users.archive({ reason: "x" }, { params: { id: 1 } });
     expect(seen).toEqual([undefined, JSON.stringify({ reason: "x" })]);
   });
 });

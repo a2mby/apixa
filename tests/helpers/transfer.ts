@@ -53,7 +53,7 @@ type Doc = { id: string };
 
 export interface TestClient {
   docs: {
-    download(id: string, options?: Record<string, unknown>): Promise<Blob>;
+    download(options: { params: { id: string } } & Record<string, unknown>): Promise<Blob>;
     buffer(options?: Record<string, unknown>): Promise<ArrayBuffer>;
     text(options?: Record<string, unknown>): Promise<string>;
     json(options?: Record<string, unknown>): Promise<unknown>;

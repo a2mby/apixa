@@ -1,4 +1,4 @@
-/** Limit how much list data a resource returns: first N rows, or half-open `{ start, end }`. */
+/** Apply `Array.prototype.slice` to a list, with a count or half-open `{ start, end }`. */
 export type ResourceSlice = number | { start: number; end: number };
 
 function isPlainSliceRange(value: unknown): value is { start: number; end: number } {
@@ -15,27 +15,21 @@ export function assertResourceSlice(
   label = "slice",
 ): asserts slice is ResourceSlice {
   if (typeof slice === "number") {
-    if (!Number.isInteger(slice) || slice < 0) {
-      throw new Error(`${label}: must be a non-negative integer (got ${String(slice)}).`);
-    }
     return;
   }
   if (!isPlainSliceRange(slice)) {
-    throw new Error(`${label}: must be a non-negative integer or { start, end }.`);
+    throw new Error(`${label}: must be a number or { start, end }.`);
   }
   const { start, end } = slice;
-  if (typeof start !== "number" || !Number.isInteger(start) || start < 0) {
-    throw new Error(`${label}.start must be a non-negative integer (got ${String(start)}).`);
+  if (typeof start !== "number") {
+    throw new Error(`${label}.start must be a number (got ${String(start)}).`);
   }
-  if (typeof end !== "number" || !Number.isInteger(end) || end < 0) {
-    throw new Error(`${label}.end must be a non-negative integer (got ${String(end)}).`);
-  }
-  if (end < start) {
-    throw new Error(`${label}.end (${end}) must not be before ${label}.start (${start}).`);
+  if (typeof end !== "number") {
+    throw new Error(`${label}.end must be a number (got ${String(end)}).`);
   }
 }
 
-/** Apply `slice` to a list array. Overshoot returns all rows. */
+/** Apply native slice semantics to a list array. */
 export function applyResourceSlice<T>(
   records: T[],
   slice: ResourceSlice | undefined,
@@ -45,11 +39,9 @@ export function applyResourceSlice<T>(
   assertResourceSlice(slice, label);
 
   if (typeof slice === "number") {
-    if (slice >= records.length) return records.slice();
     return records.slice(0, slice);
   }
 
-  if (slice.end > records.length) return records.slice();
   return records.slice(slice.start, slice.end);
 }
 

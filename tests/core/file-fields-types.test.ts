@@ -75,9 +75,8 @@ const overridden = () =>
 
 type Simple = ReturnType<typeof simple>["users"];
 type CreateBody = Parameters<Simple["create"]>[0];
-type UpdateBody = Parameters<Simple["update"]>[1];
-type PatchBody = Parameters<Simple["patch"]>[1];
-type UpsertBody = Parameters<Simple["upsert"]>[1];
+type UpdateBody = Parameters<Simple["update"]>[1]["body"];
+type PatchBody = Parameters<Simple["patch"]>[1]["body"];
 
 describe("fileFields type contract", () => {
   it("keeps read types as string / string[]", () => {
@@ -96,10 +95,9 @@ describe("fileFields type contract", () => {
     expectTypeOf<CreateBody["id"]>().toEqualTypeOf<string | undefined>();
   });
 
-  it("derives optional File | Blob inputs for update, patch and upsert", () => {
+  it("derives optional File | Blob inputs for update and patch", () => {
     expectTypeOf<UpdateBody["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
     expectTypeOf<PatchBody["documents"]>().toEqualTypeOf<readonly (File | Blob)[] | undefined>();
-    expectTypeOf<UpsertBody["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
     expectTypeOf<UpdateBody["name"]>().toEqualTypeOf<string | undefined>();
   });
 
@@ -148,19 +146,19 @@ describe("fileFields type contract", () => {
   it("leaves resources without fileFields exactly as before", () => {
     type Plain = ReturnType<typeof plain>["users"];
     expectTypeOf<Parameters<Plain["create"]>[0]>().toEqualTypeOf<CreateBodyOf<User>>();
-    expectTypeOf<Parameters<Plain["update"]>[1]>().toEqualTypeOf<Partial<User>>();
+    expectTypeOf<Parameters<Plain["update"]>[1]["body"]>().toEqualTypeOf<Partial<User>>();
   });
 
   it("reverts to entity inputs when an operation forces dataFormat json", () => {
     type J = ReturnType<typeof jsonCreate>["users"];
     expectTypeOf<Parameters<J["create"]>[0]["avatar"]>().toEqualTypeOf<string>();
     // Other eligible operations keep file inputs.
-    expectTypeOf<Parameters<J["update"]>[1]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
+    expectTypeOf<Parameters<J["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
   });
 
   it("accepts dataFormat multipart on a write builtin", () => {
     type S = ReturnType<typeof snake>["users"];
-    expectTypeOf<Parameters<S["update"]>[1]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
+    expectTypeOf<Parameters<S["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
   });
 
   it("rejects invalid configuration at compile time", () => {

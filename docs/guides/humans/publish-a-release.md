@@ -24,3 +24,6 @@ No npm organization scope is needed. Release an approved, previously unpublished
 5. Smoke-test `npm install apixa@latest` in an empty project; for React add `react @tanstack/react-query`.
 
 The migration and verification scripts do not publish, commit or push.
+
+To try a fix in a consumer app, do not publish; use [`pnpm consumer:local`](./test-a-local-package.md).
+The `experimental` dist-tag is only for external testers.

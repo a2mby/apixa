@@ -24,13 +24,12 @@ const PAYLOADS = [
 ];
 
 describe("mock writes reject prototype-changing keys", () => {
-  it.each(PAYLOADS)("create/update/patch/upsert/createMany refuse %s", async (payload) => {
+  it.each(PAYLOADS)("create/update/patch/createMany refuse %s", async (payload) => {
     const a = api();
     const calls = [
       () => a.users.create({ id: "9", ...evil(payload) } as never),
-      () => a.users.update("1", evil(payload) as never),
-      () => a.users.patch("1", evil(payload) as never),
-      () => a.users.upsert("7", evil(payload) as never),
+      () => a.users.update("1", { body: evil(payload) as never }),
+      () => a.users.patch("1", { body: evil(payload) as never }),
       () => a.users.createMany([evil(payload)] as never),
     ];
     for (const call of calls) {
@@ -57,7 +56,7 @@ describe("mock writes reject prototype-changing keys", () => {
 
   it("ordinary nested objects are still fine", async () => {
     const a = api();
-    const row = await a.users.patch("1", { profile: { city: "London" } } as never);
+    const row = await a.users.patch("1", { body: { profile: { city: "London" } } as never });
     expect(row).toMatchObject({ profile: { city: "London" } });
   });
 });
@@ -72,13 +71,13 @@ describe("queries read own properties only", () => {
     expect(store.count({ role: "admin" })).toBe(0);
     expect(store.search({ role: "adm" })).toEqual([]);
     expect(store.findFirst({ role: "admin" })).toBeNull();
-    expect(() => store.getBy("role", "admin")).toThrow(/no record/);
+    expect(store.getBy("role", "admin")).toBeNull();
     expect(store.count({ name: "A" })).toBe(1);
   });
 
   it("reset restores the seeded rows", async () => {
     const a = api();
-    await a.users.patch("1", { name: "changed" });
+    await a.users.patch("1", { body: { name: "changed" } });
     resetMock(a);
     expect(await a.users.getById("1")).toEqual({ id: "1", name: "A" });
   });

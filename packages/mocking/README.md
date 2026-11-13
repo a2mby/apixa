@@ -56,7 +56,7 @@ const api = defineApi({
 - Records are validated when the first call loads them (plain objects, unique string/number ids).
   The array you pass is copied at that moment; changing it later does not change the store.
 - A mocked resource never reaches a transport, whatever the URL looks like after middleware.
-- `pagination` is `"page"` or `"cursor"` (Core rejects `true`). `slice` caps the **list result** of
+- `pagination` is `"page"`, `"cursor"`, `false` (to shadow/disable per operation), or `{ type, preset | fields | parseList, params }` (Core rejects `true`). `slice` caps the **list result** of
   `getAll` (first N, or `{ start, end }`); `count`, lookups and writes still see every record.
 
 ### Reading with filters and pages
@@ -70,7 +70,7 @@ await api.products.getAll({ query: { category: "beauty" } }); // exact match on 
 await api.products.getAll({ query: { id: ["1", "3"] } }); // ids
 await api.products.getAll({ query: { page: 2, pageSize: 10 } }); // { data, total, page, pageSize }
 await api.products.getAll({ query: { page: 999 } }); // an empty page, never an error
-await api.products.search({ query: { title: "wooden" } }); // case-insensitive substring
+await api.products.findFirst({ query: { title: "Wooden" } }); // exact match; first row or null
 ```
 
 Filters match flat keys by string equality (an array means "any of"); nested paths are not
@@ -80,7 +80,7 @@ with `MOCK_INVALID_INPUT`.
 
 ### Custom operations
 
-A mocked resource simulates the 16 builtins by their own intent: overriding a builtin's `path` or
+A mocked resource simulates the 13 builtins by their own intent: overriding a builtin's `path` or
 disabling another builtin never changes how it runs. A **declarative** custom operation
 (`{ kind, method, path }`) has no behavior a mock could guess, so you state it with an optional
 `mock` handler **on the operation itself**:
@@ -106,6 +106,7 @@ const api = defineApi({
           kind: "write",
           method: "POST",
           path: "/:id/archive",
+          hasBody: false,
           mock: async ({ params, store }) => store.patch(params.id, { archived: true }),
         },
       },
@@ -114,7 +115,7 @@ const api = defineApi({
 });
 
 await api.users.getActive(); // [{ id: "1", … }]
-await api.users.archive("1"); // patches this client's record; getById("1") now has archived: true
+await api.users.archive({ params: { id: "1" } }); // patches this client's record; getById("1") now has archived: true
 ```
 
 **When it runs.** The handler runs only when the resource is mocked. On a live resource the
@@ -122,7 +123,7 @@ operation is the normal HTTP request and `mock` is ignored. A mocked custom oper
 handler rejects with `MOCK_UNSUPPORTED` naming the operation: it is never guessed from its URL
 (`DELETE /purge` does not delete the record `purge`) and never sent to the network. `mock` belongs to
 custom declarative operations only; a builtin or a `run` operation that sets it fails when the client
-is built. Handlers do not depend on any builtin being enabled (`defaultOperations: false` is fine).
+is built. Handlers do not depend on any builtin being enabled (`operations: { preset: [], … }` is fine).
 
 **What it receives** (`context`):
 
@@ -135,7 +136,7 @@ is built. Handlers do not depend on any builtin being enabled (`defaultOperation
 | `signal`                | Aborts on cancellation or timeout. The call rejects at once; a handler may continue, but its managed draft is discarded and late writes reject. External user side effects are outside rollback.                                                                 |
 | `resource`, `operation` | Names, for messages.                                                                                                                                                                                                                                             |
 
-Return any value; it flows through response key transforms and response middleware like a builtin's
+Return any value; it flows through response transforms, response processing, and response middleware like a builtin's
 result. The status is 200, or 204 for a `DELETE` that returns nothing. Throwing (sync or async) goes
 through error middleware, which may recover or replay as usual. Each client has its own store, so a
 handler's writes are visible to later builtin reads of that client and never to another client;
@@ -149,8 +150,8 @@ inferred from the resource's inline array, provider or named dataset. `defineApi
 and full path parameter names independently for each backend.
 
 **Function operations** (`{ kind, run }`) keep working: `ctx.request()` is simulated against the
-store for these shapes: `GET/POST ""`, `GET/PUT/PATCH/DELETE "/:id"`, `GET "/count"`, `GET "/search"`,
-`GET "/slug/:slug"` and `POST/DELETE "/bulk"`. Anything else (including an absolute URL) rejects with
+store for these shapes: `GET/POST ""`, `GET/PUT/PATCH/DELETE "/:id"`, `GET "/count"`,
+and `POST/DELETE "/bulk"`. Anything else (including an absolute URL) rejects with
 `MOCK_UNSUPPORTED`. They take no `mock` handler. Core still validates `kind` against the HTTP method.
 
 ### Errors, reset and isolation
@@ -183,25 +184,25 @@ import { defineMockApi } from "apixa/mocking";
 
 const mockApi = defineMockApi({
   resources: {
-    users: { type: "users-mock", readOnly: true },
-    comments: { type: "comments-mock", pagination: true, slice: 50 },
+    users: { type: "users-mock", operations: "read" },
+    comments: { type: "comments-mock", pagination: "page" },
     products: { type: "products-mock", seed: { limit: 20 } },
   },
 });
 
-const page = await mockApi.comments.getAll({ page: 1, pageSize: 10, postId: "1" });
-// { data, total, page, pageSize } — paging keys and filters sit side by side in one object
+const page = await mockApi.comments.getAll({ query: { page: 1, pageSize: 10, postId: "1" } });
+// { data, total, page, pageSize }
 ```
 
 | Option       | Meaning                                                                                                                              |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `type`       | Dataset id (see the table below). Unknown ids throw `UNKNOWN_DATASET`.                                                               |
-| `pagination` | `true` / `"page"`: `{ data, total, page, pageSize }`; `"cursor"`: `{ data, nextCursor }`. Out-of-range pages are empty, as in Core.  |
+| `pagination` | `"page"` / `true`: `{ data, total, page, pageSize }`; `"cursor"`: `{ data, nextCursor }`; `false`: disabled; or `{ type, ... }`.     |
 | `slice`      | Caps the `getAll` list result (first N, or `{ start, end }`). The store keeps every record: `count`, `getById` and writes ignore it. |
 | `seed`       | `{ limit, offset }`: start the store with a window of the dataset. Records outside it do not exist for any operation.                |
 
-Root settings (`defaultOperations`, `readOnly`, `writeOnly`, `operationGroups`) follow Core's
-precedence; a resource's own value wins. Operation values are `true`, `false` or a function that
+Root `operations` accepts a preset or builtin list; resources can replace it or add named overrides.
+Operation values are `true`, `false` or a function that
 receives a typed `ctx` (`rows()`, `defaults`, `fail`) first. HTTP-shaped operations are rejected.
 The older flat form `defineMockApi({ users: "users-mock" })` still works.
 
@@ -249,7 +250,7 @@ Measured on Node 24 (`--expose-gc`, 3 fresh processes, one inline client, record
 | 100,000 |  41.3 MB (was 73.3) |        0.04 ms (was 169) |   4.0 ms (was 21) |
 
 Named datasets retain 0.17 MB per client (was 0.28) for `countries-csc` with 20 clients. The
-100-record figure includes one-time module warm-up. `search` over 100,000 rows is about 1.6 ms
+100-record figure includes one-time module warm-up. `findFirst` over 100,000 rows is about 1.6 ms
 slower than before (own-property reads). `slice` and `seed` do not skip loading: the full module is
 imported and validated.
 
@@ -324,7 +325,9 @@ const api = defineMockApi({
   },
 });
 // A backend can use any string field as a file reference; email is an existing catalog field here.
-const user = await api.users.patch("1", { email: new Blob(["fixture"], { type: "text/plain" }) });
+const user = await api.users.patch("1", {
+  body: { email: new Blob(["fixture"], { type: "text/plain" }) },
+});
 mockFiles(api).get(user.email)?.text();
 resetMock(api.users);
 ```

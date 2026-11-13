@@ -1,56 +1,47 @@
 import type {
   OperationDefinition,
-  OperationGroupName,
   OperationRunDefinition,
+  OperationSelection,
 } from "../types/definition.js";
 import type { OperationFn } from "../types/builtins.js";
 import { BUILTIN_CONVENTIONS, isBuiltinName } from "./conventions.js";
 
 export type OperationInput = OperationDefinition | OperationRunDefinition | OperationFn | boolean;
 export type ExpandedOperation = OperationDefinition | OperationRunDefinition | OperationFn;
-export type OperationGroup = OperationGroupName;
-
-export interface ExpandOperationsOptions {
-  defaultOperations?: boolean;
-  readOnly?: boolean;
-  writeOnly?: boolean;
-  operationGroups?: Partial<Record<OperationGroup, boolean>>;
-}
-
 /**
- * Deterministic precedence (lowest → highest), independent of property order:
- * builtin defaults → `defaultOperations` → `readOnly`/`writeOnly` → `extended` → `read`/`write`
- * → `many` → individual `operations` entries. The type-level `Selected` mirrors this exactly.
+ * Named overrides win over the selected preset or list, independent of property order.
  * Inputs are validated by `api/validate.ts` before this runs (once, at construction).
  */
-const GROUP_ORDER: readonly OperationGroup[] = ["extended", "read", "write", "many"];
-
 export function expandOperations(
-  operations?: Record<string, OperationInput>,
-  options: ExpandOperationsOptions = {},
+  operations?: Record<string, OperationInput> | OperationSelection,
 ): Record<string, ExpandedOperation> {
+  let selection: OperationSelection | undefined;
+  let overrides: Record<string, OperationInput> | undefined;
+  if (typeof operations === "string" || Array.isArray(operations)) {
+    selection = operations as OperationSelection;
+  } else if (operations && Object.hasOwn(operations, "preset")) {
+    const { preset, ...named } = operations as { preset: OperationSelection } & Record<
+      string,
+      OperationInput
+    >;
+    selection = preset;
+    overrides = named;
+  } else {
+    overrides = operations as Record<string, OperationInput> | undefined;
+  }
   const enabled = new Map<string, boolean>();
   for (const [name, convention] of Object.entries(BUILTIN_CONVENTIONS)) {
-    let on = options.defaultOperations !== false;
-    if (options.readOnly && convention.access === "write") on = false;
-    if (options.writeOnly && convention.access === "read") on = false;
-    for (const group of GROUP_ORDER) {
-      const choice = options.operationGroups?.[group];
-      if (choice === undefined) continue;
-      if (
-        (group === "extended" && convention.extended) ||
-        (group === "many" && convention.many) ||
-        group === convention.access
-      ) {
-        on = choice;
-      }
-    }
+    const on = selection === undefined || (Array.isArray(selection)
+      ? selection.includes(name as never)
+      : selection === "all" ||
+        (selection === "crud" && !convention.extended) ||
+        (selection === "read" && convention.access === "read"));
     enabled.set(name, on);
   }
 
   const expanded: Record<string, ExpandedOperation> = {};
   for (const name of Object.keys(BUILTIN_CONVENTIONS)) {
-    const override = operations?.[name];
+    const override = overrides?.[name];
     if (override === false || (override === undefined && !enabled.get(name))) continue;
     expanded[name] =
       typeof override === "function"
@@ -59,7 +50,7 @@ export function expandOperations(
           ? {}
           : override;
   }
-  for (const [name, definition] of Object.entries(operations ?? {})) {
+  for (const [name, definition] of Object.entries(overrides ?? {})) {
     if (
       isBuiltinName(name) ||
       definition === false ||

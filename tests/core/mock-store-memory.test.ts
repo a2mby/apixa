@@ -120,7 +120,7 @@ describe("working rows share objects with the seed until a write replaces them",
     const one = mk();
     const two = mk();
     await one.users.delete("1");
-    await one.users.patch("2", { name: "one" });
+    await one.users.patch("2", { body: { name: "one" } });
     expect(await two.users.count()).toBe(10);
     expect((await two.users.getById("2")).name).toBe("u1");
     resetMock(one);

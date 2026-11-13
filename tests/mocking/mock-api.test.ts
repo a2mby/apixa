@@ -52,12 +52,9 @@ describe("defineMockApi: configuration", () => {
           "getAll",
           "getBy",
           "getById",
-          "getBySlug",
           "getMany",
           "patch",
-          "search",
           "update",
-          "upsert",
         ].sort(),
       );
     }
@@ -104,21 +101,45 @@ describe("defineMockApi: configuration", () => {
   });
 
   it("rejects invalid slice and pagination values", async () => {
-    for (const size of [-1, 1.5, "10", NaN, Infinity, null]) {
+    for (const size of ["10", null, {}, { start: 1, end: "2" }]) {
       await expectCode(
         () => defineMockApi({ a: { type: "users-mock", slice: size as never } }),
         "INVALID_SLICE",
-        /slice must be a non-negative integer/,
+        /slice(?:\.(?:start|end))? must be a number/,
       );
     }
     for (const pagination of ["yes", 1, null]) {
       await expectCode(
         () => defineMockApi({ a: { type: "users-mock", pagination: pagination as never } }),
         "INVALID_CONFIG",
-        /pagination must be true, false, "page" or "cursor"/,
+        /pagination must be true, false, "page" or "cursor", a preset/,
       );
     }
+    await expectCode(
+      () => defineMockApi({ a: { type: "users-mock", pagination: { type: "cursor", preset: "laravel" } } }),
+      "INVALID_CONFIG",
+      /has no "cursor" mapping/,
+    );
     await expectCode(() => defineMockApi({ a: 42 as never }), "INVALID_CONFIG");
+  });
+
+  it("supports unified preset shorthands and object pagination forms in defineMockApi", async () => {
+    const api = defineMockApi({
+      shorthand: { type: "users-mock", pagination: "laravel" },
+      cursorPreset: { type: "users-mock", pagination: { type: "cursor", preset: "laravel-paginator" } },
+      noTypeObj: { type: "users-mock", pagination: { preset: "strapi" } },
+    });
+    const p1 = await api.shorthand.getAll({ page: 1, pageSize: 2 });
+    expectTypeOf(p1).toEqualTypeOf<Page<User>>();
+    expect(p1).toMatchObject({ total: 100, page: 1, pageSize: 2 });
+
+    const p2 = await api.cursorPreset.getAll({ pageSize: 3 });
+    expect(p2.data).toHaveLength(3);
+    expect(p2.nextCursor).toBe("3");
+
+    const p3 = await api.noTypeObj.getAll({ page: 2, pageSize: 5 });
+    expectTypeOf(p3).toEqualTypeOf<Page<User>>();
+    expect(p3).toMatchObject({ total: 100, page: 2, pageSize: 5 });
   });
 
   it("accepts a dataset id string as resource shorthand", async () => {
@@ -230,13 +251,13 @@ describe("defineMockApi: seeding and source data", () => {
       username: "new",
       companyId: "1",
     });
-    await api.users.patch("1", { name: "Changed" });
-    await api.users.update("2", {
+    await api.users.patch("1", { body: { name: "Changed" } });
+    await api.users.update("2", { body: {
       name: "Replaced",
       email: "r@example.com",
       username: "r",
       companyId: "1",
-    });
+    } });
     await api.users.delete("1");
 
     expect(usersPreset).toEqual(before);
@@ -280,7 +301,7 @@ describe("defineMockApi: CRUD", () => {
       companyId: "1",
     });
     expect(await api.users.getById(created.id)).toEqual(created);
-    await api.users.patch(created.id, { name: "Alan T." });
+    await api.users.patch(created.id, { body: { name: "Alan T." } });
     expect((await api.users.getById(created.id)).name).toBe("Alan T.");
     await api.users.delete(created.id);
     expect(await api.users.getAll()).toHaveLength(2);
@@ -373,30 +394,30 @@ describe("defineMockApi: CRUD", () => {
 
   it("update replaces the record and keeps its id", async () => {
     const api = defineMockApi({ products: { type: "products-mock", seed: { limit: 3 } } });
-    const replaced = await api.products.update("2", {
+    const replaced = await api.products.update("2", { body: {
       title: "Only title",
-    } as never);
+    } as never });
     expect(replaced).toEqual({ id: "2", title: "Only title" });
     expect(await api.products.getById("2")).toEqual({ id: "2", title: "Only title" });
 
     // same id (as a number, or repeated in the body) is fine; a different id is not
-    await api.products.update(2, { id: 2, title: "Again" } as never);
+    await api.products.update(2, { body: { id: 2, title: "Again" } as never });
     await expectCode(
-      () => api.products.update("2", { id: "9", title: "Nope" } as never),
+      () => api.products.update("2", { body: { id: "9", title: "Nope" } as never }),
       "INVALID_INPUT",
       /cannot change id from "2"/,
     );
-    await expectCode(() => api.products.update("999", {} as never), "NOT_FOUND");
+    await expectCode(() => api.products.update("999", { body: {} as never }), "NOT_FOUND");
   });
 
   it("patch changes only the supplied fields", async () => {
     const api = defineMockApi({ products: { type: "products-mock", seed: { limit: 3 } } });
     const before = await api.products.getById("1");
-    const patched = await api.products.patch("1", { price: 1.5, stock: undefined });
+    const patched = await api.products.patch("1", { body: { price: 1.5, stock: undefined } });
     expect(patched).toEqual({ ...before, price: 1.5 }); // `undefined` is skipped, not applied
     expect(await api.products.getById("1")).toEqual(patched);
-    await expectCode(() => api.products.patch("1", { id: "2" }), "INVALID_INPUT");
-    await expectCode(() => api.products.patch("999", { price: 1 }), "NOT_FOUND");
+    await expectCode(() => api.products.patch("1", { body: { id: "2" } }), "INVALID_INPUT");
+    await expectCode(() => api.products.patch("999", { body: { price: 1 } }), "NOT_FOUND");
   });
 
   it("delete removes the record; deleting a missing record rejects with NOT_FOUND", async () => {
@@ -411,8 +432,8 @@ describe("defineMockApi: CRUD", () => {
     const api = defineMockApi({ users: { type: "users-mock", seed: { limit: 2 } } });
     for (const bad of [null, undefined, [], "text", 7]) {
       await expectCode(() => api.users.create(bad as never), "INVALID_INPUT", /create\(\) input/);
-      await expectCode(() => api.users.update("1", bad as never), "INVALID_INPUT");
-      await expectCode(() => api.users.patch("1", bad as never), "INVALID_INPUT");
+      await expectCode(() => api.users.update("1", { body: bad as never }), "INVALID_INPUT");
+      await expectCode(() => api.users.patch("1", { body: bad as never }), "INVALID_INPUT");
     }
     await expectCode(
       () => api.users.create({ fn: () => 1 } as never),
@@ -531,7 +552,7 @@ describe("defineMockApi: pagination", () => {
     const lastPage = await api.products.getAll({ page: 6, pageSize: 10 });
     expect(lastPage.data.map((p) => p.id)).toEqual(["51"]);
 
-    await api.products.patch("51", { title: "Edited" });
+    await api.products.patch("51", { body: { title: "Edited" } });
     expect((await api.products.getAll({ page: 6, pageSize: 10 })).data[0]!.title).toBe("Edited");
 
     await api.products.delete("51");

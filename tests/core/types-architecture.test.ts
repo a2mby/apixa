@@ -27,11 +27,11 @@ describe("defineApi type architecture", () => {
       ...base,
       resources: {
         users: { path: "/users", operations: { getById: false, createMany: false } },
-        ro: { path: "/ro", readOnly: true },
-        wo: { path: "/wo", writeOnly: true },
-        none: { path: "/none", defaultOperations: false, operations: { getAll: true } },
-        groups: { path: "/g", operationGroups: { read: false, many: true } },
-        explicit: { path: "/e", operationGroups: { read: false }, operations: { getById: true } },
+        ro: { path: "/ro", operations: "read" },
+        wo: { path: "/wo", operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"] },
+        none: { path: "/none", operations: ["getAll"] },
+        groups: { path: "/g", operations: ["getMany", "createMany", "deleteMany"] },
+        explicit: { path: "/e", operations: { preset: [], getById: true } },
       },
     });
     expectTypeOf(api.users).not.toHaveProperty("getById");
@@ -74,7 +74,7 @@ describe("defineApi type architecture", () => {
     expectTypeOf(api.users.stats).returns.resolves.toEqualTypeOf<{ total: number }>();
     expectTypeOf(api.users.loose).parameters.toEqualTypeOf<[value: unknown]>();
     expectTypeOf(api.users.loose).returns.resolves.toBeUnknown();
-    expectTypeOf(api.users.archive).parameter(0).toEqualTypeOf<string | number>();
+    expectTypeOf(api.users.archive).parameter(0).toEqualTypeOf<unknown>();
   });
 
   it("infers entities from mock data with no entity, generic, or satisfies", () => {
@@ -150,8 +150,7 @@ describe("defineApi type architecture", () => {
       userId: number;
       userProfile: { phoneNumber: string };
     }>();
-    expectTypeOf(api.users.patch)
-      .parameter(1)
+    expectTypeOf<Parameters<typeof api.users.patch>[1]["body"]>()
       .toEqualTypeOf<Partial<{ userId: number; userProfile: { phoneNumber: string } }>>();
   });
 
@@ -178,7 +177,7 @@ describe("defineApi type architecture", () => {
       });
       defineApi({
         ...base,
-        // @ts-expect-error both mode flags
+        // @ts-expect-error removed selection flags
         resources: { users: { path: "/users", readOnly: true, writeOnly: true } },
       });
       defineApi({
@@ -205,6 +204,57 @@ describe("defineApi type architecture", () => {
       resetMock(live.users);
       // @ts-expect-error unknown client option inside defineApis
       defineApis({ a: { ...base, timeuot: 1, resources: {} } });
+    }
+    expect(true).toBe(true);
+  });
+
+  it("isolates malformed config diagnostics so sibling operations and resources stay typed", () => {
+    type Post = { id: number; title: string };
+    if (false as boolean) {
+      const apiWithMissingMethod = defineApi<{
+        users: { entity: User; operations: { good: { response: number } } };
+        posts: { entity: Post };
+      }>()({
+        ...base,
+        resources: {
+          users: {
+            path: "/users",
+            operations: {
+              good: { method: "GET", path: "/good" },
+              // @ts-expect-error missing method on custom operation
+              bad: { path: "/bad" },
+            },
+          },
+          posts: {
+            path: "/posts",
+            // @ts-expect-error invalid pagination setting
+            pagination: "bogus",
+          },
+        },
+      });
+      expectTypeOf(apiWithMissingMethod.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
+      expectTypeOf(apiWithMissingMethod.users.good).returns.resolves.toEqualTypeOf<number>();
+      expectTypeOf(apiWithMissingMethod.posts.getAll).returns.resolves.toEqualTypeOf<Post[]>();
+      expectTypeOf(apiWithMissingMethod.posts.getById).parameter(0).toEqualTypeOf<number>();
+      expectTypeOf(apiWithMissingMethod.posts.getById).returns.resolves.toEqualTypeOf<Post>();
+
+      const apiWithInvalidMethod = defineApi<{
+        users: { entity: User; operations: { good: { response: number } } };
+      }>()({
+        ...base,
+        resources: {
+          users: {
+            path: "/users",
+            // @ts-expect-error invalid HTTP method inside operations union
+            operations: {
+              good: { method: "GET", path: "/good" },
+              bogus: { method: "BOGUS", path: "/bogus" },
+            },
+          },
+        },
+      });
+      expectTypeOf(apiWithInvalidMethod.users.getAll).returns.resolves.toEqualTypeOf<User[]>();
+      expectTypeOf(apiWithInvalidMethod.users.good).returns.resolves.toEqualTypeOf<number>();
     }
     expect(true).toBe(true);
   });

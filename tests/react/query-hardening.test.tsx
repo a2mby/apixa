@@ -87,14 +87,14 @@ describe("Q1 — tracked-property re-render parity", () => {
 
 describe("Q2 — signal binding by Core argument position", () => {
   it("forwards the signal for nested-resource operations without touching params", async () => {
-    const { api, requests } = recordingApi();
+    const { api, requests } = recordingApi(() => ada);
     const client = newClient();
     const { result } = renderHook(
       () =>
         useResourceQuery(api.members, {
           queryKey: ["members"],
           operation: "getById",
-          args: [{ orgId: "o1", teamId: "t1", id: "7" }],
+          args: ["7", { params: { orgId: "o1", teamId: "t1" } }],
         }),
       { wrapper: wrap(client) },
     );
@@ -103,7 +103,8 @@ describe("Q2 — signal binding by Core argument position", () => {
     expect(client.getQueryCache().getAll()[0]!.queryKey).toEqual([
       "members",
       "detail",
-      { orgId: "o1", teamId: "t1", id: "7" },
+      "7",
+      { params: { orgId: "o1", teamId: "t1" } },
     ]);
   });
 
@@ -127,7 +128,7 @@ describe("Q2 — signal binding by Core argument position", () => {
         useResourceQuery(api2.members, {
           queryKey: ["m"],
           operation: "getAll",
-          args: ["o1"],
+          args: [{ params: { orgId: "o1" } }],
         }),
       { wrapper: wrap(client) },
     );
@@ -234,10 +235,8 @@ describe("Q4 — inherited reads", () => {
         "getAll",
         "getBy",
         "getById",
-        "getBySlug",
         "getMany",
         "findByTeam",
-        "search",
         "stats",
       ].sort(),
     );

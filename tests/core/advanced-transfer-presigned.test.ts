@@ -27,12 +27,14 @@ function setup() {
       inheritedHeaders++;
       return { Authorization: "Bearer private", "x-secret": "private" };
     },
-    middleware: {
-      onRequest(request) {
-        inheritedMiddleware++;
-        request.headers.set("x-custom-secret", "private");
+    middleware: [
+      {
+        onRequest(request) {
+          inheritedMiddleware++;
+          request.headers.set("x-custom-secret", "private");
+        },
       },
-    },
+    ],
     transport,
     resources: {
       files: {
@@ -156,11 +158,13 @@ describe("explicit presigned destinations", () => {
     let replay: unknown;
     const api = defineApi({
       baseURL: "https://api.example.com",
-      middleware: {
-        onError(error, context) {
-          replay = context.replay;
+      middleware: [
+        {
+          onError(error, context) {
+            replay = context.replay;
+          },
         },
-      },
+      ],
       transport: createFetchTransport(async () => {
         throw new Error(url);
       }),

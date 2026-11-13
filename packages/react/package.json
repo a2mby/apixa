@@ -1,6 +1,6 @@
 {
   "name": "@apixa/react",
-  "version": "2.0.0",
+  "version": "3.0.0-rc.0",
   "description": "React integration for Apixa: resource-aware queries, mutations, provider and QueryClient, backed by TanStack Query.",
   "license": "MIT",
   "repository": {
