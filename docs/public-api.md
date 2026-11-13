@@ -7,7 +7,7 @@ area and what must stay compatible. Checks: `tests/facade/`, `pnpm check:archite
 
 ## Distribution and private modules
 
-Only `apixa` is published (`1.0.0-rc.0`, ESM, Node.js >=22). `packages/core`, `packages/mocking`,
+Only `apixa` is published (`2.0.0` is current on npm `latest`; `3.0.0-rc.0` is the prepared release candidate in this repository, ESM, Node.js >=22). `packages/core`, `packages/mocking`,
 `packages/react` and `packages/internal/shared` are private workspace modules. Their `@apixa/*`
 names are for development; the public distribution imports none of those names. The facade in
 `src/` only re-exports canonical implementations, compiled together into shared runtime chunks.
@@ -34,9 +34,9 @@ unpublished root manifest). `@apixa/tanstack-query` was never published to npm.
 
 ### Curated root
 
-Values (29): `defineApi`, `defineApis`, `defineMockApi`; `ApiError`, `NetworkError`, `HttpError`,
-`ParseError`, `ValidationError`, `TimeoutError`, `AbortError`, `ConfigError`, `SecurityError`,
-`TransformError`, `MockError`, `MockApiError`, `InvalidSliceError`, `isApiError`, `isHttpError`,
+Values: `defineApi`, `defineApis`, `defineMockApi`; `ApiError`, `NetworkError`, `HttpError`,
+`ParseError`, `ResponseShapeError`, `ValidationError`, `TimeoutError`, `AbortError`, `ConfigError`, `SecurityError`,
+`SerializationError`, `TransformError`, `MockError`, `MockApiError`, `InvalidSliceError`, `isApiError`, `isHttpError`,
 `isTimeoutError`, `isMockError`; `createFetchTransport`, `computeBackoffMs`, `parseRetryAfter`,
 `isRetryableStatus`; `convertKey`, `transformKeys`, `KEY_CASES`; `OPERATION_METADATA`,
 `getOperationMetadata`. The exact list is `tests/facade/curated-root-exports.json`, shared by the
@@ -118,6 +118,39 @@ No symbol or import path changed; the generated export snapshot is unchanged. On
   unchanged. **Migration:** an API that redirected to another origin must list that origin or return the URL in a JSON
   body and use a `presigned` descriptor. This is the only public type addition in v1.8.0 (one optional property); no
   export was added or removed.
+
+## v3.0.0-rc.0 changes (Core overhaul; release candidate prepared, not npm-published)
+
+Coordinated breaking v3 release candidate consolidating operation selection, typed signatures,
+query/body serialization, response processing, transforms, middleware and per-operation pagination:
+
+- **Facade & Core surface**: Added `ResponseShapeError` to root and Core exports alongside
+  `QueryOptions`, `ResponseOptions`, `ResponseHookContext`, `MiddlewareOptions`, `MiddlewareHooks`,
+  `PaginationQueryOf`, `PaginatedListOf`, `OperationPreset`, `OperationSelection`, `OperationsBag`,
+  `QueryArrayFormat`, `TransformsConfig`, `KeyTransformConfig`, `ResourcePagination`,
+  `PaginationPreset`, `LaravelPagination`, `LaravelPaginatorPagination`, `LaravelCursorPagination`,
+  `StrapiPagination`, `PayloadPagination`, `NestjsPagination`, `PaginationFields`,
+  `PaginationParams`, `PageResult`, `ResolvedPagination`, `PaginationMode`, `LayerOptions`,
+  `ApiState`, `ApiStateOf`, `ResourceState`, `OperationState`, `OperationKindsOf`, `BuiltinOpName`,
+  `ExtendedBuiltinOpName`, and `AllBuiltinOpName`.
+- **13 built-in operations**: Removed `getBySlug`, `upsert`, and `search` from the default builtin set
+  (and `OPERATION_METADATA`); kept `getAll`, `getById`, `getMany`, `getBy`, `findFirst`, `count`,
+  `exists` (7 reads) and `create`, `update`, `patch`, `delete`, `createMany`, `deleteMany` (6 writes).
+  Removed deprecated `bulkCreate` / `bulkDelete` / `createBulk` / `deleteBulk` aliases and boolean
+  resource `pagination: true`.
+- **Operation calls & definitions**: Standardized `update(id, { body, ...options })` and
+  `patch(id, { body, ...options })`, resource/call `{ params }` for path parameters, declarative
+  custom operations (`hasBody: false` reads take `(options?)`, body writes take `(body?, options?)`),
+  and HTTP-method-derived `kind` for declarative operations.
+- **Unified middleware**: Replaced `requestMiddleware` / `responseMiddleware` arrays with unified
+  ordered `middleware: MiddlewareHooks[]` (`onRequest`, `onResponse`, `onError`), where request
+  middleware runs before final query serialization and accepts `(request)` / `(response)` /
+  `(error, { request, replay })`.
+- **Serialization, responses & pagination**: Added client-wide `query` (`nulls`, `emptyArrays`,
+  `booleans`) alongside `queryArrayFormat` and `querySerializer`, strict JSON/explicit `responseType`,
+  `response` (`unwrap`, `parse`, `validate`, `source`), bounded/excluded `transforms` (`TransformError`
+  on cycle/depth/collision), and opt-in per-operation `pagination` on `getAll` with live/mock parity.
+  `slice` now uses native array semantics and rejects configuration alongside `pagination`.
 - Validation counts each occurrence of a shared object (a plain object reachable twice is serialized twice, so its files
   count twice); previously the second occurrence was skipped, which under-counted `maxFiles` / `maxTotalSize`.
 - `loadDataset(id, { basePath })` (`apixa/mocking/node`) no longer resolves an `id` that points outside the datasets root.

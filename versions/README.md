@@ -20,7 +20,9 @@ Each folder under `versions/` freezes the coding contract for one milestone.
 
 ## Current
 
-**[v1.8.1](./v1.8.1/)** — Laravel Real-World Backend Playground. Environment-only implementation under issue #107: independent Composer/Laravel project, native PostgreSQL, MongoDB documents, empty API routing, CORS, storage and isolated test/E2E/production configuration. No SDK/package-version change or npm release. HTTP manual-test cases stay blocked until the author adds application endpoints.
+**[v3.0.0](./v3.0.0/)** — coordinated Core architecture overhaul and release-candidate preparation; no npm publication.
+
+Previous in-progress work: [v1.9.0](./v1.9.0/) — live pagination and DX fixes; not completed or shipped.
 
 ## Milestone status
 
@@ -29,7 +31,9 @@ an unchecked frozen box is not inferred as passed.
 
 | Version | Status                                                                                | Topic                                                |
 | ------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| v1.8.1  | Active — environment verified locally; PR CI and owner sign-off remain delivery gates | Laravel/PostgreSQL/MongoDB playground                |
+| v3.0.0  | Release candidate `3.0.0-rc.0` verified (not npm-published)                           | Coordinated Core architecture overhaul               |
+| v1.9.0  | Carried forward into v3 where applicable; not released separately                     | DX and bug fixes, starting with live pagination      |
+| v1.8.1  | Environment verified locally; PR CI and owner sign-off remain delivery gates          | Laravel/PostgreSQL/MongoDB playground                |
 | v1.8.0  | Merged as PR #106 (`b0cf6b4`); CI Node 22/24 green; owner final sign-off not inferred | File lifecycle, performance and production hardening |
 | v1.7.0  | Completed, verified, merged as PR #104; owner-signed-off 2026-11-11                   | Large files and advanced transfers                   |
 | v1.6.0  | Implemented and verified; merged as PR #102; owner sign-off open                      | Advanced framework and consumer integration          |

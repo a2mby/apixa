@@ -75,7 +75,7 @@ describe("React integration inference from Apixa ResourceClient", () => {
   it("accepts read-only and partially disabled Core resources without exposing absent methods", () => {
     const readOnly = defineApi<AppApi>()({
       ...base,
-      resources: { users: { path: "/users", readOnly: true } },
+      resources: { users: { path: "/users", operations: "read" } },
     });
     const noDetail = defineApi<AppApi>()({
       ...base,
@@ -101,7 +101,7 @@ describe("useResourceMutation inference from real defineApi clients", () => {
         path: "/users",
         operations: {
           deleteMany: false,
-          archive: { kind: "write", method: "POST", path: "/:id/archive" },
+          archive: { kind: "write", method: "POST", path: "/:id/archive", hasBody: false },
           stats: {
             kind: "read",
             run: async (ctx, range: "day" | "week") =>
@@ -109,7 +109,7 @@ describe("useResourceMutation inference from real defineApi clients", () => {
           },
         },
       },
-      ro: { path: "/ro", readOnly: true },
+      ro: { path: "/ro", operations: "read" },
     },
   });
 
@@ -127,7 +127,7 @@ describe("useResourceMutation inference from real defineApi clients", () => {
       void users.create({ name: "Ada", email: "a@x.dev" });
       // @ts-expect-error create takes a body, not a tuple
       void users.create([{ name: "Ada", email: "a@x.dev" }]);
-      void users.update("42", { name: "Grace" });
+      void users.update("42", { body: { name: "Grace" } });
       expectTypeOf(users.states.update.data).toEqualTypeOf<User | undefined>();
       // @ts-expect-error id is a string
       void users.update(42, { name: "Grace" });
@@ -144,7 +144,7 @@ describe("useResourceMutation inference from real defineApi clients", () => {
       expectTypeOf(users.archive).parameters.toEqualTypeOf<
         import("../../packages/react/src/types.js").OperationParameters<typeof api.users, "archive">
       >();
-      void users.archive("42");
+      void users.archive({ params: { id: "42" } });
       // @ts-expect-error custom reads are absent
       void users.stats("day");
     }
@@ -295,7 +295,7 @@ describe("query typing with defineApis and runtime selection", () => {
       const list = useResourceQuery(apis.backend.users, {
         queryKey: ["users"],
         scope: ["backend", "tenant-42"],
-        args: ["tenant-42"],
+        args: [{ params: { orgId: "tenant-42" } }],
       });
       expectTypeOf(list.data).toEqualTypeOf<
         | {
@@ -314,7 +314,7 @@ describe("query typing with defineApis and runtime selection", () => {
       const detail = useResourceQuery(apis.backend.users, {
         queryKey: ["users"],
         operation: "getById",
-        args: [{ orgId: "acme", id: "42" }],
+        args: ["42", { params: { orgId: "acme" } }],
       });
       expectTypeOf(detail.data).toEqualTypeOf<User | undefined>();
       const maybe = conditional.users;
@@ -329,7 +329,7 @@ describe("query typing with defineApis and runtime selection", () => {
       baseURL: "https://api.example.com",
       transport: base.transport,
       resources: {
-        users: { path: "/users", defaultOperations: false, operations: { count: true } },
+        users: { path: "/users", operations: ["count"] },
       },
     });
     if (false as boolean) {

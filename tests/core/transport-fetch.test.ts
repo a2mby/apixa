@@ -48,16 +48,22 @@ describe("createFetchTransport — response parsing", () => {
     expect(response.body).toEqual([{ id: "1" }]);
   });
 
-  it("falls back to raw text when content-type is ambiguous and the body isn't JSON", async () => {
-    // No declared content-type: Apixa can't assume the body was meant to be JSON, so a parse
-    // failure here falls back to the raw text rather than throwing — unlike a server that
-    // explicitly declares `application/json` and then sends something broken.
+  it("throws ParseError on ambiguous content-type for default json, and falls back to raw text for auto", async () => {
     const transport = createFetchTransport(fetchImplReturning("plain text, not json", ""));
+
+    await expect(
+      transport.request({
+        url: "https://api.example.com/users",
+        method: "GET",
+        headers: new Headers(),
+      }),
+    ).rejects.toMatchObject({ name: "ParseError", code: "PARSE" });
 
     const response = await transport.request({
       url: "https://api.example.com/users",
       method: "GET",
       headers: new Headers(),
+      responseType: "auto",
     });
     expect(response.body).toBe("plain text, not json");
   });

@@ -31,12 +31,6 @@ const cases: Case[] = [
     mock: (r) => expect(r).toMatchObject({ id: 2 }),
   },
   {
-    name: "getBySlug",
-    call: (u) => u.getBySlug!("sara"),
-    http: "GET /users/slug/sara",
-    mock: (r) => expect(r).toMatchObject({ id: 3 }),
-  },
-  {
     name: "getMany",
     call: (u) => u.getMany!([3, 1]),
     http: "GET /users?id=3&id=1",
@@ -45,20 +39,14 @@ const cases: Case[] = [
   {
     name: "getBy",
     call: (u) => u.getBy!("name", "Omar"),
-    http: "GET /users/name/Omar",
+    http: "GET /users?name=Omar",
     mock: (r) => expect(r).toMatchObject({ id: 2 }),
   },
   {
     name: "findFirst",
-    call: (u) => u.findFirst!({ name: "Sara" }),
+    call: (u) => u.findFirst!({ query: { name: "Sara" } }),
     http: "GET /users?name=Sara",
     mock: (r) => expect(r).toMatchObject({ id: 3 }),
-  },
-  {
-    name: "search",
-    call: (u) => u.search!({ query: { name: "a" } }),
-    http: "GET /users/search?name=a",
-    mock: (r) => expect(r).toHaveLength(3),
   },
   {
     name: "exists",
@@ -80,21 +68,15 @@ const cases: Case[] = [
   },
   {
     name: "update",
-    call: (u) => u.update!(1, { name: "X", slug: "x" }),
+    call: (u) => u.update!(1, { body: { name: "X", slug: "x" } }),
     http: "PUT /users/1",
     mock: (r) => expect(r).toMatchObject({ name: "X" }),
   },
   {
     name: "patch",
-    call: (u) => u.patch!(1, { name: "P" }),
+    call: (u) => u.patch!(1, { body: { name: "P" } }),
     http: "PATCH /users/1",
     mock: (r) => expect(r).toMatchObject({ name: "P", slug: "ali" }),
-  },
-  {
-    name: "upsert",
-    call: (u) => u.upsert!(7, { name: "U" }),
-    http: "PUT /users/7",
-    mock: (r) => expect(r).toMatchObject({ id: 7 }),
   },
   {
     name: "delete",
@@ -123,9 +105,8 @@ const other = (name: AllBuiltinOpName) => names[(names.indexOf(name) + 1) % name
 const coupled: Partial<Record<AllBuiltinOpName, AllBuiltinOpName[]>> = {
   getMany: ["getAll", "getById"],
   exists: ["getById"],
-  findFirst: ["search", "getAll"],
-  getBy: ["getById", "getAll", "getBySlug"],
-  upsert: ["update", "create"],
+  findFirst: ["getAll"],
+  getBy: ["getById", "getAll"],
   createMany: ["create"],
   deleteMany: ["delete"],
 };
@@ -157,7 +138,7 @@ describe.each(cases)("$name is independent", ({ name, call, http, mock }) => {
           body:
             name === "count"
               ? 3
-              : name === "getMany" || name === "findFirst"
+              : name === "getAll" || name === "getMany" || name === "findFirst" || name === "createMany"
                 ? [{ id: 1 }]
                 : { id: 1 },
         };
@@ -204,7 +185,7 @@ describe("HTTP-specific strategies", () => {
     let errors = 0;
     const api = defineApi({
       baseURL: "https://api.example.com",
-      middleware: { onError: () => void errors++ },
+      middleware: [{ onError: () => void errors++ }],
       transport: createFakeTransport(() => ({ status: 404, body: { message: "nope" } })),
       resources: { users: { path: "/users" } },
     });
@@ -212,13 +193,13 @@ describe("HTTP-specific strategies", () => {
     expect(errors).toBe(0);
   });
 
-  it("getMany and findFirst accept bare arrays or { data } envelopes", async () => {
+  it("getMany and findFirst process array responses independently", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
-      transport: createFakeTransport(() => ({ body: { data: [{ id: 5 }, { id: 6 }], total: 2 } })),
+      transport: createFakeTransport(() => ({ body: [{ id: 5 }, { id: 6 }] })),
       resources: { users: { path: "/users" } },
     });
     expect(await api.users.getMany([5, 6])).toEqual([{ id: 5 }, { id: 6 }]);
-    expect(await api.users.findFirst({ id: 5 })).toEqual({ id: 5 });
+    expect(await api.users.findFirst({ query: { id: 5 } })).toEqual({ id: 5 });
   });
 });

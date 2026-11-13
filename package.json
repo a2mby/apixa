@@ -1,6 +1,6 @@
 {
   "name": "apixa",
-  "version": "2.0.0",
+  "version": "3.0.0-rc.0",
   "description": "Define your API once. Use it everywhere.",
   "license": "MIT",
   "repository": {
@@ -88,6 +88,7 @@
     "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/internal-shared typecheck && pnpm --filter @apixa/mocking typecheck && pnpm --filter @apixa/react typecheck && tsc --noEmit -p tests/tsconfig.json && pnpm typecheck:examples",
     "typecheck:examples": "pnpm --filter @apixa/example-query-ssr-next typecheck",
     "test": "pnpm ai:test && vitest run",
+    "consumer:local": "node scripts/local-package-consumer.mjs",
     "verify:consumers": "node scripts/mocking-consumer.mjs && node scripts/verify-react-consumers.mjs && node scripts/verify-unified-consumer.mjs && node scripts/verify-type-consumers.mjs",
     "verify:browser": "node scripts/verify-browser.mjs",
     "verify:edge": "node scripts/verify-edge.mjs",

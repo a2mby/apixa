@@ -17,10 +17,14 @@ export function recordingTransport(): Transport & Recorded {
     calls,
     async request(input) {
       calls.push(input);
-      const raw = new Response(JSON.stringify({ id: "1", name: "x" }), {
+      const body =
+        input.method === "GET" && new URL(input.url).pathname === "/pets"
+          ? [{ id: "1", name: "x" }]
+          : { id: "1", name: "x" };
+      const raw = new Response(JSON.stringify(body), {
         headers: { "content-type": "application/json" },
       });
-      return { status: 200, headers: raw.headers, raw, body: { id: "1", name: "x" } };
+      return { status: 200, headers: raw.headers, raw, body };
     },
   };
 }

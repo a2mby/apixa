@@ -3,7 +3,7 @@
 # Usage: run-laravel.sh [--env=<environment>]
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 APP="$ROOT/examples/backends/laravel-backend"
 HOST="${LARAVEL_HOST:-127.0.0.1}"
 PORT="${LARAVEL_PORT:-8000}"
@@ -22,9 +22,9 @@ Environment variables:
   LARAVEL_ENV   optional Laravel environment name (for example testing)
 
 Examples:
-  ./scripts/laravel/macos/run-laravel.sh
-  LARAVEL_PORT=8010 ./scripts/laravel/linux/run-laravel.sh
-  ./scripts/laravel/macos/run-laravel.sh --env=testing
+  ./scripts/macos/run-laravel.sh
+  LARAVEL_PORT=8010 ./scripts/linux/run-laravel.sh
+  ./scripts/macos/run-laravel.sh --env=testing
 EOF
       exit 0
       ;;

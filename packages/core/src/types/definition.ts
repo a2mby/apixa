@@ -6,7 +6,7 @@ import type { HeadersSource, HttpMethod, QueryParams } from "./http.js";
 import type { MiddlewareOptions } from "./middleware.js";
 import type { MockDatasetId } from "./mock-datasets.js";
 import type { RetryOption } from "./retry.js";
-import type { ResponseType, TransferObserver } from "./transport.js";
+import type { ResponseType, TransferObserver, ApiRequest } from "./transport.js";
 import type { TransformsConfig } from "./transform.js";
 import type { Transport } from "./transport.js";
 
@@ -19,6 +19,57 @@ export type OperationsBag<V> = Partial<Record<AllBuiltinOpName, V>> & Record<str
 /** How array query values are encoded. Default: `"repeat"`. */
 export type QueryArrayFormat = "repeat" | "comma" | "brackets";
 
+/** Client-wide query string serialization options. */
+export interface QueryOptions {
+  /**
+   * How `null` query values are serialized. Default: `"omit"`.
+   * - `"omit"`: omit keys and array items whose value is `null`
+   * - `"empty"`: serialize as an empty value (`key=`)
+   * - `"null"`: serialize as literal `"null"` (`key=null`)
+   */
+  nulls?: "omit" | "empty" | "null";
+  /**
+   * How empty array query values (`[]`) are serialized. Default: `"omit"`.
+   * - `"omit"`: omit empty arrays
+   * - `"empty"`: serialize as an empty value (`key=`, or `key%5B%5D=` in `"brackets"` mode)
+   */
+  emptyArrays?: "omit" | "empty";
+  /**
+   * How boolean query values are serialized. Default: `"string"` (`"true"` / `"false"`).
+   * `"number"` encodes booleans as `"1"` / `"0"`.
+   */
+  booleans?: "string" | "number";
+}
+
+/** Context passed to `response.unwrap`, `response.parse`, and `response.validate` hooks. */
+export interface ResponseHookContext {
+  readonly status: number;
+  readonly headers: Headers;
+  readonly request: ApiRequest;
+  readonly resource: string;
+  readonly operation: string;
+}
+
+/** Response envelope extraction, parsing, and validation hooks (inherited root → resource → operation). */
+export interface ResponseOptions<T = unknown> {
+  /**
+   * Extract payload from a backend response envelope (e.g. `"data"`, `"meta.item"`, or
+   * `(source, ctx) => unknown`). Pass `false` to disable an inherited unwrap rule.
+   */
+  unwrap?: string | false | ((source: unknown, ctx: ResponseHookContext) => unknown);
+  /**
+   * Parse / coerce the unwrapped & key-transformed body before builtin shape checks. Non-`ApiError`
+   * throws are wrapped in `ValidationError`. Pass `false` to disable an inherited parser.
+   */
+  parse?: ((data: unknown, ctx: ResponseHookContext) => T) | false;
+  /**
+   * Validate the processed response data. Returning a defined value replaces the data; returning
+   * `undefined` keeps it unchanged. Non-`ApiError` throws are wrapped in `ValidationError`.
+   * Pass `false` to disable an inherited validator.
+   */
+  validate?: { bivariant(data: unknown, ctx: ResponseHookContext): unknown }["bivariant"] | false;
+}
+
 /** Settings shared by root, resource, and operation levels (most specific wins). */
 export interface LayerOptions extends MiddlewareOptions {
   headers?: HeadersSource;
@@ -26,13 +77,10 @@ export interface LayerOptions extends MiddlewareOptions {
   timeout?: number;
   retry?: RetryOption;
   transforms?: TransformsConfig;
+  response?: ResponseOptions;
 }
 
-/**
- * Runtime operation config: overrides merge with the builtin convention (unspecified fields keep
- * their defaults). Payload types live on the `defineApi<T>()` metadata, not here.
- */
-/** Read/write classification. Builtins use their convention; custom operations declare it. */
+/** Read/write classification. Declarative HTTP operations derive it from their method. */
 export type OperationKind = "read" | "write";
 
 /**
@@ -171,14 +219,11 @@ export interface OperationDefinition extends LayerOptions {
    * replay. Pass `idempotencyKey` in the call options to supply (and reuse) your own key.
    */
   idempotency?: IdempotencyOption;
-  /**
-   * Custom operations only: `"read"` marks it safe to run as a cached query (integrations such as
-   * `@apixa/tanstack-query`). Required for custom operations. Builtins keep their fixed convention.
-   */
+  /** Explicit classification for function-based operations; HTTP methods determine their kind. */
   kind?: OperationKind;
   /** Path relative to the resource `path`, or an absolute URL on the API origin. */
   path?: string;
-  /** Override body presence. Default: `true` for POST / PUT / PATCH (and `deleteMany`). */
+  /** Override body presence. Default: `true` for POST / PUT / PATCH / DELETE (and `deleteMany`), `false` for GET / HEAD / OPTIONS (and builtin `delete`). */
   hasBody?: boolean;
   /**
    * Custom operations only: what this operation does on a **mocked** resource, as
@@ -188,6 +233,12 @@ export interface OperationDefinition extends LayerOptions {
    * mocked resource rejects with `MOCK_UNSUPPORTED`; on a live resource the handler is ignored.
    */
   mock?: unknown;
+  /**
+   * Opt-in pagination for list operations (`getAll`, `getMany`, and custom declarative operations).
+   * `false` disables resource-level pagination on `getAll`; `true` uses the resource's pagination
+   * or `"page"`.
+   */
+  pagination?: ResourcePagination;
 }
 
 /** A function operation with metadata — same execution as passing the function directly. */
@@ -199,6 +250,15 @@ export interface OperationRunDefinition {
 }
 
 export type OperationValue = boolean | OperationDefinition | OperationFn | OperationRunDefinition;
+
+/** Builtin operation sets supported by the unified operation selector. */
+export type OperationPreset = "crud" | "read" | "all";
+export type OperationSelection =
+  | OperationPreset
+  | readonly AllBuiltinOpName[]
+  | (OperationsBag<OperationValue | OperationPreset | readonly AllBuiltinOpName[]> & {
+      preset: OperationPreset | readonly AllBuiltinOpName[];
+    });
 
 /** Records for a mocked resource: inline, or loaded on first use. */
 export type MockData =
@@ -220,19 +280,12 @@ export type MockOption =
       seed?: { limit?: number; offset?: number };
     };
 
-export type OperationGroupName = "read" | "write" | "many" | "extended";
-
 /** Runtime resource definition under `resources`. */
 export interface ResourceDefinition extends LayerOptions {
   path: string;
-  /** `false` starts with no builtins (enable some through `operations` / `operationGroups`). */
-  defaultOperations?: boolean;
-  /** Removes the 7 write builtins (explicit groups / operations still win). */
-  readOnly?: boolean;
-  /** Removes the 9 read builtins (explicit groups / operations still win). */
-  writeOnly?: boolean;
-  operationGroups?: Partial<Record<OperationGroupName, boolean>>;
-  operations?: OperationsBag<OperationValue>;
+  /** Entity identity field. Default: `"id"`. */
+  idKey?: string;
+  operations?: OperationsBag<OperationValue> | OperationSelection;
   /** Entity fields that hold files: typed `File | Blob` inputs on eligible writes. */
   fileFields?: FileFieldsConfig;
   /** Multipart encoding overrides for every operation of this resource. */
@@ -242,10 +295,11 @@ export interface ResourceDefinition extends LayerOptions {
   /** Data source for client-scoped Mocking. A mocked resource never touches the network. */
   mock?: MockOption;
   /**
-   * List envelope contract shared by live and mocked resources. Live: describes what the
-   * server returns (types only). Mocked: the engine produces this envelope.
+   * List envelope contract shared by live and mocked resources. Mocked: the engine produces it.
+   * Live: the string form expects the server to already return it; an object maps the server's
+   * own shape to it (`preset`, `fields`/`params`, or `parseList`).
    */
-  pagination?: "page" | "cursor";
+  pagination?: ResourcePagination;
   /** Cap array `getAll` responses: first N rows or `{ start, end }`. Not mock seeding. */
   slice?: number | { start: number; end: number };
 }
@@ -256,6 +310,8 @@ export interface ApiRootConfig extends LayerOptions {
   transport?: Transport;
   /** Array encoding for query strings. Default: `"repeat"`. */
   queryArrayFormat?: QueryArrayFormat;
+  /** Client-wide query string serialization options (`nulls`, `emptyArrays`, `booleans`). */
+  query?: QueryOptions;
   /** Replaces Core's query string builder entirely. */
   querySerializer?: (query: QueryParams) => string;
   resources: Record<string, ResourceDefinition>;
@@ -297,3 +353,64 @@ export type ResourceState = {
    */
   operations?: Record<string, OperationState | ((...args: never[]) => unknown)>;
 };
+
+/** Response field paths (dot notation) a live backend uses for apixa's page contract. */
+export interface PaginationFields {
+  data?: string;
+  total?: string;
+  page?: string;
+  pageSize?: string;
+  nextCursor?: string;
+}
+
+/** Backend query names for apixa's `page` / `pageSize` / `cursor`. */
+export interface PaginationParams {
+  page?: string;
+  pageSize?: string;
+  cursor?: string;
+}
+
+/** Built-in backend mappings for `pagination.preset`. */
+export type PaginationPreset = "laravel" | "laravel-paginator" | "strapi" | "payload" | "nestjs";
+
+/** Declared pagination for a resource or list operation: boolean, mode, preset shorthand, or mapping object. */
+export type ResourcePagination =
+  | boolean
+  | "page"
+  | "cursor"
+  | PaginationPreset
+  | {
+      type?: "page" | "cursor";
+      /**
+       * Named backend mapping; mutually exclusive with `fields`. `"laravel"` (resource collection),
+       * `"laravel-paginator"` (`paginate()` / `cursorPaginate()`; page or cursor), `"strapi"`,
+       * `"payload"` and `"nestjs"` (nestjs-typeorm-paginate) map page mode. When `preset` is set
+       * without `type`, `"page"` is inferred.
+       */
+      preset?: PaginationPreset;
+      fields?: PaginationFields;
+      params?: PaginationParams;
+      /** Escape hatch for shapes `fields` cannot describe; wins over `preset` / `fields`. */
+      parseList?: (body: any, ctx: { status: number }) => unknown;
+    };
+
+type PageShape<T> = { data: T[]; total: number; page: number; pageSize: number };
+type CursorShape<T> = { data: T[]; nextCursor: string | null };
+
+/**
+ * What `getAll` resolves to for a resource using that preset, for typing component state:
+ * `useState<LaravelPagination<Product> | null>(null)`. Every preset normalizes to the same page
+ * contract (`Page<T>` in page mode, `CursorPage<T>` in cursor mode); the name records which backend
+ * the state comes from.
+ */
+export type LaravelPagination<T> = PageShape<T>;
+/** `preset: "laravel-paginator"` with `type: "page"` (`paginate()`). */
+export type LaravelPaginatorPagination<T> = PageShape<T>;
+/** `preset: "laravel-paginator"` with `type: "cursor"` (`cursorPaginate()`). */
+export type LaravelCursorPagination<T> = CursorShape<T>;
+/** `preset: "strapi"`. */
+export type StrapiPagination<T> = PageShape<T>;
+/** `preset: "payload"`. */
+export type PayloadPagination<T> = PageShape<T>;
+/** `preset: "nestjs"` (nestjs-typeorm-paginate). */
+export type NestjsPagination<T> = PageShape<T>;

@@ -77,14 +77,24 @@ Opt-in `retry` on api / resource / operation / call. Defaults: methods `GET`/`HE
 ## Middleware
 
 ```ts
-const refresh: Middleware = async (ctx, next) => {
-  let res = await next(); // ApiResponse — may call again
-  if (res.status === 401) res = await next();
-  return res;
+const refresh: MiddlewareHooks = {
+  onError: async (error, ctx) => {
+    if (isHttpError(error) && error.status === 401 && ctx.replay) {
+      await refreshSession();
+      return ctx.replay();
+    }
+  },
 };
 ```
 
-Context: `{ request, response?, attempt, meta }`.
+Configure `middleware: [refresh]` on the API, resource, or operation layer. Each entry may provide `onRequest(request)`, `onResponse(response)`, and/or `onError(error, { request, replay })`.
+
+## Response processing, query options, transforms, and pagination
+
+- **`query` options**: configure `{ arrays, nulls, skipUndefined, serialize }` on API, resource, or operation layers (precedence: call > operation > resource > API).
+- **`response` processing**: configure `{ unwrap, parse, validate }` on API, resource, or operation layers (`false` disables an inherited hook). Builtin collection responses reject invalid shapes with `ResponseShapeError`; `ApiResponse.source` preserves the raw payload when `{ full: true }` is used.
+- **`transforms`**: configure `transforms: { request: { keys, exclude, preserve, maxDepth }, response: { keys, exclude, preserve, maxDepth } }`.
+- **`pagination`**: declare `"page"`, `"cursor"`, `false` (shadow/disable per operation), or `{ type, preset | fields | parseList, params }` for live backends (`laravel`, `laravel-paginator`, `strapi`, `payload`, `nestjs`).
 
 ## Plugin seams
 
@@ -104,7 +114,7 @@ const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
 });
 
 await api.users.create({ name: "Ada", avatar: file, documents: [a, b] }); // multipart
-await api.users.update("1", { name: "Ada L." }); // no binary values → JSON
+await api.users.update("1", { body: { name: "Ada L." } }); // no binary values → JSON
 const user = await api.users.getById("1"); // user.avatar: string
 ```
 
@@ -134,8 +144,8 @@ const api = defineApi<{ reports: { path: "/reports"; entity: Report } }>()({
   },
 });
 
-const blob = await api.reports.download("1"); // Blob
-const res = await api.reports.download("1", { full: true }); // ApiResponse<Blob>
+const blob = await api.reports.download({ params: { id: "1" } }); // Blob
+const res = await api.reports.download({ params: { id: "1" }, full: true }); // ApiResponse<Blob>
 parseContentDisposition(res.headers).filename; // string | undefined (never assumed)
 res.headers.get("content-type"); // content type / length are plain headers
 await api.reports.getById("1", { responseType: "arrayBuffer" }); // ArrayBuffer
@@ -170,7 +180,8 @@ headers. A `Blob` is not serializable, so it cannot cross a server/client or deh
 `onTransfer` is optional and typed everywhere a call takes options. Without it nothing is wrapped:
 
 ```ts
-const blob = await api.reports.download("1", {
+const blob = await api.reports.download({
+  params: { id: "1" },
   signal,
   onTransfer(event) {
     if (event.phase === "unsupported") return console.log(event.direction, event.reason);
@@ -250,8 +261,8 @@ return the URL in a JSON body and use a `presigned` descriptor instead.
 
 ## Errors
 
-`ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `VALIDATION` | `TIMEOUT` | `ABORT` | `SERIALIZATION` (an unencodable body, such as binary values under `dataFormat: "json"`).  
-`ApiError` has `code`, `retryable`, `attempt`. Guards: `isApiError`, `isHttpError`, `isTimeoutError`.
+`ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `RESPONSE_SHAPE` | `VALIDATION` | `TIMEOUT` | `ABORT` | `CONFIG` | `HEADERS` | `SECURITY` | `TRANSFORM` | `SERIALIZATION` | `MOCK_NOT_FOUND` | `MOCK_DUPLICATE_ID` | `MOCK_INVALID_INPUT` | `MOCK_UNSUPPORTED` | `MOCK_LOAD`.  
+`ApiError` has `code`, `retryable`, `attempt`. Specialized classes include `HttpError`, `ParseError`, `ResponseShapeError`, `ValidationError`, `TimeoutError`, `AbortError`, `ConfigError`, `SecurityError`, `TransformError`, `SerializationError`, `MockError`. Guards: `isApiError`, `isHttpError`, `isTimeoutError`.
 
 ## Notes
 
@@ -282,7 +293,9 @@ const api = defineApi({
 });
 const seeded = await api.docs.getById(1); // seeded.file: string
 mockFiles(api).get(seeded.file)?.text(); // "hello"
-await api.docs.patch(1, { file: new File(["updated"], "guide.txt", { type: "text/plain" }) });
+await api.docs.patch(1, {
+  body: { file: new File(["updated"], "guide.txt", { type: "text/plain" }) },
+});
 mockFiles(api).list({ disk: "documents", path: "guides" });
 resetMock(api); // invalidates pending work immediately; fixtures rehydrate on next awaited read
 ```
@@ -324,7 +337,7 @@ Blob plus explicit metadata works in Node, browsers, SSR and Edge. No driver/pro
 
 <a id="advanced-transfers-v170"></a>
 
-## Advanced transfers (v1.7.0; implemented, not npm-published)
+## Advanced transfers (v1.7.0+)
 
 Normal uploads and downloads keep their existing behavior. To use a backend's chunk/session
 protocol, add `transfer` to a **write operation** (including a builtin override). Configuration is

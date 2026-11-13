@@ -32,13 +32,7 @@ export interface MiddlewareHooks {
   onError?: ErrorMiddleware;
 }
 
-/**
- * Middleware options accepted at root, resource, and operation level. All three styles feed
- * one pipeline. Order per stage: root → resource → operation; within a level `middleware`
- * runs before the `requestMiddleware` / `responseMiddleware` arrays (in array order).
- */
+/** Middleware runs root → resource → operation and in array order at each level. */
 export interface MiddlewareOptions {
-  middleware?: MiddlewareHooks;
-  requestMiddleware?: RequestMiddleware[];
-  responseMiddleware?: ResponseMiddleware[];
+  middleware?: readonly MiddlewareHooks[];
 }

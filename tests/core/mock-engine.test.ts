@@ -173,7 +173,7 @@ describe("mock state lifecycle", () => {
     });
     const created = await api.users.create({ name: "New", email: "n@example.com" });
     expect(created.id).toBe(4);
-    await api.users.patch(1, { name: "Ali 2" });
+    await api.users.patch(1, { body: { name: "Ali 2" } });
     await api.users.delete(2);
     expect((await api.users.getAll()).map((u) => u.name)).toEqual(["Ali 2", "Sara", "New"]);
     expect(source).toEqual(snapshot);
@@ -238,15 +238,13 @@ describe("mock builtins", () => {
     expect(await api.users.exists(42)).toBe(false);
   });
 
-  it("findFirst uses exact matching; search uses case-insensitive substrings", async () => {
+  it("findFirst uses exact matching", async () => {
     const api = make();
-    expect(await api.users.findFirst({ name: "Omar" })).toMatchObject({ id: 2 });
-    expect(await api.users.findFirst({ name: "omar" })).toBeNull();
-    expect((await api.users.search({ query: { name: "a" } })).map((u) => u.id)).toEqual([1, 2, 3]);
-    expect((await api.users.search({ query: { email: "SARA" } })).map((u) => u.id)).toEqual([3]);
+    expect(await api.users.findFirst({ query: { name: "Omar" } })).toMatchObject({ id: 2 });
+    expect(await api.users.findFirst({ query: { name: "omar" } })).toBeNull();
   });
 
-  it("count filters exactly; getBy and getBySlug look up by field", async () => {
+  it("count filters exactly; getBy looks up by field and returns null when absent", async () => {
     const api = defineApi({
       baseURL: "/api",
       resources: {
@@ -261,27 +259,22 @@ describe("mock builtins", () => {
     });
     expect(await api.posts.count({ query: { tag: "a" } })).toBe(1);
     expect(await api.posts.getBy("tag", "b")).toMatchObject({ id: 2 });
-    expect(await api.posts.getBySlug("hello")).toMatchObject({ id: 1 });
+    expect(await api.posts.getBy("slug", "hello")).toMatchObject({ id: 1 });
+    expect(await api.posts.getBy("slug", "missing")).toBeNull();
   });
 
-  it("update replaces, patch merges, upsert inserts or replaces", async () => {
+  it("update replaces, patch merges", async () => {
     const api = make();
-    expect(await api.users.update(1, { name: "X", email: "x@x" })).toEqual({
+    expect(await api.users.update(1, { body: { name: "X", email: "x@x" } })).toEqual({
       id: 1,
       name: "X",
       email: "x@x",
     });
-    expect(await api.users.patch(2, { name: "Y" })).toEqual({
+    expect(await api.users.patch(2, { body: { name: "Y" } })).toEqual({
       id: 2,
       name: "Y",
       email: "omar@example.com",
     });
-    expect(await api.users.upsert(9, { name: "Z", email: "z@z" })).toEqual({
-      id: 9,
-      name: "Z",
-      email: "z@z",
-    });
-    expect(await api.users.upsert(9, { name: "Z2", email: "z@z" })).toMatchObject({ name: "Z2" });
   });
 
   it("createMany is atomic on duplicates; deleteMany ignores missing ids", async () => {
@@ -329,7 +322,7 @@ describe("mock routing never falls back to the network", () => {
           path: "/users",
           mock: "users-mock",
           operations: {
-            search: { path: "/custom-search", method: "GET" },
+            getAll: { path: "/custom-all" },
             count: { path: "https://example.com/stats/count" },
             archive: { kind: "write", method: "POST", path: "/:id/archive" },
             byName: {
@@ -341,11 +334,11 @@ describe("mock routing never falls back to the network", () => {
       },
     });
     expect(await api.users.getAll()).toHaveLength(100);
-    // A path override keeps the mock search semantics.
-    expect(await api.users.search({ query: { username: "user001" } })).toHaveLength(1);
+    // A path override keeps the mock getAll semantics.
+    expect(await api.users.getAll({ query: { username: "user001" } })).toHaveLength(1);
     expect(await api.users.count()).toBe(100);
     expect(await api.users.byName(usersDataset[0]!.name)).toHaveLength(1);
-    const unsupported = await api.users.archive("1", {}).catch((e: unknown) => e);
+    const unsupported = await api.users.archive({}, { params: { id: "1" } }).catch((e: unknown) => e);
     expect(unsupported).toMatchObject({ code: "MOCK_UNSUPPORTED", status: 501 });
     expect(hits).toEqual([]);
   });

@@ -44,11 +44,13 @@ describe("advanced transfer Batch 0: existing execution seams", () => {
         sent.push(request);
         return { body: { ok: true } };
       }),
-      middleware: {
-        onRequest(request) {
-          middlewareSteps.push(request.path);
+      middleware: [
+        {
+          onRequest(request) {
+            middlewareSteps.push(request.path);
+          },
         },
-      },
+      ],
       resources: {
         files: {
           path: "/files",
@@ -82,11 +84,13 @@ describe("advanced transfer Batch 0: existing execution seams", () => {
         sends++;
         return { body: null };
       }),
-      middleware: {
-        onRequest(request) {
-          request.url = "https://storage.example.com/object?signature=temporary";
+      middleware: [
+        {
+          onRequest(request) {
+            request.url = "https://storage.example.com/object?signature=temporary";
+          },
         },
-      },
+      ],
       resources: { files: { path: "/files" } },
     });
 
@@ -106,11 +110,13 @@ describe("advanced transfer Batch 0: existing execution seams", () => {
         files: {
           path: "/files",
           fileFields: { document: { maxSize: 2 } },
-          middleware: {
-            onRequest(request) {
-              request.body = { document: new Blob(["oversized"]) };
+          middleware: [
+            {
+              onRequest(request) {
+                request.body = { document: new Blob(["oversized"]) };
+              },
             },
-          },
+          ],
           operations: {
             upload: {
               kind: "write",

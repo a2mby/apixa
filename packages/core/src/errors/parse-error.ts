@@ -9,3 +9,11 @@ export class ParseError extends ApiError {
     this.name = "ParseError";
   }
 }
+
+/** A parsed response does not match the structural contract of an operation. */
+export class ResponseShapeError extends ParseError {
+  constructor(message: string, options?: ConstructorParameters<typeof ApiError>[1]) {
+    super(message, { ...options, code: "RESPONSE_SHAPE" });
+    this.name = "ResponseShapeError";
+  }
+}

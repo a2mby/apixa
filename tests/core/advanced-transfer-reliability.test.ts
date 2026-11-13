@@ -55,14 +55,16 @@ it("an explicit error-middleware replay keeps the same part key and cannot repla
   const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
-    middleware: {
-      async onError(error, context) {
-        if (context.request?.url.includes("/parts/") && context.replay) {
-          replays++;
-          return context.replay();
-        }
+    middleware: [
+      {
+        async onError(error, context) {
+          if (context.request?.url.includes("/parts/") && context.replay) {
+            replays++;
+            return context.replay();
+          }
+        },
       },
-    },
+    ],
     resources: {
       files: {
         path: "/files",
@@ -113,11 +115,13 @@ it("outer error replay reconciles a checkpoint instead of creating a second sess
   const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
-    middleware: {
-      async onError(error, context) {
-        if (context.request?.path === "/files" && context.replay) return context.replay();
+    middleware: [
+      {
+        async onError(error, context) {
+          if (context.request?.path === "/files" && context.replay) return context.replay();
+        },
       },
-    },
+    ],
     resources: {
       files: {
         path: "/files",
@@ -138,11 +142,13 @@ it("generic error middleware cannot replay a protocol write marked unsafe", asyn
   const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
-    middleware: {
-      onError(error, context) {
-        if (context.request?.url.includes("/parts/")) return context.replay?.();
+    middleware: [
+      {
+        onError(error, context) {
+          if (context.request?.url.includes("/parts/")) return context.replay?.();
+        },
       },
-    },
+    ],
     resources: {
       files: {
         path: "/files",

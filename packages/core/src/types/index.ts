@@ -9,7 +9,6 @@ export type {
 
 export type {
   ApiRequest,
-  RequestConfig,
   ApiResponse,
   TransportRequest,
   TransportResponse,
@@ -27,13 +26,27 @@ export type {
   OperationDefinition,
   IdempotencyOption,
   OperationValue,
+  OperationPreset,
+  OperationSelection,
   OperationKind,
   OperationRunDefinition,
-  OperationGroupName,
   LayerOptions,
+  ResponseHookContext,
+  ResponseOptions,
+  QueryOptions,
   MockData,
   MockOption,
   ResourceDefinition,
+  ResourcePagination,
+  PaginationPreset,
+  LaravelPagination,
+  LaravelPaginatorPagination,
+  LaravelCursorPagination,
+  StrapiPagination,
+  PayloadPagination,
+  NestjsPagination,
+  PaginationFields,
+  PaginationParams,
   ApiRootConfig,
   ApiState,
   ApiStateOf,
@@ -63,7 +76,13 @@ export type {
 
 export type { ApiErrorCode, FileViolation, FileViolationCode } from "./errors.js";
 
-export type { KeyCase, TransformsConfig, TransformKeys, ConvertKey } from "./transform.js";
+export type {
+  KeyCase,
+  KeyTransformConfig,
+  TransformsConfig,
+  TransformKeys,
+  ConvertKey,
+} from "./transform.js";
 
 export type {
   BuiltinOpName,
@@ -98,6 +117,7 @@ export type {
   ListOf,
   QueryOf,
   PaginatedListOf,
+  PaginationQueryOf,
   CallResult,
   EffectivePath,
   FullPath,

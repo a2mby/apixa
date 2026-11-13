@@ -2,10 +2,13 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | 
 
 export type PathParams = Record<string, string | number>;
 
-export type QueryParams = Record<
-  string,
-  string | number | boolean | null | undefined | Array<string | number | boolean>
->;
+export type QueryScalar = string | number | boolean | Date | null | undefined;
+export type QueryValue =
+  | QueryScalar
+  | readonly QueryValue[]
+  | { readonly [key: string]: QueryValue };
+
+export type QueryParams = Record<string, QueryValue>;
 
 /**
  * Common HTTP headers as optional string fields, plus an index signature for custom names.

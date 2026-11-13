@@ -31,27 +31,24 @@ describe("hook typing with files", () => {
         useResourceQuery(api.docs, {
           queryKey: ["a"],
           operation: "download",
-          args: [
-            "1",
-            {
+          args: [{
               onTransfer: (e) => {
                 expectTypeOf(e).toEqualTypeOf<TransferEvent>();
               },
-            },
-          ],
+            params: { id: "1" } }],
         }),
       ).result.current;
       expectTypeOf(blob.data).toEqualTypeOf<Blob | undefined>();
       expectTypeOf<IsAny<typeof blob>>().toEqualTypeOf<false>();
       const raw = renderHook(() =>
-        useResourceQuery(api.docs, { queryKey: ["b"], operation: "raw", args: ["1"] }),
+        useResourceQuery(api.docs, { queryKey: ["b"], operation: "raw", args: [{ params: { id: "1" } }] }),
       ).result.current;
       expectTypeOf(raw.data).toEqualTypeOf<ArrayBuffer | undefined>();
       const note = renderHook(() =>
         useResourceQuery(api.docs, {
           queryKey: ["c"],
           operation: "note",
-          args: ["1"],
+          args: [{ params: { id: "1" } }],
           select: (text) => text.length,
         }),
       ).result.current;
@@ -81,7 +78,7 @@ describe("hook typing with files", () => {
       expectTypeOf(sent).toEqualTypeOf<string>();
       const r = renderHook(() => useResource(api.docs, { queryKey: ["d"] })).result.current;
       expectTypeOf<IsAny<typeof r>>().toEqualTypeOf<false>();
-      expectTypeOf(await r.download("1")).toEqualTypeOf<Blob>();
+      expectTypeOf(await r.download({ params: { id: "1" } })).toEqualTypeOf<Blob>();
       expectTypeOf(r.states.create.error).toEqualTypeOf<Error | null>();
     };
     void run;

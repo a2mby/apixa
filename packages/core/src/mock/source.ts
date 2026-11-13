@@ -39,10 +39,14 @@ function describe(value: unknown): string {
 }
 
 /** Validate a `mock` value at client construction. Throws `ConfigError` naming the resource. */
-export function normalizeMockSource(resource: string, value: unknown): MockSource {
+export function normalizeMockSource(
+  resource: string,
+  value: unknown,
+  resourceIdKey?: string,
+): MockSource {
   const label = `resources.${resource}.mock`;
   let data: unknown = value;
-  let idKey: string | undefined;
+  let idKey: string | undefined = resourceIdKey;
   let seed: MockSource["seed"];
   const extras: Pick<MockSource, "storage" | "fixtures"> = {};
 
@@ -60,6 +64,9 @@ export function normalizeMockSource(resource: string, value: unknown): MockSourc
     if (value.idKey !== undefined) {
       if (typeof value.idKey !== "string" || value.idKey === "") {
         throw new ConfigError(`${label}.idKey must be a non-empty string.`);
+      }
+      if (resourceIdKey !== undefined && resourceIdKey !== value.idKey) {
+        throw new ConfigError(`${label}.idKey must match resources.${resource}.idKey.`);
       }
       idKey = value.idKey;
     }

@@ -24,7 +24,7 @@ describe("error propagation through the hooks", () => {
     const { api, behavior } = makeApi();
     behavior.next = () => Response.json({ message: "nope" }, { status: 422 });
     const query = renderHook(
-      () => useResourceQuery(api.docs, { queryKey: ["d"], operation: "download", args: ["1"] }),
+      () => useResourceQuery(api.docs, { queryKey: ["d"], operation: "download", args: [{ params: { id: "1" } }] }),
       { wrapper: wrap(newClient()) },
     );
     await waitFor(() => expect(query.result.current.isError).toBe(true));
@@ -73,7 +73,7 @@ describe("error propagation through the hooks", () => {
         q: useResourceQuery(api.docs, {
           queryKey: ["l"],
           operation: "download",
-          args: ["1", { maxResponseSize: 3 }],
+          args: [{ ...({ maxResponseSize: 3 }), params: { id: "1" } }],
         }),
       }),
       {
@@ -112,13 +112,13 @@ describe("error propagation through the hooks", () => {
       wrapper: wrap(newClient()),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    const flat = result.current as never as { download(id: string, o: object): Promise<unknown> };
+    const flat = result.current as never as { download(options: object): Promise<unknown> };
     const controller = new AbortController();
     controller.abort();
     expect(
-      await flat.download("1", { signal: controller.signal }).catch((e: unknown) => e),
+      await flat.download({ ...({ signal: controller.signal }), params: { id: "1" } }).catch((e: unknown) => e),
     ).toBeInstanceOf(AbortError);
-    expect(await flat.download("1", { timeout: 1 }).catch((e: unknown) => e)).toBeInstanceOf(
+    expect(await flat.download({ ...({ timeout: 1 }), params: { id: "1" } }).catch((e: unknown) => e)).toBeInstanceOf(
       TimeoutError,
     );
   });

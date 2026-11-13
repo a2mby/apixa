@@ -126,7 +126,7 @@ describe("cache invalidation with files", () => {
       await result.current.create({ name: "x", photo: png() } as never);
     });
     await act(async () => {
-      await result.current.update("1", { name: "y" } as never);
+      await result.current.update("1", { body: { name: "y" } as never });
     });
     await new Promise((r) => setTimeout(r, 30));
     expect(gets(requests)).toBe(1); // the list was never refetched

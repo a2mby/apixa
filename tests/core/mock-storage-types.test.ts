@@ -48,7 +48,7 @@ it("types adapter writes separately from returned references", () => {
   const api = defineMockApi({
     resources: { users: { type: "users-mock", fileFields: ["email"] } },
   });
-  type Input = Parameters<typeof api.users.patch>[1];
+  type Input = Parameters<typeof api.users.patch>[1]["body"];
   expectTypeOf<Input["email"]>().toEqualTypeOf<string | File | Blob | undefined>();
   expectTypeOf<Awaited<ReturnType<typeof api.users.getById>>["email"]>().toEqualTypeOf<string>();
   expectTypeOf(mockFiles(api.users)).toEqualTypeOf<MockFileStorage>();

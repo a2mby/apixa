@@ -17,7 +17,7 @@ const violation = (e: unknown) => (e as ValidationError).violations[0];
 
 describe("maxResponseSize across response types", () => {
   const cases = [
-    ["blob", (c: ReturnType<typeof limited>) => c.docs.download("1")],
+    ["blob", (c: ReturnType<typeof limited>) => c.docs.download({ params: { id: "1" } })],
     ["arrayBuffer", (c: ReturnType<typeof limited>) => c.docs.buffer()],
     ["text", (c: ReturnType<typeof limited>) => c.docs.text()],
     ["json", (c: ReturnType<typeof limited>) => c.docs.json()],
@@ -76,7 +76,7 @@ describe("maxResponseSize across response types", () => {
     const liar: StubFetch = async () =>
       chunkedResponse(parts, { headers: { "content-length": "3" } });
     const error = await limited(10, liar)
-      .docs.download("1")
+      .docs.download({ params: { id: "1" } })
       .catch((e) => e);
     expect(violation(error)).toMatchObject({ code: "RESPONSE_TOO_LARGE", limit: 10 });
   });
@@ -86,25 +86,25 @@ describe("maxResponseSize across response types", () => {
       chunkedResponse(parts, { headers: { "content-length": "2", "content-encoding": "gzip" } });
     // 2 "compressed" bytes would pass a naive check; 12 decoded bytes exceed 10.
     const error = await limited(10, stub)
-      .docs.download("1")
+      .docs.download({ params: { id: "1" } })
       .catch((e) => e);
     expect(violation(error)).toMatchObject({ code: "RESPONSE_TOO_LARGE" });
-    await expect(limited(12, stub).docs.download("1")).resolves.toBeDefined();
+    await expect(limited(12, stub).docs.download({ params: { id: "1" } })).resolves.toBeDefined();
   });
 
   it("an unlimited call is unaffected and never wrapped for limits", async () => {
     const stub: StubFetch = async () => chunkedResponse(parts);
-    const blob = await transferClient(stub).docs.download("1");
+    const blob = await transferClient(stub).docs.download({ params: { id: "1" } });
     expect(blob.size).toBe(12);
   });
 
   it("a per-call limit wins over the operation's, both ways", async () => {
     const stub: StubFetch = async () => chunkedResponse(parts);
     await expect(
-      limited(5, stub).docs.download("1", { maxResponseSize: 100 }),
+      limited(5, stub).docs.download({ params: { id: "1" }, maxResponseSize: 100 }),
     ).resolves.toBeDefined();
     const error = await limited(100, stub)
-      .docs.download("1", { maxResponseSize: 5 })
+      .docs.download({ params: { id: "1" }, maxResponseSize: 5 })
       .catch((e) => e);
     expect(violation(error)).toMatchObject({ limit: 5 });
   });
@@ -116,7 +116,7 @@ describe("maxResponseSize across response types", () => {
         headers: { "content-type": "application/json" },
       });
     const error = await limited(1000, stub)
-      .docs.download("1")
+      .docs.download({ params: { id: "1" } })
       .catch((e) => e);
     expect(error).toBeInstanceOf(HttpError);
     expect((error as HttpError).status).toBe(500);
@@ -139,7 +139,7 @@ describe("maxResponseSize across response types", () => {
         { status: 502, headers: { "content-type": "application/json" } },
       );
     const error = (await limited(25, huge)
-      .docs.download("1")
+      .docs.download({ params: { id: "1" } })
       .catch((e) => e)) as HttpError;
     expect(error).toBeInstanceOf(HttpError);
     expect(error.status).toBe(502);
@@ -161,7 +161,7 @@ describe("maxResponseSize across response types", () => {
         { status: 503, headers: { "content-length": "9999" } },
       );
     const e2 = (await limited(25, declared)
-      .docs.download("1")
+      .docs.download({ params: { id: "1" } })
       .catch((e) => e)) as HttpError;
     expect(e2.status).toBe(503);
     expect(e2.data).toBeNull();
@@ -175,7 +175,7 @@ describe("maxResponseSize across response types", () => {
       return chunkedResponse(parts);
     };
     await limited(5, stub)
-      .docs.download("1", { retry: { retries: 3, baseDelayMs: 0 } })
+      .docs.download({ params: { id: "1" }, retry: { retries: 3, baseDelayMs: 0 } })
       .catch(() => {});
     expect(calls).toBe(1);
   });
@@ -183,7 +183,7 @@ describe("maxResponseSize across response types", () => {
   it("emits a terminal error event with willRetry false and no complete", async () => {
     const c = collector();
     await limited(5, async () => chunkedResponse(parts))
-      .docs.download("1", { onTransfer: c.observer })
+      .docs.download({ params: { id: "1" }, onTransfer: c.observer })
       .catch(() => {});
     expect(c.of("download").at(-1)).toMatchObject({ phase: "error", willRetry: false });
     expect(c.of("download").some((e) => e.phase === "complete")).toBe(false);
@@ -195,15 +195,17 @@ describe("maxResponseSize across response types", () => {
       async () =>
         chunkedResponse(parts, { headers: { "content-type": type } });
     await expect(
-      limited(1000, stub("application/pdf"), { responseAccept: ["application/pdf"] }).docs.download(
-        "1",
-      ),
+      limited(1000, stub("application/pdf"), { responseAccept: ["application/pdf"] }).docs.download({
+        params: { id: "1" },
+      }),
     ).resolves.toBeDefined();
     await expect(
-      limited(1000, stub("Image/PNG; x=y"), { responseAccept: ["image/*"] }).docs.download("1"),
+      limited(1000, stub("Image/PNG; x=y"), { responseAccept: ["image/*"] }).docs.download({
+        params: { id: "1" },
+      }),
     ).resolves.toBeDefined();
     const error = await limited(1000, stub("text/html"), { responseAccept: ["application/pdf"] })
-      .docs.download("1")
+      .docs.download({ params: { id: "1" } })
       .catch((e) => e);
     expect(violation(error)).toMatchObject({
       code: "RESPONSE_TYPE_NOT_ALLOWED",
@@ -214,14 +216,16 @@ describe("maxResponseSize across response types", () => {
 
   it("an empty 204 passes; a limit of 0 only accepts an empty body", async () => {
     await expect(
-      limited(0, async () => new Response(null, { status: 204 })).docs.download("1"),
+      limited(0, async () => new Response(null, { status: 204 })).docs.download({
+        params: { id: "1" },
+      }),
     ).resolves.toBeInstanceOf(Blob);
     await expect(
-      limited(0, async () => chunkedResponse([])).docs.download("1"),
+      limited(0, async () => chunkedResponse([])).docs.download({ params: { id: "1" } }),
     ).resolves.toBeInstanceOf(Blob);
     expect(
       await limited(0, async () => chunkedResponse(parts))
-        .docs.download("1")
+        .docs.download({ params: { id: "1" } })
         .catch((e) => e),
     ).toBeInstanceOf(ValidationError);
   });

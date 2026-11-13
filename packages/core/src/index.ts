@@ -1,4 +1,12 @@
-export { defineApi, defineApis, resetMock, mockFiles } from "./api/index.js";
+export {
+  defineApi,
+  defineApis,
+  resetMock,
+  mockFiles,
+  validatePagination,
+  resolvePagination,
+} from "./api/index.js";
+export type { PageResult, ResolvedPagination } from "./api/index.js";
 export { OPERATION_METADATA, getOperationMetadata, createIdempotencyKey } from "./api/metadata.js";
 export type { OperationMetadata } from "./api/metadata.js";
 
@@ -7,6 +15,7 @@ export {
   NetworkError,
   HttpError,
   ParseError,
+  ResponseShapeError,
   ValidationError,
   TimeoutError,
   AbortError,
@@ -60,7 +69,7 @@ export type {
 } from "./mock/index.js";
 export { applyResourceSliceToListResult } from "./utils/slice.js";
 
-/** Operation selection (defaults, groups, `readOnly` / `writeOnly`) shared with `@apixa/mocking`. */
+/** Operation selection shared with `@apixa/mocking`. */
 export { expandOperations, BUILTIN_CONVENTIONS } from "./operation/index.js";
 
 export { convertKey, transformKeys, KEY_CASES } from "./transform/index.js";

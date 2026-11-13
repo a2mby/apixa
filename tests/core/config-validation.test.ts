@@ -69,13 +69,13 @@ describe("configuration fails early with descriptive errors", () => {
     ],
     [
       "invalid middleware shape",
-      { ...base, middleware: { onRequset: () => undefined }, resources: {} },
+      { ...base, middleware: [{ onRequset: () => undefined }], resources: {} },
       /unknown option "onRequset"/,
     ],
     [
       "non-function hook",
-      { ...base, responseMiddleware: [1], resources: {} },
-      /responseMiddleware\[0\] must be a function/,
+      { ...base, middleware: [{ onResponse: 1 }], resources: {} },
+      /middleware\[0\]\.onResponse must be a function/,
     ],
     [
       "invalid transform name",
@@ -89,8 +89,18 @@ describe("configuration fails early with descriptive errors", () => {
     ],
     [
       "invalid pagination mode",
-      { ...base, resources: { u: { path: "/u", pagination: true } } },
-      /pagination must be "page" or "cursor".*replaced/,
+      { ...base, resources: { u: { path: "/u", pagination: "table" } } },
+      /pagination must be true, false, "page" or "cursor", a preset/,
+    ],
+    [
+      "pagination on non-list builtin",
+      { ...base, resources: { u: { path: "/u", operations: { getById: { pagination: "page" } } } } },
+      /pagination is only supported on list operations/,
+    ],
+    [
+      "slice combined with getAll pagination",
+      { ...base, resources: { u: { path: "/u", slice: 5, operations: { getAll: { pagination: "page" } } } } },
+      /slice cannot be combined with pagination/,
     ],
     [
       "invalid mock dataset id",
@@ -130,12 +140,12 @@ describe("configuration fails early with descriptive errors", () => {
     [
       "conflicting flags",
       { ...base, resources: { u: { path: "/u", readOnly: true, writeOnly: true } } },
-      /both readOnly and writeOnly/,
+      /unknown option "readOnly"/,
     ],
     [
       "unknown group",
       { ...base, resources: { u: { path: "/u", operationGroups: { reads: false } } } },
-      /unknown option "reads"/,
+      /unknown option "operationGroups"/,
     ],
     [
       "invalid timeout",
@@ -152,7 +162,7 @@ describe("configuration fails early with descriptive errors", () => {
       { ...base, transport: {}, resources: {} },
       /transport must be an object with a request/,
     ],
-    ["invalid slice", { ...base, resources: { u: { path: "/u", slice: -2 } } }, /slice/],
+    ["invalid slice", { ...base, resources: { u: { path: "/u", slice: "two" } } }, /slice/],
   ])("%s", (_label, config, message) => {
     expect(build(config)).toThrow(ConfigError);
     expect(build(config)).toThrow(message);

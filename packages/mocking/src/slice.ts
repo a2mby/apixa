@@ -15,79 +15,27 @@ function isPlainSliceRange(value: unknown): value is { start: number; end: numbe
 /** Config-time check for `defineMockApi` / resource `slice` shape (not range order). */
 export function assertSliceConfig(slice: unknown, label: string): asserts slice is MockSlice {
   if (typeof slice === "number") {
-    if (!Number.isInteger(slice) || slice < 0) {
-      throw new InvalidSliceError(
-        `${label}: slice must be a non-negative integer (got ${String(slice)}).`,
-      );
-    }
     return;
   }
   if (!isPlainSliceRange(slice)) {
-    throw new InvalidSliceError(
-      `${label}: slice must be a non-negative integer or { start, end }.`,
-    );
+    throw new InvalidSliceError(`${label}: slice must be a number or { start, end }.`);
   }
   const { start, end } = slice;
-  if (typeof start !== "number" || !Number.isInteger(start) || start < 0) {
-    throw new InvalidSliceError(
-      `${label}: slice.start must be a non-negative integer (got ${String(start)}).`,
-    );
+  if (typeof start !== "number") {
+    throw new InvalidSliceError(`${label}: slice.start must be a number (got ${String(start)}).`);
   }
-  if (typeof end !== "number" || !Number.isInteger(end) || end < 0) {
-    throw new InvalidSliceError(
-      `${label}: slice.end must be a non-negative integer (got ${String(end)}).`,
-    );
-  }
-  if (end < start) {
-    throw new InvalidSliceError(
-      `${label}: slice.end (${end}) must not be before slice.start (${start}).`,
-    );
+  if (typeof end !== "number") {
+    throw new InvalidSliceError(`${label}: slice.end must be a number (got ${String(end)}).`);
   }
 }
 
-/**
- * Apply `slice` to records.
- * - `number`: first N rows; if N exceeds length, return all.
- * - `{ start, end }`: Array.slice window; if `end` exceeds length, return all;
- *   if `end < start`, throw `InvalidSliceError`.
- */
+/** Apply native array slicing to records. */
 export function applySlice<T>(records: T[], slice: MockSlice | undefined, label = "slice"): T[] {
   if (slice === undefined) return records;
-
-  if (typeof slice === "number") {
-    if (!Number.isInteger(slice) || slice < 0) {
-      throw new InvalidSliceError(
-        `${label}: slice must be a non-negative integer (got ${String(slice)}).`,
-      );
-    }
-    if (slice >= records.length) return records.slice();
-    return records.slice(0, slice);
-  }
-
-  if (!isPlainSliceRange(slice)) {
-    throw new InvalidSliceError(
-      `${label}: slice must be a non-negative integer or { start, end }.`,
-    );
-  }
-
-  const { start, end } = slice;
-  if (typeof start !== "number" || !Number.isInteger(start) || start < 0) {
-    throw new InvalidSliceError(
-      `${label}: slice.start must be a non-negative integer (got ${String(start)}).`,
-    );
-  }
-  if (typeof end !== "number" || !Number.isInteger(end) || end < 0) {
-    throw new InvalidSliceError(
-      `${label}: slice.end must be a non-negative integer (got ${String(end)}).`,
-    );
-  }
-  if (end < start) {
-    throw new InvalidSliceError(
-      `${label}: slice.end (${end}) must not be before slice.start (${start}).`,
-    );
-  }
-  if (end > records.length) return records.slice();
-  return records.slice(start, end);
+  assertSliceConfig(slice, label);
+  return typeof slice === "number"
+    ? records.slice(0, slice)
+    : records.slice(slice.start, slice.end);
 }
 
 /** Parse optional slice from a resource bag; throws on bad shape. */

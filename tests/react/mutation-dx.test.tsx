@@ -263,7 +263,7 @@ describe("idempotency keys through TanStack mutation retries", () => {
         wrapper: wrap(newClient()),
       },
     );
-    await act(() => result.current.update("1", { name: "x" }));
+    await act(() => result.current.update("1", { body: { name: "x" } }));
     expect(keys()).toEqual([null]);
   });
 });

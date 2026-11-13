@@ -38,7 +38,7 @@ describe("validation and onTransfer", () => {
     const c = collector();
     const blob = await transferClient(fetchImpl, {
       operation: { maxResponseSize: 10 },
-    }).docs.download("1", { retry: RETRY, onTransfer: c.observer });
+    }).docs.download({ params: { id: "1" }, retry: RETRY, onTransfer: c.observer });
     expect(blob.size).toBe(4);
     expect(c.events.map((e) => `${e.attempt}:${e.phase}`)).toEqual([
       "0:start",
@@ -57,7 +57,7 @@ describe("validation and onTransfer", () => {
     };
     const c = collector();
     const error = await transferClient(fetchImpl, { operation: { maxResponseSize: 10 } })
-      .docs.download("1", { retry: RETRY, onTransfer: c.observer })
+      .docs.download({ params: { id: "1" }, retry: RETRY, onTransfer: c.observer })
       .catch((e) => e);
     expect(error).toBeInstanceOf(ValidationError);
     expect(n).toBe(2);
@@ -69,7 +69,7 @@ describe("validation and onTransfer", () => {
     await transferClient(async () => chunkedResponse([bytes(6), bytes(6)]), {
       operation: { maxResponseSize: 8 },
     })
-      .docs.download("1", { onTransfer: c.observer })
+      .docs.download({ params: { id: "1" }, onTransfer: c.observer })
       .catch(() => {});
     expect(c.events.some((e) => e.phase === "complete")).toBe(false);
     expect(c.events.at(-1)).toMatchObject({ phase: "error" });

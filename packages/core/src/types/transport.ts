@@ -2,10 +2,10 @@ import type { AdvancedTransferOptions, PresignedRequest } from "./advanced-trans
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
 import type { RetryConfig } from "./retry.js";
 
-export type ResponseType = "json" | "text" | "blob" | "arrayBuffer" | "stream";
+export type ResponseType = "json" | "auto" | "text" | "blob" | "arrayBuffer" | "stream";
 
-/** Every {@link ResponseType} that is not parsed as JSON. */
-export type BinaryResponseType = Exclude<ResponseType, "json">;
+/** Every {@link ResponseType} that is not parsed as JSON / auto. */
+export type BinaryResponseType = Exclude<ResponseType, "json" | "auto">;
 
 /**
  * The value an operation resolves to for a non-JSON `responseType`. `stream` is `null` for an
@@ -50,13 +50,12 @@ export interface ApiRequest {
   mocked: boolean;
 }
 
-/** @deprecated Renamed to `ApiRequest`. */
-export type RequestConfig = ApiRequest;
-
 /** Response envelope for response middleware and `{ full: true }` calls. */
 export interface ApiResponse<T> {
-  /** Parsed body after response key transforms. */
+  /** Processed body after unwrapping, response key transforms, parsing, and validation. */
   data: T;
+  /** Original parsed body from transport or mock engine, before response pipeline stages. */
+  source?: unknown;
   status: number;
   headers: Headers;
   request: ApiRequest;
@@ -166,6 +165,8 @@ export interface Transport {
 export type RequestOptions<TQuery = QueryParams> = {
   transfer?: AdvancedTransferOptions;
   presigned?: PresignedRequest;
+  /** Values for path placeholders on this operation. */
+  params?: PathParams;
   query?: TQuery;
   /** Highest-precedence headers for this call. */
   headers?: HeadersInitLike;

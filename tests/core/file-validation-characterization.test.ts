@@ -30,8 +30,13 @@ describe("v1.3.0 behavior without rules (preserved)", () => {
   it("middleware runs before serialization: a body replaced by middleware is what is sent", async () => {
     const { api, calls } = petApi("live", {
       resource: {
-        requestMiddleware: [
-          (request: { body: unknown }) => ({ ...request, body: { photo: file(1, "mw.png") } }),
+        middleware: [
+          {
+            onRequest: (request: { body: unknown }) => ({
+              ...request,
+              body: { photo: file(1, "mw.png") },
+            }),
+          },
         ],
       },
     });

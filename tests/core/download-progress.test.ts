@@ -14,8 +14,8 @@ describe("download progress", () => {
         }),
       );
     const c = collector();
-    const observed = await make().docs.download("1", { onTransfer: c.observer });
-    const plain = await make().docs.download("1");
+    const observed = await make().docs.download({ params: { id: "1" }, onTransfer: c.observer });
+    const plain = await make().docs.download({ params: { id: "1" } });
     expect(c.phases()).toEqual([
       "download:start",
       "download:progress",
@@ -63,7 +63,8 @@ describe("download progress", () => {
 
   it("unknown length: no total, ever", async () => {
     const c = collector();
-    await transferClient(async () => chunkedResponse(parts)).docs.download("1", {
+    await transferClient(async () => chunkedResponse(parts)).docs.download({
+      params: { id: "1" },
       onTransfer: c.observer,
     });
     expect(c.events.every((e) => !("total" in e))).toBe(true);
@@ -77,7 +78,7 @@ describe("download progress", () => {
     const c = collector();
     await transferClient(async () =>
       chunkedResponse(parts, { headers: headers as Record<string, string> }),
-    ).docs.download("1", { onTransfer: c.observer });
+    ).docs.download({ params: { id: "1" }, onTransfer: c.observer });
     expect(c.events.every((e) => !("total" in e))).toBe(true);
     expect(c.events.at(-1)).toMatchObject({ phase: "complete", loaded: 12 });
   });
@@ -86,7 +87,7 @@ describe("download progress", () => {
     const c = collector();
     await transferClient(async () =>
       chunkedResponse(parts, { headers: { "content-length": "5" } }),
-    ).docs.download("1", { onTransfer: c.observer });
+    ).docs.download({ params: { id: "1" }, onTransfer: c.observer });
     const last = c.events.at(-1)!;
     expect(last).toMatchObject({ phase: "complete", loaded: 12 });
     expect("total" in last).toBe(false);
@@ -96,14 +97,14 @@ describe("download progress", () => {
     const e = collector();
     const empty = await transferClient(
       async () => new Response(new Blob([]), { status: 200 }),
-    ).docs.download("1", { onTransfer: e.observer });
+    ).docs.download({ params: { id: "1" }, onTransfer: e.observer });
     expect(empty.size).toBe(0);
     expect(e.events.at(-1)).toMatchObject({ phase: "complete", loaded: 0 });
 
     const n = collector();
     const none = await transferClient(
       async () => new Response(null, { status: 204 }),
-    ).docs.download("1", { onTransfer: n.observer });
+    ).docs.download({ params: { id: "1" }, onTransfer: n.observer });
     expect(none.size).toBe(0);
     expect(n.phases()).toEqual(["download:start", "download:complete"]);
   });
@@ -139,7 +140,7 @@ describe("download progress", () => {
           headers: { "content-type": "application/json" },
         }),
     )
-      .docs.download("1", { onTransfer: c.observer })
+      .docs.download({ params: { id: "1" }, onTransfer: c.observer })
       .catch((e) => e);
     expect(failure).toBeInstanceOf(HttpError);
     expect((failure as HttpError).data).toEqual({ message: "nope" });

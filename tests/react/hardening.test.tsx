@@ -448,7 +448,7 @@ describe("infinite mode: errors, retry, refetch, Strict Mode", () => {
         const cursor = Number(new URL(request.url).searchParams.get("cursor"));
         return { body: { items: [`p${cursor}`], next: cursor < 2 ? cursor + 1 : null } };
       }),
-      resources: { posts: { path: "/posts", readOnly: true } },
+      resources: { posts: { path: "/posts", operations: "read" } },
     });
     return { api, calls: () => calls };
   }

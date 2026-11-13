@@ -99,12 +99,22 @@ const call = async (
   method: "GET" | "POST" = "GET",
   body?: unknown,
 ) => {
+  const resourceOps = resource.operations as Record<string, Record<string, unknown>> | undefined;
   const c = defineApi({
     baseURL: origin(api),
     headers: secrets,
-    resources: { r: { path, ...resource } },
+    resources: {
+      r: {
+        path,
+        ...resource,
+        operations: {
+          ...resourceOps,
+          fetch: { method: "GET", path: "", ...(resourceOps?.getAll ?? {}) },
+        },
+      },
+    },
   });
-  const run = method === "GET" ? c.r.getAll(options) : c.r.create(body ?? { a: 1 }, options);
+  const run = method === "GET" ? c.r.fetch(options) : c.r.create(body ?? { a: 1 }, options);
   return run.then(
     (value): { value?: unknown; error?: unknown } => ({ value: value as unknown }),
     (error: unknown): { value?: unknown; error?: unknown } => ({ error }),

@@ -29,7 +29,7 @@ export class MockApiError extends MockingErrors {
   }
 }
 
-/** Invalid `slice` (negatives, non-integers, or `end` before `start`). */
+/** Invalid `slice` configuration (a non-numeric bound or an unsupported shape). */
 export class InvalidSliceError extends MockApiError {
   constructor(message: string) {
     super("INVALID_SLICE", message);

@@ -1,7 +1,7 @@
 # Apixa — Project Context and Development Direction
 
-> **Current milestone:** [v1.8.1](../versions/v1.8.1/) — Laravel Real-World Backend Playground (environment provisioning only, issue #107). Previous: [v1.8.0](../versions/v1.8.0/) is merged via PR #106 (`b0cf6b4`), CI Node 22/24 green; owner final sign-off is not inferred. Last shipped: [v0.11.0](../versions/v0.11.0/); [v1.0.0](../versions/v1.0.0/) remains a published release candidate (`1.0.0-rc.0`), not stable.
-> Previous: [v0.10.0](../versions/v0.10.0/) (Fully customizable resource operations, 11 always-on builtins); [v0.9.0](../versions/v0.9.0/) (Flatten Core mock syntax); [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`); [v0.7.0](../versions/v0.7.0/); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
+> **Current milestone:** [v3.0.0](../versions/v3.0.0/) — coordinated Core architecture overhaul (`3.0.0-rc.0` release candidate verified, not npm-published). The published npm package remains `apixa@2.0.0`.
+> Previous: [v0.10.0](../versions/v0.10.0/) (Fully customizable resource operations, always-on builtins); [v0.9.0](../versions/v0.9.0/) (Flatten Core mock syntax); [v0.8.0](../versions/v0.8.0/) (Unified TanStack Query `useResourceQuery`); [v0.7.0](../versions/v0.7.0/); [v0.6.0](../versions/v0.6.0/); [v0.5.0](../versions/v0.5.0/); [v0.4.0](../versions/v0.4.0/); [v0.3.0](../versions/v0.3.0/); [v0.2.0](../versions/v0.2.0/); [v0.1.0](../versions/v0.1.0/).
 > This file is the living project context. Version folders freeze a milestone; update this file when direction changes.
 
 ## 1. Project Identity
@@ -100,11 +100,11 @@ support `signal` / `timeout`; opt-in `retry` and thin `middleware` shipped in v0
 Writes may opt into `idempotency` (`true` or `{ header, generate }`): one key per call,
 reused by Core retries and middleware replay (implemented in the v1.0.0 release candidate).
 
-**Implemented (v0.10.0):** `operations` accepts a config object, a function, or `false` per key —
-add, remove, or override any operation, on both `defineApi` and `@apixa/mocking` resources. 11 new
-builtins (`getBySlug`, `patch`, `upsert`, `count`, `search`, `createMany`, `deleteMany`, `getMany`,
-`exists`, `findFirst`, `getBy`) are **always-on**, the same default-first treatment as the original
-5 — no `operations` entry needed to use them:
+**Implemented (v0.10.0, refined in v3.0.0):** `operations` accepts a preset, list, or object
+of config/function/`false` overrides per key — add, remove, or override any operation, on both
+`defineApi` and `@apixa/mocking` resources. Alongside the original 5 CRUD methods, 8 additional
+builtins (`patch`, `count`, `createMany`, `deleteMany`, `getMany`, `exists`, `findFirst`, `getBy`)
+are **always-on** (13 defaults total; `getBySlug`, `upsert`, and `search` were removed in v3):
 
 ```ts
 const api = defineApi<AppApi>()({
@@ -128,14 +128,14 @@ await api.users.archive("123"); // fully custom operation
 
 See the full table in [`docs/conventions.md`](./conventions.md#operation-customization).
 
-**Current change (#56):** all 16 defaults remain enabled. `defaultOperations`, `readOnly`,
-`writeOnly`, `operationGroups`, and per-operation entries select methods in a fixed order;
-TypeScript reflects the literal runtime settings. `createMany` / `deleteMany` replace the old
-bulk names without changing `/bulk` wire paths. `exists`, `findFirst`, `getMany`, and `getBy`
-execute independent requests. The Core mock store filters `getMany` IDs, and TanStack's list hook
+**Implemented in v3.0.0 (`3.0.0-rc.0`):** consolidated 13 built-in defaults, `operations` presets/lists/named
+overrides reflected in TypeScript, `createMany` / `deleteMany` replacing the old bulk names,
+independent `exists` / `findFirst` / `getMany` / `getBy` execution, `{ body }` write signatures for
+`update` / `patch`, `{ params }` for path parameters, derived HTTP kinds for declarative operations,
+unified `middleware[]` hooks (`onRequest` / `onResponse` / `onError`), structured `query` serialization,
+explicit `response` processing (`unwrap` / `parse` / `validate` / `source`), bounded/excluded
+`transforms`, and unified per-operation `pagination` with live/mock parity. TanStack's list hook
 supports resources with disabled detail and mutation methods.
-
-**Planned later:** `crud<>()` preset, path-param template inference, `idKey`, runtime schema validation hooks, live pagination conventions for real backends.
 
 Prefer clear semantics. For example, `update()` is a clearer default than an ambiguous operation such as `appendUser()`.
 
@@ -171,8 +171,9 @@ users.states.create.isPending;
 ```
 
 All three share one QueryClient and one key structure; reads and writes are routed by Core's
-`kind` classification, never by name. Every custom operation declares its kind explicitly;
-Core rejects incompatible HTTP methods. Internals use TanStack Query (`useQuery`, `useMutation`, `queryOptions`,
+`kind` classification, never by name. Declarative HTTP operations derive their kind from the
+method; custom function operations declare it explicitly. Core rejects incompatible HTTP methods.
+Internals use TanStack Query (`useQuery`, `useMutation`, `queryOptions`,
 cache APIs). The Query hook forwards native options and results, reads any guaranteed built-in
 operation or explicitly declared custom read, and exposes resource cache helpers. A hook-free
 query-options factory supports native Suspense, parallel queries, prefetching, and hydration.
@@ -299,10 +300,9 @@ This roadmap describes possible future capabilities. Do not implement them all a
 
 ## 11. Immediate Objective
 
-The active milestone is [v1.8.1](../versions/v1.8.1/): an independent Laravel/PostgreSQL/MongoDB
-playground with no application HTTP endpoints. It does not change the SDK. Day-to-day SDK work
-should follow the active milestone contract; when none is open, use the roadmap and open a new
-milestone with `/start-version` rather than inventing work.
+The active milestone is [v3.0.0](../versions/v3.0.0/): the coordinated Core architecture
+overhaul. Follow its scope and acceptance criteria; the in-progress v1.9.0 work has not been
+declared complete.
 
 The original Core objective is met: a developer defines a resource in a few lines, obtains a fully
 typed client, and executes real HTTP requests without manually implementing every repetitive

@@ -82,12 +82,12 @@ describe("onTransfer types", () => {
         },
       });
       void api.docs.create({ name: "x" }, { onTransfer: seen });
-      void api.docs.download("1", { onTransfer: seen });
+      void api.docs.download({ ...({ onTransfer: seen }), params: { id: "1" } });
       void api.docs.plain({ onTransfer: seen });
       // @ts-expect-error onTransfer takes a function
-      void api.docs.download("1", { onTransfer: "nope" });
+      void api.docs.download({ ...({ onTransfer: "nope" }), params: { id: "1" } });
       // @ts-expect-error the callback receives a TransferEvent, not a number
-      void api.docs.download("1", { onTransfer: (n: number) => n });
+      void api.docs.download({ ...({ onTransfer: (n: number) => n }), params: { id: "1" } });
     };
     void run;
   });
@@ -96,9 +96,9 @@ describe("onTransfer types", () => {
     const run = async () => {
       const api = client();
       const onTransfer: TransferObserver = () => {};
-      const blob = await api.docs.download("1", { onTransfer });
+      const blob = await api.docs.download({ ...({ onTransfer }), params: { id: "1" } });
       expectTypeOf(blob).toEqualTypeOf<Blob>();
-      const full = await api.docs.download("1", { onTransfer, full: true });
+      const full = await api.docs.download({ ...({ onTransfer, full: true }), params: { id: "1" } });
       expectTypeOf(full).toEqualTypeOf<ApiResponse<Blob>>();
       const entity = await api.docs.getById("1", { onTransfer });
       expectTypeOf(entity).toEqualTypeOf<Doc>();

@@ -19,6 +19,33 @@ const base = {
 };
 
 describe("custom operation classification (kind)", () => {
+  it("derives declarative operation kinds from HTTP methods", async () => {
+    const client = defineApi({
+      ...base,
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            report: { method: "GET", path: "/report" },
+            archive: { method: "POST", path: "/archive" },
+            search: { method: "POST" },
+            task: { kind: "read", run: async () => 5 },
+          },
+        },
+      },
+    });
+    const meta = getOperationMetadata(client.users)!;
+    expect(meta.report?.kind).toBe("read");
+    expect(meta.archive?.kind).toBe("write");
+    expect(meta.search?.kind).toBe("write");
+    expect(meta.task?.kind).toBe("read");
+    type Kinds = OperationKindsOf<typeof client.users>;
+    expectTypeOf<Kinds["report"]>().toEqualTypeOf<"read">();
+    expectTypeOf<Kinds["archive"]>().toEqualTypeOf<"write">();
+    expectTypeOf<Kinds["search"]>().toEqualTypeOf<"write">();
+    await expect(client.users.report()).resolves.toEqual([]);
+  });
+
   const api = defineApi<{ users: { entity: User } }>()({
     ...base,
     resources: {
@@ -40,7 +67,7 @@ describe("custom operation classification (kind)", () => {
           getAll: async (ctx, team: string) => ctx.request<User[]>({ query: { team } }),
         },
       },
-      org: { path: "/orgs/:orgId/users", operationGroups: { extended: false } },
+      org: { path: "/orgs/:orgId/users", operations: "crud" },
     },
   });
 
@@ -74,15 +101,15 @@ describe("custom operation classification (kind)", () => {
     const users = getOperationMetadata(api.users)!;
     expect(users.getById!.optionsIndex).toBe(1);
     expect(users.create!.optionsIndex).toBe(1);
-    expect(users.update!.optionsIndex).toBe(2);
+    expect(users.update!.optionsIndex).toBe(1);
     expect(users.count!.optionsIndex).toBe(0);
-    expect(users.findFirst!.optionsIndex).toBe(1);
+    expect(users.findFirst!.optionsIndex).toBe(0);
     expect(users.getBy!.optionsIndex).toBe(2);
-    expect(users.archive!.optionsIndex).toBe(2);
+    expect(users.archive!.optionsIndex).toBe(1);
     const org = getOperationMetadata(api.org)!;
-    expect(org.getAll!.optionsIndex).toBe(1);
+    expect(org.getAll!.optionsIndex).toBe(0);
     expect(org.getById!.optionsIndex).toBe(1);
-    expect(org.update!.optionsIndex).toBe(2);
+    expect(org.update!.optionsIndex).toBe(1);
   });
 
   it("keeps metadata non-enumerable, frozen, and outside the operation keys", () => {
@@ -121,7 +148,7 @@ describe("custom operation classification (kind)", () => {
       /unknown option "method"/,
     );
     expect(build({ stats: { kind: "read", run: async () => 1 } })).not.toThrow(ConfigError);
-    expect(build({ stats: { method: "GET" } })).toThrow(/kind must be explicitly set/);
+    expect(build({ stats: { method: "GET" } })).not.toThrow(ConfigError);
     expect(build({ stats: async () => 1 })).toThrow(/requires \{ kind:/);
     expect(build({ stats: { kind: "read", method: "POST" } })).toThrow(
       /POST requires kind "write"/,
@@ -129,8 +156,8 @@ describe("custom operation classification (kind)", () => {
     expect(build({ archive: { kind: "write", method: "GET" } })).toThrow(
       /GET requires kind "read"/,
     );
-    expect(build({ getMany: { method: "POST" } })).toThrow(/getMany: Operation kind "read"/);
-    expect(build({ create: { method: "GET" } })).toThrow(/create: Operation kind "write"/);
+    expect(build({ getMany: { method: "POST" } })).not.toThrow(ConfigError);
+    expect(build({ create: { method: "GET" } })).not.toThrow(ConfigError);
     expect(build({ getMany: true, deleteMany: true })).not.toThrow(ConfigError);
     for (const method of ["HEAD", "OPTIONS"]) {
       expect(build({ stats: { kind: "read", method } })).not.toThrow(ConfigError);
@@ -170,11 +197,6 @@ describe("custom operation classification (kind)", () => {
       });
       defineApi({
         ...base,
-        // @ts-expect-error custom declarative operations require kind
-        resources: { u: { path: "/u", operations: { s: { method: "GET" } } } },
-      });
-      defineApi({
-        ...base,
         // @ts-expect-error custom function shorthand requires kind and run
         resources: { u: { path: "/u", operations: { s: async () => 1 } } },
       });
@@ -186,18 +208,6 @@ describe("custom operation classification (kind)", () => {
             operations: {
               // @ts-expect-error read cannot use POST
               s: { kind: "read", method: "POST" },
-            },
-          },
-        },
-      });
-      defineApi({
-        ...base,
-        resources: {
-          u: {
-            path: "/u",
-            operations: {
-              // @ts-expect-error builtin method cannot change to the other kind
-              getMany: { method: "POST" },
             },
           },
         },

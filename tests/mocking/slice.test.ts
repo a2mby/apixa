@@ -1,7 +1,7 @@
 import "../../packages/mocking/src/register.js";
 import { describe, expect, it } from "vitest";
 import { defineApi } from "@apixa/core";
-import { defineMockApi, InvalidSliceError, MockingErrors } from "@apixa/mocking";
+import { defineMockApi, InvalidSliceError } from "@apixa/mocking";
 import { type User } from "@apixa/mocking/datasets";
 
 describe("mock slice", () => {
@@ -27,27 +27,28 @@ describe("mock slice", () => {
     const api = defineMockApi({
       overshoot: { type: "products-mock", slice: { start: 10, end: 10_000 } },
     });
-    expect(await api.overshoot.getAll()).toHaveLength(100);
+    expect(await api.overshoot.getAll()).toHaveLength(90);
   });
 
-  it("rejects end before start with InvalidSliceError when the API is built", () => {
-    const build = () =>
-      defineMockApi({ bad: { type: "products-mock", slice: { start: 10, end: 3 } } });
-    expect(build).toThrow(InvalidSliceError);
-    expect(build).toThrow(MockingErrors);
-    expect(build).toThrow(/end \(3\).*before.*start \(10\)/);
+  it("returns an empty list when the end precedes the start", async () => {
+    const api = defineMockApi({ users: { type: "products-mock", slice: { start: 10, end: 3 } } });
+    await expect(api.users.getAll()).resolves.toEqual([]);
   });
 
-  it("rejects negative slice values", () => {
-    expect(() => defineMockApi({ a: { type: "products-mock", slice: -1 } })).toThrow(
+  it("supports negative indices and rejects non-numeric indices", async () => {
+    const api = defineMockApi({
+      last: { type: "products-mock", slice: { start: -3, end: -1 } },
+    });
+    expect((await api.last.getAll()).map((row) => row.id)).toEqual(["98", "99"]);
+    expect(() => defineMockApi({ a: { type: "products-mock", slice: "first" as never } })).toThrow(
       InvalidSliceError,
     );
+  });
+
+  it("rejects slice together with mock pagination", () => {
     expect(() =>
-      defineMockApi({ a: { type: "products-mock", slice: { start: -1, end: 2 } } }),
-    ).toThrow(InvalidSliceError);
-    expect(() =>
-      defineMockApi({ a: { type: "products-mock", slice: { start: 0, end: -2 } } }),
-    ).toThrow(InvalidSliceError);
+      defineMockApi({ users: { type: "products-mock", slice: 5, pagination: true } }),
+    ).toThrow(/slice.*pagination|pagination.*slice/i);
   });
 
   it("defineApi users-mock + slice: 100 yields 100 users", async () => {

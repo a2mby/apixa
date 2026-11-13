@@ -1,4 +1,4 @@
-import { defineApi, isHttpError } from "@apixa/core";
+import { defineApi, isHttpError, ResponseShapeError } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -12,6 +12,37 @@ type UsersApi = {
 };
 
 describe("builtins added in v0.10.0", () => {
+  it.each(["getMany", "findFirst"] as const)(
+    "%s rejects an invalid collection instead of reporting no results",
+    async (operation) => {
+      const invalid = { items: [{ id: "1" }], trace: "response-42" };
+      const api = defineApi({
+        baseURL: "https://api.example.com",
+        transport: createFakeTransport(() => ({ status: 200, body: invalid })),
+        resources: { users: { path: "/users" } },
+      });
+
+      const result = operation === "getMany" ? api.users.getMany(["1"]) : api.users.findFirst();
+      await expect(result).rejects.toBeInstanceOf(ResponseShapeError);
+      await expect(result).rejects.toMatchObject({
+        code: "RESPONSE_SHAPE",
+        status: 200,
+        data: invalid,
+        response: { data: invalid, status: 200, raw: expect.any(Response) },
+      });
+    },
+  );
+
+  it("keeps genuinely empty collection results valid", async () => {
+    const api = defineApi({
+      baseURL: "https://api.example.com",
+      transport: createFakeTransport(() => ({ body: [] })),
+      resources: { users: { path: "/users" } },
+    });
+    await expect(api.users.getMany(["1"])).resolves.toEqual([]);
+    await expect(api.users.findFirst()).resolves.toBeNull();
+  });
+
   it("are present by default for a path-only resource, same as the original 5", () => {
     const api = defineApi<UsersApi>()({
       baseURL: "https://api.example.com",
@@ -32,12 +63,9 @@ describe("builtins added in v0.10.0", () => {
       "getAll",
       "getBy",
       "getById",
-      "getBySlug",
       "getMany",
       "patch",
-      "search",
       "update",
-      "upsert",
     ]);
   });
 
@@ -55,12 +83,12 @@ describe("builtins added in v0.10.0", () => {
       }, // no `operations` at all
     });
 
-    await api.users.patch("1", { name: "Ada" });
-    await api.users.getBySlug("ada-lovelace");
+    await api.users.patch("1", { body: { name: "Ada" } });
+    await api.users.getBy("email", "a@example.com");
 
     expect(calls).toEqual([
       { method: "PATCH", url: "https://api.example.com/users/1" },
-      { method: "GET", url: "https://api.example.com/users/slug/ada-lovelace" },
+      { method: "GET", url: "https://api.example.com/users?email=a%40example.com" },
     ]);
   });
 
@@ -71,21 +99,9 @@ describe("builtins added in v0.10.0", () => {
     expectedUrl: string;
   }> = [
     {
-      name: "getBySlug",
-      call: (api) => api.users.getBySlug("ada-lovelace"),
-      expectedMethod: "GET",
-      expectedUrl: "https://api.example.com/users/slug/ada-lovelace",
-    },
-    {
       name: "patch",
-      call: (api) => api.users.patch("1", { name: "Ada" }),
+      call: (api) => api.users.patch("1", { body: { name: "Ada" } }),
       expectedMethod: "PATCH",
-      expectedUrl: "https://api.example.com/users/1",
-    },
-    {
-      name: "upsert",
-      call: (api) => api.users.upsert("1", { name: "Ada" }),
-      expectedMethod: "PUT",
       expectedUrl: "https://api.example.com/users/1",
     },
     {
@@ -93,12 +109,6 @@ describe("builtins added in v0.10.0", () => {
       call: (api) => api.users.count(),
       expectedMethod: "GET",
       expectedUrl: "https://api.example.com/users/count",
-    },
-    {
-      name: "search",
-      call: (api) => api.users.search({ query: { q: "ada" } }),
-      expectedMethod: "GET",
-      expectedUrl: "https://api.example.com/users/search?q=ada",
     },
     {
       name: "createMany",
@@ -122,6 +132,9 @@ describe("builtins added in v0.10.0", () => {
         baseURL: "https://api.example.com",
         transport: createFakeTransport((request) => {
           calls.push({ method: request.method, url: request.url });
+          if (request.url.endsWith("/count")) return { status: 200, body: 3 };
+          if (request.method === "POST" && request.url.endsWith("/bulk"))
+            return { status: 200, body: [] };
           return { status: 200, body: {} };
         }),
         resources: {
@@ -158,20 +171,20 @@ describe("builtins added in v0.10.0", () => {
     expect(urls).toEqual(["https://api.example.com/users/total"]);
   });
 
-  it("false removes a builtin added in v0.10.0, same as the original 5", () => {
+  it("false removes a builtin, same as the original 5", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
       resources: {
         users: {
           path: "/users",
-          operations: { count: false, search: false },
+          operations: { count: false, findFirst: false },
         },
       },
     });
 
     expect(Object.keys(api.users)).not.toContain("count");
-    expect(Object.keys(api.users)).not.toContain("search");
+    expect(Object.keys(api.users)).not.toContain("findFirst");
     expect(api.users).toHaveProperty("getAll");
   });
 
@@ -223,7 +236,7 @@ describe("builtins added in v0.10.0", () => {
     });
 
     expect(await api.users.findFirst()).toEqual({ id: "1", name: "Ada", email: "a@example.com" });
-    expect(await api.users.findFirst({ empty: true })).toBeNull();
+    expect(await api.users.findFirst({ query: { empty: true } })).toBeNull();
   });
 
   it("getMany composes over the collection endpoint with an id query", async () => {
@@ -251,7 +264,7 @@ describe("builtins added in v0.10.0", () => {
     expect(urls).toEqual(["https://api.example.com/users?id=1&id=2"]);
   });
 
-  it("getBy interpolates a :placeholder path, or appends the value to a plain field/prefix", async () => {
+  it("getBy uses query params by default or interpolates a :field/:value override", async () => {
     const urls: string[] = [];
 
     const api = defineApi({
@@ -262,15 +275,19 @@ describe("builtins added in v0.10.0", () => {
       }),
       resources: {
         users: { path: "/users" },
+        templated: {
+          path: "/templated",
+          operations: { getBy: { path: "/by/:field/:value" } },
+        },
       },
     });
 
     await api.users.getBy("code", "ABC123");
-    await api.users.getBy("/by-code/:code", "ABC123");
+    await api.templated.getBy("code", "ABC123");
 
     expect(urls).toEqual([
-      "https://api.example.com/users/code/ABC123",
-      "https://api.example.com/users/by-code/ABC123",
+      "https://api.example.com/users?code=ABC123",
+      "https://api.example.com/templated/by/code/ABC123",
     ]);
   });
 
@@ -343,7 +360,7 @@ describe("builtins added in v0.10.0", () => {
     expect(await api.users.getMany(["1"])).toEqual([{ id: "1" }]);
   });
 
-  it("findFirst / getMany handle a paginated getAll envelope (v0.11.0 fix)", async () => {
+  it("does not implicitly unwrap an envelope for findFirst or getMany", async () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({
@@ -355,8 +372,8 @@ describe("builtins added in v0.10.0", () => {
       },
     });
 
-    expect(await api.users.findFirst()).toEqual({ id: "1" });
-    expect(await api.users.getMany(["1", "2"])).toEqual([{ id: "1" }, { id: "2" }]);
+    await expect(api.users.findFirst()).rejects.toBeInstanceOf(ResponseShapeError);
+    await expect(api.users.getMany(["1", "2"])).rejects.toBeInstanceOf(ResponseShapeError);
   });
 
   it("types exists / findFirst / getMany / getBy as their composed public signature", () => {
@@ -375,13 +392,13 @@ describe("builtins added in v0.10.0", () => {
   });
 });
 
-describe("readOnly shorthand (v0.11.0)", () => {
-  it("removes the 7 write ops; getAll/getById/exists stay", () => {
+describe("read preset", () => {
+  it("removes the write ops; getAll/getById/exists stay", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: null })),
       resources: {
-        users: { path: "/users", readOnly: true },
+        users: { path: "/users", operations: "read" },
       },
     });
 
@@ -389,7 +406,6 @@ describe("readOnly shorthand (v0.11.0)", () => {
       "create",
       "update",
       "patch",
-      "upsert",
       "delete",
       "createMany",
       "deleteMany",
@@ -401,7 +417,7 @@ describe("readOnly shorthand (v0.11.0)", () => {
     expect(Object.keys(api.users)).toContain("exists");
   });
 
-  it("an explicit operations entry still wins over readOnly", async () => {
+  it("an explicit operation entry still wins over the read preset", async () => {
     const urls: string[] = [];
     const api = defineApi({
       baseURL: "https://api.example.com",
@@ -412,15 +428,14 @@ describe("readOnly shorthand (v0.11.0)", () => {
       resources: {
         users: {
           path: "/users",
-          readOnly: true,
-          operations: { patch: {} },
+          operations: { preset: "read", patch: {} },
         },
       },
     });
 
     expect(Object.keys(api.users)).toContain("patch");
     expect(Object.keys(api.users)).not.toContain("delete");
-    await api.users.patch("1", { name: "Ada" });
+    await api.users.patch("1", { body: { name: "Ada" } });
     expect(urls).toEqual(["https://api.example.com/users/1"]);
   });
 });

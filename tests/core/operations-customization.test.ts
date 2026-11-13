@@ -36,12 +36,9 @@ describe("operations customization", () => {
       "getAll",
       "getBy",
       "getById",
-      "getBySlug",
       "getMany",
       "patch",
-      "search",
       "update",
-      "upsert",
     ]);
     expect((api.users as Record<string, unknown>).delete).toBeUndefined();
   });
@@ -91,12 +88,9 @@ describe("operations customization", () => {
       "getAll",
       "getBy",
       "getById",
-      "getBySlug",
       "getMany",
       "patch",
-      "search",
       "update",
-      "upsert",
     ]);
   });
 
@@ -200,7 +194,7 @@ describe("operations customization", () => {
         path: "/users";
         entity: User;
         operations?: {
-          getBySlug: { path: "/slug/:slug"; response: User };
+          getBy: { path: "/lookup/:field/:value"; response: User | null };
           patch: {};
           archive: (id: string) => Promise<void>;
         };
@@ -214,7 +208,7 @@ describe("operations customization", () => {
         users: {
           path: "/users",
           operations: {
-            getBySlug: {},
+            getBy: {},
             patch: {},
             archive: {
               kind: "write",
@@ -227,7 +221,7 @@ describe("operations customization", () => {
       },
     });
 
-    expectTypeOf(api.users.getBySlug).toBeFunction();
+    expectTypeOf(api.users.getBy).toBeFunction();
     expectTypeOf(api.users.patch).toBeFunction();
     expectTypeOf(api.users.archive).toBeFunction();
   });

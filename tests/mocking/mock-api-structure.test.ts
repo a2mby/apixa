@@ -8,8 +8,7 @@ describe("defineMockApi mirrors the defineApi structure", () => {
         users: {
           type: "users-mock",
           seed: { limit: 20 },
-          readOnly: true,
-          operations: { getById: true, getBySlug: false },
+          operations: { preset: "read", getById: true, getBySlug: false },
         },
         products: {
           type: "products-mock",
@@ -28,7 +27,7 @@ describe("defineMockApi mirrors the defineApi structure", () => {
     expect(page.data).toHaveLength(5);
     expectTypeOf(page).toEqualTypeOf<Page<(typeof page)["data"][number]>>();
 
-    // readOnly removes the write builtins, getBySlug: false removes that read builtin.
+    // The read preset removes writes; getBySlug: false removes that read builtin.
     expect(Object.keys(api.users)).not.toContain("create");
     expect(Object.keys(api.users)).not.toContain("getBySlug");
     expect(Object.keys(api.products)).not.toContain("delete");
@@ -36,7 +35,7 @@ describe("defineMockApi mirrors the defineApi structure", () => {
 
     // @ts-expect-error `delete` is disabled on products
     api.products.delete;
-    // @ts-expect-error `create` is removed by readOnly
+    // @ts-expect-error `create` is removed by the read preset
     api.users.create;
     // @ts-expect-error `getBySlug` is disabled on users
     api.users.getBySlug;
@@ -91,32 +90,30 @@ describe("defineMockApi mirrors the defineApi structure", () => {
 });
 
 describe("root settings and precedence", () => {
-  it("root readOnly applies to every resource; a resource can override it", () => {
+  it("a root preset applies to every resource; a resource can override it", () => {
     const api = defineMockApi({
-      readOnly: true,
+      operations: "read",
       resources: {
         users: { type: "users-mock" },
-        products: { type: "products-mock", readOnly: false },
+        products: { type: "products-mock", operations: "all" },
       },
     });
     expect(Object.keys(api.users)).not.toContain("create");
     expect(Object.keys(api.products)).toContain("create");
 
-    // @ts-expect-error removed by the root readOnly
+    // @ts-expect-error removed by the root read preset
     api.users.delete;
     expectTypeOf(api.products.delete).toBeFunction();
   });
 
-  it("root defaultOperations: false starts empty; groups and operations opt in", async () => {
+  it("resource overrides apply after an inherited selection", async () => {
     const api = defineMockApi({
-      defaultOperations: false,
-      operationGroups: { read: true },
+      operations: "read",
       resources: {
         users: { type: "users-mock", operations: { count: false } },
         products: {
           type: "products-mock",
-          operationGroups: { read: false },
-          operations: { getAll: true },
+          operations: ["getAll"],
         },
       },
     });
@@ -126,19 +123,19 @@ describe("root settings and precedence", () => {
     expect(Object.keys(api.products)).toEqual(["getAll"]);
     expect((await api.products.getAll()).length).toBeGreaterThan(0);
 
-    // @ts-expect-error not enabled by any group
+    // @ts-expect-error not enabled by the read preset
     api.users.create;
-    // @ts-expect-error count: false beats the read group
+    // @ts-expect-error count: false beats the read preset
     api.users.count;
-    // @ts-expect-error the resource turned the read group off
+    // @ts-expect-error the resource selected only getAll
     api.products.getById;
   });
 
-  it("groups merge per group: a resource overrides only the groups it names", () => {
+  it("named entries extend an inherited preset", () => {
     const api = defineMockApi({
-      operationGroups: { many: false, extended: false },
+      operations: "crud",
       resources: {
-        users: { type: "users-mock", operationGroups: { many: true } },
+        users: { type: "users-mock", operations: { getMany: true, createMany: true } },
       },
     });
     const keys = Object.keys(api.users);
@@ -151,19 +148,18 @@ describe("root settings and precedence", () => {
   it("validates the root settings", () => {
     expect(() =>
       defineMockApi({
+        // @ts-expect-error the old flag is no longer supported
         readOnly: true,
-        // @ts-expect-error readOnly and writeOnly cannot both be true
-        writeOnly: true,
         resources: { users: { type: "users-mock" } },
       }),
-    ).toThrow(/cannot both be true/);
+    ).toThrow(/unsupported option "readOnly"/);
     expect(() =>
       defineMockApi({
-        // @ts-expect-error unknown group
+        // @ts-expect-error the old group setting is no longer supported
         operationGroups: { nope: true },
         resources: { users: { type: "users-mock" } },
       }),
-    ).toThrow(/unknown operation group/);
+    ).toThrow(/unsupported option "operationGroups"/);
   });
 });
 
@@ -178,7 +174,7 @@ describe("typed operations", () => {
 
     expect(await api.users.exists("1")).toBe(true);
     expect(await api.users.count()).toBeGreaterThan(0);
-    expect((await api.users.findFirst({ username: "nobody" }))?.id).toBeUndefined();
+    expect((await api.users.findFirst({ query: { username: "nobody" } }))?.id).toBeUndefined();
     expectTypeOf(api.users.exists).returns.resolves.toBeBoolean();
     expectTypeOf(api.users.count).returns.resolves.toBeNumber();
     expectTypeOf(api.users.deleteMany).parameter(0).toEqualTypeOf<(string | number)[]>();

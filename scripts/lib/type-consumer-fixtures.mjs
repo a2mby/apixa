@@ -74,7 +74,7 @@ async function storageTypes() {
   type _ref = Assert<Equal<typeof row.file, string>>;
   const file = mockFiles(seeded).get(row.file);
   type _meta = Assert<Equal<NonNullable<typeof file>["meta"]["disk"], string | undefined>>;
-  await seeded.docs.patch(1, { file: new Blob(["next"]) });
+  await seeded.docs.patch(1, { body: { file: new Blob(["next"]) } });
   const listed = mockFiles(seeded).list({ disk: "test", path: "docs" });
   type _list = Assert<NotAny<typeof listed[number]>>;
 }
@@ -82,7 +82,7 @@ void storageTypes;
 `;
 
 /** Core only: no React, no TanStack anywhere in the project. */
-export const CORE_ONLY = `import { defineApi, detectTransferSupport, parseContentDisposition, type ApiError, type TransferEvent, type TransferSupport, type FileViolation, type FileViolationCode, ValidationError } from "apixa";
+export const CORE_ONLY = `import { defineApi, detectTransferSupport, parseContentDisposition, type ApiError, type TransferEvent, type TransferSupport, type FileViolation, type FileViolationCode, type QueryOptions, type ResponseOptions, type KeyTransformConfig, type PageResult, type ResolvedPagination, type OperationMockHandler, ValidationError } from "apixa";
 import { defineApi as defineCore, mockFileFixture, mockFixtureRef, mockFiles } from "apixa/core";
 import { defineMockApi } from "apixa/mocking";
 ${HELPERS}${API}${ADVANCED_TYPES}${DOWNLOAD_API}${STORAGE_API}
@@ -96,15 +96,64 @@ export async function main() {
   type _one = Assert<Equal<typeof one, User>>;
   const archived = await api.users.archive("1");
   type _archived = Assert<Equal<typeof archived, User>>;
+  const updated = await api.users.update("1", { body: { name: "Ada" } });
+  type _updated = Assert<Equal<typeof updated, User>>;
+  // @ts-expect-error v3 update requires options.body
+  await api.users.update("1", { name: "Ada" });
   type _err = Assert<NotAny<ApiError>>;
 
-  const blob = await files.docs.download("1");
+  // v3.0.0: QueryOptions, ResponseOptions, KeyTransformConfig, per-op pagination, response.source
+  const qOpts: QueryOptions = { nulls: "empty", emptyArrays: "omit", booleans: "number" };
+  const rOpts: ResponseOptions = { unwrap: "data", validate: (d) => d };
+  const tRule: KeyTransformConfig = { keys: "snake_case", preserve: ["meta"], maxDepth: 16 };
+  const mockHandler: OperationMockHandler<
+    { id: string; firstName: string },
+    { id: string | number },
+    unknown,
+    unknown,
+    { id: string; firstName: string }
+  > = ({ store, params }) => store.get(params.id);
+  void mockHandler;
+  const v3 = defineApi<{
+    items: { entity: { id: string; firstName: string }; query: { role?: string } };
+  }>()({
+    baseURL: "https://example.test",
+    query: qOpts,
+    response: rOpts,
+    transforms: { request: tRule, response: { keys: "camelCase" } },
+    resources: {
+      items: {
+        path: "/items",
+        operations: {
+          getAll: { pagination: "page" },
+          inspect: {
+            kind: "read",
+            method: "GET",
+            path: "/:id/inspect",
+            mock: ({ store, params }) => store.get(params.id),
+          },
+        },
+      },
+    },
+  });
+  const page = await v3.items.getAll({ query: { page: 1, role: "admin" } });
+  type _v3page = Assert<
+    Equal<typeof page, { data: { id: string; firstName: string }[]; total: number; page: number; pageSize: number }>
+  >;
+  type _pageResult = Assert<NotAny<PageResult>>;
+  type _resolvedPagination = Assert<NotAny<ResolvedPagination>>;
+  const fullItem = await v3.items.getById("1", { full: true });
+  type _v3source = Assert<Equal<typeof fullItem.source, unknown>>;
+  const rp: ResolvedPagination | undefined = undefined;
+  void [rp, fullItem];
+
+  const blob = await files.docs.download({ params: { id: "1" } });
   type _d1 = Assert<Equal<typeof blob, Blob>>;
-  const buffer = await files.docs.raw("1");
+  const buffer = await files.docs.raw({ params: { id: "1" } });
   type _d2 = Assert<Equal<typeof buffer, ArrayBuffer>>;
-  const note = await files.docs.note("1");
+  const note = await files.docs.note({ params: { id: "1" } });
   type _d3 = Assert<Equal<typeof note, string>>;
-  const full = await files.docs.download("1", { full: true });
+  const full = await files.docs.download({ params: { id: "1" }, full: true });
   type _d4 = Assert<Equal<(typeof full)["data"], Blob>>;
   type _d5 = Assert<Equal<(typeof full)["status"], number>>;
   type _d6 = Assert<Equal<(typeof full)["headers"], Headers>>;
@@ -121,7 +170,8 @@ export async function main() {
   type _d12 = Assert<Equal<typeof disposition.filename, string | undefined>>;
 
   // v1.3.0: typed transfer events (inline callbacks are contextually typed from packed declarations).
-  const watched = await files.docs.download("1", {
+  const watched = await files.docs.download({
+    params: { id: "1" },
     onTransfer: (event) => {
       type _t1 = Assert<Equal<typeof event, TransferEvent>>;
       type _t2 = Assert<NotAny<typeof event>>;
@@ -132,7 +182,7 @@ export async function main() {
     },
   });
   type _t5 = Assert<Equal<typeof watched, Blob>>;
-  const watchedFull = await files.docs.download("1", { full: true, onTransfer: () => {} });
+  const watchedFull = await files.docs.download({ params: { id: "1" }, full: true, onTransfer: () => {} });
   type _t6 = Assert<Equal<(typeof watchedFull)["data"], Blob>>;
   const watchedEntity = await api.users.getById("1", { onTransfer: () => {} });
   type _t7 = Assert<Equal<typeof watchedEntity, User>>;
@@ -196,8 +246,8 @@ export function App() {
     queryKey: ["file"],
     operation: "download",
     args: [
-      "1",
       {
+        params: { id: "1" },
         onTransfer: (event) => {
           type _tx1 = Assert<NotAny<typeof event>>;
           type _tx2 = Assert<Equal<typeof event.direction, "upload" | "download">>;
@@ -255,7 +305,7 @@ export function App() {
   });
   type _w7 = Assert<Equal<ReturnType<(typeof custom)["ping"]>, Promise<number>>>;
 
-  const dq = useResourceQuery(files.docs, { queryKey: ["file"], operation: "download", args: ["1"] });
+  const dq = useResourceQuery(files.docs, { queryKey: ["file"], operation: "download", args: [{ params: { id: "1" } }] });
   type DQ = typeof dq;
   type _dq1 = Assert<NotAny<DQ>>;
   type _dq2 = Assert<NoAnyMembers<DQ>>;
@@ -263,14 +313,14 @@ export function App() {
   const dsel = useResourceQuery(files.docs, {
     queryKey: ["size"],
     operation: "download",
-    args: ["1"],
+    args: [{ params: { id: "1" } }],
     select: (blob) => {
       type _b = Assert<Equal<typeof blob, Blob>>;
       return blob.size;
     },
   });
   type _dq4 = Assert<Equal<(typeof dsel)["data"], number | undefined>>;
-  const dr = useResource(files.docs, { queryKey: ["files"], query: { operation: "download", args: ["1"] } });
+  const dr = useResource(files.docs, { queryKey: ["files"], query: { operation: "download", args: [{ params: { id: "1" } }] } });
   type DR = typeof dr;
   type _dr1 = Assert<NotAny<DR>>;
   type _dr2 = Assert<NoAnyMembers<DR>>;

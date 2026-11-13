@@ -15,7 +15,8 @@ function recording(statuses: number[] = [200], header = "idempotency-key") {
       body: request.body,
     });
     const status = statuses[Math.min(i++, statuses.length - 1)]!;
-    return { status, body: status >= 400 ? { error: status } : { id: "1", name: "Ada" } };
+    const okBody = request.method === "GET" ? [] : { id: "1", name: "Ada" };
+    return { status, body: status >= 400 ? { error: status } : okBody };
   });
   return { transport, seen };
 }
@@ -153,13 +154,15 @@ describe("Core idempotency keys", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transport,
-      middleware: {
-        onRequest: (request) => {
-          middlewareKeys.push(request.headers.get("idempotency-key"));
+      middleware: [
+        {
+          onRequest: (request) => {
+            middlewareKeys.push(request.headers.get("idempotency-key"));
+          },
+          onError: (error, { replay }) =>
+            error instanceof HttpError && error.status === 401 ? replay?.() : undefined,
         },
-        onError: (error, { replay }) =>
-          error instanceof HttpError && error.status === 401 ? replay?.() : undefined,
-      },
+      ],
       resources: {
         users: {
           path: "/users",
@@ -194,12 +197,12 @@ describe("Core idempotency keys", () => {
         users: {
           path: "/users",
           operations: {
-            archive: { kind: "write", method: "POST", path: "/:id/archive", idempotency: true },
+            archive: { kind: "write", method: "POST", path: "/:id/archive", hasBody: false, idempotency: true },
           },
         },
       },
     });
-    await api.users.archive("7");
+    await api.users.archive({ params: { id: "7" } });
     expect(seen[0]!.url).toBe("https://x.dev/users/7/archive");
     expect(seen[0]!.key).not.toBeNull();
   });

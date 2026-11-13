@@ -24,7 +24,7 @@ describe("v0.7.0 thin core", () => {
       },
     });
 
-    await api.users.getById({ orgId: "acme", id: "1" });
+    await api.users.getById("1", { params: { orgId: "acme" } });
     expect(seen[0]).toBe("https://api.example.com/orgs/acme/users/1");
   });
 
@@ -43,8 +43,8 @@ describe("v0.7.0 thin core", () => {
     });
 
     await api.users.getAll({ query: { tag: ["a", "b"] } });
-    expect(seen[0]).toContain("tag[]=a");
-    expect(seen[0]).toContain("tag[]=b");
+    expect(seen[0]).toContain("tag%5B%5D=a");
+    expect(seen[0]).toContain("tag%5B%5D=b");
   });
 
   it("passes FormData bodies through without JSON encoding", async () => {
@@ -137,7 +137,7 @@ describe("v0.7.0 thin core", () => {
       },
     });
 
-    expectTypeOf(api.users.getAll()).resolves.toEqualTypeOf<Page>();
+    expectTypeOf(api.users.getAll).returns.resolves.toEqualTypeOf<Page>();
     void api;
   });
 });

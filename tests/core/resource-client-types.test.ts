@@ -41,7 +41,7 @@ describe("resource client TypeScript surface", () => {
     expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<string | number>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<unknown>();
     expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<string | number>();
-    expectTypeOf(api.users.update).parameter(1).toEqualTypeOf<unknown>();
+    expectTypeOf<Parameters<typeof api.users.update>[1]["body"]>().toEqualTypeOf<unknown>();
     expectTypeOf(api.users.delete).parameter(0).toEqualTypeOf<string | number>();
   });
 

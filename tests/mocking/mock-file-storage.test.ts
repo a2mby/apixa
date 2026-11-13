@@ -61,7 +61,7 @@ describe("defineMockApi uses the same file storage and managed lifecycle", () =>
   it("preserves client isolation, typed builtin file inputs and MockApiError translation", async () => {
     const a = make();
     const b = make();
-    const row = await a.users.patch("1", { email: new Blob(["a"]) });
+    const row = await a.users.patch("1", { body: { email: new Blob(["a"]) } });
     expect(mockFiles(b).has(row.email)).toBe(false);
     await expect(a.users.getById("missing")).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(a.users.getById("missing")).rejects.toBeInstanceOf(MockApiError);

@@ -12,7 +12,9 @@ of the matching checkout.
 
 | Milestone      | Status                                                            | Topic                                                |
 | -------------- | ----------------------------------------------------------------- | ---------------------------------------------------- |
-| v1.8.1         | **Active** — environment verified locally; PR/sign-off pending    | Laravel/PostgreSQL/MongoDB playground                |
+| v3.0.0         | **Release candidate** — `3.0.0-rc.0` verified (not npm-published) | Coordinated Core architecture overhaul               |
+| v1.9.0         | Carried forward into v3 where applicable; not released separately | DX and bug fixes, starting with live pagination      |
+| v1.8.1         | Environment verified locally; PR/sign-off pending                 | Laravel/PostgreSQL/MongoDB playground                |
 | v1.8.0         | Merged (PR #106); CI green; final sign-off not inferred           | File lifecycle, performance and production hardening |
 | v1.7.0         | Completed and owner-signed-off 2026-11-11 (PR #104)               | Large files and advanced transfers                   |
 | v1.6.0         | Implemented and verified (PR #102); owner sign-off open           | Advanced framework and consumer integration          |
@@ -28,7 +30,27 @@ of the matching checkout.
 Exact delivery evidence and frozen checkboxes live in each folder and in
 [`versions/README.md`](../versions/README.md). A merged milestone is not an npm release.
 
-## Active: v1.8.1 — Laravel Real-World Backend Playground
+## Active: v3.0.0 — Core architecture overhaul (`3.0.0-rc.0` RC)
+
+**Spec:** [versions/v3.0.0/](../versions/v3.0.0/) · [umbrella issue #112](https://github.com/a2mby/apixa/issues/112)
+
+Implemented and verified the approved breaking redesign across operations (13 builtins, derived HTTP
+kinds, `{ body }` write calls and `{ params }`), unified `middleware[]`, query/body serialization,
+response processing (`unwrap`, `parse`, `validate`, `source`), safe transforms, and opt-in per-operation
+pagination, preserving existing advanced capabilities. Prepared and verified `apixa@3.0.0-rc.0` without
+publishing to npm.
+
+## In progress: v1.9.0 — DX and bug fixes
+
+**Spec:** [versions/v1.9.0/](../versions/v1.9.0/)
+
+Core-only milestone for developer-experience problems and bugs found by using Apixa against real
+backends. First item: live pagination. `pagination` currently shapes only types for live resources;
+this adds a runtime mapping with a default (apixa's own shape), a `laravel` preset, a field-path
+object and a `parseList` escape hatch, with `ParseError` on missing fields. No auto-detection, new
+package, version bump or npm release.
+
+## Previous: v1.8.1 — Laravel Real-World Backend Playground
 
 **Spec:** [versions/v1.8.1/](../versions/v1.8.1/)
 

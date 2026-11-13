@@ -14,6 +14,7 @@
       "NetworkError",
       "OPERATION_METADATA",
       "ParseError",
+      "ResponseShapeError",
       "SecurityError",
       "SerializationError",
       "TimeoutError",
@@ -46,8 +47,10 @@
       "parseRetryAfter",
       "registerMockDatasetLoader",
       "resetMock",
+      "resolvePagination",
       "runBuiltin",
-      "transformKeys"
+      "transformKeys",
+      "validatePagination"
     ],
     "types": [
       "AdvancedTransferConfig",
@@ -102,8 +105,12 @@
       "InferredApiInput",
       "InferredApisInput",
       "KeyCase",
+      "KeyTransformConfig",
       "KnownOpName",
       "Language",
+      "LaravelCursorPagination",
+      "LaravelPagination",
+      "LaravelPaginatorPagination",
       "LayerOptions",
       "ListOf",
       "MaybeOpName",
@@ -132,11 +139,11 @@
       "MockUser",
       "MockedResource",
       "MultipartOptions",
+      "NestjsPagination",
       "OperationDefinition",
       "OperationFn",
       "OperationFnContext",
       "OperationFnRequestInit",
-      "OperationGroupName",
       "OperationKind",
       "OperationKindOf",
       "OperationKindsOf",
@@ -144,38 +151,51 @@
       "OperationMetadataBrand",
       "OperationMockContext",
       "OperationMockHandler",
+      "OperationPreset",
       "OperationRunDefinition",
+      "OperationSelection",
       "OperationState",
       "OperationTypeOnlyKey",
       "OperationValue",
       "OperationsBag",
       "Order",
+      "PageResult",
       "PaginatedListOf",
+      "PaginationFields",
       "PaginationMode",
+      "PaginationParams",
+      "PaginationPreset",
+      "PaginationQueryOf",
       "PathParams",
+      "PayloadPagination",
       "Post",
       "PresignedPolicy",
       "PresignedRequest",
       "Product",
       "QueryArrayFormat",
       "QueryOf",
+      "QueryOptions",
       "QueryParams",
-      "RequestConfig",
       "RequestMiddleware",
       "RequestOptions",
+      "ResolvedPagination",
       "ResolvedRetryConfig",
       "ResourceClient",
       "ResourceDefinition",
       "ResourceOpsOf",
+      "ResourcePagination",
       "ResourceState",
       "ResourceTypeOnlyKey",
+      "ResponseHookContext",
       "ResponseMiddleware",
+      "ResponseOptions",
       "ResponseType",
       "RetryConfig",
       "RetryHookContext",
       "RetryOption",
       "RootTypes",
       "RootTypesOf",
+      "StrapiPagination",
       "Timezone",
       "TransferCheckpoint",
       "TransferControl",
@@ -286,31 +306,61 @@
     ]
   },
   "@apixa/mocking/datasets/comments": {
-    "values": ["comments"],
-    "types": ["Comment"]
+    "values": [
+      "comments"
+    ],
+    "types": [
+      "Comment"
+    ]
   },
   "@apixa/mocking/datasets/companies": {
-    "values": ["companies"],
-    "types": ["Company"]
+    "values": [
+      "companies"
+    ],
+    "types": [
+      "Company"
+    ]
   },
   "@apixa/mocking/datasets/orders": {
-    "values": ["orders"],
-    "types": ["Order"]
+    "values": [
+      "orders"
+    ],
+    "types": [
+      "Order"
+    ]
   },
   "@apixa/mocking/datasets/posts": {
-    "values": ["posts"],
-    "types": ["Post"]
+    "values": [
+      "posts"
+    ],
+    "types": [
+      "Post"
+    ]
   },
   "@apixa/mocking/datasets/products": {
-    "values": ["products"],
-    "types": ["Product"]
+    "values": [
+      "products"
+    ],
+    "types": [
+      "Product"
+    ]
   },
   "@apixa/mocking/datasets/users": {
-    "values": ["users"],
-    "types": ["User"]
+    "values": [
+      "users"
+    ],
+    "types": [
+      "User"
+    ]
   },
   "@apixa/mocking/node": {
-    "values": ["findDatasetDirs", "getDataset", "listDatasets", "loadDataset", "resolveDatasetDir"],
+    "values": [
+      "findDatasetDirs",
+      "getDataset",
+      "listDatasets",
+      "loadDataset",
+      "resolveDatasetDir"
+    ],
     "types": [
       "Dataset",
       "DatasetFieldSchema",
@@ -476,6 +526,7 @@
       "NetworkError",
       "OPERATION_METADATA",
       "ParseError",
+      "ResponseShapeError",
       "SecurityError",
       "SerializationError",
       "TimeoutError",
@@ -506,15 +557,19 @@
       "ApiRequest",
       "ApiResponse",
       "ApiRootConfig",
+      "ApiState",
+      "ApiStateOf",
       "ApisClient",
       "ApixaClient",
       "BuiltinOpName",
       "ContentDisposition",
+      "ConvertKey",
       "CursorPage",
       "DataFormat",
       "DatasetId",
       "EntityOf",
       "ErrorMiddleware",
+      "ExtendedBuiltinOpName",
       "FileFieldOptions",
       "FileFieldsConfig",
       "FileLimits",
@@ -525,6 +580,11 @@
       "IdOf",
       "IdempotencyOption",
       "KeyCase",
+      "KeyTransformConfig",
+      "LaravelCursorPagination",
+      "LaravelPagination",
+      "LaravelPaginatorPagination",
+      "LayerOptions",
       "ListOf",
       "MiddlewareHooks",
       "MiddlewareOptions",
@@ -536,7 +596,12 @@
       "MockData",
       "MockDatasetId",
       "MockErrorCode",
+      "MockFileFilter",
+      "MockFileFixture",
+      "MockFileFixtures",
       "MockFileMeta",
+      "MockFilesHandle",
+      "MockFixtureRef",
       "MockOperationContext",
       "MockOperationFn",
       "MockOption",
@@ -544,38 +609,60 @@
       "MockResourceConfig",
       "MockSlice",
       "MockSource",
+      "MockStorageOptions",
+      "MockStoreHandle",
       "MockStoredFile",
       "MockedResource",
       "MultipartOptions",
+      "NestjsPagination",
       "OperationDefinition",
       "OperationFn",
       "OperationFnContext",
-      "OperationGroupName",
       "OperationKind",
       "OperationKindsOf",
       "OperationMetadata",
+      "OperationMockContext",
+      "OperationMockHandler",
+      "OperationPreset",
+      "OperationSelection",
+      "OperationState",
       "OperationsBag",
       "Page",
       "PageParams",
+      "PageResult",
       "PaginatedListOf",
       "PaginationConfig",
+      "PaginationFields",
+      "PaginationMode",
+      "PaginationParams",
+      "PaginationPreset",
+      "PaginationQueryOf",
+      "PayloadPagination",
       "QueryArrayFormat",
       "QueryOf",
-      "RequestConfig",
+      "QueryOptions",
       "RequestMiddleware",
       "RequestOptions",
+      "ResolvedPagination",
       "ResourceClient",
       "ResourceDefinition",
       "ResourceInput",
+      "ResourcePagination",
+      "ResourceState",
+      "ResponseHookContext",
       "ResponseMiddleware",
+      "ResponseOptions",
       "ResponseType",
       "RetryConfig",
+      "RetryHookContext",
       "RetryOption",
+      "StrapiPagination",
       "TransferDirection",
       "TransferEvent",
       "TransferObserver",
       "TransferPhase",
       "TransferSupport",
+      "TransformKeys",
       "TransformsConfig",
       "Transport",
       "TransportRequest",
@@ -598,6 +685,7 @@
       "NetworkError",
       "OPERATION_METADATA",
       "ParseError",
+      "ResponseShapeError",
       "SecurityError",
       "SerializationError",
       "TimeoutError",
@@ -630,8 +718,10 @@
       "parseRetryAfter",
       "registerMockDatasetLoader",
       "resetMock",
+      "resolvePagination",
       "runBuiltin",
-      "transformKeys"
+      "transformKeys",
+      "validatePagination"
     ],
     "types": [
       "AdvancedTransferConfig",
@@ -686,8 +776,12 @@
       "InferredApiInput",
       "InferredApisInput",
       "KeyCase",
+      "KeyTransformConfig",
       "KnownOpName",
       "Language",
+      "LaravelCursorPagination",
+      "LaravelPagination",
+      "LaravelPaginatorPagination",
       "LayerOptions",
       "ListOf",
       "MaybeOpName",
@@ -716,11 +810,11 @@
       "MockUser",
       "MockedResource",
       "MultipartOptions",
+      "NestjsPagination",
       "OperationDefinition",
       "OperationFn",
       "OperationFnContext",
       "OperationFnRequestInit",
-      "OperationGroupName",
       "OperationKind",
       "OperationKindOf",
       "OperationKindsOf",
@@ -728,38 +822,51 @@
       "OperationMetadataBrand",
       "OperationMockContext",
       "OperationMockHandler",
+      "OperationPreset",
       "OperationRunDefinition",
+      "OperationSelection",
       "OperationState",
       "OperationTypeOnlyKey",
       "OperationValue",
       "OperationsBag",
       "Order",
+      "PageResult",
       "PaginatedListOf",
+      "PaginationFields",
       "PaginationMode",
+      "PaginationParams",
+      "PaginationPreset",
+      "PaginationQueryOf",
       "PathParams",
+      "PayloadPagination",
       "Post",
       "PresignedPolicy",
       "PresignedRequest",
       "Product",
       "QueryArrayFormat",
       "QueryOf",
+      "QueryOptions",
       "QueryParams",
-      "RequestConfig",
       "RequestMiddleware",
       "RequestOptions",
+      "ResolvedPagination",
       "ResolvedRetryConfig",
       "ResourceClient",
       "ResourceDefinition",
       "ResourceOpsOf",
+      "ResourcePagination",
       "ResourceState",
       "ResourceTypeOnlyKey",
+      "ResponseHookContext",
       "ResponseMiddleware",
+      "ResponseOptions",
       "ResponseType",
       "RetryConfig",
       "RetryHookContext",
       "RetryOption",
       "RootTypes",
       "RootTypesOf",
+      "StrapiPagination",
       "Timezone",
       "TransferCheckpoint",
       "TransferControl",
@@ -870,31 +977,61 @@
     ]
   },
   "apixa/mocking/datasets/comments": {
-    "values": ["comments"],
-    "types": ["Comment"]
+    "values": [
+      "comments"
+    ],
+    "types": [
+      "Comment"
+    ]
   },
   "apixa/mocking/datasets/companies": {
-    "values": ["companies"],
-    "types": ["Company"]
+    "values": [
+      "companies"
+    ],
+    "types": [
+      "Company"
+    ]
   },
   "apixa/mocking/datasets/orders": {
-    "values": ["orders"],
-    "types": ["Order"]
+    "values": [
+      "orders"
+    ],
+    "types": [
+      "Order"
+    ]
   },
   "apixa/mocking/datasets/posts": {
-    "values": ["posts"],
-    "types": ["Post"]
+    "values": [
+      "posts"
+    ],
+    "types": [
+      "Post"
+    ]
   },
   "apixa/mocking/datasets/products": {
-    "values": ["products"],
-    "types": ["Product"]
+    "values": [
+      "products"
+    ],
+    "types": [
+      "Product"
+    ]
   },
   "apixa/mocking/datasets/users": {
-    "values": ["users"],
-    "types": ["User"]
+    "values": [
+      "users"
+    ],
+    "types": [
+      "User"
+    ]
   },
   "apixa/mocking/node": {
-    "values": ["findDatasetDirs", "getDataset", "listDatasets", "loadDataset", "resolveDatasetDir"],
+    "values": [
+      "findDatasetDirs",
+      "getDataset",
+      "listDatasets",
+      "loadDataset",
+      "resolveDatasetDir"
+    ],
     "types": [
       "Dataset",
       "DatasetFieldSchema",

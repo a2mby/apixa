@@ -10,6 +10,7 @@
   "NetworkError",
   "OPERATION_METADATA",
   "ParseError",
+  "ResponseShapeError",
   "SecurityError",
   "SerializationError",
   "TimeoutError",

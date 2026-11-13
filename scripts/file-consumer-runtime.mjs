@@ -136,7 +136,7 @@ const png = (size) => new File([new Uint8Array(size)], "secret-name.png", { type
     useResourceQuery(api.docs, {
       queryKey: ["download"],
       operation: "download",
-      args: ["1", { onTransfer: (e) => events.push(e) }],
+      args: [{ params: { id: "1" }, onTransfer: (e) => events.push(e) }],
     }),
   );
   await until(() => current.isSuccess, "download query");
@@ -197,7 +197,11 @@ const png = (size) => new File([new Uint8Array(size)], "secret-name.png", { type
   const controller = new AbortController();
   const abortEvents = [];
   const pending = current
-    .download("1", { signal: controller.signal, onTransfer: (e) => abortEvents.push(e.phase) })
+    .download({
+      params: { id: "1" },
+      signal: controller.signal,
+      onTransfer: (e) => abortEvents.push(e.phase),
+    })
     .catch((e) => e);
   setTimeout(() => controller.abort(), 8);
   assert.ok((await act(async () => pending)) instanceof AbortError, "caller abort");
@@ -213,7 +217,9 @@ const png = (size) => new File([new Uint8Array(size)], "secret-name.png", { type
       }),
       { headers: { "content-length": "99" } },
     );
-  const timeout = await act(async () => current.download("1", { timeout: 30 }).catch((e) => e));
+  const timeout = await act(async () =>
+    current.download({ params: { id: "1" }, timeout: 30 }).catch((e) => e),
+  );
   assert.ok(timeout instanceof TimeoutError, "timeout");
 
   const upload = [];
@@ -260,7 +266,7 @@ const png = (size) => new File([new Uint8Array(size)], "secret-name.png", { type
   assert.ok(rejected instanceof ValidationError);
   assert.equal(mockFiles(mocked).size, filesBefore, "rejected write left the store");
   await act(async () => {
-    await current.patch(1, { photo: new File(["changed"], "new.txt") });
+    await current.patch(1, { body: { photo: new File(["changed"], "new.txt") } });
   });
   assert.equal(
     mockFiles(mocked)

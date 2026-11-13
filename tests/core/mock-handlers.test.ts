@@ -89,8 +89,8 @@ describe("custom reads", () => {
 
   it("returns aggregates, single records, null and empty results", async () => {
     expect(await api.users.summary()).toEqual({ total: 3, active: 2 });
-    expect(await api.users.byName("Grace")).toMatchObject({ id: "3" });
-    expect(await api.users.byName("Nobody")).toBeNull();
+    expect(await api.users.byName({ params: { name: "Grace" } })).toMatchObject({ id: "3" });
+    expect(await api.users.byName({ params: { name: "Nobody" } })).toBeNull();
     expect(await api.users.nobody()).toEqual([]);
     expect(await api.users.noRecordsRead()).toBe(true);
   });
@@ -129,6 +129,7 @@ describe("custom writes", () => {
               kind: "write",
               method: "POST",
               path: "/:id/archive",
+              hasBody: false,
               mock: async ({ params, store }) => store.patch(params.id, { archived: true }),
             },
             invite: {
@@ -141,6 +142,7 @@ describe("custom writes", () => {
               kind: "write",
               method: "DELETE",
               path: "/purge",
+              hasBody: false,
               mock: ({ store }) => {
                 for (const u of store.list({ active: false })) store.delete(u.id);
               },
@@ -149,6 +151,7 @@ describe("custom writes", () => {
               kind: "write",
               method: "POST",
               path: "/activate-all",
+              hasBody: false,
               mock: ({ store }) => store.list().map((u) => store.patch(u.id, { active: true })),
             },
             replace: {
@@ -161,6 +164,7 @@ describe("custom writes", () => {
               kind: "write",
               method: "POST",
               path: "/clash",
+              hasBody: false,
               mock: ({ store }) => store.create({ id: "1", name: "dup" }),
             },
           },
@@ -170,7 +174,10 @@ describe("custom writes", () => {
 
   it("patches one record, and built-in reads see it", async () => {
     const api = make();
-    expect(await api.users.archive("1")).toMatchObject({ id: "1", archived: true });
+    expect(await api.users.archive({ params: { id: "1" } })).toMatchObject({
+      id: "1",
+      archived: true,
+    });
     expect(await api.users.getById("1")).toMatchObject({ archived: true });
     expect((await api.users.getAll())[1]).not.toHaveProperty("archived");
   });
@@ -181,7 +188,7 @@ describe("custom writes", () => {
     expect(await api.users.purge({ full: true }).then((r) => r.status)).toBe(204);
     expect((await api.users.getAll()).map((u) => u.id)).toEqual(["1", "3"]);
     expect(((await api.users.activateAll()) as User[]).every((u) => u.active)).toBe(true);
-    expect(await api.users.replace("3", { name: "Replaced" })).toEqual({
+    expect(await api.users.replace({ name: "Replaced" }, { params: { id: "3" } })).toEqual({
       id: "3",
       name: "Replaced",
     });
@@ -189,7 +196,9 @@ describe("custom writes", () => {
 
   it("fails like the store: not found, duplicate id", async () => {
     const api = make();
-    await expect(api.users.archive("zz")).rejects.toMatchObject({ code: "MOCK_NOT_FOUND" });
+    await expect(api.users.archive({ params: { id: "zz" } })).rejects.toMatchObject({
+      code: "MOCK_NOT_FOUND",
+    });
     await expect(api.users.clash()).rejects.toMatchObject({ code: "MOCK_DUPLICATE_ID" });
     expect(await api.users.count()).toBe(3);
   });
@@ -197,7 +206,7 @@ describe("custom writes", () => {
   it("is isolated per client and restored by resetMock", async () => {
     const one = make();
     const two = make();
-    await one.users.archive("1");
+    await one.users.archive({ params: { id: "1" } });
     await one.users.purge();
     expect(await two.users.count()).toBe(3);
     expect(await two.users.getById("1")).not.toHaveProperty("archived");
@@ -213,12 +222,13 @@ describe("custom writes", () => {
         users: {
           path: "/users",
           mock: users(),
-          defaultOperations: false,
           operations: {
+            preset: [],
             archive: {
               kind: "write",
               method: "POST",
               path: "/:id/archive",
+              hasBody: false,
               mock: ({ store, params }) => store.patch(params.id, { archived: true }),
             },
           },
@@ -226,7 +236,7 @@ describe("custom writes", () => {
       },
     });
     expect(Object.keys(api.users)).toEqual(["archive"]);
-    expect(await api.users.archive("2")).toMatchObject({ archived: true });
+    expect(await api.users.archive({ params: { id: "2" } })).toMatchObject({ archived: true });
   });
 
   it("two clients over the same inline array do not share writes", async () => {
@@ -252,7 +262,7 @@ describe("custom writes", () => {
       });
     const a = mk();
     const b = mk();
-    await a.users.rename("1", { name: "Changed" });
+    await a.users.rename({ name: "Changed" }, { params: { id: "1" } });
     expect((await b.users.getById("1")).name).toBe("Adam");
     expect(shared[0]?.name).toBe("Adam");
   });
@@ -355,24 +365,26 @@ describe("lifecycle", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transforms: { request: { keys: "snake_case" } },
-      middleware: {
-        onRequest: (request: ApiRequest) => {
-          order.push("root:onRequest");
-          request.query = { ...request.query, added: "by-middleware" };
+      middleware: [
+        {
+          onRequest: (request: ApiRequest) => {
+            order.push("root:onRequest");
+            request.query = { ...request.query, added: "by-middleware" };
+          },
+          onResponse: () => void order.push("root:onResponse"),
         },
-        onResponse: () => void order.push("root:onResponse"),
-      },
+      ],
       resources: {
         users: {
           path: "/users",
           mock: users(),
-          middleware: { onRequest: () => void order.push("resource:onRequest") },
+          middleware: [{ onRequest: () => void order.push("resource:onRequest") }],
           operations: {
             tag: {
               kind: "write",
               method: "POST",
               path: "/tag",
-              middleware: { onRequest: () => void order.push("op:onRequest") },
+              middleware: [{ onRequest: () => void order.push("op:onRequest") }],
               mock: ({ body, query }) => {
                 order.push("handler");
                 seen = { body, query };
@@ -400,7 +412,7 @@ describe("lifecycle", () => {
     const seen: string[] = [];
     const api = defineApi({
       baseURL: "https://x.dev",
-      middleware: { onError: (error: unknown) => void seen.push((error as Error).message) },
+      middleware: [{ onError: (error: unknown) => void seen.push((error as Error).message) }],
       resources: {
         users: {
           path: "/users",
@@ -425,7 +437,7 @@ describe("lifecycle", () => {
   it("can be recovered by error middleware", async () => {
     const api = defineApi({
       baseURL: "https://x.dev",
-      middleware: { onError: () => "fallback" },
+      middleware: [{ onError: () => "fallback" }],
       resources: {
         users: {
           path: "/users",
@@ -547,7 +559,7 @@ describe("compatibility", () => {
     );
     expect(build({ getAll: { mock: () => [] } })).toThrow(/builtin "getAll".*custom operations/);
     expect(build({ a: { kind: "read", run: () => 1, mock: () => 1 } })).toThrow(/mock/);
-    expect(build({ a: { method: "GET", path: "/a", mock: () => 1 } })).toThrow(/kind/);
+    expect(build({ a: { method: "GET", path: "/a", mock: () => 1 } })).not.toThrow();
     expect(build({ a: { kind: "read", method: "POST", path: "/a", mock: () => 1 } })).toThrow(
       /requires kind "write"/,
     );
@@ -603,6 +615,7 @@ describe("compatibility", () => {
                 kind: "write",
                 method: "POST",
                 path: "/:id/archive",
+                hasBody: false,
                 mock: ({ store, params }) => store.patch(String(params.id), { archived: true }),
               },
             },
@@ -614,7 +627,7 @@ describe("compatibility", () => {
         resources: { users: { path: "/users", mock: users() } },
       },
     });
-    await apis.one.users.archive("1");
+    await apis.one.users.archive({ params: { id: "1" } });
     expect(await apis.one.users.getById("1")).toMatchObject({ archived: true });
     expect(await apis.two.users.getById("1")).not.toHaveProperty("archived");
   });
@@ -631,6 +644,7 @@ describe("compatibility", () => {
               kind: "write",
               method: "POST",
               path: "/:userId/activate",
+              hasBody: false,
               mock: ({ params, store }) => {
                 expectTypeOf(params).toEqualTypeOf<{
                   orgId: string | number;
@@ -643,7 +657,7 @@ describe("compatibility", () => {
         },
       },
     });
-    const res = await api.members.activate({ orgId: "o1", userId: "m1" });
+    const res = await api.members.activate({ params: { orgId: "o1", userId: "m1" } });
     expect(res).toMatchObject({ org: "o1", user: { id: "m1", active: true } });
   });
 });
@@ -761,8 +775,8 @@ describe("types", () => {
           users: {
             path: "/users",
             mock: [{ id: "1", first_name: "Adam" }],
+            // @ts-expect-error metadata describes raw first_name, not public firstName
             operations: {
-              // @ts-expect-error metadata describes raw first_name, not public firstName
               profile: {
                 kind: "read",
                 method: "GET",
@@ -809,7 +823,7 @@ describe("types", () => {
       },
     });
     expectTypeOf(
-      await apis.backend.users.getActive({ orgId: "a", userId: "1" }),
+      await apis.backend.users.getActive({ params: { orgId: "a", userId: "1" } }),
     ).toEqualTypeOf<unknown>();
   });
 
@@ -920,12 +934,14 @@ describe("types", () => {
       expectTypeOf(apis.inline.users.getById).toBeFunction();
       expectTypeOf(apis.named.products.getById).toBeFunction();
       expectTypeOf(
-        apis.inline.users.updateName({ orgId: "a", userId: "1" }, { name: "A" }),
+        apis.inline.users.updateName({ name: "A" }, { params: { orgId: "a", userId: "1" } }),
       ).toEqualTypeOf<Promise<{ id: number; name: string; nickname?: string }>>();
-      expectTypeOf(apis.named.products.getPrice("p1")).toEqualTypeOf<Promise<{ price: number }>>();
-      expectTypeOf(apis.provided.members.getMember({ teamId: "t1", memberId: "m1" })).toEqualTypeOf<
-        Promise<{ active: boolean }>
+      expectTypeOf(apis.named.products.getPrice({ params: { productId: "p1" } })).toEqualTypeOf<
+        Promise<{ price: number }>
       >();
+      expectTypeOf(
+        apis.provided.members.getMember({ params: { teamId: "t1", memberId: "m1" } }),
+      ).toEqualTypeOf<Promise<{ active: boolean }>>();
     };
     expect(check).toBeTypeOf("function");
   });
@@ -972,8 +988,8 @@ describe("types", () => {
           users: {
             path: "/users",
             mock: users(),
+            // @ts-expect-error the declared response is { total: number }, the handler returns { count }
             operations: {
-              // @ts-expect-error the declared response is { total: number }, the handler returns { count }
               stats: { kind: "read", method: "GET", path: "/stats", mock: () => ({ count: 1 }) },
             },
           },
@@ -1039,7 +1055,7 @@ describe("types", () => {
           users: {
             path: "/users",
             mock: users(),
-            // @ts-expect-error a custom operation still needs its kind
+            // Declarative HTTP operations derive kind from their method.
             operations: { d: { method: "GET", path: "/d", mock: () => 1 } },
           },
         },

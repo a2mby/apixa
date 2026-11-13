@@ -12,7 +12,6 @@ export interface BuiltinIntent {
   op: BuiltinConventionName;
   id?: unknown;
   ids?: unknown;
-  slug?: unknown;
   field?: string;
   value?: unknown;
   query?: Record<string, unknown>;
@@ -37,6 +36,31 @@ function positiveInt(
     );
   }
   return n;
+}
+
+export function paginateList(
+  label: string,
+  rows: readonly unknown[],
+  mode: PaginationMode,
+  query: Record<string, unknown> = {},
+): unknown {
+  const pageSize = positiveInt(label, "pageSize", query.pageSize, DEFAULT_PAGE_SIZE, 1);
+  if (mode === "page") {
+    const page = positiveInt(label, "page", query.page, 1, 1);
+    const start = (page - 1) * pageSize;
+    return {
+      data: rows.slice(start, start + pageSize),
+      total: rows.length,
+      page,
+      pageSize,
+    };
+  }
+  const start = positiveInt(label, "cursor", query.cursor, 0, 0);
+  const end = start + pageSize;
+  return {
+    data: rows.slice(start, end),
+    nextCursor: end < rows.length ? String(end) : null,
+  };
 }
 
 /**
@@ -84,16 +108,12 @@ export async function runBuiltin(
       return { status: 200, data: paginate(store, source.label, store.select(q), pagination, q) };
     case "getById":
       return { status: 200, data: store.get(intent.id) };
-    case "getBySlug":
-      return { status: 200, data: store.getBy("slug", intent.slug) };
     case "getMany":
-      return { status: 200, data: store.getMany(intent.ids) };
+      return { status: 200, data: paginate(store, source.label, store.getMany(intent.ids), pagination, q) };
     case "getBy":
       return { status: 200, data: store.getBy(intent.field!, intent.value) };
     case "findFirst":
       return { status: 200, data: store.findFirst(q) };
-    case "search":
-      return { status: 200, data: store.search(q) };
     case "exists":
       return { status: 200, data: store.exists(intent.id) };
     case "count":
@@ -104,8 +124,6 @@ export async function runBuiltin(
       return { status: 200, data: store.update(intent.id, intent.body) };
     case "patch":
       return { status: 200, data: store.patch(intent.id, intent.body) };
-    case "upsert":
-      return { status: 200, data: store.upsert(intent.id, intent.body) };
     case "delete":
       store.delete(intent.id);
       return { status: 204, data: null };
@@ -145,19 +163,16 @@ export function routeToIntent(
   } else if (segments.length === 1) {
     const [seg] = segments as [string];
     if (seg === "count" && m === "GET") return { op: "count", query };
-    if (seg === "search" && m === "GET") return { op: "search", query };
     if (seg === "bulk" && m === "POST") return { op: "createMany", body };
     if (seg === "bulk" && m === "DELETE") return { op: "deleteMany", body };
     if (m === "GET") return { op: "getById", id: seg };
     if (m === "PUT") return { op: "update", id: seg, body };
     if (m === "PATCH") return { op: "patch", id: seg, body };
     if (m === "DELETE") return { op: "delete", id: seg };
-  } else if (segments.length === 2 && segments[0] === "slug" && m === "GET") {
-    return { op: "getBySlug", slug: segments[1] };
   }
   throw new MockError(
     "MOCK_UNSUPPORTED",
     `${label}: cannot simulate ${m} "${relativePath || "/"}" against in-memory records. ` +
-      `Supported: GET/POST "", GET/PUT/PATCH/DELETE "/:id", GET "/count", GET "/search", GET "/slug/:slug", POST/DELETE "/bulk".`,
+      `Supported: GET/POST "", GET/PUT/PATCH/DELETE "/:id", GET "/count", POST/DELETE "/bulk".`,
   );
 }

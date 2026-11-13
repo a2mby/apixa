@@ -83,14 +83,16 @@ describe("advanced transfer pipeline integration", () => {
       .client(
         {},
         {
-          middleware: {
-            onRequest() {
-              requests++;
+          middleware: [
+            {
+              onRequest() {
+                requests++;
+              },
+              onResponse() {
+                responses++;
+              },
             },
-            onResponse() {
-              responses++;
-            },
-          },
+          ],
         },
       )
       .files.create({ document: source() });
@@ -235,11 +237,13 @@ it("binary-part replacement by middleware cannot silently change the hashed byte
   const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
-    middleware: {
-      onRequest(request) {
-        if (request.body instanceof Blob) request.body = new Blob(["corrupt"]);
+    middleware: [
+      {
+        onRequest(request) {
+          if (request.body instanceof Blob) request.body = new Blob(["corrupt"]);
+        },
       },
-    },
+    ],
     resources: {
       files: {
         path: "/files",
@@ -253,7 +257,7 @@ it("binary-part replacement by middleware cannot silently change the hashed byte
   expect(server.completions).toBe(0);
 });
 
-it.each(["update", "patch", "upsert"] as const)(
+it.each(["update", "patch"] as const)(
   "%s override uses the same advanced strategy",
   async (name) => {
     const server = protocolServer();
@@ -267,12 +271,11 @@ it.each(["update", "patch", "upsert"] as const)(
           operations: {
             update: { transfer: server.config },
             patch: { transfer: server.config },
-            upsert: { transfer: server.config },
           },
         },
       },
     });
-    await expect(api.files[name]("original", { document: source() })).resolves.toHaveProperty(
+    await expect(api.files[name]("original", { body: { document: source() } })).resolves.toHaveProperty(
       "size",
       13,
     );

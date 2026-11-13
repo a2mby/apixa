@@ -12,7 +12,7 @@ export default async function Page() {
   await prefetchResourceQuery(client, filesApi.files, { queryKey: ["files"] });
   // Binary data stays on the server: a Blob cannot cross the Server -> Client boundary, so the
   // Server Component reads it and passes only plain values (a number) down.
-  const blob = await filesApi.files.download("1");
+  const blob = await filesApi.files.download({ params: { id: "1" } });
   return (
     <ApixaHydrationBoundary state={dehydrate(client)}>
       <main>

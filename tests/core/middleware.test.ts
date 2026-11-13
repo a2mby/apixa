@@ -9,7 +9,152 @@ import {
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
-describe("one pipeline for three middleware styles", () => {
+describe("middleware pipeline", () => {
+  it("composes middleware arrays at client, resource, and operation levels", async () => {
+    const events: string[] = [];
+    const entry = (name: string) => ({
+      onRequest: () => void events.push(`request:${name}`),
+      onResponse: () => void events.push(`response:${name}`),
+      onError: () => void events.push(`error:${name}`),
+    });
+    const api = defineApi({
+      baseURL: "https://x.dev",
+      middleware: [entry("client-a"), entry("client-b")],
+      transport: createFakeTransport(() => ({ body: [] })),
+      resources: {
+        users: {
+          path: "/users",
+          middleware: [entry("resource")],
+          operations: { getAll: { middleware: [entry("operation")] } },
+        },
+      },
+    });
+    await api.users.getAll();
+    expect(events).toEqual([
+      "request:client-a",
+      "request:client-b",
+      "request:resource",
+      "request:operation",
+      "response:client-a",
+      "response:client-b",
+      "response:resource",
+      "response:operation",
+    ]);
+  });
+
+  it("propagates and recovers errors through middleware arrays in declaration order", async () => {
+    const seen: string[] = [];
+    const api = defineApi({
+      baseURL: "https://x.dev",
+      transport: createFakeTransport(() => ({ status: 503 })),
+      middleware: [
+        {
+          onError: () => {
+            seen.push("client");
+            throw new Error("replacement");
+          },
+        },
+      ],
+      resources: {
+        users: {
+          path: "/users",
+          middleware: [
+            {
+              onError: (error) => {
+                seen.push((error as Error).message);
+                return [{ id: 42 }];
+              },
+            },
+          ],
+        },
+      },
+    });
+    await expect(api.users.getAll()).resolves.toEqual([{ id: 42 }]);
+    expect(seen).toEqual(["client", "replacement"]);
+  });
+
+  it("uses middleware query mutations for transport, mocks, and response metadata", async () => {
+    const urls: string[] = [];
+    const middleware = {
+      onRequest: (request: ApiRequest) => {
+        request.query = { ...request.query, name: "Zed" };
+      },
+    };
+    const data = [
+      { id: 1, name: "Ada", active: true },
+      { id: 2, name: "Zed", active: true },
+    ];
+    const api = defineApi({
+      baseURL: "https://x.dev",
+      middleware: [middleware],
+      transport: createFakeTransport((request) => {
+        urls.push(request.url);
+        return {
+          body: data.filter((user) => user.name === new URL(request.url).searchParams.get("name")),
+        };
+      }),
+      resources: {
+        live: { path: "/users" },
+        mock: { path: "/users", mock: data },
+      },
+    });
+
+    const live = await api.live.getAll({ query: { active: true }, full: true });
+    const mock = await api.mock.getAll({ query: { active: true }, full: true });
+    expect(urls).toEqual(["https://x.dev/users?active=true&name=Zed"]);
+    expect(live.request.url).toBe(urls[0]);
+    expect(mock.request.url).toBe(urls[0]);
+    expect(live.request.query).toEqual({ active: true, name: "Zed" });
+    expect(mock.request.query).toEqual(live.request.query);
+    expect(live.data).toEqual([{ id: 2, name: "Zed", active: true }]);
+    expect(mock.data).toEqual(live.data);
+  });
+
+  it("preserves a middleware URL path rewrite while applying the effective query", async () => {
+    const api = defineApi({
+      baseURL: "https://x.dev",
+      transport: createFakeTransport((request) => ({ body: [request.url] })),
+      middleware: [
+        {
+          onRequest: (request) => {
+            request.url = request.url.replace("/users", "/v2/users");
+            request.query = { ...request.query, name: "Zed" };
+          },
+        },
+      ],
+      resources: { users: { path: "/users" } },
+    });
+    await expect(api.users.getAll({ query: { active: true } })).resolves.toEqual([
+      "https://x.dev/v2/users?active=true&name=Zed",
+    ]);
+  });
+
+  it("merges a URL rewrite's query with request.query, with request.query taking precedence", async () => {
+    let serializeCount = 0;
+    const api = defineApi({
+      baseURL: "https://x.dev",
+      querySerializer: (query) => {
+        serializeCount++;
+        return new URLSearchParams(query as Record<string, string>).toString();
+      },
+      transport: createFakeTransport((request) => ({ body: [request.url] })),
+      middleware: [
+        {
+          onRequest: (request) => {
+            request.url = "https://x.dev/v2/users?fromUrl=yes&name=old";
+            request.query = { name: "Zed" };
+          },
+        },
+      ],
+      resources: { users: { path: "/users" } },
+    });
+    const response = await api.users.getAll({ full: true });
+    expect(response.request.query).toEqual({ fromUrl: "yes", name: "Zed" });
+    expect(response.request.url).toBe("https://x.dev/v2/users?fromUrl=yes&name=Zed");
+    expect(response.data).toEqual([response.request.url]);
+    expect(serializeCount).toBe(1);
+  });
+
   it("runs request, response, and error stages root → resource → operation, sync and async", async () => {
     const log: string[] = [];
     const tag = (name: string) => ({
@@ -19,22 +164,23 @@ describe("one pipeline for three middleware styles", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transport: createFakeTransport(() => ({ body: [] })),
-      middleware: tag("root"),
-      requestMiddleware: [
-        (r) => (log.push("req:root[0]"), r),
-        async () => {
-          log.push("req:root[1]"); // returning nothing keeps the request
+      middleware: [
+        tag("root"),
+        { onRequest: (r) => (log.push("req:root[0]"), r) },
+        {
+          onRequest: async () => {
+            log.push("req:root[1]"); // returning nothing keeps the request
+          },
         },
+        { onResponse: (r) => (log.push("res:root[0]"), r) },
       ],
-      responseMiddleware: [(r) => (log.push("res:root[0]"), r)],
       resources: {
         users: {
           path: "/users",
-          middleware: tag("resource"),
+          middleware: [tag("resource")],
           operations: {
             getAll: {
-              middleware: tag("op"),
-              responseMiddleware: [() => void log.push("res:op[0]")],
+              middleware: [tag("op"), { onResponse: () => void log.push("res:op[0]") }],
             },
           },
         },
@@ -61,13 +207,15 @@ describe("one pipeline for three middleware styles", () => {
       transport: createFakeTransport((r) => ({
         body: { echo: r.headers.get("x-app"), body: r.body },
       })),
-      requestMiddleware: [
-        (r) => {
-          r.headers.set("X-App", "apixa");
-          return { ...r, body: { ...(r.body as object), added: true } };
+      middleware: [
+        {
+          onRequest: (r) => {
+            r.headers.set("X-App", "apixa");
+            return { ...r, body: { ...(r.body as object), added: true } };
+          },
         },
+        { onResponse: (res) => ({ ...res, data: { wrapped: res.data, status: res.status } }) },
       ],
-      responseMiddleware: [(res) => ({ ...res, data: { wrapped: res.data, status: res.status } })],
       resources: { users: { path: "/users" } },
     });
     expect(await api.users.create({ a: 1 })).toEqual({
@@ -95,7 +243,7 @@ describe("one pipeline for three middleware styles", () => {
     const rethrow = defineApi({
       baseURL: "https://x.dev",
       transport: failing,
-      middleware: { onError: (e) => (seen.push(e), undefined) },
+      middleware: [{ onError: (e) => (seen.push(e), undefined) }],
       resources: { users: { path: "/users" } },
     });
     await expect(rethrow.users.getAll()).rejects.toBeInstanceOf(HttpError);
@@ -104,7 +252,7 @@ describe("one pipeline for three middleware styles", () => {
     const recover = defineApi({
       baseURL: "https://x.dev",
       transport: failing,
-      resources: { users: { path: "/users", middleware: { onError: () => [{ id: "cached" }] } } },
+      resources: { users: { path: "/users", middleware: [{ onError: () => [{ id: "cached" }] }] } },
     });
     expect(await recover.users.getAll()).toEqual([{ id: "cached" }]);
   });
@@ -115,12 +263,14 @@ describe("one pipeline for three middleware styles", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transport: createFakeTransport(() => ({ status: 503 })),
-      middleware: {
-        onError: () => {
-          throw new Friendly("try later");
+      middleware: [
+        {
+          onError: () => {
+            throw new Friendly("try later");
+          },
         },
-      },
-      resources: { users: { path: "/users", middleware: { onError: (e) => void seen.push(e) } } },
+      ],
+      resources: { users: { path: "/users", middleware: [{ onError: (e) => void seen.push(e) }] } },
     });
     await expect(api.users.getAll()).rejects.toBeInstanceOf(Friendly);
     expect(seen[0]).toBeInstanceOf(Friendly);
@@ -142,7 +292,7 @@ describe("one pipeline for three middleware styles", () => {
         baseURL: "https://x.dev",
         transport,
         timeout,
-        middleware: { onError },
+        middleware: [{ onError }],
         resources: { u: { path: "/u" } },
       });
       await api.u.getAll().catch(() => undefined);
@@ -158,8 +308,7 @@ describe("one pipeline for three middleware styles", () => {
       baseURL: "https://x.dev",
       retry: { retries: 3, baseDelayMs: 0 },
       transport: createFakeTransport(() => (++attempts < 3 ? { status: 503 } : { body: [] })),
-      requestMiddleware: [(r) => (req++, r)],
-      responseMiddleware: [(r) => (res++, r)],
+      middleware: [{ onRequest: (r) => (req++, r) }, { onResponse: (r) => (res++, r) }],
       resources: { users: { path: "/users" } },
     });
     await api.users.getAll();
@@ -172,7 +321,7 @@ describe("one pipeline for three middleware styles", () => {
       baseURL: "https://x.dev",
       transforms: { response: { keys: "camelCase" } },
       transport: createFakeTransport(() => ({ body: { first_name: "Ali" } })),
-      responseMiddleware: [(r) => void (seen = r.data)],
+      middleware: [{ onResponse: (r) => void (seen = r.data) }],
       resources: { users: { path: "/users" } },
     });
     expect(await api.users.getById(1)).toEqual({ firstName: "Ali" });
@@ -183,11 +332,13 @@ describe("one pipeline for three middleware styles", () => {
     const log: string[] = [];
     const api = defineApi({
       baseURL: "/api",
-      middleware: {
-        onRequest: (r) => void log.push(`req ${r.mocked}`),
-        onResponse: (r) => void log.push(`res ${r.status}`),
-        onError: (e) => void log.push(`err ${(e as { code: string }).code}`),
-      },
+      middleware: [
+        {
+          onRequest: (r) => void log.push(`req ${r.mocked}`),
+          onResponse: (r) => void log.push(`res ${r.status}`),
+          onError: (e) => void log.push(`err ${(e as { code: string }).code}`),
+        },
+      ],
       resources: { users: { path: "/users", mock: [{ id: 1 }] } },
     });
     await api.users.create({});
@@ -199,23 +350,29 @@ describe("one pipeline for three middleware styles", () => {
     const api = defineApi({
       baseURL: "https://x.dev",
       transport: createFakeTransport(() => ({ body: [] })),
-      responseMiddleware: [() => "nope" as never],
+      middleware: [{ onResponse: () => "nope" as never }],
       resources: { users: { path: "/users" } },
     });
     await expect(api.users.getAll()).rejects.toBeInstanceOf(ConfigError);
     expect(() =>
-      defineApi({ baseURL: "https://x.dev", middleware: [] as never, resources: {} }),
-    ).toThrow(/Around-style/);
+      defineApi({
+        baseURL: "https://x.dev",
+        middleware: [[() => undefined] as never],
+        resources: {},
+      }),
+    ).toThrow(/middleware\[0\] must be an object/);
     expect(() =>
       defineApi({ baseURL: "https://x.dev", requestMiddleware: ["x"] as never, resources: {} }),
-    ).toThrow(/requestMiddleware\[0\] must be a function/);
+    ).toThrow(/unknown option "requestMiddleware"/);
   });
 
   it("types middleware arguments", () => {
     defineApi({
       baseURL: "https://x.dev",
-      requestMiddleware: [(r) => (expectTypeOf(r).toEqualTypeOf<ApiRequest>(), r)],
-      middleware: { onError: (e) => (expectTypeOf(e).toBeUnknown(), undefined) },
+      middleware: [
+        { onError: (e) => (expectTypeOf(e).toBeUnknown(), undefined) },
+        { onRequest: (r) => (expectTypeOf(r).toEqualTypeOf<ApiRequest>(), r) },
+      ],
       resources: {},
     });
     expect(TimeoutError).toBeDefined();

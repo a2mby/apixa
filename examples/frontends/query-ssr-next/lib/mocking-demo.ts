@@ -91,8 +91,8 @@ export async function runPaginationAndSlice() {
 export async function runCrudErrorsReset() {
   const api = inlineMock();
   const log: unknown[] = [];
-  log.push(await api.pets.update("1", { name: "Rex II" }));
-  log.push(await api.pets.patch("2", { name: "Tommy" }));
+  log.push(await api.pets.update("1", { body: { name: "Rex II" } }));
+  log.push(await api.pets.patch("2", { body: { name: "Tommy" } }));
   await api.pets.delete("1");
   const missing = await api.pets.getById("1").catch((e: unknown) => e);
   log.push({ code: (missing as { code?: string }).code, message: (missing as Error).message });
@@ -129,6 +129,7 @@ export async function runCustomOperations() {
             kind: "write",
             method: "POST",
             path: "/:id/vaccinate",
+            hasBody: false,
             mock: ({ store, params }) => store.patch(params.id, { vaccinated: true }),
           },
           // No handler: on a mock this rejects with MOCK_UNSUPPORTED. It is never read as
@@ -144,7 +145,7 @@ export async function runCustomOperations() {
     },
   });
   const before = (await api.pets.getVaccinated()) as Array<{ id: string }>;
-  const vaccinated = await api.pets.vaccinate("1");
+  const vaccinated = await api.pets.vaccinate({ params: { id: "1" } });
   const after = (await api.pets.getVaccinated()) as Array<{ id: string }>;
   const stats = await api.pets.stats().catch((e: unknown) => (e as { code?: string }).code);
   return {

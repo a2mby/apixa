@@ -99,11 +99,13 @@ describe("idempotency keys across Core retry paths", () => {
 describe("idempotency keys and middleware", () => {
   it("middleware that adds headers keeps the key", async () => {
     const { client, attempts } = api([200], {
-      middleware: {
-        onRequest: (request: { headers: Headers }) => {
-          request.headers.set("x-trace", "t-1");
+      middleware: [
+        {
+          onRequest: (request: { headers: Headers }) => {
+            request.headers.set("x-trace", "t-1");
+          },
         },
-      },
+      ],
     });
     await client.users.create({ name: "Ada" });
     expect(attempts[0]!.headers.get("x-trace")).toBe("t-1");
@@ -113,18 +115,20 @@ describe("idempotency keys and middleware", () => {
   it("an auth refresh replay sends the new token with the same key", async () => {
     let token = "old";
     const { client, attempts } = api([401, 200], {
-      middleware: {
-        onRequest: (request: { headers: Headers }) => {
-          request.headers.set("authorization", `Bearer ${token}`);
+      middleware: [
+        {
+          onRequest: (request: { headers: Headers }) => {
+            request.headers.set("authorization", `Bearer ${token}`);
+          },
+          onError: (error: unknown, context: { replay?: () => Promise<unknown> }) => {
+            if (error instanceof HttpError && error.status === 401 && context.replay) {
+              token = "new";
+              return context.replay();
+            }
+            return undefined;
+          },
         },
-        onError: (error: unknown, context: { replay?: () => Promise<unknown> }) => {
-          if (error instanceof HttpError && error.status === 401 && context.replay) {
-            token = "new";
-            return context.replay();
-          }
-          return undefined;
-        },
-      },
+      ],
     });
     await client.users.create({ name: "Ada" });
     expect(attempts.map((a) => a.headers.get("authorization"))).toEqual([
@@ -137,14 +141,16 @@ describe("idempotency keys and middleware", () => {
   it("middleware that throws rejects the call; the next call gets a fresh key", async () => {
     let fail = true;
     const { client, keys } = api([200], {
-      middleware: {
-        onRequest: () => {
-          if (fail) {
-            fail = false;
-            throw new Error("blocked");
-          }
+      middleware: [
+        {
+          onRequest: () => {
+            if (fail) {
+              fail = false;
+              throw new Error("blocked");
+            }
+          },
         },
-      },
+      ],
     });
     await expect(client.users.create({ name: "Ada" })).rejects.toThrow("blocked");
     await client.users.create({ name: "Ada" });

@@ -68,12 +68,12 @@ describe("binary downloads through the React hooks", () => {
         plain: useResourceQuery(api.docs, {
           queryKey: ["file", doc.id],
           operation: "download",
-          args: [doc.id],
+          args: [{ params: { id: doc.id } }],
         }),
         sized: useResourceQuery(api.docs, {
           queryKey: ["size", doc.id],
           operation: "download",
-          args: [doc.id],
+          args: [{ params: { id: doc.id } }],
           select: (blob) => blob.size,
         }),
       }),
@@ -97,7 +97,7 @@ describe("binary downloads through the React hooks", () => {
       () =>
         useResource(api.docs, {
           queryKey: ["docs"],
-          query: { operation: "download", args: [doc.id] },
+          query: { operation: "download", args: [{ params: { id: doc.id } }] },
         }),
       { wrapper: wrap(newClient()) },
     );
@@ -108,7 +108,7 @@ describe("binary downloads through the React hooks", () => {
     expectTypeOf<ReturnType<R["report"]>>().toEqualTypeOf<Promise<ArrayBuffer>>();
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toBeInstanceOf(Blob);
-    const again = await result.current.download(doc.id);
+    const again = await result.current.download({ params: { id: doc.id } });
     expect(again).toBeInstanceOf(Blob);
   });
 

@@ -8,11 +8,8 @@ const names: AllBuiltinOpName[] = [
   "create",
   "update",
   "delete",
-  "getBySlug",
   "patch",
-  "upsert",
   "count",
-  "search",
   "createMany",
   "deleteMany",
   "getMany",
@@ -26,7 +23,7 @@ const base = {
 };
 
 describe("operation selection", () => {
-  it("exposes all 16 builtins by default, with no old bulk names", () => {
+  it("exposes all 13 builtins by default, with no old bulk or removed names", () => {
     const api = defineApi({
       ...base,
       resources: {
@@ -36,6 +33,9 @@ describe("operation selection", () => {
     expect(Object.keys(api.users).sort()).toEqual([...names].sort());
     expect(Object.keys(api.users)).not.toContain("bulkCreate");
     expect(Object.keys(api.users)).not.toContain("bulkDelete");
+    expect(Object.keys(api.users)).not.toContain("getBySlug");
+    expect(Object.keys(api.users)).not.toContain("upsert");
+    expect(Object.keys(api.users)).not.toContain("search");
   });
 
   it.each(names)("disables and restores %s individually", (name) => {
@@ -47,21 +47,19 @@ describe("operation selection", () => {
     const restored = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", defaultOperations: false, operations: { [name]: true } },
+        users: { path: "/users", operations: { preset: [], [name]: true } },
       },
     } as never) as unknown as { users: Record<string, unknown> };
     expect(Object.keys(restored.users)).toEqual([name]);
   });
 
-  it("resolves defaults, flags, groups, then individual entries", () => {
+  it("applies named overrides after the selected operations", () => {
     const api = defineApi({
       ...base,
       resources: {
         users: {
           path: "/users",
-          readOnly: true,
-          operationGroups: { extended: false, many: true },
-          operations: { create: true, createMany: { path: "/batch" }, deleteMany: false },
+          operations: { preset: ["getAll", "getById", "getMany"], create: true, createMany: { path: "/batch" }, deleteMany: false },
         },
       },
     });
@@ -70,17 +68,17 @@ describe("operation selection", () => {
     );
   });
 
-  it("gives many precedence over broad, overlapping groups independent of property order", () => {
+  it("applies overrides independent of property order", () => {
     const left = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", operationGroups: { many: true, read: false, extended: false } },
+        users: { path: "/users", operations: { preset: ["create", "update", "delete"], getMany: true, createMany: true, deleteMany: true } },
       },
     });
     const right = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", operationGroups: { extended: false, read: false, many: true } },
+        users: { path: "/users", operations: { deleteMany: true, createMany: true, getMany: true, preset: ["create", "update", "delete"] } },
       },
     });
     expect(Object.keys(left.users).sort()).toEqual(Object.keys(right.users).sort());
@@ -90,11 +88,11 @@ describe("operation selection", () => {
     expect(left.users).not.toHaveProperty("getAll");
   });
 
-  it("supports writeOnly and defaultOperations false", () => {
+  it("supports explicit write and minimal selections", () => {
     const write = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", writeOnly: true },
+        users: { path: "/users", operations: ["create", "update", "patch", "delete", "createMany", "deleteMany"] },
       },
     });
     expect(write.users).toHaveProperty("create");
@@ -103,19 +101,19 @@ describe("operation selection", () => {
     const minimal = defineApi({
       ...base,
       resources: {
-        users: { path: "/users", defaultOperations: false, operations: { getAll: true } },
+        users: { path: "/users", operations: ["getAll"] },
       },
     });
     expect(Object.keys(minimal.users)).toEqual(["getAll"]);
   });
 
-  it("rejects conflicting flags and custom true", () => {
+  it("rejects removed flags and custom true", () => {
     expect(() =>
       defineApi({
         ...base,
         resources: { users: { path: "/users", readOnly: true, writeOnly: true } },
       } as never),
-    ).toThrow(/both readOnly and writeOnly/);
+    ).toThrow(/unknown option "readOnly"/);
     expect(() =>
       defineApi({
         ...base,
@@ -146,7 +144,7 @@ describe("operation selection", () => {
       },
     });
     await api.users.exists("1");
-    await api.users.findFirst({ active: true });
+    await api.users.findFirst({ query: { active: true } });
     await api.users.getMany(["1", "2"]);
     expect(seen).toEqual([
       { method: "GET", url: "https://api.example.com/users/exists/1", body: undefined },
@@ -183,15 +181,15 @@ describe("operation selection", () => {
         users: { path: "/orgs/:orgId/users" },
       },
     });
-    await api.users.exists("1", { orgId: "acme" });
-    await api.users.findFirst(undefined, { orgId: "acme" });
-    await api.users.getMany(["1"], { orgId: "acme" });
-    await api.users.getBy("code", "A", { orgId: "acme" });
+    await api.users.exists("1", { params: { orgId: "acme" } });
+    await api.users.findFirst({ params: { orgId: "acme" } });
+    await api.users.getMany(["1"], { params: { orgId: "acme" } });
+    await api.users.getBy("code", "A", { params: { orgId: "acme" } });
     expect(urls).toEqual([
       "https://api.example.com/orgs/acme/users/1",
       "https://api.example.com/orgs/acme/users",
       "https://api.example.com/orgs/acme/users?id=1",
-      "https://api.example.com/orgs/acme/users/code/A",
+      "https://api.example.com/orgs/acme/users?code=A",
     ]);
   });
 
@@ -201,7 +199,7 @@ describe("operation selection", () => {
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         seen.push({ method: request.method, url: request.url, body: request.body });
-        return { body: [] };
+        return { body: request.url.endsWith("/count") ? 3 : [] };
       }),
       resources: {
         users: { path: "/users", operations: { count: { method: "HEAD", hasBody: false } } },

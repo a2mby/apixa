@@ -1,13 +1,13 @@
 import type { AdvancedTransferFailure } from "../types/advanced-transfer.js";
 import type { ApiErrorCode } from "../types/errors.js";
-import type { ApiResponse, RequestConfig } from "../types/transport.js";
+import type { ApiRequest, ApiResponse } from "../types/transport.js";
 
 export class ApiError extends Error {
   advancedTransfer?: AdvancedTransferFailure;
   status?: number;
   code: ApiErrorCode | (string & {});
   data?: unknown;
-  request?: RequestConfig;
+  request?: ApiRequest;
   response?: ApiResponse<unknown>;
   retryable: boolean;
   attempt?: number;
@@ -24,7 +24,7 @@ export class ApiError extends Error {
       status?: number;
       code?: ApiErrorCode | (string & {});
       data?: unknown;
-      request?: RequestConfig;
+      request?: ApiRequest;
       response?: ApiResponse<unknown>;
       retryable?: boolean;
       attempt?: number;

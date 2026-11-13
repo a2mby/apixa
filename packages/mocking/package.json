@@ -1,6 +1,6 @@
 {
   "name": "@apixa/mocking",
-  "version": "2.0.0",
+  "version": "3.0.0-rc.0",
   "description": "Standalone in-memory mock APIs and local JSON datasets for Apixa \u2014 no network, no backend.",
   "license": "MIT",
   "repository": {

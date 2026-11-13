@@ -186,9 +186,11 @@ describe("F11 (defect, fixed): a caller's AbortSignal is honored by hook reads",
     });
     const controller = new AbortController();
     const pending = (
-      result.current as never as { download(id: string, o: object): Promise<unknown> }
+      result.current as never as {
+        download(o: { params: { id: string } } & Record<string, unknown>): Promise<unknown>;
+      }
     )
-      .download("1", { signal: controller.signal })
+      .download({ params: { id: "1" }, signal: controller.signal })
       .catch((e: unknown) => e);
     setTimeout(() => controller.abort(), 6);
     expect(await pending).toBeInstanceOf(AbortError);
@@ -200,7 +202,7 @@ describe("F11 (defect, fixed): a caller's AbortSignal is honored by hook reads",
     const options = createResourceQueryOptions(api.docs, {
       queryKey: ["d"],
       operation: "download",
-      args: ["1", { signal: caller.signal }],
+      args: [{ params: { id: "1" }, signal: caller.signal }],
     } as never);
     const run = (signal: AbortSignal) =>
       (options.queryFn as (c: unknown) => Promise<unknown>)({
@@ -216,7 +218,7 @@ describe("F11 (defect, fixed): a caller's AbortSignal is honored by hook reads",
     const fresh = createResourceQueryOptions(api.docs, {
       queryKey: ["d"],
       operation: "download",
-      args: ["1", { signal: new AbortController().signal }],
+      args: [{ params: { id: "1" }, signal: new AbortController().signal }],
     } as never);
     const second = (fresh.queryFn as (c: unknown) => Promise<unknown>)({
       signal: tanstack.signal,
@@ -231,7 +233,7 @@ describe("F11 (defect, fixed): a caller's AbortSignal is honored by hook reads",
     const options = createResourceQueryOptions(api.docs, {
       queryKey: ["d"],
       operation: "download",
-      args: ["1"],
+      args: [{ params: { id: "1" } }],
     } as never);
     const tanstack = new AbortController();
     const pending = (options.queryFn as (c: unknown) => Promise<unknown>)({

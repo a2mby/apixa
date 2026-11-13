@@ -17,7 +17,9 @@ function makeApi() {
   const calls: string[] = [];
   const fetchImpl = (async (url: string, init?: RequestInit) => {
     calls.push(`${init?.method ?? "GET"} ${url}`);
-    return new Response(JSON.stringify([{ id: "1", name: "x" }]), {
+    const body =
+      new URL(url).pathname === "/v1/docs/1" ? { id: "1", name: "x" } : [{ id: "1", name: "x" }];
+    return new Response(JSON.stringify(body), {
       headers: { "content-type": "application/json" },
     });
   }) as typeof fetch;
