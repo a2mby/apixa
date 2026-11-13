@@ -205,4 +205,48 @@ describe("transforms in defineApi", () => {
     >();
     expect(await api.users.getAll()).toEqual([{ userId: 1, displayName: "A" }]);
   });
+
+  it("applies mocked page and cursor pagination alongside request and response key transforms", async () => {
+    const api = defineApi({
+      baseURL: "/api",
+      transforms: { request: { keys: "snake_case" }, response: { keys: "camelCase" } },
+      resources: {
+        paged: {
+          path: "/paged",
+          pagination: "page",
+          mock: [
+            { id: 1, team_name: "alpha" },
+            { id: 2, team_name: "alpha" },
+            { id: 3, team_name: "alpha" },
+            { id: 4, team_name: "beta" },
+          ],
+        },
+        cursor: {
+          path: "/cursor",
+          pagination: "cursor",
+          mock: [
+            { id: 1, team_name: "alpha" },
+            { id: 2, team_name: "alpha" },
+            { id: 3, team_name: "alpha" },
+          ],
+        },
+      },
+    });
+
+    await expect(
+      api.paged.getAll({ query: { page: 2, pageSize: 2, teamName: "alpha" } }),
+    ).resolves.toEqual({
+      data: [{ id: 3, teamName: "alpha" }],
+      total: 3,
+      page: 2,
+      pageSize: 2,
+    });
+
+    await expect(
+      api.cursor.getAll({ query: { cursor: "1", pageSize: 1, teamName: "alpha" } }),
+    ).resolves.toEqual({
+      data: [{ id: 2, teamName: "alpha" }],
+      nextCursor: "2",
+    });
+  });
 });

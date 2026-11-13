@@ -2,7 +2,7 @@ import { defineApi, type TransportRequest } from "@apixa/core";
 
 export type User = { id: string; name: string; active: boolean };
 export type Post = { id: string; title: string };
-export type PostPage = { items: Post[]; nextCursor: number | null };
+export type PostPage = { data: Post[]; nextCursor: string | null };
 const posts: Post[] = Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), title: `Post ${i + 1}` }));
 const users: User[] = [
   { id: "1", name: "Ada", active: true },
@@ -15,7 +15,7 @@ function respond(request: TransportRequest): unknown {
   if (path === "/posts") {
     const start = Number(url.searchParams.get("cursor") ?? 0);
     const end = start + Number(url.searchParams.get("limit") ?? 5);
-    return { items: posts.slice(start, end), nextCursor: end < posts.length ? end : null };
+    return { items: posts.slice(start, end), nextCursor: end < posts.length ? String(end) : null };
   }
   if (request.method === "POST" && path === "/users") {
     const created = { id: String(users.length + 1), active: true, ...JSON.parse(String(request.body)) };
@@ -45,7 +45,7 @@ const transport = {
 
 export const api = defineApi<{
   users: { entity: User };
-  posts: { entity: Post; list: PostPage; query: { cursor?: number; limit: number } };
+  posts: { entity: Post };
 }>()({
   baseURL: "https://example.test",
   transport,
@@ -59,13 +59,21 @@ export const api = defineApi<{
         create: { idempotency: true },
       },
     },
-    posts: { path: "/posts", operations: "read" },
+    posts: {
+      path: "/posts",
+      operations: "read",
+      pagination: {
+        type: "cursor",
+        fields: { data: "items", nextCursor: "nextCursor" },
+        params: { pageSize: "limit" },
+      },
+    },
   },
 });
 
 /** Shared by the server prefetch and the client hook, so both use the same cache entry. */
 export const postsPaging = {
-  initialPageParam: 0 as number,
+  initialPageParam: null as string | null,
   getNextPageParam: (last: PostPage) => last.nextCursor,
-  query: (cursor: number) => ({ cursor, limit: 5 }),
+  query: (cursor: string | null) => ({ ...(cursor !== null ? { cursor } : {}), pageSize: 5 }),
 };

@@ -143,9 +143,9 @@ query/body serialization, response processing, transforms, middleware and per-op
   custom operations (`hasBody: false` reads take `(options?)`, body writes take `(body?, options?)`),
   and HTTP-method-derived `kind` for declarative operations.
 - **Unified middleware**: Replaced `requestMiddleware` / `responseMiddleware` arrays with unified
-  ordered `middleware: MiddlewareHooks[]` (`onRequest`, `onResponse`, `onError`), where request
-  middleware runs before final query serialization and accepts `(request)` / `(response)` /
-  `(error, { request, replay })`.
+  `middleware: MiddlewareHooks` (`{ onRequest?, onResponse?, onError? }` arrays composed root →
+  resource → operation), where request middleware runs before final query serialization and accepts
+  `(request)` / `(response)` / `(error, { request, replay })`.
 - **Serialization, responses & pagination**: Added client-wide `query` (`nulls`, `emptyArrays`,
   `booleans`) alongside `queryArrayFormat` and `querySerializer`, strict JSON/explicit `responseType`,
   `response` (`unwrap`, `parse`, `validate`, `source`), bounded/excluded `transforms` (`TransformError`

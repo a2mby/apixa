@@ -246,15 +246,15 @@ describe("middleware, custom transports, defaults", () => {
       async () => (++n === 1 ? new Response("x", { status: 503 }) : response()),
       {
         operation: {
-          middleware: [
-            { onRequest: () => void requests++ },
-            {
-              onResponse: (res: { data: unknown }) => {
+          middleware: {
+            onRequest: [() => void requests++],
+            onResponse: [
+              (res: { data: unknown }) => {
                 responses++;
                 seen = res.data;
               },
-            },
-          ],
+            ],
+          },
         },
       },
     );

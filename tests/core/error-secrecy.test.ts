@@ -56,13 +56,13 @@ describe("errors do not leak credentials or request payloads", () => {
       baseURL: "https://api.example.com",
       headers,
       transport: createFakeTransport(() => ({ status: 500, body: {} })),
-      middleware: [
-        {
-          onError: (error) => {
+      middleware: {
+        onError: [
+          (error) => {
             (error as ApiError).request = undefined;
           },
-        },
-      ],
+        ],
+      },
       resources: { users: { path: "/users" } },
     });
     const error = (await api.users.getAll().catch((e: unknown) => e)) as ApiError;

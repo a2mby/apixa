@@ -16,7 +16,7 @@ export function Posts() {
   return (
     <section>
       <ul>
-        {posts.data.pages.flatMap((page) => page.items).map((post) => (
+        {posts.data.pages.flatMap((page) => page.data).map((post) => (
           <li key={post.id}>{post.title}</li>
         ))}
       </ul>

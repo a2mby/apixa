@@ -96,7 +96,7 @@ describe("hierarchical headers", () => {
       baseURL: "https://a.example.com",
       transport,
       headers: shared,
-      middleware: [{ onRequest: (r) => (r.headers.set("X-Mutated", "yes"), r) }],
+      middleware: { onRequest: [(r) => (r.headers.set("X-Mutated", "yes"), r)] },
       resources: { users: { path: "/users" } },
     });
     const b = defineApi({

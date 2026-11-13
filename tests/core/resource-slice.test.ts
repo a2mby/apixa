@@ -59,7 +59,7 @@ describe("resource slice", () => {
     ).toThrow(/slice.*pagination|pagination.*slice/i);
   });
 
-  it("leaves non-array getAll object payloads alone and rejects primitives", async () => {
+  it("rejects non-array unpaginated getAll payloads even when slice is set", async () => {
     const page = { data: [{ id: "1" }, { id: "2" }], total: 2, page: 1, pageSize: 20 };
     expect(applyResourceSliceToListResult(page, 1)).toEqual(page);
 
@@ -76,7 +76,7 @@ describe("resource slice", () => {
       },
     });
 
-    await expect(api.users.getAll()).resolves.toEqual(page);
+    await expect(api.users.getAll()).rejects.toBeInstanceOf(ResponseShapeError);
     await expect(api.users.getAll({ query: { primitive: "1" } })).rejects.toBeInstanceOf(
       ResponseShapeError,
     );

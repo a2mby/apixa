@@ -98,7 +98,7 @@ describe('"lists" invalidation scope', () => {
         hits.set(key, (hits.get(key) ?? 0) + 1);
         if (new URL(request.url).pathname.endsWith("/1")) return { body: { id: "1" } };
         if (new URL(request.url).pathname.endsWith("/stats")) return { body: { n: 1 } };
-        return { body: { items: [], next: null } };
+        return { body: [] };
       }),
       resources: {
         users: {
@@ -434,8 +434,6 @@ describe("infinite mode: errors, retry, refetch, Strict Mode", () => {
     const api = defineApi<{
       posts: {
         entity: { id: string };
-        list: { items: string[]; next: number | null };
-        query: { cursor: number };
       };
     }>()({
       baseURL: "https://x.dev",
@@ -445,17 +443,25 @@ describe("infinite mode: errors, retry, refetch, Strict Mode", () => {
           fail.times--;
           return { status: 500, body: {} };
         }
-        const cursor = Number(new URL(request.url).searchParams.get("cursor"));
-        return { body: { items: [`p${cursor}`], next: cursor < 2 ? cursor + 1 : null } };
+        const cursor = Number(new URL(request.url).searchParams.get("cursor") ?? 0);
+        return {
+          body: { items: [{ id: `p${cursor}` }], next: cursor < 2 ? String(cursor + 1) : null },
+        };
       }),
-      resources: { posts: { path: "/posts", operations: "read" } },
+      resources: {
+        posts: {
+          path: "/posts",
+          pagination: { type: "cursor", fields: { data: "items", nextCursor: "next" } },
+          operations: "read",
+        },
+      },
     });
     return { api, calls: () => calls };
   }
   const paging = {
-    initialPageParam: 0,
-    getNextPageParam: (last: { next: number | null }) => last.next,
-    query: (cursor: number) => ({ cursor }),
+    initialPageParam: "0" as string | null,
+    getNextPageParam: (last: { nextCursor: string | null }) => last.nextCursor,
+    query: (cursor: string | null) => (cursor === null ? {} : { cursor }),
   };
 
   it("an error page is retried natively and pages stay aligned", async () => {
@@ -481,9 +487,9 @@ describe("infinite mode: errors, retry, refetch, Strict Mode", () => {
     fail.times = 1; // next page fails once, then the native retry succeeds
     await act(() => result.current.fetchNextPage());
     await waitFor(() =>
-      expect(result.current.data?.pages.map((p) => p.items[0])).toEqual(["p0", "p1"]),
+      expect(result.current.data?.pages.map((p) => p.data[0]?.id)).toEqual(["p0", "p1"]),
     );
-    expect(result.current.data?.pageParams).toEqual([0, 1]);
+    expect(result.current.data?.pageParams).toEqual(["0", "1"]);
     fail.times = 5; // now it fails beyond the retry budget
     await act(() => result.current.fetchNextPage());
     await waitFor(() => expect(result.current.isFetchNextPageError).toBe(true));
@@ -508,7 +514,7 @@ describe("infinite mode: errors, retry, refetch, Strict Mode", () => {
     await act(() => result.current.refetch());
     expect(calls() - before).toBe(2);
     await waitFor(() =>
-      expect(result.current.data?.pages.map((p) => p.items[0])).toEqual(["p0", "p1"]),
+      expect(result.current.data?.pages.map((p) => p.data[0]?.id)).toEqual(["p0", "p1"]),
     );
   });
 

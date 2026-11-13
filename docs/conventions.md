@@ -144,15 +144,15 @@ const api = defineApi({
   validates decoded payloads; `ApiResponse.source` keeps the raw parsed body prior to response stages.
 - Error middleware receives `(error, { request, replay })`. `replay()` re-runs the call once (fresh headers),
   e.g. refresh a token on 401 and `return replay()`; it is `undefined` inside a replay.
-- Register middleware as an array of `{ onRequest?, onResponse?, onError? }` objects under `middleware`.
-  Hooks run from client to resource to operation, in array order within each level.
+- Register middleware under `middleware: { onRequest?, onResponse?, onError? }` with arrays of hook
+  functions. Hooks run from client to resource to operation, in array order within each list.
 - Request middleware sees `request.query` already transformed by `transforms.request`. Mutations to
   `request.query` or `request.url` stay synchronized across transport, mocks, URLs, and response/error
   `request` metadata.
-- `getMany` and `findFirst` expect an array response; unpaginated `getAll` expects an array or plain
-  list/page object (supporting custom `list` envelopes via `ResourceState.list`), and configured
-  `pagination` expects an object. Invalid shapes raise `ResponseShapeError`, whose `data` and
-  `response` retain the parsed source and response details; an empty array is valid.
+- `getMany`, `findFirst`, and unpaginated `getAll` expect an array response; configured `pagination`
+  expects an object (use `pagination` or a custom read operation for object/envelope list responses).
+  Invalid shapes raise `ResponseShapeError`, whose `data` and `response` retain the parsed source
+  and response details; an empty array is valid.
 - An operation whose body type is unknown (e.g. a custom POST) may be called without a body.
 - Clients are frozen. To use a different base URL, build another client, or use `defineApis()`.
 

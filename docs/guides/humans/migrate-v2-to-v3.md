@@ -106,9 +106,9 @@ await mockApi.users.update("1", { body: { name: "Ada" } });
 await mockApi.users.patch("1", { body: { email: new Blob(["fixture"], { type: "text/plain" }) } });
 ```
 
-## 3. Unified `middleware` hook arrays
+## 3. Unified `middleware` hook lists
 
-Separate `middleware`, `requestMiddleware`, `responseMiddleware`, and `errorMiddleware` properties are consolidated into a single `middleware` array of hook objects at root, resource, and operation levels:
+Separate `middleware`, `requestMiddleware`, `responseMiddleware`, and `errorMiddleware` properties are consolidated into a single `middleware: { onRequest?, onResponse?, onError? }` object at root, resource, and operation levels:
 
 ```ts
 // Before (v2)
@@ -127,20 +127,24 @@ const api = defineApi({
 import { defineApi, isHttpError, type MiddlewareHooks } from "apixa";
 
 const authHooks: MiddlewareHooks = {
-  onRequest: (request) => {
-    request.headers.set("Authorization", `Bearer ${getToken()}`);
-  },
-  onError: async (error, { replay }) => {
-    if (isHttpError(error) && error.status === 401 && replay) {
-      await refreshToken();
-      return replay();
-    }
-  },
+  onRequest: [
+    (request) => {
+      request.headers.set("Authorization", `Bearer ${getToken()}`);
+    },
+  ],
+  onError: [
+    async (error, { replay }) => {
+      if (isHttpError(error) && error.status === 401 && replay) {
+        await refreshToken();
+        return replay();
+      }
+    },
+  ],
 };
 
 const api = defineApi({
   baseURL: "https://api.example.com",
-  middleware: [authHooks],
+  middleware: authHooks,
   resources: { users: { path: "/users" } },
 });
 ```

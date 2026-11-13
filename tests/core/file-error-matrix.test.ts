@@ -35,7 +35,7 @@ function client(transport: Transport, seen: unknown[], extra: object = {}) {
   return defineApi({
     baseURL: "https://api.example.com",
     transport,
-    middleware: [{ onError: (error) => void seen.push(error) }],
+    middleware: { onError: [(error) => void seen.push(error)] },
     resources: {
       docs: {
         path: "/docs",
@@ -169,7 +169,7 @@ describe("advanced transfer failures keep one classification and a typed reason"
     const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
       baseURL: "https://api.example.com",
       transport: withFaults(server.transport, [fault]),
-      middleware: [{ onError: (error) => void seen.push(error) }],
+      middleware: { onError: [(error) => void seen.push(error)] },
       resources: {
         files: {
           path: "/files",

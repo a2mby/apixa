@@ -16,8 +16,8 @@ See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) fo
   across Core, `apixa/react` mutations/optimistic updaters, and `defineMockApi`. Passing no `body`
   is a TypeScript error and a runtime `ValidationError`.
 - **Unified `middleware`:** Consolidated `middleware`, `requestMiddleware`, `responseMiddleware`, and
-  `errorMiddleware` into `middleware: MiddlewareHooks[]` (`{ onRequest?, onResponse?, onError? }`)
-  at root, resource, and operation layers.
+  `errorMiddleware` into `middleware: MiddlewareHooks` (`{ onRequest?, onResponse?, onError? }`)
+  at root, resource, and operation layers, composing hook arrays `root → resource → operation`.
 - **Declarative custom operation arguments & `kind` derivation:** Declarative HTTP operations derive
   `kind` from `method` (rejecting mismatched `kind`); reads take `(options?)`, writes default to
   `hasBody: true` unless `hasBody: false` is set.

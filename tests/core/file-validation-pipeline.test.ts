@@ -39,11 +39,9 @@ describe("the validation checkpoint", () => {
     const { api, calls } = petApi("live", {
       resource: {
         ...rules,
-        middleware: [
-          {
-            onRequest: (request: { body: unknown }) => ({ ...request, body: { photo: file(50) } }),
-          },
-        ],
+        middleware: {
+          onRequest: [(request: { body: unknown }) => ({ ...request, body: { photo: file(50) } })],
+        },
       },
     });
     expect(await rejection(api.pets.create({ name: "innocent" }))).toBeInstanceOf(ValidationError);
@@ -66,14 +64,14 @@ describe("the validation checkpoint", () => {
     const { api, calls } = petApi("live", {
       resource: {
         ...rules,
-        middleware: [
-          {
-            onError: (error: unknown) => {
+        middleware: {
+          onError: [
+            (error: unknown) => {
               seen = error;
               return { recovered: true };
             },
-          },
-        ],
+          ],
+        },
       },
     });
     await expect(api.pets.create({ photo: file(50) })).resolves.toEqual({ recovered: true });
@@ -86,14 +84,14 @@ describe("the validation checkpoint", () => {
     const { api } = petApi("live", {
       resource: {
         ...rules,
-        middleware: [
-          {
-            onError: async (_e: unknown, ctx: { replay?: () => Promise<unknown> }) => {
+        middleware: {
+          onError: [
+            async (_e: unknown, ctx: { replay?: () => Promise<unknown> }) => {
               attempts++;
               return ctx.replay ? ctx.replay() : undefined;
             },
-          },
-        ],
+          ],
+        },
       },
     });
     expect(await rejection(api.pets.create({ photo: file(50) }))).toBeInstanceOf(ValidationError);

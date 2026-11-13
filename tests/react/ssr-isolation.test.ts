@@ -9,25 +9,32 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string };
 type Post = { id: string; owner: string };
-type PostPage = { items: Post[]; next: number | null };
+type PostPage = { data: Post[]; nextCursor: string | null };
 
 /** One server: answers with the data of whoever the Authorization header names, after a delay. */
 const server = createFakeTransport(async (request) => {
   const who = request.headers.get("authorization")?.replace("Bearer ", "") ?? "anonymous";
   await new Promise((resolve) => setTimeout(resolve, who === "alice" ? 15 : 1));
   if (new URL(request.url).pathname === "/posts") {
-    return { body: { items: [{ id: `${who}-p1`, owner: who }], next: null } satisfies PostPage };
+    return { body: { items: [{ id: `${who}-p1`, owner: who }], next: null } };
   }
   return { body: [{ id: who, name: `${who}'s profile` }] satisfies User[] };
 });
 
 /** What an app does per request: an API bound to that request's credentials. */
 const apiFor = (token: string) =>
-  defineApi<{ users: { entity: User }; posts: { entity: Post; list: PostPage } }>()({
+  defineApi<{ users: { entity: User }; posts: { entity: Post } }>()({
     baseURL: "https://x.dev",
     transport: server,
     headers: { authorization: `Bearer ${token}` },
-    resources: { users: { path: "/users" }, posts: { path: "/posts", operations: "read" } },
+    resources: {
+      users: { path: "/users" },
+      posts: {
+        path: "/posts",
+        operations: "read",
+        pagination: { type: "cursor", fields: { data: "items", nextCursor: "next" } },
+      },
+    },
   });
 
 async function render(token: string) {
@@ -37,7 +44,10 @@ async function render(token: string) {
     prefetchResourceQuery(client, api.users, { queryKey: ["users"] }),
     prefetchResourceInfiniteQuery(client, api.posts, {
       queryKey: ["posts"],
-      infinite: { initialPageParam: 0, getNextPageParam: (last: PostPage) => last.next },
+      infinite: {
+        initialPageParam: null as string | null,
+        getNextPageParam: (last: PostPage) => last.nextCursor,
+      },
     }),
   ]);
   return JSON.stringify(dehydrate(client));

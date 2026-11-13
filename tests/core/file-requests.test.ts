@@ -83,15 +83,12 @@ describe("automatic multipart on builtin writes", () => {
     expect(await sent.text()).toBe("PNG");
   });
 
-  it.each(["update", "patch"])(
-    "%s sends multipart when a file is present",
-    async (op) => {
-      const { api, seen } = setup();
-      await api.users[op]!("7", { body: { avatar: file("a.txt") } });
-      expect(seen[0]!.method).toBe(op === "patch" ? "PATCH" : "PUT");
-      expect(seen[0]!.body).toBeInstanceOf(FormData);
-    },
-  );
+  it.each(["update", "patch"])("%s sends multipart when a file is present", async (op) => {
+    const { api, seen } = setup();
+    await api.users[op]!("7", { body: { avatar: file("a.txt") } });
+    expect(seen[0]!.method).toBe(op === "patch" ? "PATCH" : "PUT");
+    expect(seen[0]!.body).toBeInstanceOf(FormData);
+  });
 
   it("keeps JSON when no binary value is present", async () => {
     const { api, seen } = setup();
@@ -228,14 +225,14 @@ describe("pipeline behavior", () => {
     const { api } = setup(
       {},
       {
-        middleware: [
-          {
-            onRequest: (request: ApiRequest) => {
+        middleware: {
+          onRequest: [
+            (request: ApiRequest) => {
               seenBody = request.body as Record<string, unknown>;
               return request;
             },
-          },
-        ],
+          ],
+        },
         transforms: { request: { keys: "snake_case" } },
       },
     );

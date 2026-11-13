@@ -221,20 +221,22 @@ const api = defineApi({
   baseURL: "https://api.example.com",
   timeout: 10_000,
   retry: { retries: 2, baseDelayMs: 200 },
-  middleware: [
-    {
-      onRequest: (request) => {
+  middleware: {
+    onRequest: [
+      (request) => {
         request.headers.set("X-Trace", "1");
       },
-      onError: async (error, { replay }) =>
+    ],
+    onError: [
+      async (error, { replay }) =>
         isHttpError(error) && error.status === 401 && replay ? replay() : undefined,
-    },
-  ],
+    ],
+  },
   resources: { users: { path: "/users" } },
 });
 ```
 
-Unified `middleware` hook arrays (`{ onRequest?, onResponse?, onError? }`) and `response`
+Unified `middleware` hook lists (`{ onRequest?, onResponse?, onError? }`) and `response`
 (`{ unwrap?, parse?, validate? }`) run inside Core's request pipeline. See
 [`packages/core/README.md`](./packages/core/README.md) and the
 [v2-to-v3 migration guide](./docs/guides/humans/migrate-v2-to-v3.md).

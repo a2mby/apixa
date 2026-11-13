@@ -591,10 +591,10 @@ Sources: [transform tests](../tests/core/transforms.test.ts), [prototype safety]
 
 Sources: [middleware tests](../tests/core/middleware.test.ts), [polish/replay tests](../tests/core/v1-polish.test.ts), [file pipeline tests](../tests/core/file-validation-pipeline.test.ts).
 
-Current middleware uses ordered `middleware: MiddlewareHooks[]` (`{ onRequest, onResponse, onError }`) arrays across root, resource, and operation levels, as defined in [public middleware types](../packages/core/src/types/middleware.ts). Around-style `(ctx, next)` and legacy `requestMiddleware` / `responseMiddleware` properties were removed in v3; negative tests reject those shapes.
+Current middleware uses `middleware: MiddlewareHooks` (`{ onRequest?, onResponse?, onError? }` hook arrays) across root, resource, and operation levels, as defined in [public middleware types](../packages/core/src/types/middleware.ts). Around-style `(ctx, next)` and legacy `requestMiddleware` / `responseMiddleware` properties (as well as array-of-objects `middleware: [...]`) were removed in v3; negative tests reject those shapes.
 
 - [ ] **MID-001 — Ordered stage hooks** · `T`
-  - Do: Install `middleware: [{ onRequest, onResponse, onError }]` arrays at root, resource and operation levels; record their order and per-call metadata.
+  - Do: Install `middleware: { onRequest, onResponse, onError }` hook lists at root, resource and operation levels; record their order and per-call metadata.
   - Expect: Each stage runs root → resource → operation in array order; request/response callbacks receive `ApiRequest` / `ApiResponse`, and returning void keeps the current value.
 
 - [ ] **MID-002 — Header enrichment and response mapping** · `T`

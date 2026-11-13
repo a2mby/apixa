@@ -1089,6 +1089,14 @@ type ValidateResponseOptions<Resp> = Resp extends object
   ? Exact<Resp, { unwrap: unknown; parse: unknown; validate: unknown }>
   : unknown;
 
+type ValidateMiddlewareHooks<M> = [M] extends [undefined]
+  ? unknown
+  : M extends readonly unknown[]
+    ? ConfigTypeError<"middleware must be an object { onRequest?, onResponse?, onError? }">
+    : M extends object
+      ? Exact<M, { onRequest: unknown; onResponse: unknown; onError: unknown }>
+      : ConfigTypeError<"middleware must be an object { onRequest?, onResponse?, onError? }">;
+
 type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
   ? Exact<Op, { kind: unknown; run: unknown; presigned?: unknown }> &
       (Name extends AllBuiltinOpName
@@ -1120,6 +1128,9 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
             : unknown) &
           (Op extends { response: infer Resp }
             ? { response: ValidateResponseOptions<Resp> }
+            : unknown) &
+          (Op extends { middleware: infer M }
+            ? { middleware: ValidateMiddlewareHooks<M> }
             : unknown) &
           (Name extends AllBuiltinOpName
             ? unknown
@@ -1268,6 +1279,7 @@ type ValidateResource<R, Meta, Root extends RootTypes> = Exact<R, ResourceDefini
     : unknown) &
   (R extends { transforms: infer T } ? { transforms: ValidateTransformsConfig<T> } : unknown) &
   (R extends { response: infer Resp } ? { response: ValidateResponseOptions<Resp> } : unknown) &
+  (R extends { middleware: infer M } ? { middleware: ValidateMiddlewareHooks<M> } : unknown) &
   ValidateResourcePagination<R>;
 
 /** Compile-time checks applied on top of the inferred config (`Config & ValidateConfig<…>`). */
@@ -1288,18 +1300,7 @@ export type ValidateConfig<Meta, Config> = Exact<Config, ApiRootConfig> &
     ? { response: ValidateResponseOptions<Resp> }
     : unknown) &
   (Config extends { query: infer Q } ? { query: Exact<Q, QueryOptions> } : unknown) &
-  (Config extends { middleware: infer M }
-    ? {
-        middleware: M extends readonly unknown[]
-          ? {
-              [K in keyof M]: Exact<
-                M[K],
-                { onRequest: unknown; onResponse: unknown; onError: unknown }
-              >;
-            }
-          : Exact<M, { onRequest: unknown; onResponse: unknown; onError: unknown }>;
-      }
-    : unknown);
+  (Config extends { middleware: infer M } ? { middleware: ValidateMiddlewareHooks<M> } : unknown);
 
 export type ValidateApisConfig<Defs, Configs> = {
   [K in keyof Configs]: ValidateConfig<K extends keyof Defs ? Defs[K] : {}, Configs[K]>;

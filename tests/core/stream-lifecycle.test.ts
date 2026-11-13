@@ -157,13 +157,13 @@ describe("stream lifetime (v1.3.0 fix: a stream stays owned by its call)", () =>
       );
     const client = transferClient(fetchImpl, {
       operation: {
-        middleware: [
-          {
-            onResponse: () => {
+        middleware: {
+          onResponse: [
+            () => {
               throw new Error("middleware failed");
             },
-          },
-        ],
+          ],
+        },
       },
     });
     await expect(client.docs.feed()).rejects.toThrow("middleware failed");

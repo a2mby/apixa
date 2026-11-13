@@ -83,16 +83,18 @@ describe("advanced transfer pipeline integration", () => {
       .client(
         {},
         {
-          middleware: [
-            {
-              onRequest() {
+          middleware: {
+            onRequest: [
+              () => {
                 requests++;
               },
-              onResponse() {
+            ],
+            onResponse: [
+              () => {
                 responses++;
               },
-            },
-          ],
+            ],
+          },
         },
       )
       .files.create({ document: source() });
@@ -237,13 +239,13 @@ it("binary-part replacement by middleware cannot silently change the hashed byte
   const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
-    middleware: [
-      {
-        onRequest(request) {
+    middleware: {
+      onRequest: [
+        (request) => {
           if (request.body instanceof Blob) request.body = new Blob(["corrupt"]);
         },
-      },
-    ],
+      ],
+    },
     resources: {
       files: {
         path: "/files",
@@ -275,10 +277,9 @@ it.each(["update", "patch"] as const)(
         },
       },
     });
-    await expect(api.files[name]("original", { body: { document: source() } })).resolves.toHaveProperty(
-      "size",
-      13,
-    );
+    await expect(
+      api.files[name]("original", { body: { document: source() } }),
+    ).resolves.toHaveProperty("size", 13);
     expect(server.completions).toBe(1);
   },
 );

@@ -203,11 +203,7 @@ function validateQueryOptions(where: string, value: unknown): void {
       `${where}.emptyArrays must be "omit" or "empty" (got ${JSON.stringify(value.emptyArrays)}).`,
     );
   }
-  if (
-    value.booleans !== undefined &&
-    value.booleans !== "string" &&
-    value.booleans !== "number"
-  ) {
+  if (value.booleans !== undefined && value.booleans !== "string" && value.booleans !== "number") {
     throw new ConfigError(
       `${where}.booleans must be "string" or "number" (got ${JSON.stringify(value.booleans)}).`,
     );
@@ -244,11 +240,7 @@ function validateResponseOptions(where: string, value: unknown): void {
       throw new ConfigError(`${where}.unwrap must be a path string, function, or false.`);
     }
   }
-  if (
-    value.parse !== undefined &&
-    value.parse !== false &&
-    typeof value.parse !== "function"
-  ) {
+  if (value.parse !== undefined && value.parse !== false && typeof value.parse !== "function") {
     throw new ConfigError(`${where}.parse must be a function or false.`);
   }
   if (
@@ -283,19 +275,22 @@ export function validateLayer(where: string, layer: Record<string, unknown>): vo
   if (response !== undefined) validateResponseOptions(`${where}.response`, response);
 }
 
-function validateHooks(where: string, value: unknown): asserts value is readonly MiddlewareHooks[] {
-  if (!Array.isArray(value))
-    throw new ConfigError(`${where} must be an array of middleware objects.`);
-  value.forEach((entry, index) => validateHookObject(`${where}[${index}]`, entry));
-}
-
-function validateHookObject(where: string, value: unknown): asserts value is MiddlewareHooks {
-  if (!isPlainObject(value))
+function validateHooks(where: string, value: unknown): asserts value is MiddlewareHooks {
+  if (!isPlainObject(value)) {
     throw new ConfigError(`${where} must be an object { onRequest?, onResponse?, onError? }.`);
-  for (const [key, hook] of Object.entries(value)) {
-    if (!HOOK_KEYS.has(key)) unknownKey(where, key, HOOK_KEYS);
-    if (hook !== undefined && typeof hook !== "function")
-      throw new ConfigError(`${where}.${key} must be a function.`);
+  }
+  assertKnownKeys(where, value, HOOK_KEYS);
+  for (const key of HOOK_KEYS) {
+    const list = value[key];
+    if (list === undefined) continue;
+    if (!Array.isArray(list)) {
+      throw new ConfigError(`${where}.${key} must be an array of functions.`);
+    }
+    list.forEach((entry, index) => {
+      if (typeof entry !== "function") {
+        throw new ConfigError(`${where}.${key}[${index}] must be a function.`);
+      }
+    });
   }
 }
 
@@ -318,7 +313,9 @@ function validateTransforms(where: string, value: unknown): asserts value is Tra
       unknownKey(where, direction, new Set(["request", "response"]));
     if (rule === undefined) continue;
     if (!isPlainObject(rule))
-      throw new ConfigError(`${where}.${direction} must be { keys, exclude?, preserve?, maxDepth? }.`);
+      throw new ConfigError(
+        `${where}.${direction} must be { keys, exclude?, preserve?, maxDepth? }.`,
+      );
     assertKnownKeys(`${where}.${direction}`, rule, TRANSFORM_RULE_KEYS);
     if (!isKeyCase(rule.keys)) {
       throw new ConfigError(

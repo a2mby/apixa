@@ -86,10 +86,11 @@ Every call then runs through `request/pipeline.ts`:
    `File` / `Blob` values first move them into the client's virtual file store (see "File handling");
    records keep string references.
 7. Run response processing in order (skipped for non-JSON `responseType`): preserve raw parsed
-   payload as `source`, run `response.unwrap`, apply response key transforms (`TransformError` on
-   cycles/depth/collisions), resolve per-operation or resource `pagination`, run `response.parse` and
-   `response.validate` (`ValidationError` on non-`ApiError` throws), and apply builtin shaping
-   (`exists`, `getMany`, `findFirst`, `slice`, `ResponseShapeError` on invalid shapes).
+   payload as `source`; on live paginated calls map the page envelope before transforming page rows
+   (`TransformError` on cycles/depth/collisions), otherwise run `response.unwrap` and response key
+   transforms; run `response.parse` on JSON responses, apply builtin shaping (`exists`, `getMany`,
+   `findFirst`, `getAll`, `slice`, `ResponseShapeError` on invalid shapes), and run
+   `response.validate` (`ValidationError` on non-`ApiError` throws).
 8. Run unified `middleware` `onResponse` hooks.
 9. Return the data, or the `ApiResponse` envelope (including `source`) when `{ full: true }` is passed.
 
