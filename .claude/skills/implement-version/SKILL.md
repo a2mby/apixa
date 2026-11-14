@@ -21,7 +21,7 @@ If the brief asks for something in **Out** of scope, stop and name it. Suggest `
 2. Stay inside `scope.md` In.
 3. Reshape existing Core files before adding files; do not add new packages unless scope says so.
 4. Keep public exports minimal and honest.
-5. Update `examples/frontends/basic` to **implemented** API only.
+5. Update internal verification fixtures under `tests/` (if needed) to **implemented** API only; leave `templates/` postponed (`templates/README.md` only).
 6. Add/adjust tests under `tests/` with fake/injectable transport.
 7. Check off items in `acceptance-criteria.md` when evidence exists (tests, typecheck, example).
 8. When the milestone advances or completes, append `docs/story.md` (newest first). Update living docs only if principles or architecture changed.

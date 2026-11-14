@@ -32,9 +32,10 @@ yarn.lock
 .DS_Store
 *.log
 .vscode
+.idea
 
-# Examples are local-only (gitignored); skip if present
-examples/**
+# Local manual-testing environments are gitignored; skip if present
+manual-testing/**
 
 # Python backend local env
 backend/.venv/

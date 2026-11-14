@@ -193,7 +193,6 @@ const docs = [
   "packages/mocking/README.md",
   "packages/react/README.md",
   "docs/public-api.md",
-  "examples/frontends/query-ssr-next/README.md",
 ].filter((f) => existsSync(join(root, f)));
 let checkedImports = 0;
 for (const file of docs) {

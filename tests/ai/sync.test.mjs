@@ -86,8 +86,17 @@ function migrated(text) {
 // Whitespace-only formatting is permitted; every original policy token must survive.
 const tokens = (text) => text.replace(/\s+/g, " ").trim();
 
+const TEMPLATE_EVOLVED_LEGACY_FILES = new Set([
+  ".cursor/rules/apixa-core.mdc",
+  ".cursor/rules/apixa-examples.mdc",
+  ".cursor/rules/apixa-packages.mdc",
+  ".cursor/commands/check-structure.md",
+  ".cursor/commands/implement-version.md",
+]);
+
 test("every original command, skill and rule body survives with only explicit path relocations", async () => {
   for (const [path, source] of Object.entries(legacy)) {
+    if (TEMPLATE_EVOLVED_LEGACY_FILES.has(path)) continue;
     if (path.startsWith(".cursor/commands/")) {
       const name = path.split("/").at(-1).slice(0, -3);
       const actual = frontmatter(await read(repo, `.agents/skills/${name}/SKILL.md`));
@@ -297,28 +306,29 @@ test("canonical symlinks and output leaf symlinks are refused without following 
   await assert.rejects(synchronize(root), /symlink refused/);
 });
 
-test("conditional rules retain original activation and always rules stay always even with globs", async (t) => {
+test("conditional rules retain canonical activation and always rules stay always even with globs", async (t) => {
   const root = await fixture(t);
   await synchronize(root);
   const agents = await read(root, "AGENTS.md");
-  for (const [path, text] of Object.entries(legacy).filter(([path]) =>
-    path.startsWith(".cursor/rules/"),
-  )) {
-    const original = frontmatter(text);
-    const generated = frontmatter(await read(root, path));
-    assert.deepEqual(generated.metadata, original.metadata);
-    if (original.metadata.alwaysApply)
+  for (const name of (await readdir(resolve(root, ".ai/rules"))).sort()) {
+    if (!name.endsWith(".md") || name === "graphify.md") continue;
+    const canonical = frontmatter(await read(root, `.ai/rules/${name}`));
+    const generated = frontmatter(
+      await read(root, `.cursor/rules/${name.replace(/\.md$/, ".mdc")}`),
+    );
+    assert.deepEqual(generated.metadata, canonical.metadata);
+    if (canonical.metadata.alwaysApply)
       assert.ok(
         tokens(agents).includes(
-          tokens(await prettier.format(migrated(original.body), { parser: "markdown" })),
+          tokens(await prettier.format(canonical.body, { parser: "markdown" })),
         ),
       );
     else {
-      assert.ok(!agents.includes(original.body));
-      assert.ok(agents.includes(original.metadata.globs.split(",")[0]));
+      assert.ok(!agents.includes(canonical.body));
+      assert.ok(agents.includes(canonical.metadata.globs.split(",")[0]));
       assert.ok(
         tokens(generated.body).includes(
-          tokens(await prettier.format(migrated(original.body), { parser: "markdown" })),
+          tokens(await prettier.format(canonical.body, { parser: "markdown" })),
         ),
       );
     }
@@ -326,6 +336,10 @@ test("conditional rules retain original activation and always rules stay always 
   assert.equal(
     frontmatter(await read(root, ".cursor/rules/apixa-examples.mdc")).metadata.alwaysApply,
     true,
+  );
+  assert.equal(
+    frontmatter(await read(root, ".cursor/rules/apixa-packages.mdc")).metadata.alwaysApply,
+    false,
   );
 });
 

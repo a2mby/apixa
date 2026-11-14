@@ -125,7 +125,7 @@ describe("live pagination presets", () => {
   const expectedPage = { data: rows, total: 31, page: 2, pageSize: 10 };
 
   // Bodies in each backend's documented shape. The Laravel paginator bodies are trimmed real output
-  // of examples/backends/laravel-backend (`paginate(2)` and `cursorPaginate(2)`).
+  // of the local Laravel playground (`manual-testing/backends/laravel-backend`, `paginate(2)` and `cursorPaginate(2)`).
   const cases: [string, string, unknown, Record<string, string>][] = [
     [
       "laravel-paginator",

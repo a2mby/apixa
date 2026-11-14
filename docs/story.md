@@ -2,6 +2,15 @@
 
 Project log. Newest entry first.
 
+## 2026-11-14 — Postpone templates and move verification fixtures into tests
+
+Retired tracked `examples/`, reduced `templates/` to [templates/README.md](../templates/README.md) until
+Apixa's API stabilizes, and moved reusable helpers, reliability/mocking tests, and the Next.js App
+Router SSR fixture into `tests/` (`tests/helpers/`, `tests/fixtures/browser-next/`,
+`tests/core/api-reliability.test.ts`, and `tests/mocking/mocking-demo.test.ts`). Removed obsolete
+example runners and workspace entries so `pnpm verify` (including packed consumers, Chromium browser/SSR
+checks, and both Edge runtimes) runs with zero template dependencies under `v3.0.0`.
+
 ## 2026-11-14 — Stabilize final v3 result contracts
 
 Issue #121 completes pagination envelope checks and enforces final builtin shapes on live and

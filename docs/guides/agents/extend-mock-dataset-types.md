@@ -11,7 +11,7 @@ records, use the public inline/provider `mock` syntax described in the [human gu
    Keep records out of initial chunks. A new public dataset subpath also requires the facade,
    export map, build entries and public API contract to agree.
 4. Extend catalog/integrity tests under `tests/mocking/`. Update package documentation using
-   `apixa/mocking` import paths. Only `examples/frontends/query-ssr-next` (maintained) and the local
-   `examples/frontends/next` playground may be edited without a named exception.
+   `apixa/mocking` import paths. Starter templates under `templates/` are postponed; update internal
+   fixtures under `tests/` or local `manual-testing/` apps when needed alongside approved changes.
 5. Run `pnpm verify` and `graphify update .`. The single packed `apixa` must expose the intended
    types and load just the requested dataset. Update the export snapshot only for approved exports.

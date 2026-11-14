@@ -25,5 +25,6 @@
       "@apixa/react/advanced": ["../packages/react/src/advanced.ts"]
     }
   },
-  "include": ["./**/*.ts", "./**/*.tsx"]
+  "include": ["./**/*.ts", "./**/*.tsx"],
+  "exclude": ["./fixtures/**"]
 }

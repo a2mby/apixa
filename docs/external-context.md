@@ -34,8 +34,8 @@ If the repository and this file disagree, the repository wins; say so and update
 - Mocking never falls back to the network; docs must distinguish implemented from planned.
 - Do not create `packages/transport-fetch|client|server|vue|angular|openapi` or empty
   `versions/vX.Y.Z/` folders without an approved milestone.
-- Examples: only `examples/frontends/query-ssr-next` (maintained) and the local, untracked `examples/frontends/next`
-  may be edited unless the human names another example.
+- Templates & manual testing: starter templates under `templates/` are intentionally postponed (`templates/README.md` only);
+  `manual-testing/` is gitignored for local playground apps. Never resurrect `examples/`.
 - Only `apixa` is published; `@apixa/*` names never appear in public imports.
 
 ## Planning template

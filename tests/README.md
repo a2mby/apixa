@@ -29,6 +29,7 @@ pnpm verify      # build, architecture, API, typecheck, tests, packed consumers,
   contracts (see `public-exports.snapshot.json`).
 - `tests/architecture/*` — repository boundary checks used by `pnpm check:architecture`.
 - `tests/ai/*.test.mjs` — the `.ai` sync engine, filesystem safety and migration fixtures.
+- `tests/fixtures/browser-next/` — internal Next.js App Router fixture used by `pnpm verify:browser`.
 - `tests/helpers/` — fake `Transport`, type helpers and shared test utilities.
 - `tests/tsconfig.json` — typecheck project for compile-time contracts.
 

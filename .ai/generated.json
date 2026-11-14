@@ -22,7 +22,7 @@
       "mode": 420
     },
     ".claude/skills/check-structure/SKILL.md": {
-      "sha256": "7ce6e5aefd26fd3c3b8ed61c35f0d3c354afc37bbb9cbfb9a0558a14d817d1c0",
+      "sha256": "5558bdce499134f93b55ea08727074ddc0e5cf2b6257f50e091a1eb352a85200",
       "mode": 420
     },
     ".claude/skills/frontend-engineering/SKILL.md": {
@@ -94,7 +94,7 @@
       "mode": 420
     },
     ".claude/skills/implement-version/SKILL.md": {
-      "sha256": "316b22f1731a032ff83ccbd1fa8b046cdc7827838f8f4f6379372b052d21aaf6",
+      "sha256": "fc85f7e1826a8794abc99ae63688e3814f68e36944c0aa88cfbe17a307a39616",
       "mode": 420
     },
     ".claude/skills/plan-change/SKILL.md": {
@@ -178,7 +178,7 @@
       "mode": 420
     },
     ".cursor/rules/apixa-examples.mdc": {
-      "sha256": "0e2dd3c8a3dc5bdc523fba491c4f82c7e81a821376b602464aa881eae4a3d123",
+      "sha256": "78ed02adaf84817fc085a3928c4f5b063c1e1dcc437430ea975c05fb5cbae3b8",
       "mode": 420
     },
     ".cursor/rules/apixa-git-push-format.mdc": {
@@ -186,7 +186,7 @@
       "mode": 420
     },
     ".cursor/rules/apixa-packages.mdc": {
-      "sha256": "4fd5e165f192c901976fb74121a721778ebcf1c74dded980d7881831ab1f6369",
+      "sha256": "cd789da2e7f80174d6d7431fb6b2501dca13988e916fd8dd769a87155c9b8965",
       "mode": 420
     },
     ".cursor/rules/graphify.mdc": {
@@ -298,7 +298,7 @@
       "mode": 420
     },
     "AGENTS.md": {
-      "sha256": "b138fb381757ab48ed9022bfa247c08a5c4520aa81a7bc2c7589e5473b2a6acc",
+      "sha256": "02ecc7391b4ffd7e52e741b949b625f0cbbad688e69124c60369907a6a2078ec",
       "mode": 420
     },
     "CLAUDE.md": {

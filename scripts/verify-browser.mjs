@@ -1,8 +1,8 @@
 import { createServer as createSecureServer } from "node:https";
 import { MOCK_STORAGE_SCENARIO } from "./lib/mock-storage-scenario.mjs";
 // Real-browser verification of server rendering, hydration and client behavior, against the
-// tracked Next.js example (`examples/frontends/query-ssr-next`) in production (`next start`) and development
-// (`next dev`) mode. Run after `pnpm build`.
+// internal Next.js App Router test fixture (`tests/fixtures/browser-next`) in production
+// (`next start`) and development (`next dev`) mode. Run after `pnpm build`.
 //
 // Browser: Chromium through playwright-core. Resolution order: $APIXA_CHROMIUM, Playwright's
 // default install, then the newest `chromium-*` in the Playwright cache. Install one with
@@ -875,7 +875,7 @@ try {
   const packs = join(temporary, "packs");
   mkdirSync(packs);
   execFileSync("pnpm", ["pack", "--pack-destination", packs], { cwd: root, stdio: "pipe" });
-  cpSync(join(root, "examples/frontends/query-ssr-next"), example, {
+  cpSync(join(root, "tests/fixtures/browser-next"), example, {
     recursive: true,
     filter: (file) => !/(^|\/)(node_modules|\.next|\.git)(\/|$)|tsbuildinfo$/.test(file),
   });

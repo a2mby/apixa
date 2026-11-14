@@ -19,8 +19,9 @@ docs/           # living: context, architecture, roadmap, conventions, decisions
 versions/       # frozen milestones only — never empty future stubs
 packages/       # private core, mocking, react, internal/shared implementations
 src/            # facade for the only published npm package: apixa
-examples/frontends/query-ssr-next/  # tracked, verified Next example (examples/frontends/next is the local playground); do not edit other examples/*
-tests/
+templates/      # postponed until stable API (templates/README.md only)
+manual-testing/ # local, gitignored manual-testing backends and frontends
+tests/          # unit, integration, architecture, AI sync, and internal fixtures (`tests/fixtures/`)
 ```
 
 - Living context stays at `docs/context.md` — **not** a duplicate root `context.md`.
@@ -47,37 +48,25 @@ tests/
 
 <!-- source: .ai/rules/apixa-examples.md -->
 
-# Examples — Next only
+# Templates, internal fixtures, and manual testing
 
-The maintained Next.js apps are **`examples/frontends/query-ssr-next`** (tracked and driven by `pnpm verify`: this is where scenarios that must stay maintained live) and the local, untracked playground **`examples/frontends/next`** (ignored by git). Do not create, edit, delete, or “sync” other example apps unless the user explicitly names that framework.
+Framework-specific starter templates under **`templates/`** are intentionally postponed until Apixa
+reaches a stable API; only **`templates/README.md`** belongs in `templates/`.
+Internal browser/SSR verification uses **`tests/fixtures/browser-next`** (driven by
+`pnpm verify:browser`). Local manual-testing apps and experiments belong under **`manual-testing/`**
+(gitignored).
 
 ## Allowed
 
-- `examples/frontends/query-ssr-next/**` (tracked; its README when documenting Next usage)
-- `examples/frontends/next/**` (local playground; not committed)
-- Root docs / README that _mention_ examples in general
+- `templates/README.md` (postponement notice)
+- `tests/fixtures/browser-next/**` (internal Next.js App Router fixture for `pnpm verify:browser`)
+- Root docs / README that mention postponed `templates/` or `manual-testing/`
 
-## Do not touch
+## Keep separated
 
-- `examples/frontends/basic`
-- `examples/frontends/react-vite`
-- `examples/frontends/vue`
-- `examples/frontends/vanilla`
-- `examples/frontends/angular`
-- `examples/frontends/react-native`
-- Any new `examples/<framework>/` folder
-
-```text
-# ❌ BAD — drive-by updates across playgrounds
-examples/frontends/vue/src/api.ts
-examples/frontends/react-vite/src/api.ts
-
-# ✅ GOOD — Next only
-examples/frontends/query-ssr-next/lib/api.ts
-examples/frontends/query-ssr-next/app/files/...
-```
-
-If an API change needs a usage sample and Next is not enough, update Core tests / README first. Only open another example when the user asks for that example by name.
+- Never restore `examples/` or add unrequested framework templates or playgrounds under `templates/`.
+- Never commit files under `manual-testing/` (it is gitignored).
+- Keep internal verification fixtures aligned with **implemented** Apixa APIs only.
 
 ---
 
@@ -126,7 +115,7 @@ Before reading, editing, or reviewing files matching a pattern below, read the l
 | ----------------------------------------------------------------------------- | ----------------------------------------------------- |
 | `packages/**/*`, `scripts/**/*`, `docs/architecture.md`, `docs/public-api.md` | [apixa-architecture](.ai/rules/apixa-architecture.md) |
 | `docs/**/*`, `versions/**/*`                                                  | [apixa-docs](.ai/rules/apixa-docs.md)                 |
-| `packages/**/*`, `examples/**/*`, `tests/**/*`                                | [apixa-packages](.ai/rules/apixa-packages.md)         |
+| `packages/**/*`, `tests/**/*`                                                 | [apixa-packages](.ai/rules/apixa-packages.md)         |
 
 ## Workflows and roles
 

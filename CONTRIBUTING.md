@@ -76,10 +76,8 @@ apixa/
 ├── .ai/                    # canonical rules, roles, adapters, sync
 ├── .agents/skills/         # canonical reusable workflows
 ├── datasets/
-├── examples/
-│   ├── backends/laravel-backend/
-│   ├── frontends/          # query-ssr-next (maintained), local next and other playgrounds
-│   └── templates/          # empty laravel/next/react placeholders
+├── templates/              # postponed until stable API (templates/README.md only)
+├── manual-testing/         # gitignored local manual-testing backends and frontends
 ├── tests/
 ├── docs/
 ├── versions/
@@ -186,17 +184,15 @@ corepack pnpm exec prettier --check .
 
 Inspect changes after running repository-wide formatting to avoid unintentionally including unrelated edits.
 
-### Run Examples
+### Full Verification
 
-The primary Next.js playground can be started with:
+Run the full verification pipeline (AI sync check, build, architecture, public API, typecheck, tests, packed consumers, Chromium browser/SSR, and Edge runtimes) with:
 
 ```bash
-corepack pnpm example:next
+corepack pnpm verify
 ```
 
-Other platform examples and their scripts are documented in [scripts/README.md](scripts/README.md).
-
-Keep examples aligned with implemented behavior rather than proposed or unfinished APIs.
+Verification scripts are documented in [scripts/README.md](scripts/README.md). Starter templates under [`templates/`](templates/README.md) are postponed until Apixa stabilizes.
 
 ## 4. Graphify — Knowledge Graph Setup
 

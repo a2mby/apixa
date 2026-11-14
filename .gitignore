@@ -12,17 +12,8 @@ coverage
 .vite
 /.vscode
 
-# Examples are local except the maintained Next app, the standalone Laravel backend,
-# and the empty starter-template placeholders.
-examples/**
-!examples/backends/
-!examples/backends/laravel-backend/
-!examples/backends/laravel-backend/**
-!examples/frontends/
-!examples/frontends/query-ssr-next/
-!examples/frontends/query-ssr-next/**
-!examples/templates/
-!examples/templates/**
+# Local manual-testing environments (backends, frontends, experiments) are never tracked in git.
+manual-testing/
 
 # dataset build cache (re-fetched by scripts/datasets/build-collection.mjs)
 scripts/datasets/.cache/
