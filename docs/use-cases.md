@@ -8,7 +8,7 @@ Baseline: repository work through PR #108 (merge `f2883dc`, content tip `672b35a
 
 This is a working QA notebook, not a second API specification. [Public API](public-api.md), [architecture](architecture.md), package READMEs, and the relevant milestone contract settle exact behavior. If a case disagrees with those sources, investigate and record the discrepancy before changing the expectation.
 
-Local follow-up (November 12, 2026): the author requested seeded PostgreSQL relational/JSONB data and MongoDB documents. See [Playground datasets](../examples/backends/laravel-backend/database/fixtures/README.md). This adds data/models, not application HTTP endpoints, and does not rewrite the frozen v1.8.1 environment milestone.
+Local follow-up (November 12, 2026): the author requested seeded PostgreSQL relational/JSONB data and MongoDB documents in the local Laravel playground (`manual-testing/backends/laravel-backend/database/fixtures/README.md`, gitignored). This adds data/models, not application HTTP endpoints, and does not rewrite the frozen v1.8.1 environment milestone.
 
 ## How to use this document
 
@@ -28,11 +28,11 @@ Case IDs are permanent references. Add new IDs at the end of a group; do not ren
 | `T` | Small caller-owned, instrumented `Transport` or controlled test harness | Exact request shape, deterministic errors, timing and race ordering; no browser/network claim |
 | `H` | Genuine HTTP backend with the required author-owned endpoints           | Wire encoding, response bodies, database persistence, server acknowledgments                  |
 | `B` | Browser with Network panel and Console open                             | Real CORS, browser File/Blob behavior, cancellation, download UI                              |
-| `R` | React/TanStack consumer; maintained Next example where applicable       | Rendered states, keys, cache, mutation lifecycle and hydration                                |
+| `R` | React/TanStack consumer; maintained Next template where applicable      | Rendered states, keys, cache, mutation lifecycle and hydration                                |
 | `E` | Strict TypeScript editor or small `tsc --noEmit` consumer               | Inference, autocomplete and rejected invalid programs; no runtime proof                       |
 | `P` | Clean consumer installed from a locally packed tarball                  | Actual public exports, declarations and dependency boundaries                                 |
 | `N` | Supported Node.js runtime                                               | Native ESM, Node files/streams and filesystem dataset utilities                               |
-| `L` | Standalone Laravel playground                                           | Environment readiness only, until the author adds application behavior                        |
+| `L` | Standalone Laravel starter/playground                                   | Environment readiness only, until the author adds application behavior                        |
 | `X` | Historical worktree/tarball, with that version's own documentation      | Retired API/migration behavior; never a current API recommendation                            |
 
 A case tagged `T/H` can be explored deterministically with a transport and then repeated over HTTP when an endpoint exists. Record the mode actually used. A transport success does not complete its HTTP counterpart. A browser scenario needs a real browser, not just `curl`.
@@ -50,8 +50,8 @@ A case tagged `T/H` can be explored deterministically with a transport and then 
 ### Current starting points
 
 - [Core usage](../packages/core/README.md), [Mocking usage](../packages/mocking/README.md), [React usage](../packages/react/README.md).
-- [Maintained Next consumer](../examples/frontends/query-ssr-next/README.md), including its `/files` scenario. Inspect its README for the actual startup command and installed dependencies.
-- [Laravel environment](../examples/backends/laravel-backend/README.md): currently stock `/`, built-in `/up`, and an **empty** registered API route file. It has no CRUD, upload, download, authentication, or transfer protocol endpoints.
+- Verification fixtures: [browser-next SSR/files fixture](../tests/fixtures/browser-next/package.json) and [S3 transfer recipe](../tests/helpers/s3-transfer.ts) (starter templates under [templates/](../templates/README.md) are postponed until Apixa stabilizes).
+- Local Laravel playground (`manual-testing/backends/laravel-backend/README.md`, gitignored): local PostgreSQL/MongoDB playground with empty application API routing.
 - [Production file handling](guides/humans/production-file-handling.md) for ownership, safety, performance and recovery boundaries.
 - [Version status](../versions/README.md) distinguishes shipped, merged, signed-off and pending work. This notebook does not change those statuses.
 
@@ -540,8 +540,8 @@ Sources: [headers tests](../tests/core/headers.test.ts), [transport tests](../te
   - Expect: Unconfigured responses retain their existing representation; enabled pagination preserves the supported envelope and never implies an unimplemented backend paging service.
 
 - [ ] **BODY-011 — Live list slice boundary** · `T/H`
-  - Do: Apply a resource slice to an array list response, then return a non-array payload and read a detail/count.
-  - Expect: The list array is capped as documented while non-array responses and unrelated operations remain unaffected; a slice is not backend pagination.
+  - Do: Apply a resource slice to an array list response, then return a non-array JSON payload on unpaginated `getAll` and read a detail/count.
+  - Expect: The list array is capped with `Array.prototype.slice` semantics; a non-array JSON payload on unpaginated `getAll` rejects with `ResponseShapeError`, while detail/count operations remain unaffected; a slice is not backend pagination.
 
 - [ ] **BODY-012 — Custom transport seam** · `T/E`
   - Do: Inject a small conforming Transport, inspect received method/headers/body/signal and return a controlled response, then try the default Fetch transport separately.
@@ -870,8 +870,8 @@ Sources: [adapter usage](../packages/mocking/README.md#definemockapi), [adapter 
   - Expect: Each uses its own documented signature; do not assume the adapter and Core accept identical argument objects.
 
 - [ ] **ADAPT-003 — Pagination compatibility** · `M`
-  - Do: Use adapter pagination `true`, `page` and `cursor`; try Core pagination `true` separately.
-  - Expect: Adapter compatibility alias works where documented; Core rejects its unsupported boolean form.
+  - Do: Use adapter pagination `true`, `"page"` and `"cursor"`; compare with Core pagination `true`, `"page"` and `"cursor"`.
+  - Expect: Both accept `true` (as `"page"`), `"page"` and `"cursor"` and validate the same complete page/cursor envelope contract.
 
 - [ ] **ADAPT-004 — Selection parity** · `M/E`
   - Do: Use root/resource operation settings, groups and individual overrides on the adapter.
@@ -1012,7 +1012,7 @@ Sources: [download usage](../packages/core/README.md#file-downloads-and-binary-r
   - Expect: The call throws HttpError with permitted parsed error data instead of returning a successful error-file Blob.
 
 - [ ] **DOWN-007 — Binary bypasses list shaping** · `T/H`
-  - Do: Apply list slice/toArray/transform settings to a binary-returning operation.
+  - Do: Apply list slice/unwrap/transform settings to a binary-returning operation.
   - Expect: Binary output is not treated as an entity list or recursively transformed; bytes and type survive.
 
 - [ ] **DOWN-008 — Mock download of stored bytes** · `M`
@@ -1583,7 +1583,7 @@ Sources: [optimistic ordering contract](../packages/react/README.md#declarative-
 
 ## SSR, hydration, providers and native TanStack consumers — SSR
 
-Sources: [SSR recipe](../packages/react/README.md#server-rendering-nextjs-app-router), [request isolation](../tests/react/ssr-isolation.test.ts), [Next consumer](../examples/frontends/query-ssr-next/README.md).
+Sources: [SSR recipe](../packages/react/README.md#server-rendering-nextjs-app-router), [request isolation](../tests/react/ssr-isolation.test.ts), [browser-next fixture](../tests/fixtures/browser-next/package.json).
 
 - [ ] **SSR-001 — Server prefetch and hydration** · `R/B`
   - Do: Use a request-scoped QueryClient, prefetch serializable data, dehydrate, hydrate under the matching provider and use a suitable staleTime.
@@ -1671,7 +1671,7 @@ Sources: [framework files](../packages/react/README.md#files-through-the-hooks-v
 
 ## Advanced chunk/session transfer orchestration — ADV
 
-Sources: [advanced transfer contract](../packages/core/README.md#advanced-transfers-v170), [protocol recipe](../examples/frontends/query-ssr-next/lib/advanced-transfer.ts), [chunk tests](../tests/core/advanced-transfer-chunks.test.ts). Requires an explicit protocol harness or author-owned server; Laravel currently provides none.
+Sources: [advanced transfer contract](../packages/core/README.md#advanced-transfers-v170), [protocol recipe](../tests/fixtures/browser-next/lib/advanced-transfer.ts), [chunk tests](../tests/core/advanced-transfer-chunks.test.ts). Requires an explicit protocol harness or author-owned server; Laravel currently provides none.
 
 - [ ] **ADV-001 — Ordinary upload stays ordinary** · `T/H`
   - Do: Send a raw Blob through an operation without transfer strategy, then compare an explicitly configured transfer operation.
@@ -1837,7 +1837,7 @@ Sources: [recovery tests](../tests/core/advanced-transfer-recovery.test.ts), [ch
 
 ## Presigned destinations and S3-compatible recipes — SIGN
 
-Sources: [presigned contract](../packages/core/README.md#presigned-destinations), [presigned tests](../tests/core/advanced-transfer-presigned.test.ts), [S3 recipe](../examples/frontends/query-ssr-next/lib/s3-transfer.ts).
+Sources: [presigned contract](../packages/core/README.md#presigned-destinations), [presigned tests](../tests/core/advanced-transfer-presigned.test.ts), [S3 recipe](../tests/helpers/s3-transfer.ts).
 
 - [ ] **SIGN-001 — Explicit destination policy** · `T/H`
   - Do: Configure exact HTTPS allowed origins and try an allowed signed URL plus another host/port/scheme.
@@ -2059,7 +2059,7 @@ Sources: each linked milestone in the coverage map, [current compatibility contr
 
 ## Laravel/PostgreSQL environment manual readiness — LAR
 
-Sources and exact provisioning/Storage commands: [backend README](../examples/backends/laravel-backend/README.md). These cases exercise infrastructure only and do not add endpoints.
+Sources and exact provisioning/Storage commands: gitignored local PostgreSQL/Mongo playground `manual-testing/backends/laravel-backend/README.md` (starter templates under [templates/](../templates/README.md) are postponed). These cases exercise infrastructure only and do not add endpoints.
 
 - [ ] **LAR-001 — Dependency installation and boot** · `L/N`
   - Do: Select supported PHP with pdo_pgsql, run composer install and php artisan --version/about.
@@ -2225,10 +2225,10 @@ This catalog groups risks instead of reproducing every unit assertion. When a ne
 | Input/output safety and error consistency    | `tests/core/file-rules-*.test.ts`, `file-validation-*.test.ts`, `response-limits`, `validation-transfer`, `file-error-matrix`, `error-secrecy`        |
 | Virtual ownership, fixtures and rollback     | `tests/core/mock-storage*.test.ts`, `mock-fixtures`, `mock-file-lifecycle`, `mock-write-faults`, `tests/mocking/mock-file-storage.test.ts`            |
 | Advanced sessions, security and races        | `tests/core/advanced-transfer-*.test.ts`, `redirect-security`, `http-security`, `operation-security`                                                  |
-| Hooks, cache, optimistic state and SSR       | `tests/react/`, `tests/internal-shared/`, `examples/frontends/query-ssr-next/`                                                                        |
+| Hooks, cache, optimistic state and SSR       | `tests/react/`, `tests/internal-shared/`, `tests/fixtures/browser-next/`                                                                              |
 | Packed artifact and runtime constraints      | `tests/facade/`, `tests/architecture/`, existing `scripts/verify-*` checks and root package scripts                                                   |
 | Measured hardening and ownership contract    | `versions/v1.8.0/acceptance-criteria.md`, production file handling guide                                                                              |
-| Laravel prerequisites and environment checks | `examples/backends/laravel-backend/README.md`, its four environment examples, standard Laravel configuration and default tests                        |
+| Laravel prerequisites and environment checks | gitignored `manual-testing/backends/laravel-backend/README.md` (starter templates under `templates/` postponed), standard Laravel config and tests    |
 
 Historical test filenames can remain after an API changes. Read the test's actual assertions and the current public contract; a filename such as `type-markers` does not mean markers are still supported.
 

@@ -70,7 +70,8 @@ Keep the initial core small and cohesive. Do not implement every future feature 
 
 ## 5. Intended Developer Experience
 
-**Implemented direction (v0.2.0 + v0.4.0):** a resource with `path` gets built-in CRUD; type payloads via resource-only `defineApi<AppApi>()({ … })`.
+**Implemented direction (v3.0.0):** resources live under `resources`; type payloads via
+resource-only `defineApi<AppApi>()({ … })`.
 
 ```ts
 import { defineApi } from "apixa";
@@ -84,21 +85,26 @@ type AppApi = {
 const api = defineApi<AppApi>()({
   baseURL: "https://api.example.com",
   headers: { Accept: "application/json" },
-  users: { path: "/users" },
+  resources: {
+    users: { path: "/users" },
+  },
 });
 
 const users = await api.users.getAll();
 const user = await api.users.getById("123");
 ```
 
-The original CRUD five use positional args. `create` / `update` bodies are derived from `entity`
-(`Omit` / `Partial` on `"id"`). The runtime configuration supplies resource names, paths, and
-operation selection; `AppApi` supplies payload types without repeating paths. Both curried generic
-and direct inferred forms remain supported. Root builtins (`baseURL`, `headers` /
-`BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed by Core. Call options
-support `signal` / `timeout`; opt-in `retry` and thin `middleware` shipped in v0.6.0.
-Writes may opt into `idempotency` (`true` or `{ header, generate }`): one key per call,
-reused by Core retries and middleware replay (implemented in the v1.0.0 release candidate).
+Reads (`getAll`, `getById`, `getMany`, `getBy`, `findFirst`, `count`, `exists`) and `create` /
+`delete` / `createMany` / `deleteMany` take their documented arguments, while `update` and `patch`
+take `(id, { body, params?, ... })` and resource path parameters use `options.params`. `create` /
+`update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). The runtime configuration
+supplies resource names, paths, and operation selection; `AppApi` supplies payload types without
+repeating paths. Both curried generic and direct inferred forms remain supported. Root builtins
+(`baseURL`, `headers` / `BuiltinHeaders`, `transport`, `timeout`, `retry`, `middleware`) are typed
+by Core. Call options support `signal` / `timeout`; opt-in `retry` and middleware shipped in
+v0.6.0 (unified into `middleware: MiddlewareHooks` in v3.0.0). Writes may opt into `idempotency`
+(`true` or `{ header, generate }`): one key per call, reused by Core retries and middleware replay
+(implemented in the v1.0.0 release candidate).
 
 **Implemented (v0.10.0, refined in v3.0.0):** `operations` accepts a preset, list, or object
 of config/function/`false` overrides per key — add, remove, or override any operation, on both
@@ -109,13 +115,15 @@ are **always-on** (13 defaults total; `getBySlug`, `upsert`, and `search` were r
 ```ts
 const api = defineApi<AppApi>()({
   baseURL: "https://api.example.com",
-  users: {
-    path: "/users",
-    operations: {
-      delete: false, // remove a builtin
-      archive: {
-        kind: "write",
-        run: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+  resources: {
+    users: {
+      path: "/users",
+      operations: {
+        delete: false, // remove a builtin
+        archive: {
+          kind: "write",
+          run: (ctx, id: string) => ctx.request({ method: "POST", path: `/${id}/archive` }),
+        },
       },
     },
   },
@@ -123,7 +131,7 @@ const api = defineApi<AppApi>()({
 
 await api.users.exists("123"); // built in, no operations entry needed
 await api.users.getBy("username", "ada"); // lookup by a string/number entity field
-await api.users.archive("123"); // fully custom operation
+await api.users.archive("123"); // custom function operation
 ```
 
 See the full table in [`docs/conventions.md`](./conventions.md#operation-customization).
@@ -199,17 +207,12 @@ packages/
   mocking/                 # implemented: datasets, mock engine adapter, Node loaders
   react/                   # implemented: optional React/TanStack Query integration
   internal/shared/         # implemented, private, never published
-examples/
-  backends/
-    laravel-backend/       # independent Laravel/PostgreSQL/MongoDB playground (environment only)
-  frontends/
-    query-ssr-next/        # maintained Next.js App Router example (verified by pnpm verify)
-    next/                  # local, untracked Next.js playground
-  templates/               # empty laravel/next/react starter placeholders
+templates/                 # postponed until stable API (templates/README.md only)
+manual-testing/            # local, gitignored manual-testing backends and frontends
 docs/                      # living docs
 versions/                  # frozen milestone contracts (v0.1.0 ... v1.8.1)
 .ai/, .agents/             # canonical AI rules, roles and skills
-scripts/, tests/, datasets/
+scripts/, tests/, datasets/ # verification scripts, tests + internal fixtures, datasets
 ```
 
 The intended responsibilities are:

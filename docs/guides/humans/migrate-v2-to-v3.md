@@ -150,25 +150,36 @@ const api = defineApi({
 ```
 
 - Hook execution runs `root -> resource -> operation`, in array order within each level.
-- Request middleware sees `request.query` already transformed by `transforms.request`; any mutations to `request.query` or `request.url` stay synchronized across live transport, mocks, URLs, and `response.request` / `error.request` metadata.
+- `onRequest` middleware sees `request.query` already transformed by `transforms.request` (and
+  renamed by live pagination `params`), while `request.body` transforms run after `onRequest`.
+  Mutations to `request.query` or `request.url` stay synchronized across live transport, mocks,
+  URLs, and `response.request` / `error.request` metadata (`request.query` wins on conflicts).
+- `onResponse` runs after `response` processing (`unwrap`, response transforms, `parse`, shaping,
+  `validate`) with `ApiResponse.source` preserved; returning `undefined` keeps the current response.
+- `onError` runs on failures: throwing replaces the error for later handlers, returning a non-`undefined`
+  value recovers the call, returning `undefined` passes the original error on, and `replay` is
+  `undefined` inside a replay.
 
 ## 4. Declarative operation `kind` derivation
 
 Declarative HTTP operations now derive `kind` (`"read"` vs `"write"`) from their HTTP `method` (`GET`, `HEAD`, `OPTIONS` -> `"read"`; `POST`, `PUT`, `PATCH`, `DELETE` -> `"write"`). Passing `kind` on a declarative operation remains accepted when consistent, while function operations (`{ kind, run }`) still require an explicit `kind`.
 
-## 5. Client-wide query serialization (`query` and `queryArrayFormat`)
+## 5. Client-wide query serialization (`query`, `queryArrayFormat`, and `querySerializer`)
 
-Configure query serialization once at the root of `defineApi`:
+Configure query serialization once at the root of `defineApi` (root-only; not accepted on resources,
+operations, or per call):
 
 ```ts
 const api = defineApi({
   baseURL: "https://api.example.com",
-  queryArrayFormat: "brackets", // "repeat" | "comma" | "brackets"
+  queryArrayFormat: "brackets", // "repeat" (default) | "comma" | "brackets"
   query: {
     nulls: "empty", // "omit" (default) | "empty" | "null"
     emptyArrays: "empty", // "omit" (default) | "empty"
     booleans: "number", // "string" (default) | "number"
   },
+  // Or supply a custom serializer replacing the built-in builder:
+  // querySerializer: (query) => new URLSearchParams(...).toString(),
   resources: { users: { path: "/users" } },
 });
 ```
@@ -213,9 +224,10 @@ const full = await api.users.getById("1", { full: true });
 - Invalid collection payloads (for example `getMany` or `findFirst` receiving a non-array) now throw `ResponseShapeError` instead of silently collapsing to `[]`; valid empty arrays remain valid.
 - Key transforms accept `KeyTransformConfig` (`{ keys, exclude?, preserve?, maxDepth? }`) and throw `TransformError` on cycles, excessive depth (default `64`), or key collisions.
 
-## 7. Opt-in pagination per operation and strict `slice`
+## 7. Per-operation pagination and strict `slice`
 
-Pagination can now be configured on a resource **or** on individual list operations (`getAll`, `getMany`, and declarative custom reads):
+Pagination can be configured on a resource (inherited by `getAll`) **or** per operation on `getAll`,
+`getMany`, and declarative custom operations:
 
 ```ts
 const api = defineApi<{ users: { entity: User } }>()({
@@ -234,7 +246,8 @@ const api = defineApi<{ users: { entity: User } }>()({
 const page = await api.users.getAll({ query: { page: 2, pageSize: 25 } });
 ```
 
-- Operation-level `pagination` cleanly shadows resource-level `pagination` (setting `pagination: false` on an operation opts it out of resource pagination).
+- Accepted forms: `true` (`"page"`), `"page"`, `"cursor"`, preset shorthands (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"` — defaulting to `"page"`), `false` (disables resource pagination on `getAll`), or `{ type?, preset | fields | parseList, params }` (`type` defaults to `"page"` when omitted with `preset`; `"laravel-paginator"` supports both `"page"` and `"cursor"`).
+- Operation-level `pagination` cleanly shadows resource-level `pagination` (`pagination: false` opts `getAll` out; `pagination: true` reuses resource pagination or defaults to `"page"`).
 - `slice` uses strict `Array.prototype.slice` semantics on client-side lists and now throws `ConfigError` if combined with `pagination`.
 
 ## Final v3 contract stabilization

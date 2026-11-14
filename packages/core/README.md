@@ -10,20 +10,20 @@ TypeScript API client: `defineApi()`, default-first resource CRUD, Fetch transpo
 type inference, operation metadata, and the `MockStore` execution bridge. **Imports:** nothing
 (no React, TanStack Query, Mocking, or Node built-ins). See [architecture](../../docs/architecture.md#architecture-contract-v100).
 
-Every custom operation declares `kind: "read" | "write"`. Declarative operations also declare
-an HTTP method; function operations use `{ kind, run }`:
+Declarative HTTP operations derive `kind` (`"read"` for `GET`/`HEAD`/`OPTIONS`; `"write"` for
+`POST`/`PUT`/`PATCH`/`DELETE`) from `method` — passing `kind` is optional when consistent and
+rejected if mismatched. Function operations must declare `{ kind, run }`:
 
 ```ts
 operations: {
-  stats: { kind: "read", method: "GET", path: "/stats" },
+  stats: { method: "GET", path: "/stats" }, // derives kind: "read"
   archive: { kind: "write", run: (ctx, id: string) =>
     ctx.request({ method: "POST", path: `/${id}/archive` }) },
 }
 ```
 
-Built-ins inherit their fixed kind, including function overrides. GET, HEAD, and OPTIONS require
-`read`; POST, PUT, PATCH, and DELETE require `write`. Core validates declarative operations at
-API construction and every function `ctx.request()` before transport or mock dispatch.
+Built-ins inherit their fixed kind, including function overrides. Core validates declarative
+operations at API construction and every function `ctx.request()` before transport or mock dispatch.
 
 ## Request options
 
@@ -72,7 +72,7 @@ await api.orders.create(body, { idempotencyKey: "checkout-42" }); // your own ke
 
 ## Retries
 
-Opt-in `retry` on api / resource / operation / call. Defaults: methods `GET`/`HEAD`, status `408`/`429`/`5xx`, exponential backoff. Also: `respectRetryAfter`, `shouldRetry(ctx)`, `onRetry(ctx)`.
+Opt-in `retry` on api / resource / operation / call. Defaults: methods `GET`/`HEAD`/`OPTIONS`, status `408`/`429`/`5xx`, exponential backoff (`baseDelayMs: 200`, `maxDelayMs: 2000`, `jitter: true`). Also: `respectRetryAfter`, `shouldRetry(ctx)`, `onRetry(ctx)`.
 
 ## Middleware
 
@@ -89,14 +89,14 @@ const refresh: MiddlewareHooks = {
 };
 ```
 
-Configure `middleware: refresh` (`{ onRequest?, onResponse?, onError? }`) on the API, resource, or operation layer, composed `root → resource → operation` in array order within each hook list.
+Configure `middleware: refresh` (`{ onRequest?, onResponse?, onError? }`) on the API, resource, or operation layer, composed `root → resource → operation` in array order within each hook list. `onRequest` sees `request.query` already key-transformed (and renamed by live pagination `params`), while `request.body` transforms run after `onRequest`; mutations to `request.query` or `request.url` stay synchronized (`request.query` wins on conflicts). `onResponse` runs after `response` processing (`unwrap`, transforms, `parse`, shaping, `validate`) and preserves `ApiResponse.source`.
 
 ## Response processing, query options, transforms, and pagination
 
-- **`query` options**: configure `{ arrays, nulls, skipUndefined, serialize }` on API, resource, or operation layers (precedence: call > operation > resource > API).
+- **Query serialization (root `defineApi` only)**: configure `queryArrayFormat` (`"repeat"` | `"comma"` | `"brackets"`, default `"repeat"`), `query` (`{ nulls?: "omit" | "empty" | "null", emptyArrays?: "omit" | "empty", booleans?: "string" | "number" }`), and `querySerializer?: (query) => string`. (`undefined` is always omitted; nested plain objects use percent-encoded brackets.)
 - **`response` processing**: configure `{ unwrap, parse, validate }` on API, resource, or operation layers (`false` disables an inherited hook). Builtin collection responses reject invalid shapes with `ResponseShapeError`; `ApiResponse.source` preserves the raw payload when `{ full: true }` is used.
 - **`transforms`**: configure `transforms: { request: { keys, exclude, preserve, maxDepth }, response: { keys, exclude, preserve, maxDepth } }`.
-- **`pagination`**: declare `"page"`, `"cursor"`, `false` (shadow/disable per operation), or `{ type, preset | fields | parseList, params }` for live backends (`laravel`, `laravel-paginator`, `strapi`, `payload`, `nestjs`).
+- **`pagination`**: declare `true` (`"page"`), `"page"`, `"cursor"`, a preset shorthand (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"`), `false` (shadow/disable per operation), or `{ type?, preset | fields | parseList, params }` (`type` defaults to `"page"` when omitted with `preset`). Configured on a resource (`getAll` inherits it) or per operation on `getAll`, `getMany`, and declarative custom operations; shorthand, mapped, `parseList`, and mock envelopes all validate complete page/cursor metadata.
 
 ## Plugin seams
 
@@ -108,7 +108,7 @@ Declare which entity fields hold files; writes then accept native `File` / `Blob
 sends `multipart/form-data` automatically (JSON stays the default when there are no files):
 
 ```ts
-const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
+const api = defineApi<{ users: { entity: User } }>()({
   baseURL: "https://api.example.com",
   resources: {
     users: { path: "/users", fileFields: ["avatar", "documents"] },
@@ -134,7 +134,7 @@ A download is an ordinary operation. `responseType` (`"json"` default, `"text"`,
 `responseType` wins, and `{ full: true }` gives the `ApiResponse` with `status` and `headers`:
 
 ```ts
-const api = defineApi<{ reports: { path: "/reports"; entity: Report } }>()({
+const api = defineApi<{ reports: { entity: Report } }>()({
   baseURL: "https://api.example.com",
   resources: {
     reports: {
@@ -157,7 +157,7 @@ Result types: `text` → `string`, `blob` → `Blob`, `arrayBuffer` → `ArrayBu
 `ReadableStream<Uint8Array> | null`. Metadata `response` in `defineApi<T>()` wins over the inferred
 type; function operations use `ctx.request({ path, responseType: "blob" })` (also typed). Rules:
 an unknown `responseType` is a `ConfigError`; binary data is never JSON-parsed, key-transformed or
-shaped (`getAll` `slice`, `toArray`); a failed download is an `HttpError` whose `data` is the parsed
+shaped (collection array validation, `slice`); a failed download is an `HttpError` whose `data` is the parsed
 JSON/text body; an empty 204/205 gives `""` / an empty `Blob` / an empty `ArrayBuffer` for explicit
 text/binary modes (`null` for JSON and `stream`). Abort and timeout cover the body read, and retries
 never read a binary body that was not successful.
@@ -349,7 +349,7 @@ its type. Outer `dataFormat` and `transfer` cannot be combined; each protocol re
 own serialization. Operations still return native promises and their inferred domain result;
 `full: true` returns the real finalization response metadata.
 
-The maintained [Next recipe](../../examples/frontends/query-ssr-next/lib/advanced-transfer.ts) shows the
+The verified [Next fixture recipe](../../tests/fixtures/browser-next/lib/advanced-transfer.ts) shows the
 complete protocol: `initiate`, `inspect`, `uploadPart`, `complete`, and optional `abort`/`renew`.
 Callbacks use a narrow `TransferStepContext.request({ kind, method, ... })`, which runs through
 Core's existing request pipeline, transport, middleware, limits, timeout and retry mechanism.
@@ -445,7 +445,7 @@ in query keys or SSR props. Buffered Blob/ArrayBuffer downloads retain their doc
 use the existing stream response with a caller-owned sink for bounded large downloads. Range resume
 is not implemented in this milestone.
 
-The [SDK-free S3 recipe](../../examples/frontends/query-ssr-next/lib/s3-transfer.ts) delegates initiate,
+The [SDK-free S3 recipe](../../tests/helpers/s3-transfer.ts) delegates initiate,
 presign, list, complete and abort to the backend. It sends raw part blobs, captures exposed ETags,
 and completes an ordered part manifest. Configure storage CORS to expose ETag; the backend must
 paginate ListParts and normalize provider errors/checksum evidence. HTTP multipart/form-data and

@@ -56,7 +56,7 @@ const api = defineApi({
 - Records are validated when the first call loads them (plain objects, unique string/number ids).
   The array you pass is copied at that moment; changing it later does not change the store.
 - A mocked resource never reaches a transport, whatever the URL looks like after middleware.
-- `pagination` is `"page"`, `"cursor"`, `false` (to shadow/disable per operation), or `{ type, preset | fields | parseList, params }` (Core rejects `true`). `slice` caps the **list result** of
+- `pagination` accepts `true` (`"page"`), `"page"`, `"cursor"`, preset shorthands (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"`), `false` (to shadow/disable per operation), or `{ type?, preset | fields | parseList, params }` (on a resource for `getAll`, or per operation on `getAll`, `getMany`, and declarative custom operations). `slice` caps the **list result** of
   `getAll` (first N, or `{ start, end }`); `count`, lookups and writes still see every record.
 
 ### Reading with filters and pages
@@ -127,14 +127,14 @@ is built. Handlers do not depend on any builtin being enabled (`operations: { pr
 
 **What it receives** (`context`):
 
-| Field                   | Meaning                                                                                                                                                                                                                                                          |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `records`               | A **snapshot copy** of every record, taken when you first read it, typed from the resource's mock data. Editing it changes nothing. Reading it copies the resource, so use `store.list(query)` for big filtered reads and ignore it when you only write.         |
-| `store`                 | `get(id)`, `exists(id)`, `list(query?)`, `create`, `update` (replace), `patch`, `delete(id)`. Copies in and out; the same engine as the builtins, so duplicate ids, missing records and unsafe keys (`__proto__`, `constructor`, `prototype`) fail the same way. |
-| `params`                | Path parameters (typed from the path, resource path included): `params.id`.                                                                                                                                                                                      |
-| `query`, `body`         | What the mock engine sees: after request middleware and request key transforms, exactly like a builtin. Typed from `defineApi<Meta>()` operation `query` / `body`, otherwise `Record<string, unknown>` / `unknown`.                                              |
-| `signal`                | Aborts on cancellation or timeout. The call rejects at once; a handler may continue, but its managed draft is discarded and late writes reject. External user side effects are outside rollback.                                                                 |
-| `resource`, `operation` | Names, for messages.                                                                                                                                                                                                                                             |
+| Field                   | Meaning                                                                                                                                                                                                                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `records`               | A **snapshot copy** of every record, taken when you first read it, typed from the resource's mock data. Editing it changes nothing. Reading it copies the resource, so use `store.list(query)` for big filtered reads and ignore it when you only write.                                        |
+| `store`                 | `get(id)`, `exists(id)`, `list(query?)`, `create`, `update` (replace), `patch`, `delete(id)`. Copies in and out; the same engine as the builtins, so duplicate ids, missing records and unsafe keys (`__proto__`, `constructor`, `prototype`) fail the same way.                                |
+| `params`                | Path parameters (typed from the path, resource path included): `params.id`.                                                                                                                                                                                                                     |
+| `query`, `body`         | What the mock engine sees: `query` after request key transforms and `onRequest` middleware, and `body` after `onRequest` middleware and request key transforms (matching builtins). Typed from `defineApi<Meta>()` operation `query` / `body`, otherwise `Record<string, unknown>` / `unknown`. |
+| `signal`                | Aborts on cancellation or timeout. The call rejects at once; a handler may continue, but its managed draft is discarded and late writes reject. External user side effects are outside rollback.                                                                                                |
+| `resource`, `operation` | Names, for messages.                                                                                                                                                                                                                                                                            |
 
 Return any value; it flows through response transforms, response processing, and response middleware like a builtin's
 result. The status is 200, or 204 for a `DELETE` that returns nothing. Throwing (sync or async) goes

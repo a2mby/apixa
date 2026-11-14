@@ -72,27 +72,30 @@ Every call then runs through `request/pipeline.ts`:
    operation < request.
 2. Resolve dynamic headers. Static, sync, and async providers run once per logical call and
    merge case-insensitively.
-3. Apply request key transforms (with optional `exclude` / `preserve` / `maxDepth`) to query and
-   body payloads before middleware runs, leaving `File` / `Blob` values untouched.
-4. Run unified `middleware` `onRequest` hooks (root → resource → operation, in array order). Request
-   middleware sees `request.query` and `request.body`; mutations to `request.query` or `request.url`
-   stay synchronized across live transport, mocks, URL serialization, and metadata.
-5. For HTTP only, check the final URL against the API origin after middleware. Any other
+3. Build the initial destination URL and apply `transforms.request` (with optional `exclude` /
+   `preserve` / `maxDepth`, plus live pagination `params` renaming) to `request.query`.
+4. Run unified `middleware.onRequest` hooks (root → resource → operation, in array order). Request
+   middleware sees the transformed `request.query` and the pre-transform `request.body`. After
+   hooks run, mutations to `request.url` and `request.query` are synchronized (`request.query` wins
+   on key conflicts) and re-serialized via `querySerializer` or `buildQueryString`.
+5. Apply `transforms.request` to `request.body` (leaving `File` / `Blob` values untouched), run
+   opt-in file/body validation (`ValidationError` before dispatch), and serialize the request body.
+6. For HTTP only, check the final URL against the API origin after middleware. Any other
    origin is a `SecurityError`, and nothing is sent.
-6. Execute. For HTTP, transport attempts run with retry, exponential backoff with jitter, and
+7. Execute. For HTTP, transport attempts run with retry, exponential backoff with jitter, and
    `Retry-After`. Middleware does not re-run on retries. For a mocked resource, the resolved
    builtin runs against its `MockStore`, custom declarative operations run their `mock` handler, or
    `ctx.request()` is routed by method and relative path. No transport is involved. Writes carrying
    `File` / `Blob` values first move them into the client's virtual file store (see "File handling");
    records keep string references.
-7. Run response processing in order (skipped for non-JSON `responseType`): preserve raw parsed
+8. Run response processing in order (skipped for non-JSON `responseType`): preserve raw parsed
    payload as `source`; on live paginated calls map the page envelope before transforming page rows
    (`TransformError` on cycles/depth/collisions), otherwise run `response.unwrap` and response key
    transforms; run `response.parse` on JSON responses, apply builtin shaping (`exists`, `getMany`,
    `findFirst`, `getAll`, `slice`, `ResponseShapeError` on invalid shapes), and run
    `response.validate` (`ValidationError` on non-`ApiError` throws).
-8. Run unified `middleware` `onResponse` hooks.
-9. Return the data, or the `ApiResponse` envelope (including `source`) when `{ full: true }` is passed.
+9. Run unified `middleware.onResponse` hooks with the processed `ApiResponse` (preserving `source`).
+10. Return the data, or the `ApiResponse` envelope (including `source`) when `{ full: true }` is passed.
 
 One controller per call combines the overall timeout and the caller's signal. A timeout covers
 retries and backoff, and is reported as `TimeoutError`, never as `AbortError`. On failure, error
@@ -185,7 +188,7 @@ Server -> Client payload. Unchanged by design: resource-wide mutation invalidati
 `invalidate` option), a stream held in the query cache is the app's to consume (Core's `timeout` bounds it), and flat
 reads through a hook are cached queries. Evidence: `tests/react/framework-files-*.test.tsx`, `query-identity-binary`,
 `ssr-binary-dehydrate`, the packed React 18/19 runtime (`scripts/file-consumer-runtime.mjs`) and the Chromium-driven
-`examples/frontends/query-ssr-next` `/files` scenario.
+`tests/fixtures/browser-next` `/files` scenario.
 
 ## File validation and safety (v1.4.0, implemented)
 
@@ -429,13 +432,10 @@ packages/mocking/          # datasets entry (lazy loadDataset + eager records), 
 packages/react/            # @apixa/react: native Query reads + separate Mutation writes, provider, QueryClient
 packages/internal/shared/  # private, never published: framework-neutral keys + operation classification
 datasets/                  # version-controlled JSON fixtures
-examples/
-  backends/laravel-backend/           # independent Laravel/PostgreSQL/MongoDB playground (no app endpoints)
-  frontends/query-ssr-next/           # maintained Next.js App Router example (prefetch, hydration, files)
-  frontends/next/                     # local, untracked Next.js playground
-  templates/{laravel,next,react}/     # empty starter placeholders
+templates/                 # postponed until stable API (templates/README.md only)
+manual-testing/            # local, gitignored manual-testing backends and frontends
 src/                       # the `apixa` facade: re-export entries only
-tests/                     # vitest — Core + mocking + react + facade + shared
+tests/                     # vitest (Core + mocking + react + facade + shared) and internal fixtures (`tests/fixtures/`)
 ```
 
 **Planned later (do not create yet):**

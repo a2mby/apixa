@@ -26,7 +26,7 @@ old file", sequence those steps yourself and make each step idempotent.
 ## 1. Normal upload and download
 
 ```ts
-const api = defineApi<{ users: { path: "/users"; entity: User } }>()({
+const api = defineApi<{ users: { entity: User } }>()({
   baseURL: "https://api.example.com",
   resources: { users: { path: "/users", fileFields: ["avatar"] } },
 });
@@ -89,7 +89,7 @@ differ (Chromium cannot observe upload progress without changing the wire, so Ap
 - **Never put streams in the TanStack cache.** A cached stream is replaced on refetch **without being
   cancelled** (cancelling a stream someone may still hold would make it read as an empty, successful
   download). For downloads that must stream, call the client directly
-  (`await api.files.download(id)`) as the tracked example does, and let `useResource` cache only
+  (`await api.files.download({ params: { id } })`) as the tracked example does, and let `useResource` cache only
   metadata. `dehydrate` omits `Blob`, `ArrayBuffer` and stream query data, so they never cross the
   Next.js server/client boundary.
 - **Flat reads are cached.** A second `useResource` read inside `staleTime` returns the cached
@@ -169,7 +169,7 @@ Backend-issued, temporary destinations only; signing and secrets stay on your se
   `[presigned destination]` in errors and logs (the signed query string is never exposed).
 - An S3-compatible multipart upload is a **multi-request session protocol** (initiate, presigned
   part URLs, ETags, complete), not HTTP `multipart/form-data`. The tracked
-  [S3 recipe](../../../examples/frontends/query-ssr-next/lib/advanced-transfer.ts) needs no AWS SDK. CORS must
+  [S3 recipe](../../../tests/helpers/s3-transfer.ts) needs no AWS SDK. CORS must
   expose `ETag`; expired URLs are renewed through the protocol's `renew` step.
 
 ## 7. Resource ownership and cleanup (checklist)

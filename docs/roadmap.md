@@ -35,8 +35,8 @@ Exact delivery evidence and frozen checkboxes live in each folder and in
 **Spec:** [versions/v3.0.0/](../versions/v3.0.0/) · [umbrella issue #112](https://github.com/a2mby/apixa/issues/112)
 
 Implemented and verified the approved breaking redesign across operations (13 builtins, derived HTTP
-kinds, `{ body }` write calls and `{ params }`), unified `middleware[]`, query/body serialization,
-response processing (`unwrap`, `parse`, `validate`, `source`), safe transforms, and opt-in per-operation
+kinds, `{ body }` write calls and `{ params }`), unified `middleware` hook objects (`{ onRequest?, onResponse?, onError? }`), query/body serialization,
+response processing (`unwrap`, `parse`, `validate`, `source`), safe transforms, and per-operation
 pagination, preserving existing advanced capabilities. Prepared and verified `apixa@3.0.0-rc.0` without
 publishing to npm.
 
@@ -54,7 +54,7 @@ package, version bump or npm release.
 
 **Spec:** [versions/v1.8.1/](../versions/v1.8.1/)
 
-Independent Laravel 13 backend environment at `examples/backends/laravel-backend/`: native PostgreSQL,
+Independent Laravel 13 backend environment (local PostgreSQL/MongoDB playground in gitignored `manual-testing/backends/laravel-backend/`; starter templates under `templates/` are postponed): native PostgreSQL,
 MongoDB documents, empty API routing, configurable built-in CORS, local storage, separate
 development/test/E2E environments, multi-worker local serving and production configuration
 guidance. The author owns all future APIs and business behavior. No SDK integration, Node
