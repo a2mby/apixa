@@ -28,14 +28,15 @@ See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) fo
 ### Added
 
 - **Query serialization config:** Client-wide `queryArrayFormat` (`"repeat"` | `"comma"` |
-  `"brackets"`) and `query` (`{ nulls, emptyArrays, booleans }`) with nested bracket encoding and
-  `SerializationError` on invalid values or depth > 64.
+  `"brackets"`), `query` (`{ nulls, emptyArrays, booleans }`), and `querySerializer` with nested
+  bracket encoding and `SerializationError` on invalid values or depth > 64.
 - **Response pipeline & `source` preservation:** Layered `response: { unwrap, parse, validate }`
   (with `false` opt-out per layer) and `ApiResponse.source` preserving raw parsed payloads.
 - **Transform guards & `TransformError`:** `KeyTransformConfig` (`exclude`, `preserve`, `maxDepth`)
   with cycle/collision/depth detection raising `TransformError`.
-- **Per-operation pagination:** `pagination` on `getAll`, `getMany`, and declarative custom reads
-  (including `pagination: false` shadowing resource-level pagination).
+- **Per-operation pagination:** `pagination` (`true`, `"page"`, `"cursor"`, preset shorthands, or
+  mapping objects) inherited by `getAll` (`pagination: false` opts out) and opt-in on `getMany` and
+  declarative custom operations, with complete page/cursor envelope validation.
 - **Root & Core type exports:** Exported `LayerOptions`, `QueryOptions`, `ResponseOptions`,
   `ResponseHookContext`, `ApiState`, `ApiStateOf`, `ResourceState`, `OperationState`,
   `PageResult`, `ResolvedPagination`, `PaginationMode`, `PaginationQueryOf`, `KeyTransformConfig`,

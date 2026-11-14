@@ -42,7 +42,7 @@ client. Verified on React 18.3.1 (TanStack 5.90.1) and React 19 against the pack
   `onTransfer`).
 - **Cancel.** Pass an `AbortController` signal in the call options. A caller's `signal` and TanStack's own query
   signal are combined for reads, so either one cancels. A call `timeout` surfaces `TimeoutError`.
-- **Reads through a hook are cached queries.** `users.download(id)` (a flat read) and `useResourceQuery` share
+- **Reads through a hook are cached queries.** `users.download({ params: { id } })` (a flat read) and `useResourceQuery` share
   TanStack's cache: a second call inside `staleTime` returns the cached `Blob` with no request and no transfer
   events. Use the direct client (or `staleTime: 0`) for a one-off download with progress.
 - **Errors.** `ValidationError` (typed `violations`), `HttpError` (with body), `AbortError`, `TimeoutError` and
@@ -58,7 +58,7 @@ client. Verified on React 18.3.1 (TanStack 5.90.1) and React 19 against the pack
 - **Next.js.** `dehydrate()` (from `apixa/react/advanced`) leaves out queries whose data is a `Blob`, `File`,
   `ArrayBuffer` or `ReadableStream` (a stream is single-use, bytes would bloat the page payload, and React 18 / older
   Next cannot serialize them); the client fetches those itself. A Server Component may read a binary result and pass
-  only plain values down. See `examples/frontends/query-ssr-next` (`/files`).
+  only plain values down. See `tests/fixtures/browser-next` (`/files`).
 
 ### `ApixaProvider` and `QueryClient`
 
@@ -160,21 +160,22 @@ const count = useResourceQuery(api.users, {
 });
 ```
 
-For a Core path like `/organizations/:orgId/users`, pass the actual generated signature: `getAll(orgId, options)` becomes `args: [orgId]`; a detail operation with multiple path parameters uses `args: [{ orgId, id }]`. Apixa adds an AbortSignal to built-in request options. For an overridden operation with a different signature, bind the exact tuple yourself:
+For a Core path like `/organizations/:orgId/users`, pass the actual generated signature: `getAll({ params: { orgId } })` becomes `args: [{ params: { orgId } }]`; a detail read takes `args: [id, { params: { orgId } }]`. Apixa adds an AbortSignal to built-in request options. For a function override with a different signature, bind the exact tuple yourself:
 
 ```tsx
 const users = useResourceQuery(api.users, {
   queryKey: ["users"],
   operation: "getAll",
   keyParts: [orgId, filters],
-  args: ({ signal }) => [orgId, { query: filters, signal }],
+  args: ({ signal }) => [{ params: { orgId }, query: filters, signal }],
 });
 ```
 
 An argument-builder function requires `keyParts`, since functions cannot be a safe cache identity.
 
-Custom operations are reads only when Core says so — never by name or HTTP verb. Mark them in
-`defineApi` (`kind` is required for every custom operation):
+Custom operations are reads only when Core says so — never by name or HTTP verb. Declarative HTTP
+operations derive `kind` from `method` (`GET`/`HEAD`/`OPTIONS` → `"read"`, explicit `kind`
+optional when consistent), while custom function operations require `{ kind, run }`:
 
 ```ts
 operations: {
@@ -357,7 +358,7 @@ Client components call the hooks with the same `queryKey` (and the same `infinit
 a shared module) under `ApixaProvider` (or `QueryClientProvider`); with a `staleTime` the hydrated data is used without
 an immediate refetch. The advanced entry is hook-free and server-safe; the main entry keeps
 `"use client"`. Native `queryClient.prefetchQuery(createResourceQueryOptions(...))` remains the
-escape hatch. A [working example](../../examples/frontends/query-ssr-next/) includes a production build.
+escape hatch. A [working SSR verification fixture](../../tests/fixtures/browser-next/) includes a production build.
 
 ## Cancellation, retries, and errors
 
@@ -378,7 +379,7 @@ const users = useResourceMutation(api.users, {
 
 await users.create(body);
 await users.update(id, { body });
-await users.archive(id);
+await users.archive(id); // custom function op taking id (declarative writes with hasBody: false take { params: { id } })
 await users.exportUser(id);
 
 users.create.isPending; // state directly on the callable operation
@@ -510,7 +511,7 @@ users.states.create.isPending;
 users.create.isPending; // this write — not the same as users.isPending (the list query)
 await users.prefetch({ operation: "getById", args: [id] });
 users.cache.get();
-await users.operations.archive(id); // guaranteed namespace
+await users.operations.archive(id); // guaranteed namespace (custom function op; declarative writes without body take { params: { id } })
 ```
 
 `query: { infinite: { … } }` gives the facade the infinite result (`fetchNextPage`, `pages`, …)
@@ -615,7 +616,7 @@ saveCheckpoint }` in the operation's normal call options. UI progress and durabl
 to the application; there is no new transfer hook. `onTransfer` still describes individual request
 attempts. Invalidate after final confirmed success; do not configure whole-mutation retry to blindly
 create a new upload session. Interrupted work resumes with a reacquired source and a checkpoint,
-which Core reconciles with the server. See the [tracked Next example](../../examples/frontends/query-ssr-next/app/files/advanced-transfers.tsx).
+which Core reconciles with the server. See the [verified browser fixture](../../tests/fixtures/browser-next/app/files/advanced-transfers.tsx).
 
 Controls/callbacks are excluded from automatic query identities. Presigned downloads through queries
 require explicit nonsecret `keyParts`; never use the signed URL as a cache key or SSR prop. Existing

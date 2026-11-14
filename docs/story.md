@@ -2,6 +2,13 @@
 
 Project log. Newest entry first.
 
+## 2026-11-14 — Align v3 documentation and READMEs with runtime
+
+Updated `packages/{core,mocking,react}/README.md`, `CHANGELOG.md`, living docs, and human guides
+under `v3.0.0` to match the implemented middleware hook objects, query serialization, response
+pipeline, and pagination contracts, removing stale v2 signatures and pointing fixture links to
+`tests/fixtures/` and `templates/README.md`.
+
 ## 2026-11-14 — Postpone templates and move verification fixtures into tests
 
 Retired tracked `examples/`, reduced `templates/` to [templates/README.md](../templates/README.md) until

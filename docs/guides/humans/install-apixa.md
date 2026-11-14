@@ -1,6 +1,7 @@
 # Install and choose an entry point
 
-The published release candidate is `apixa@1.0.0-rc.0` (npm `latest` and `next`). Install it with:
+The current published `latest` release on npm is `apixa@2.0.0` (with `3.0.0-rc.0` prepared in
+this repository). Install it with:
 
 ```sh
 npm install apixa

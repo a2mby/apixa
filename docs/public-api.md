@@ -136,20 +136,22 @@ query/body serialization, response processing, transforms, middleware and per-op
 - **13 built-in operations**: Removed `getBySlug`, `upsert`, and `search` from the default builtin set
   (and `OPERATION_METADATA`); kept `getAll`, `getById`, `getMany`, `getBy`, `findFirst`, `count`,
   `exists` (7 reads) and `create`, `update`, `patch`, `delete`, `createMany`, `deleteMany` (6 writes).
-  Removed deprecated `bulkCreate` / `bulkDelete` / `createBulk` / `deleteBulk` aliases and boolean
-  resource `pagination: true`.
+  Removed deprecated `bulkCreate` / `bulkDelete` / `createBulk` / `deleteBulk` aliases.
 - **Operation calls & definitions**: Standardized `update(id, { body, ...options })` and
   `patch(id, { body, ...options })`, resource/call `{ params }` for path parameters, declarative
   custom operations (`hasBody: false` reads take `(options?)`, body writes take `(body?, options?)`),
   and HTTP-method-derived `kind` for declarative operations.
 - **Unified middleware**: Replaced `requestMiddleware` / `responseMiddleware` arrays with unified
   `middleware: MiddlewareHooks` (`{ onRequest?, onResponse?, onError? }` arrays composed root →
-  resource → operation), where request middleware runs before final query serialization and accepts
-  `(request)` / `(response)` / `(error, { request, replay })`.
+  resource → operation), where `onRequest` sees `request.query` already key-transformed before final
+  URL/query serialization and body transforms, `onResponse` runs after `response` processing with
+  `source` intact, and hooks accept `(request)` / `(response)` / `(error, { request, replay })`.
 - **Serialization, responses & pagination**: Added client-wide `query` (`nulls`, `emptyArrays`,
   `booleans`) alongside `queryArrayFormat` and `querySerializer`, strict JSON/explicit `responseType`,
   `response` (`unwrap`, `parse`, `validate`, `source`), bounded/excluded `transforms` (`TransformError`
-  on cycle/depth/collision), and opt-in per-operation `pagination` on `getAll` with live/mock parity.
+  on cycle/depth/collision), and `pagination` (`true`, `"page"`, `"cursor"`, preset shorthands, or
+  mapping objects) inherited by `getAll` (`false` opts out) and opt-in per operation on `getMany`
+  and declarative custom operations with full envelope validation and live/mock parity.
   `slice` now uses native array semantics and rejects configuration alongside `pagination`.
 - Validation counts each occurrence of a shared object (a plain object reachable twice is serialized twice, so its files
   count twice); previously the second occurrence was skipped, which under-counted `maxFiles` / `maxTotalSize`.
