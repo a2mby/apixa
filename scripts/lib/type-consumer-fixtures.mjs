@@ -90,6 +90,29 @@ const core = defineCore({ baseURL: "https://example.test", resources: { u: { pat
 void core;
 void defineMockApi;
 export async function main() {
+  const lookupApi = defineApi<{ products: { entity: { id: number; slug: string; nickname?: string; settings: object } } }>()({
+    baseURL: "https://example.test", resources: { products: { path: "/products" } },
+  });
+  await lookupApi.products.getBy("id", 42);
+  await lookupApi.products.getBy("slug", "macbook");
+  await lookupApi.products.getBy("nickname", "Mac");
+  // @ts-expect-error lookup values correlate with their selected field
+  await lookupApi.products.getBy("id", "incorrect");
+  // @ts-expect-error lookup values correlate with their selected field
+  await lookupApi.products.getBy("slug", 42);
+  // @ts-expect-error structured fields are not lookup keys
+  await lookupApi.products.getBy("settings", {});
+  const parsedApi = defineApi({ baseURL: "https://example.test", resources: { rows: { path: "/rows", operations: {
+    findFirst: { response: { parse: () => [{ id: 1, label: "parsed" }] } },
+    exists: { response: { parse: () => [] } },
+  } } } });
+  const parsedFirst = await parsedApi.rows.findFirst({ full: true });
+  type _parsedFirst = Assert<Equal<typeof parsedFirst.data, { id: number; label: string } | null>>;
+  const parsedExists = await parsedApi.rows.exists(1);
+  type _parsedExists = Assert<Equal<typeof parsedExists, boolean>>;
+  // @ts-expect-error final findFirst result is not an intermediate array
+  const incorrectFirst: { id: number; label: string }[] = parsedFirst.data;
+  void incorrectFirst;
   const list = await api.users.getAll();
   type _list = Assert<Equal<typeof list, User[]>>;
   const one = await api.users.getById("1");

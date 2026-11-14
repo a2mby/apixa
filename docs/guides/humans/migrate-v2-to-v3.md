@@ -236,3 +236,13 @@ const page = await api.users.getAll({ query: { page: 2, pageSize: 25 } });
 
 - Operation-level `pagination` cleanly shadows resource-level `pagination` (setting `pagination: false` on an operation opts it out of resource pagination).
 - `slice` uses strict `Array.prototype.slice` semantics on client-side lists and now throws `ConfigError` if combined with `pagination`.
+
+## Final v3 contract stabilization
+
+- Pagination shorthand (`true`, `"page"`, `"cursor"`) now validates complete envelopes, just like mapped configurations. `parseList` outputs and final parser/validator results are checked too. Page metadata uses integers (`total >= 0`, `page >= 1`, `pageSize >= 1`); cursor metadata requires `nextCursor: string | null`. Empty/out-of-range pages remain valid. Existing presets and operation overrides remain supported.
+- Live parsers receive the decoded, unwrapped/transformed HTTP payload before builtin shaping. Mocks already produce logical values (`findFirst`: entity/null, `exists`: boolean); their parsers receive those values. Write shared parsers to handle the appropriate input. Mock data does not need backend envelope unwrapping or backend pagination mappings. Both paths check final builtin shapes after parsers and validators; non-JSON and advanced-transfer responses retain their existing paths.
+- TypeScript infers `findFirst` and `getBy` as entity-or-null after shaping, `exists` as boolean, and `count` as number. Collection and entity parser transformations remain typed; `{ full: true }` wraps the final result. Explicit operation metadata continues to take precedence over inferred parser types.
+- Known `getBy` fields correlate with their value types: `getBy("id", 42)` and `getBy("slug", "macbook")`. Optional string/number fields require defined values. Structured, boolean, Date and other non-string/number fields are excluded; model an explicit custom operation for those lookups. Untyped resources retain string fields and string/number values. Union fields accept the corresponding union of value types.
+- Comma arrays are ambiguous when elements contain commas: `["a,b", "c"]` and `["a", "b,c"]` serialize identically. Prefer `repeat` or `brackets` in that case. Query bracket keys are percent-encoded; structured array elements use indexed bracket notation.
+
+This is release-candidate stabilization. A merged PR, local verification and stable npm publication are separate events; no publication is performed by this work.

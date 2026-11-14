@@ -131,7 +131,9 @@ const api = defineApi({
 - `queryArrayFormat` (`"repeat"` | `"comma"` | `"brackets"`) and `query`
   (`{ nulls?: "omit" | "empty" | "null", emptyArrays?: "omit" | "empty", booleans?: "string" | "number" }`)
   configure query string serialization client-wide on `defineApi`. Nested plain objects serialize with
-  bracket notation; circular, non-finite numbers, symbols, functions, or depth > 64 throw `SerializationError`.
+  bracket notation with percent-encoded brackets; circular, non-finite numbers, symbols, functions, or depth > 64 throw `SerializationError`.
+  Comma format joins values before encoding: `["a,b", "c"]` and `["a", "b,c"]` produce the same value.
+  Use `repeat` or `brackets` when values may contain commas; nested arrays/objects use indexed brackets instead of comma joining.
 - `retry: 2` is shorthand for `{ retries: 2 }`. By default only `GET`, `HEAD`, and `OPTIONS` are
   retried. Writes need an explicit `methods` entry. A `Retry-After` longer than `maxDelayMs`
   stops retrying. `timeout` is one budget for the whole call, including backoff.
@@ -150,7 +152,7 @@ const api = defineApi({
   `request.query` or `request.url` stay synchronized across transport, mocks, URLs, and response/error
   `request` metadata.
 - `getMany`, `findFirst`, and unpaginated `getAll` expect an array response; configured `pagination`
-  expects an object (use `pagination` or a custom read operation for object/envelope list responses).
+  expects a complete page/cursor envelope (use configured pagination for envelope list responses).
   Invalid shapes raise `ResponseShapeError`, whose `data` and `response` retain the parsed source
   and response details; an empty array is valid.
 - An operation whose body type is unknown (e.g. a custom POST) may be called without a body.
@@ -172,22 +174,25 @@ const api = defineApi({
   - `findFirst` and `count` match flat fields by string equality.
   - `createMany` is atomic; `deleteMany` ignores missing IDs.
 - Overridden builtin paths keep their builtin semantics.
-- `ctx.request()` and declarative custom operations with no `mock` handler are routed by method and
-  path relative to the resource. Anything else throws `MockError` with code `MOCK_UNSUPPORTED`. No
-  request is ever sent.
+- Function-operation `ctx.request()` calls are routed by method and path relative to the resource.
+  Declarative custom operations require their own `mock` handler; missing behavior throws `MockError`
+  with code `MOCK_UNSUPPORTED`. No request is ever sent.
 - Each client has its own stores. `resetMock(api.users)` or `resetMock(api)` restores the
   seeded state.
 - `pagination` is one contract for live and mocked resources: `{ data, total, page, pageSize }`
   or `{ data, nextCursor }`. It can be configured at the resource level or per list operation
   (`getAll`, `getMany`, declarative custom reads); operation-level `pagination: false` opts out of
   resource pagination. The mock engine produces the page envelope. For a live resource the string form
-  (`"page"` / `"cursor"`) declares that the server already returns it (types only, body
-  untouched). To map a backend's own shape, use an object: `{ type, preset }` (`laravel`, `laravel-paginator`, `strapi`, `payload`, `nestjs`),
+  (`"page"` / `"cursor"`, or `true` for page mode) validates that the server already returns it,
+  preserving extension metadata. To map a backend's own shape, use an object: `{ type, preset }` (`laravel`, `laravel-paginator`, `strapi`, `payload`, `nestjs`),
   `{ type, fields, params }` (dot paths for response fields; `params` renames the `page` /
   `pageSize` / `cursor` query keys), or `{ type, parseList(body, { status }) }` which wins over
   both. Fields are declared, never guessed; a missing or wrong-typed mapped field throws
   `ParseError`. The mapping runs on live calls before response key transforms (which
-  then apply to the rows).
+  then apply to the rows). Shorthand, mappings and callback outputs all require a data array;
+  page envelopes require integer `total >= 0`, `page >= 1`, `pageSize >= 1`, and cursor envelopes require
+  `nextCursor` to be a string or null. Empty and out-of-range pages are valid. Final envelopes are
+  checked again after response parsers/validators on both live and mock calls.
   Import the types from `apixa`: `Page<T>`, `CursorPage<T>`, `PageResult<T>`, `ResolvedPagination`,
   `PaginationMode`, `PaginationQueryOf`, `ResourcePagination`, `PaginationPreset`, `PaginationFields`,
   and `PaginationParams`.

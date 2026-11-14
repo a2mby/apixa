@@ -132,3 +132,43 @@ describe("resource identity", () => {
     }
   });
 });
+
+describe("correlated lookup fields", () => {
+  it("correlates literal, optional and union fields and excludes structured values", async () => {
+    type Entity = {
+      id: number;
+      slug: string;
+      nickname?: string;
+      settings: { private: boolean };
+      active: boolean;
+    };
+    const api = defineApi<{ products: { entity: Entity } }>()({
+      baseURL: "https://example.com",
+      transport: createFakeTransport(() => ({
+        body: { id: 42, slug: "macbook", active: true, settings: { private: false } },
+      })),
+      resources: { products: { path: "/products" } },
+    });
+    await api.products.getBy("id", 42);
+    await api.products.getBy("slug", "macbook");
+    await api.products.getBy("nickname", "Mac");
+    const field: "id" | "slug" = Math.random() > 0.5 ? "id" : "slug";
+    await api.products.getBy(field, field === "id" ? 42 : "macbook");
+    expectTypeOf(await api.products.getBy("id", 42)).toEqualTypeOf<Entity | null>();
+    expectTypeOf(
+      (await api.products.getBy("id", 42, { full: true })).data,
+    ).toEqualTypeOf<Entity | null>();
+    if (false as boolean) {
+      // @ts-expect-error id values are numeric
+      api.products.getBy("id", "incorrect");
+      // @ts-expect-error slug values are strings
+      api.products.getBy("slug", 42);
+      // @ts-expect-error optional fields require a defined lookup value
+      api.products.getBy("nickname", undefined);
+      // @ts-expect-error structured entity properties are not scalar lookup fields
+      api.products.getBy("settings", { private: true });
+      // @ts-expect-error boolean fields are excluded from the string/number lookup contract
+      api.products.getBy("active", true);
+    }
+  });
+});

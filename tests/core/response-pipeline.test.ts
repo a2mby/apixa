@@ -735,3 +735,157 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
     });
   });
 });
+
+describe("final builtin contracts on live and normalized mocks", () => {
+  it.each([false, true])("rejects malformed parsed builtin results (mock=%s)", async (mocked) => {
+    const api = defineApi({
+      baseURL: "https://example.com",
+      transport: createFakeTransport((req) => ({
+        body: req.url.endsWith("/count") ? 1 : [{ id: 1 }],
+      })),
+      resources: {
+        users: {
+          path: "/users",
+          ...(mocked ? { mock: [{ id: 1 }] } : {}),
+          response: { parse: () => "invalid" },
+        },
+      },
+    });
+    for (const call of [
+      () => api.users.getAll(),
+      () => api.users.getMany([1]),
+      () => api.users.findFirst(),
+      () => api.users.getBy("id", 1),
+      () => api.users.getById(1),
+      () => api.users.count(),
+    ]) {
+      await expect(call()).rejects.toBeInstanceOf(ResponseShapeError);
+    }
+    // Live exists is status-based; mock exists must remain boolean even after parsing.
+    if (mocked) await expect(api.users.exists(1)).rejects.toBeInstanceOf(ResponseShapeError);
+  });
+  it.each([false, true])(
+    "validates replacements returned by response.validate (mock=%s)",
+    async (mocked) => {
+      const api = defineApi({
+        baseURL: "https://example.com",
+        transport: createFakeTransport(() => ({ body: [{ id: 1 }] })),
+        resources: {
+          users: {
+            path: "/users",
+            ...(mocked ? { mock: [{ id: 1 }] } : {}),
+            response: { validate: () => ({ invalid: true }) },
+          },
+        },
+      });
+      await expect(api.users.getAll()).rejects.toBeInstanceOf(ResponseShapeError);
+    },
+  );
+  it("preserves already-shaped mock scalars and entities without double shaping", async () => {
+    const api = defineApi({
+      baseURL: "/api",
+      response: { parse: async (data) => data, validate: async () => undefined },
+      resources: {
+        users: { path: "/users", mock: [{ id: 1, name: "Ada" }] },
+      },
+    });
+    expect(await api.users.exists(1)).toBe(true);
+    expect(await api.users.count()).toBe(1);
+    expect(await api.users.findFirst()).toEqual({ id: 1, name: "Ada" });
+    expect(await api.users.findFirst({ query: { name: "Missing" } })).toBeNull();
+    const full = await api.users.getAll({ full: true });
+    expect(full.data).toEqual(full.source);
+  });
+});
+
+describe("write response contracts", () => {
+  it.each([false, true])(
+    "rejects malformed parsed create/update/patch/bulk results (mock=%s)",
+    async (mocked) => {
+      const api = defineApi({
+        baseURL: "https://example.com",
+        transport: createFakeTransport(() => ({ body: { id: 1 } })),
+        resources: {
+          users: {
+            path: "/users",
+            ...(mocked ? { mock: [{ id: 1, name: "Ada" }] } : {}),
+            response: { parse: () => "invalid" },
+          },
+        },
+      });
+      for (const call of [
+        () => api.users.create({ name: "Grace" }),
+        () => api.users.update(1, { body: { name: "Grace" } }),
+        () => api.users.patch(1, { body: { name: "Grace" } }),
+        () => api.users.createMany([{ name: "Grace" }]),
+      ]) {
+        await expect(call()).rejects.toBeInstanceOf(ResponseShapeError);
+      }
+    },
+  );
+});
+
+describe("inherited response stages on normalized mocks", () => {
+  it.each([false, true])(
+    "preserves unwrap/parse/validate, source and middleware (mock=%s)",
+    async (mocked) => {
+      const calls: string[] = [];
+      const api = defineApi({
+        baseURL: "https://example.com",
+        transport: createFakeTransport(() => ({ body: { data: [{ id: 1, name: "Ada" }] } })),
+        response: {
+          unwrap: "data",
+          parse: async (data) => {
+            calls.push("parse");
+            return data;
+          },
+          validate: async () => {
+            calls.push("validate");
+          },
+        },
+        middleware: {
+          onResponse: [
+            (response) => {
+              calls.push("middleware");
+              return response;
+            },
+          ],
+          onError: [
+            () => {
+              calls.push("error");
+            },
+          ],
+        },
+        resources: {
+          users: { path: "/users", ...(mocked ? { mock: [{ id: 1, name: "Ada" }] } : {}) },
+        },
+      });
+      const full = await api.users.getAll({ full: true });
+      expect(full.data).toEqual([{ id: 1, name: "Ada" }]);
+      expect(full.source).toEqual(
+        mocked ? [{ id: 1, name: "Ada" }] : { data: [{ id: 1, name: "Ada" }] },
+      );
+      expect(calls).toEqual(["parse", "validate", "middleware"]);
+    },
+  );
+  it("routes final contract failures through error recovery with original source", async () => {
+    let source: unknown;
+    const api = defineApi({
+      baseURL: "/api",
+      response: { parse: () => ({ bad: true }) },
+      middleware: {
+        onError: [
+          (error) => {
+            source = (error as ResponseShapeError).response?.source;
+            return [];
+          },
+        ],
+      },
+      resources: {
+        users: { path: "/users", mock: [{ id: 1 }] },
+      },
+    });
+    expect(await api.users.getAll()).toEqual([]);
+    expect(source).toEqual([{ id: 1 }]);
+  });
+});

@@ -401,6 +401,32 @@ function builtinOperation(
   run: (call: CallInput) => Promise<unknown>,
   ctx: BuiltinContext,
 ): Fn {
+  // Mocks already supply logical results; validate those without repeating HTTP shaping.
+  const execute = run;
+  run = (call) =>
+    execute({
+      ...call,
+      checkResult: (data, status, response) => {
+        if (name === "getAll" || name === "getMany" || name === "createMany") {
+          toArray(data, response);
+          return;
+        }
+        if (name === "delete" || name === "deleteMany") return;
+        const valid =
+          name === "exists"
+            ? typeof data === "boolean"
+            : name === "count"
+              ? typeof data === "number" && Number.isFinite(data)
+              : isRecord(data) ||
+                (data === null &&
+                  (name === "getBy" || name === "findFirst" || status === 204 || status === 205));
+        if (!valid)
+          throw new ResponseShapeError(
+            `${response.request.resource}.${name}: invalid final ${name} response.`,
+            { status, data: response.data, response },
+          );
+      },
+    });
   const paramNames = extractPathParamNames(op.path);
   const idParam = paramNames.find((p) => !ctx.resourceParamNames.includes(p));
   const keyName = (field: string) =>
