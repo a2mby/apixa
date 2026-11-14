@@ -140,3 +140,83 @@ describe("resource client TypeScript surface", () => {
       .toMatchTypeOf<{ query?: { q: string } } | undefined>();
   });
 });
+
+describe("final parsed builtin return types", () => {
+  it("infers shaped entities/scalars and full responses rather than intermediate arrays", async () => {
+    const row = { id: 1, display: "Ada" };
+    const api = defineApi({
+      baseURL: "https://example.com",
+      transport: createFakeTransport(() => ({ body: [] })),
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            findFirst: { response: { parse: async () => [row] } },
+            getBy: { response: { parse: () => [row] } },
+            getAll: { response: { parse: () => [row] } },
+            getById: { response: { parse: () => row } },
+            count: { response: { parse: () => 3 } },
+            exists: { response: { parse: () => [row] } },
+          },
+        },
+        unrelated: { path: "/other", mock: [{ id: "other" }] },
+      },
+    });
+    const first = await api.users.findFirst();
+    expectTypeOf(first).toEqualTypeOf<typeof row | null>();
+    expect(first).toEqual(row);
+    const full = await api.users.findFirst({ full: true });
+    expectTypeOf(full.data).toEqualTypeOf<typeof row | null>();
+    const lookup = await api.users.getBy("id", 1);
+    expectTypeOf(lookup).toEqualTypeOf<typeof row | null>();
+    expectTypeOf(await api.users.getAll()).toEqualTypeOf<(typeof row)[]>();
+    expectTypeOf(await api.users.getById(1)).toEqualTypeOf<typeof row>();
+    expectTypeOf(await api.users.count()).toEqualTypeOf<number>();
+    expectTypeOf(await api.users.exists(1)).toEqualTypeOf<boolean>();
+    expectTypeOf(await api.unrelated.getAll()).toEqualTypeOf<{ id: string }[]>();
+    if (false as boolean) {
+      // @ts-expect-error findFirst is not an array operation
+      const wrong: (typeof row)[] = await api.users.findFirst();
+      void wrong;
+    }
+  });
+  it("infers inherited parser transformations and respects parser opt-out", async () => {
+    const row = { id: 1, display: "Ada" };
+    const api = defineApi({
+      baseURL: "https://example.com",
+      transport: createFakeTransport(() => ({ body: [] })),
+      response: { parse: () => [row] },
+      resources: {
+        users: { path: "/users", operations: { custom: { method: "GET" } } },
+        disabled: { path: "/disabled", response: { parse: false } },
+      },
+    });
+    expectTypeOf(await api.users.findFirst()).toEqualTypeOf<typeof row | null>();
+    expectTypeOf(await api.users.getAll()).toEqualTypeOf<(typeof row)[]>();
+    expectTypeOf(await api.disabled.getAll()).toEqualTypeOf<unknown[]>();
+    expectTypeOf(await api.users.custom()).toEqualTypeOf<(typeof row)[]>();
+  });
+});
+
+describe("impossible parsed builtin shapes", () => {
+  it("does not promise object collections or array entities from invalid parser outputs", () => {
+    const api = defineApi({
+      baseURL: "/api",
+      resources: {
+        users: {
+          path: "/users",
+          operations: {
+            getAll: { response: { parse: () => ({ data: [] }) } },
+            getById: { response: { parse: () => [{ id: 1 }] } },
+            createMany: { response: { parse: () => ({ data: [] }) } },
+          },
+        },
+      },
+    });
+    if (false as boolean) {
+      expectTypeOf(api.users.getAll()).resolves.toBeNever();
+      expectTypeOf(api.users.getById(1)).resolves.toBeNever();
+      expectTypeOf(api.users.createMany([])).resolves.toBeNever();
+    }
+  });
+});

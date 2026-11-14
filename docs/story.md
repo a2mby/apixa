@@ -2,6 +2,15 @@
 
 Project log. Newest entry first.
 
+## 2026-11-14 — Stabilize final v3 result contracts
+
+Issue #121 completes pagination envelope checks and enforces final builtin shapes on live and
+normalized mock responses without double shaping. Parser inference follows builtin results,
+getBy values correlate with scalar entity fields, and migration guidance records the tightened
+contracts. Local `pnpm verify` passes (1,699 Vitest tests, 21 AI tests, 62/62 type consumers,
+browser/SSR and both Edge runtimes). The tarball dry run succeeds, but `verify:publish` is blocked
+by unavailable npm authentication; Node 22/24 CI is pending. No merge or publication is authorized.
+
 ## 2026-11-14 — Align list metadata with strict collection responses
 
 Restricted builtin list inference to array-shaped metadata, falling back to the entity array

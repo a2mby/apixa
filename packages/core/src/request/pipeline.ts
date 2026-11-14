@@ -73,6 +73,7 @@ import type { ResolvedRetryConfig } from "../types/retry.js";
 import type { KeyTransformConfig } from "../types/transform.js";
 import {
   renamePaginationQuery,
+  validatePageResult,
   type PageResult,
   type ResolvedPagination,
 } from "../api/pagination.js";
@@ -218,6 +219,8 @@ export interface CallInput {
    * middleware). Mocked builtins already return their final shape and skip this.
    */
   fromHttp?: (data: unknown, status: number, response: ApiResponse<unknown>) => unknown;
+  /** Validate the final logical result on both live and normalized mock paths. */
+  checkResult?: (data: unknown, status: number, response: ApiResponse<unknown>) => void;
   /** Response shaping for both HTTP and mock (e.g. `slice` on `getAll`), before response middleware. */
   shape?: (data: unknown) => unknown;
   /** Map a live list response to the page contract (before response key transforms). */
@@ -1069,6 +1072,14 @@ export async function runOperation(
               response: sourceResponse,
               cause: err,
             });
+          }
+        }
+        if (isJsonLike) {
+          if (call.paginated) {
+            const mode = op.pagination?.mode ?? resource.pagination;
+            if (mode) validatePageResult(data, mode, resource.name, op.name);
+          } else {
+            call.checkResult?.(data, status, sourceResponse);
           }
         }
       } catch (err) {

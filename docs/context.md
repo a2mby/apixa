@@ -122,7 +122,7 @@ const api = defineApi<AppApi>()({
 });
 
 await api.users.exists("123"); // built in, no operations entry needed
-await api.users.getBy("username", "ada"); // general lookup by any field
+await api.users.getBy("username", "ada"); // lookup by a string/number entity field
 await api.users.archive("123"); // fully custom operation
 ```
 
@@ -132,7 +132,7 @@ See the full table in [`docs/conventions.md`](./conventions.md#operation-customi
 overrides reflected in TypeScript, `createMany` / `deleteMany` replacing the old bulk names,
 independent `exists` / `findFirst` / `getMany` / `getBy` execution, `{ body }` write signatures for
 `update` / `patch`, `{ params }` for path parameters, derived HTTP kinds for declarative operations,
-unified `middleware[]` hooks (`onRequest` / `onResponse` / `onError`), structured `query` serialization,
+unified `middleware: { onRequest: [], onResponse: [], onError: [] }` hooks, structured `query` serialization,
 explicit `response` processing (`unwrap` / `parse` / `validate` / `source`), bounded/excluded
 `transforms`, and unified per-operation `pagination` with live/mock parity. TanStack's list hook
 supports resources with disabled detail and mutation methods.

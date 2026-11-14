@@ -131,6 +131,7 @@ export interface RootTypes {
   requestKeys: KeyCase | undefined;
   responseKeys: KeyCase | undefined;
   responseTransform?: KeyTransformConfig | undefined;
+  responseParser?: unknown;
 }
 
 type KeysOf<C, Dir extends "request" | "response"> = C extends {
@@ -149,6 +150,7 @@ export type RootTypesOf<Config> = {
   requestKeys: KeysOf<Config, "request">;
   responseKeys: KeysOf<Config, "response">;
   responseTransform: TransformRuleOf<Config, "response">;
+  responseParser: Config extends { response: { parse: infer P } } ? P : never;
 };
 
 type ResponseKeys<R, Root extends RootTypes> =
@@ -375,11 +377,17 @@ type DefaultFilter<R, Meta, Root extends RootTypes> =
       : QueryParams
     : QueryParams;
 
-/** Lookup field for `getBy`: public entity key when known, else string. */
+/** Lookup field for `getBy`: string/number entity keys when known, else string. */
 type LookupFieldOf<R, Meta, Root extends RootTypes> =
   EntityOf<R, Meta, Root> extends infer E
     ? Known<E> extends true
-      ? Extract<keyof E, string>
+      ? {
+          [K in Extract<keyof E, string>]-?: NonNullable<E[K]> extends string | number
+            ? [NonNullable<E[K]>] extends [never]
+              ? never
+              : K
+            : never;
+        }[Extract<keyof E, string>]
       : string
     : string;
 
@@ -495,18 +503,54 @@ type SanitizeRuntimeOp<Op> = [Op] extends [never]
       ? Omit<Op, "response">
       : Op;
 
+/** Parser output is intermediate: builtin HTTP shaping determines the public result. */
+type ParsedEntity<T> = T extends readonly unknown[] ? never : Extract<T, object | null>;
+type ParsedBuiltinResult<Name, T, Mode> = Name extends "exists"
+  ? boolean
+  : Name extends "count"
+    ? number
+    : Name extends "delete" | "deleteMany"
+      ? void
+      : Name extends "findFirst" | "getBy"
+        ? (T extends readonly (infer Item)[] ? ParsedEntity<Item> : ParsedEntity<T>) | null
+        : Name extends "getAll" | "getMany"
+          ? Mode extends "page" | "cursor"
+            ? WrapPaginated<Extract<T, readonly unknown[] | { data: readonly unknown[] }>, Mode>
+            : Extract<T, readonly unknown[]>
+          : Name extends "createMany"
+            ? Extract<T, readonly unknown[]>
+            : Name extends "getById" | "create" | "update" | "patch"
+              ? ParsedEntity<T>
+              : T;
+
+type InheritedParser<R, Op, Root extends RootTypes> = [Op] extends [never]
+  ? InheritedParser<R, {}, Root>
+  : Op extends { response: { parse: unknown } }
+    ? Op
+    : R extends { response: { parse: infer P } }
+      ? { response: { parse: P } }
+      : { response: { parse: Root["responseParser"] } };
+
 /** A literal `response.parse` function overrides the inferred `response` type unless metadata sets it. */
-type ApplyResponseParser<Op, RawOp = Op> = [RawOp] extends [never]
+type ApplyResponseParser<Op, RawOp = Op, Name = never, Mode = undefined> = Op extends {
+  responseType: BinaryResponseType;
+}
   ? Op
-  : RawOp extends {
-        response: { parse: (...args: never[]) => infer R };
-      }
-    ? [R] extends [void | undefined]
-      ? Op
-      : unknown extends R
+  : [RawOp] extends [never]
+    ? Op
+    : RawOp extends {
+          response: { parse: (...args: never[]) => infer R };
+        }
+      ? [R] extends [void | undefined]
         ? Op
-        : Omit<Op, "response"> & { response: Awaited<R> }
-    : Op;
+        : unknown extends R
+          ? Op
+          : Omit<Op, "response"> & {
+              response: [Name] extends [never]
+                ? Awaited<R>
+                : ParsedBuiltinResult<Name, Awaited<R>, Mode>;
+            }
+      : Op;
 
 /** Data type for one call: a literal non-JSON per-call `responseType` replaces `Data`. */
 type CallData<Data, O> = O extends { responseType: infer RT extends ResponseType }
@@ -662,7 +706,9 @@ type EffectiveOpDef<
               >
             >
           >,
-          Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+          InheritedParser<R, RuntimeOperation<R, Name>, Root>,
+          Name,
+          GetAllPagination<R>
         >,
         Meta,
         Name,
@@ -679,7 +725,8 @@ type EffectiveOpDef<
             SanitizeRuntimeOp<Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never>
           >
         >,
-        Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+        InheritedParser<R, RuntimeOperation<R, Name>, Root>,
+        Name
       >,
       Meta,
       Name,
@@ -692,17 +739,32 @@ type RuntimeOperation<R, Name extends string> = Name extends keyof ResourceOpsOf
 
 type ResourceParamName<R> = PathParamName<ResourcePathOf<R>>;
 
+type LookupValue<R, Meta, Root extends RootTypes, K extends string> =
+  EntityOf<R, Meta, Root> extends infer E
+    ? Known<E> extends true
+      ? K extends keyof E
+        ? NonNullable<E[K]>
+        : never
+      : string | number
+    : string | number;
+
 type GetByCall<
   R,
   Meta,
   Root extends RootTypes,
   Op = EffectiveOpDef<"getBy", R, Meta, Root>,
-> = CallWithOptions<
-  [field: LookupFieldOf<R, Meta, Root>, value: string | number],
-  Exclude<PathParamName<FullPath<R, "getBy", Op>>, "field" | "value">,
-  InferQuery<Op>,
-  InferResponse<Op>
->;
+  Params extends string = Exclude<PathParamName<FullPath<R, "getBy", Op>>, "field" | "value">,
+> = <
+  K extends LookupFieldOf<R, Meta, Root>,
+  O extends RequestOptions<InferQuery<Op>> &
+    ([Params] extends [never] ? {} : { params: { [P in Params]: string | number } }) =
+    RequestOptions<InferQuery<Op>> &
+      ([Params] extends [never] ? {} : { params: { [P in Params]: string | number } }),
+>(
+  field: K,
+  value: LookupValue<R, Meta, Root, NoInfer<K>>,
+  ...options: [Params] extends [never] ? [options?: O] : [options: O]
+) => Promise<CallResult<InferResponse<Op>, O>>;
 
 type SpecialResponse<Name extends string, R, Meta, Root extends RootTypes, Default> =
   ApplyPayload<
@@ -712,7 +774,9 @@ type SpecialResponse<Name extends string, R, Meta, Root extends RootTypes, Defau
           [RuntimeOperation<R, Name>] extends [never] ? {} : RuntimeOperation<R, Name>
         >
       >,
-      [RuntimeOperation<R, Name>] extends [never] ? {} : RuntimeOperation<R, Name>
+      InheritedParser<R, RuntimeOperation<R, Name>, Root>,
+      Name,
+      OptInPagination<R, RuntimeOperation<R, Name>>
     >,
     Meta,
     Name,
@@ -881,7 +945,7 @@ type CustomClientFn<R, Meta, Root extends RootTypes, Name extends CustomOpName<R
         ApplyPayload<
           ApplyResponseParser<
             ApplyResponseType<SanitizeRuntimeOp<ResourceOpsOf<R>[Name]>>,
-            ResourceOpsOf<R>[Name]
+            InheritedParser<R, ResourceOpsOf<R>[Name], Root>
           >,
           Meta,
           Extract<Name, string>,

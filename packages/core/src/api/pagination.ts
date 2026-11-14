@@ -20,8 +20,7 @@ export interface ResolvedPagination {
   /** Rename apixa's `page` / `pageSize` / `cursor` query keys on the wire. */
   params?: PaginationParams;
   /**
-   * Turn a live response body into the page contract (throws `ParseError`). Absent for the
-   * string form, where the server is declared to already return the contract.
+   * Turn a live response body into the validated page contract (throws `ParseError`).
    */
   parse?: (body: unknown, status: number) => PageResult;
 }
@@ -231,6 +230,31 @@ function fromFields(resource: string, opName: string, mode: Mode, fields: Pagina
   };
 }
 
+/** Check the public envelope without dropping backend extension metadata. */
+export function validatePageResult(
+  body: unknown,
+  mode: Mode,
+  resource: string,
+  opName: string,
+): PageResult {
+  fromFields(resource, opName, mode, {})(body);
+  if (mode === "page") {
+    const page = body as Extract<PageResult, { total: number }>;
+    for (const key of ["total", "page", "pageSize"] as const) {
+      const value = page[key];
+      if (!Number.isInteger(value) || value < (key === "total" ? 0 : 1)) {
+        fail(
+          resource,
+          opName,
+          key,
+          key === "total" ? "must be a non-negative integer" : "must be a positive integer",
+        );
+      }
+    }
+  }
+  return body as PageResult;
+}
+
 /** Build the runtime pagination for a resource (`undefined` when absent or `false`). */
 export function resolvePagination(
   resource: string,
@@ -238,9 +262,9 @@ export function resolvePagination(
   opName = "getAll",
 ): ResolvedPagination | undefined {
   if (value === undefined || value === false) return undefined;
-  if (value === true) return { mode: "page" };
+  if (value === true) return resolvePagination(resource, "page", opName);
   if (value === "page" || value === "cursor") {
-    return { mode: value };
+    return { mode: value, parse: (body) => validatePageResult(body, value, resource, opName) };
   }
   if (typeof value === "string") {
     return resolvePagination(resource, { type: "page", preset: value }, opName);
@@ -258,9 +282,15 @@ export function resolvePagination(
             `${resource}.${opName}: parseList must return an object with a \`data\` array.`,
           );
         }
-        return out as PageResult;
+        return validatePageResult(out, mode, resource, opName);
       }
-    : fromFields(resource, opName, mode, value.fields ?? preset?.fields ?? {});
+    : (body: unknown) =>
+        validatePageResult(
+          fromFields(resource, opName, mode, value.fields ?? preset?.fields ?? {})(body),
+          mode,
+          resource,
+          opName,
+        );
   return { mode, params: Object.keys(params).length ? params : undefined, parse };
 }
 
@@ -279,7 +309,7 @@ export function resolveOperationPagination(
   if (opPagination === false) return undefined;
   if (opPagination === true) {
     const inherited = resolvePagination(resourceName, resourcePagination, opName);
-    return inherited ?? { mode: "page" };
+    return inherited ?? resolvePagination(resourceName, "page", opName);
   }
   return resolvePagination(resourceName, opPagination, opName);
 }

@@ -297,7 +297,9 @@ export interface ResourceDefinition extends LayerOptions {
   /**
    * List envelope contract shared by live and mocked resources. Mocked: the engine produces it.
    * Live: the string form expects the server to already return it; an object maps the server's
-   * own shape to it (`preset`, `fields`/`params`, or `parseList`).
+   * own shape to it (`preset`, `fields`/`params`, or `parseList`). Every form validates the complete
+   * envelope, including callback output. Page numbers/sizes are positive integers; totals are
+   * non-negative integers; cursors are strings or null.
    */
   pagination?: ResourcePagination;
   /** Cap array `getAll` responses: first N rows or `{ start, end }`. Not mock seeding. */

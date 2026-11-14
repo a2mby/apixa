@@ -86,7 +86,7 @@ describe("live pagination", () => {
     });
   });
 
-  it("passes the body through unchanged for the string form (declared, not validated)", async () => {
+  it("validates and preserves the already-normalized shorthand envelope", async () => {
     const own = { data: [{ id: "1", name: "Pen" }], total: 1, page: 1, pageSize: 10 };
     expect(await client("page", own).products.getAll()).toEqual(own);
   });
@@ -528,5 +528,124 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
       "pagination[page]": "2",
       "pagination[pageSize]": "10",
     });
+  });
+});
+
+describe("complete pagination contracts", () => {
+  const page = { data: [], total: 0, page: 9, pageSize: 10 };
+  it.each([true, "page", { type: "page" }])(
+    "validates page envelopes for %j",
+    async (pagination) => {
+      for (const body of [
+        {},
+        [],
+        { ...page, data: {} },
+        { ...page, total: "0" },
+        { ...page, page: null },
+        { ...page, pageSize: -1 },
+        { ...page, total: Infinity },
+      ]) {
+        await expect(client(pagination, body).products.getAll()).rejects.toBeInstanceOf(ParseError);
+      }
+      const full = await client(pagination, page).products.getAll({ full: true });
+      expect(full.data).toEqual(page);
+      expect(full.source).toEqual(page);
+    },
+  );
+  it.each(["cursor", { type: "cursor" }])(
+    "validates cursor envelopes for %j",
+    async (pagination) => {
+      for (const body of [
+        {},
+        { data: [] },
+        { data: [], nextCursor: 42 },
+        { data: {}, nextCursor: null },
+      ]) {
+        await expect(client(pagination, body).products.getAll()).rejects.toBeInstanceOf(ParseError);
+      }
+      await expect(
+        client(pagination, { data: [], nextCursor: null }).products.getAll(),
+      ).resolves.toEqual({ data: [], nextCursor: null });
+    },
+  );
+  it("validates callback output rather than trusting its TypeScript declaration", async () => {
+    for (const type of ["page", "cursor"]) {
+      await expect(
+        client({ type, parseList: () => ({ data: [] }) }, {}).products.getAll(),
+      ).rejects.toBeInstanceOf(ParseError);
+    }
+  });
+  it.each([false, true])(
+    "checks final paginated custom results after hooks (mock=%s)",
+    async (mocked) => {
+      const api = defineApi({
+        baseURL: "https://example.com",
+        transport: createFakeTransport(() => ({ body: page })),
+        resources: {
+          products: {
+            path: "/products",
+            ...(mocked ? { mock: [{ id: 1 }] } : {}),
+            operations: {
+              report: {
+                method: "GET",
+                pagination: "page",
+                mock: () => [{ id: 1 }],
+                response: { parse: () => ({ data: [] }) },
+              },
+            },
+          },
+        },
+      });
+      await expect(api.products.report()).rejects.toBeInstanceOf(ParseError);
+    },
+  );
+});
+
+describe("pagination final-hook and source boundaries", () => {
+  it.each([false, true])(
+    "checks cursor metadata replaced by validators (mock=%s)",
+    async (mocked) => {
+      const api = defineApi({
+        baseURL: "https://example.com",
+        transport: createFakeTransport(() => ({ body: { data: [], nextCursor: null } })),
+        resources: {
+          products: {
+            path: "/products",
+            pagination: "cursor",
+            ...(mocked ? { mock: [{ id: 1 }] } : {}),
+            response: { validate: () => ({ data: [], nextCursor: false }) },
+          },
+        },
+      });
+      await expect(api.products.getAll()).rejects.toBeInstanceOf(ParseError);
+    },
+  );
+  it("preserves extension metadata and original source through shorthand processing", async () => {
+    const body = {
+      data: [{ id: "1", name: "Pen" }],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+      extra: { request: "original" },
+    };
+    const full = await client("page", body).products.getAll({ full: true });
+    expect(full.data).toEqual(body);
+    expect(full.source).toEqual(body);
+  });
+  it("checks callback metadata ranges and accepts empty/out-of-range callback pages", async () => {
+    const page = { data: [], total: 0, page: 12, pageSize: 10 };
+    for (const output of [
+      { ...page, total: -1 },
+      { ...page, page: 0 },
+      { ...page, pageSize: 0 },
+      { ...page, page: 1.5 },
+    ]) {
+      await expect(
+        client({ type: "page", parseList: () => output }, {}).products.getAll(),
+      ).rejects.toBeInstanceOf(ParseError);
+    }
+    await expect(
+      client({ type: "page", parseList: () => page }, {}).products.getAll(),
+    ).resolves.toEqual(page);
   });
 });
