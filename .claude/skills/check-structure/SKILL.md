@@ -10,7 +10,7 @@ The developer wants a structure check. Do not implement features. Report only.
 - `docs/conventions.md`
 - `versions/README.md`
 - `.ai/rules/apixa-core.md`
-- Tree: `docs/`, `versions/`, `packages/`, `examples/`, `tests/`
+- Tree: `docs/`, `versions/`, `packages/`, `templates/`, `tests/`
 
 ## Checklist
 
@@ -22,7 +22,7 @@ Report pass/fail for each:
 4. Current version folder has all four filled files: `context.md`, `scope.md`, `implementation-plan.md`, `acceptance-criteria.md`.
 5. No empty future version folders (folders with missing or stub-only files).
 6. Only packages that belong today exist under `packages/` (Core-only until a version scope says otherwise).
-7. `examples/frontends/basic/` exists.
+7. `templates/README.md` exists (starter templates postponed; no unapproved apps inside `templates/`) and `manual-testing/` is gitignored.
 8. `tests/` exists (README at minimum).
 9. `docs/context.md` milestone banner points at the current version folder.
 10. Planned packages are documented as future, not created early.

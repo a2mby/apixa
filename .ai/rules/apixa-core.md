@@ -18,8 +18,9 @@ docs/           # living: context, architecture, roadmap, conventions, decisions
 versions/       # frozen milestones only — never empty future stubs
 packages/       # private core, mocking, react, internal/shared implementations
 src/            # facade for the only published npm package: apixa
-examples/frontends/query-ssr-next/  # tracked, verified Next example (examples/frontends/next is the local playground); do not edit other examples/*
-tests/
+templates/      # postponed until stable API (templates/README.md only)
+manual-testing/ # local, gitignored manual-testing backends and frontends
+tests/          # unit, integration, architecture, AI sync, and internal fixtures (`tests/fixtures/`)
 ```
 
 - Living context stays at `docs/context.md` — **not** a duplicate root `context.md`.

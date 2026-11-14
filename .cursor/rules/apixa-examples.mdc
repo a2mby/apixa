@@ -1,6 +1,6 @@
 ---
-description: "Only edit the Next.js examples; leave other examples alone"
-globs: "examples/**/*"
+description: "Rules for postponed templates, internal browser fixtures, and ignored manual-testing apps"
+globs: "templates/**/*,tests/fixtures/**/*"
 alwaysApply: true
 ---
 

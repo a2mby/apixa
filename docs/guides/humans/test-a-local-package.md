@@ -8,7 +8,7 @@ this checkout.
 pnpm consumer:local
 ```
 
-By default the consumer is `examples/frontends/nextjs-products`. Point at another project with
+By default the consumer is `manual-testing/frontends/nextjs-products`. Point at another project with
 `--consumer <dir>` or `APIXA_CONSUMER=<dir>`. The consumer must already have its own dependencies
 installed (`react`, `@tanstack/react-query`, …) and declare `apixa`.
 

@@ -278,7 +278,7 @@ const api = defineApi({
 
 See [`datasets/`](./datasets/) and [`packages/mocking`](./packages/mocking).
 
-See [`examples/frontends/query-ssr-next`](./examples/frontends/query-ssr-next) for the maintained, verification-driven Next.js App Router example. [`examples/frontends/next`](./examples/frontends/next) is the untracked local playground; `examples/README.md` lists which other folders are maintained. Backend environment: [`examples/backends/laravel-backend`](./examples/backends/laravel-backend). Platform run scripts: [`scripts/README.md`](./scripts/README.md).
+See [`templates/`](./templates/README.md) for template status (postponed until Apixa reaches a stable API) and [`tests/fixtures/browser-next`](./tests/fixtures/browser-next) for the internal Next.js App Router verification fixture. Local manual-testing apps live under `manual-testing/` (gitignored). Verification scripts: [`scripts/README.md`](./scripts/README.md).
 
 ## Vision
 
@@ -324,16 +324,10 @@ packages/
   react/            # Private React integration
   internal/shared/  # Private, never published: framework-neutral integration helpers
 datasets/           # Version-controlled JSON fixtures
-examples/
-  backends/
-    laravel-backend/  # Independent Laravel/PostgreSQL/MongoDB playground
-  frontends/
-    query-ssr-next/   # Maintained Next.js App Router example (verified by pnpm verify)
-    next/             # Local, untracked Next.js playground
-    ...               # Older local playgrounds; not maintained (see examples/README.md)
-  templates/          # Empty laravel/next/react starter placeholders
-scripts/            # Build, verification, dataset, frontend and Laravel launchers
-tests/              # Vitest suite (core, mocking, react, facade, ai) + packed consumers
+templates/          # Postponed until stable API (templates/README.md only)
+manual-testing/     # Gitignored local manual-testing backends and frontends
+scripts/            # Build, verification, and dataset scripts
+tests/              # Vitest suite (core, mocking, react, facade, ai), fixtures, and packed consumers
 docs/               # Living context, architecture, roadmap, public API, use cases, ADRs
 versions/           # Frozen milestone contracts (active: v3.0.0)
 .ai/                # Canonical rules, roles, adapters and sync script
@@ -386,4 +380,4 @@ pipeline. Ordinary file uploads/downloads keep their existing zero-config behavi
 [advanced transfer guide](packages/core/README.md#advanced-transfers-v170) for typed checkpoints,
 server reconciliation, bounded concurrency, controls, presigned security and the SDK-free S3 recipe.
 
-Contributors can use the independent [Laravel/PostgreSQL backend playground](examples/backends/laravel-backend/README.md) for real HTTP infrastructure experiments.
+Starter templates under [`templates/`](./templates/README.md) are postponed until Apixa stabilizes; local manual-testing backends and frontends belong in gitignored `manual-testing/`.

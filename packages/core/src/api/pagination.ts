@@ -29,7 +29,7 @@ export interface ResolvedPagination {
  * Backend presets are data only: field paths and query names, never code. A preset ships only for
  * a shape that is a pure 1-based field mapping (no offsets, headers or request-derived values).
  * Each was checked against the shape the backend or library documents, and the Laravel ones also
- * against real output of the playground backend (`examples/backends/laravel-backend`).
+ * against real output of the local Laravel playground (`manual-testing/backends/laravel-backend`).
  */
 const PRESETS = {
   /** Laravel API resource collection (`ProductResource::collection($paginator)`). */

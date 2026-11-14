@@ -31,7 +31,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const packDir = join(root, ".local-pack");
-const DEFAULT_CONSUMER = "examples/frontends/nextjs-products";
+const DEFAULT_CONSUMER = "manual-testing/frontends/nextjs-products";
 const LOCKFILES = ["package.json", "pnpm-lock.yaml", "package-lock.json", "yarn.lock", ".npmrc"];
 
 const argv = process.argv.slice(2);

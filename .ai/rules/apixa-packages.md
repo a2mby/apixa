@@ -1,10 +1,10 @@
 ---
-description: Rules when editing packages/core or examples in Apixa
-globs: packages/**/*,examples/**/*,tests/**/*
+description: Rules when editing packages/core or tests in Apixa
+globs: packages/**/*,tests/**/*
 alwaysApply: false
 ---
 
-# Core and examples
+# Core and tests
 
 ## Prefer reshape over new packages
 
@@ -22,8 +22,8 @@ Reuse folders under `packages/core/src/` (`api/`, `operation/`, `request/`, `htt
 - Default-first builtins; optional `operations` merges overrides. Custom names coexist.
 - Custom operation with the same name wins over a convention.
 
-## Examples and tests
+## Fixtures and tests
 
-- Only maintain the Next examples, **`examples/frontends/query-ssr-next`** (tracked) and the local `examples/frontends/next` (see `apixa-examples` rule). Do not edit other `examples/*`.
+- Starter templates under **`templates/`** are postponed (`templates/README.md` only); browser/SSR verification uses the internal fixture at **`tests/fixtures/browser-next`** (`pnpm verify:browser`). Local experiments live in gitignored `manual-testing/`.
 - Tests under root `tests/` (e.g. `tests/core/`); use injectable/fake `Transport`.
 - No flaky live-network as the primary suite.
