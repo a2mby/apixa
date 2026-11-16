@@ -89,7 +89,7 @@ import { createResourceQueryOptions } from "apixa/react/advanced";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 type User = { id: string; name: string };
-const api = defineApi<{ users: { entity: User } }>()({
+const api = defineApi<{ users: User }>()({
   baseURL: "https://example.test",
   resources: {
     users: {

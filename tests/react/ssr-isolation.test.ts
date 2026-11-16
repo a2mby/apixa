@@ -23,7 +23,7 @@ const server = createFakeTransport(async (request) => {
 
 /** What an app does per request: an API bound to that request's credentials. */
 const apiFor = (token: string) =>
-  defineApi<{ users: { entity: User }; posts: { entity: Post } }>()({
+  defineApi<{ users: User; posts: Post }>()({
     baseURL: "https://x.dev",
     transport: server,
     headers: { authorization: `Bearer ${token}` },
@@ -32,7 +32,7 @@ const apiFor = (token: string) =>
       posts: {
         path: "/posts",
         operations: "read",
-        pagination: { type: "cursor", fields: { data: "items", nextCursor: "next" } },
+        paginationConfig: { strategy: "cursor", fields: { data: "items", nextCursor: "next" } },
       },
     },
   });

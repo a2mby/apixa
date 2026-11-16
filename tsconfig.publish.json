@@ -10,6 +10,7 @@
       "@apixa/mocking/datasets/*": ["packages/mocking/src/dataset-modules/*.ts"],
       "@apixa/mocking/register": ["packages/mocking/src/register.ts"],
       "@apixa/mocking/node": ["packages/mocking/src/node.ts"],
+      "@apixa/validation": ["packages/validation/src/index.ts"],
       "@apixa/react": ["packages/react/src/index.ts"],
       "@apixa/react/advanced": ["packages/react/src/advanced.ts"]
     },

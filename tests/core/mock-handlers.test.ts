@@ -2,11 +2,13 @@ import {
   defineApi,
   defineApis,
   resetMock,
+  SchemaValidationError,
   type ApiRequest,
   type MockError,
   type TransportRequest,
 } from "@apixa/core";
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
+import { z } from "zod";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; active: boolean; archived?: boolean };
@@ -669,16 +671,7 @@ describe("types", () => {
       nested_profile: { last_name: string };
       linked_users: { display_name: string }[];
     };
-    type Meta = {
-      rootUsers: { operations: { rootKeys: { response: RawSnake } } };
-      resourceUsers: {
-        operations: {
-          resourceKeys: { response: { firstName: string } };
-          operationKeys: { response: RawSnake };
-        };
-      };
-    };
-    const api = defineApi<Meta>()({
+    const api = defineApi({
       baseURL: "https://x.dev",
       transforms: { response: { keys: "camelCase" } },
       resources: {
@@ -724,21 +717,17 @@ describe("types", () => {
         },
       },
     });
+    // Unschematized custom results are `unknown`; the transforms still apply to mocked results.
     const rootResult = await api.rootUsers.rootKeys();
-    expectTypeOf(rootResult.firstName).toEqualTypeOf<string | undefined>();
-    expectTypeOf(rootResult.nestedProfile.lastName).toEqualTypeOf<string>();
-    expectTypeOf(rootResult.linkedUsers[0]?.displayName).toEqualTypeOf<string | undefined>();
+    expectTypeOf(rootResult).toEqualTypeOf<unknown>();
     expect(rootResult).toEqual({
       firstName: "Adam",
       nestedProfile: { lastName: "Smith" },
       linkedUsers: [{ displayName: "Eve" }],
     });
     const resourceResult = await api.resourceUsers.resourceKeys();
-    expectTypeOf(resourceResult.first_name).toEqualTypeOf<string>();
     expect(resourceResult).toEqual({ first_name: "Adam" });
     const operationResult = await api.resourceUsers.operationKeys();
-    expectTypeOf(operationResult.firstName).toEqualTypeOf<string | undefined>();
-    expectTypeOf(operationResult.nestedProfile.lastName).toEqualTypeOf<string>();
     expect(operationResult).toEqual({
       firstName: "Adam",
       nestedProfile: { lastName: "Smith" },
@@ -746,9 +735,9 @@ describe("types", () => {
     });
   });
 
-  it("accepts raw metadata responses without transforms and rejects wrong response shapes", async () => {
-    type Meta = { users: { operations: { profile: { response: { first_name: string } } } } };
-    const api = defineApi<Meta>()({
+  it("types the public result from the response schema and rejects wrong mock results at runtime", async () => {
+    const Profile = z.object({ first_name: z.string() });
+    const api = defineApi({
       baseURL: "https://x.dev",
       resources: {
         users: {
@@ -759,6 +748,7 @@ describe("types", () => {
               kind: "read",
               method: "GET",
               path: "/profile",
+              schema: { response: Profile },
               mock: ({ records }) => ({ first_name: records[0]!.first_name }),
             },
           },
@@ -767,27 +757,26 @@ describe("types", () => {
     });
     expectTypeOf(await api.users.profile()).toEqualTypeOf<{ first_name: string }>();
     expect(await api.users.profile()).toEqual({ first_name: "Adam" });
-    const check = () =>
-      defineApi<Meta>()({
-        baseURL: "https://x.dev",
-        transforms: { response: { keys: "camelCase" } },
-        resources: {
-          users: {
-            path: "/users",
-            mock: [{ id: "1", first_name: "Adam" }],
-            // @ts-expect-error metadata describes raw first_name, not public firstName
-            operations: {
-              profile: {
-                kind: "read",
-                method: "GET",
-                path: "/profile",
-                mock: () => ({ firstName: "Adam" }),
-              },
+    // A handler result that breaks the response schema is rejected at runtime too.
+    const wrong = defineApi({
+      baseURL: "https://x.dev",
+      resources: {
+        users: {
+          path: "/users",
+          mock: [{ id: "1", first_name: "Adam" }],
+          operations: {
+            profile: {
+              kind: "read",
+              method: "GET",
+              path: "/profile",
+              schema: { response: Profile },
+              mock: () => ({ firstName: "Adam" }),
             },
           },
         },
-      });
-    expect(check).toBeTypeOf("function");
+      },
+    });
+    await expect(wrong.users.profile()).rejects.toBeInstanceOf(SchemaValidationError);
   });
 
   it("keeps one defineApis backend's records and full path parameters precise", async () => {
@@ -827,24 +816,9 @@ describe("types", () => {
     ).toEqualTypeOf<unknown>();
   });
 
-  it("keeps independent defineApis record sources and metadata payloads", () => {
-    type Defs = {
-      inline: {
-        users: {
-          operations: {
-            updateName: {
-              body: { name: string };
-              query: { dry?: boolean };
-              response: { id: number; name: string; nickname?: string };
-            };
-          };
-        };
-      };
-      named: { products: { operations: { getPrice: { response: { price: number } } } } };
-      provided: { members: { operations: { getMember: { response: { active: boolean } } } } };
-    };
+  it("keeps independent defineApis record sources and schema payloads", () => {
     const check = () => {
-      const apis = defineApis<Defs>()({
+      const apis = defineApis({
         inline: {
           baseURL: "https://x.dev",
           resources: {
@@ -859,11 +833,20 @@ describe("types", () => {
                   kind: "write",
                   method: "PATCH",
                   path: "/:userId/name",
+                  schema: {
+                    body: z.object({ name: z.string() }),
+                    query: z.object({ dry: z.boolean().optional() }).optional(),
+                    response: z.object({
+                      id: z.number(),
+                      name: z.string(),
+                      nickname: z.string().optional(),
+                    }),
+                  },
                   mock: ({ records, params, body, query, store }) => {
                     expectTypeOf(records[0]?.nickname).toEqualTypeOf<string | undefined>();
                     expectTypeOf(records[0]?.id).toEqualTypeOf<number | undefined>();
-                    expectTypeOf(body).toEqualTypeOf<{ name: string }>();
-                    expectTypeOf(query).toEqualTypeOf<{ dry?: boolean }>();
+                    // Mock handlers receive untyped body/query; the schemas validate them before the handler runs.
+                    expectTypeOf(body).toEqualTypeOf<unknown>();
                     expectTypeOf(params).toEqualTypeOf<{
                       orgId: string | number;
                       userId: string | number;
@@ -872,7 +855,7 @@ describe("types", () => {
                     records[0]?.price;
                     // @ts-expect-error the full path has no productId
                     params.productId;
-                    return store.patch(params.userId, { name: body.name });
+                    return store.patch(params.userId, { name: (body as { name: string }).name });
                   },
                 },
               },
@@ -890,6 +873,7 @@ describe("types", () => {
                   kind: "read",
                   method: "GET",
                   path: "/:productId/price",
+                  schema: { response: z.object({ price: z.number() }) },
                   mock: ({ records, params }) => {
                     expectTypeOf(records[0]?.price).toEqualTypeOf<number | undefined>();
                     // @ts-expect-error a product has no nickname
@@ -914,6 +898,7 @@ describe("types", () => {
                   kind: "read",
                   method: "GET",
                   path: "/:memberId",
+                  schema: { response: z.object({ active: z.boolean() }) },
                   mock: ({ records, params }) => {
                     expectTypeOf(records[0]?.active).toEqualTypeOf<boolean | undefined>();
                     // @ts-expect-error a member has no price
@@ -946,16 +931,8 @@ describe("types", () => {
     expect(check).toBeTypeOf("function");
   });
 
-  it("types the declared body, query and response from metadata", async () => {
-    type Meta = {
-      users: {
-        entity: User;
-        operations: {
-          activate: { body: { id: string }; query: { dry?: boolean }; response: User };
-        };
-      };
-    };
-    const api = defineApi<Meta>()({
+  it("hands the handler the schema-parsed body (typed unknown) and validates the result", async () => {
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://x.dev",
       resources: {
         users: {
@@ -966,10 +943,15 @@ describe("types", () => {
               kind: "write",
               method: "POST",
               path: "/activate",
+              schema: {
+                body: z.object({ id: z.string() }),
+                query: z.object({ dry: z.boolean().optional() }).optional(),
+                response: z.object({ id: z.string() }).passthrough(),
+              },
               mock: ({ body, query, store }) => {
-                expectTypeOf(body).toEqualTypeOf<{ id: string }>();
-                expectTypeOf(query).toEqualTypeOf<{ dry?: boolean }>();
-                return store.patch(body.id, { active: true });
+                expectTypeOf(body).toEqualTypeOf<unknown>();
+                void query;
+                return store.patch((body as { id: string }).id, { active: true });
               },
             },
           },
@@ -980,17 +962,21 @@ describe("types", () => {
   });
 
   it("rejects wrong handler shapes at compile time", () => {
-    type Meta = { users: { operations: { stats: { response: { total: number } } } } };
     const check = () => {
-      defineApi<Meta>()({
+      defineApi({
         baseURL: "https://x.dev",
         resources: {
           users: {
             path: "/users",
             mock: users(),
-            // @ts-expect-error the declared response is { total: number }, the handler returns { count }
             operations: {
-              stats: { kind: "read", method: "GET", path: "/stats", mock: () => ({ count: 1 }) },
+              stats: {
+                kind: "read",
+                method: "GET",
+                path: "/stats",
+                schema: { response: z.object({ total: z.number() }) },
+                mock: () => ({ count: 1 }),
+              },
             },
           },
         },

@@ -26,15 +26,23 @@ old file", sequence those steps yourself and make each step idempotent.
 ## 1. Normal upload and download
 
 ```ts
-const api = defineApi<{ users: { entity: User } }>()({
+const api = defineApi<{ users: User }>()({
   baseURL: "https://api.example.com",
-  resources: { users: { path: "/users", fileFields: ["avatar"] } },
+  resources: {
+    users: {
+      path: "/users",
+      fileFields: ["avatar"],
+      operations: {
+        downloadAvatar: { method: "GET", path: "/:id/avatar", responseType: "blob" },
+      },
+    },
+  },
 });
 await api.users.create({ name: "Ada", avatar: file }); // multipart/form-data, automatically
-const blob = await api.users.getById("1", { responseType: "blob" });
+const blob = await api.users.downloadAvatar({ params: { id: "1" } });
 ```
 
-No configuration is needed beyond `fileFields`. See
+No configuration is needed beyond `fileFields` for uploads and operation `responseType` for binary downloads. See
 [File uploads](../../../packages/core/README.md#file-uploads) and
 [File downloads](../../../packages/core/README.md#file-downloads-and-binary-responses).
 
@@ -46,7 +54,7 @@ before any request is sent, with identical results for live and mocked resources
 
 - **This is not security.** `File.type` and `File.name` are chosen by the caller; extensions do not
   prove content. Your backend must validate again.
-- **Responses are unbounded by default.** `maxResponseSize` is opt-in. Set it on every operation that
+- **Responses are unbounded by default.** `maxResponseSize` is opt-in (a per-call `maxResponseSize` may only tighten an operation's limit, never widen it). Set it on every operation that
   reads a body into memory (`blob`, `arrayBuffer`, `text`, `json`), or use `responseType: "stream"`
   for large downloads.
 - **Custom transports:** the built-in fetch transport counts bytes while reading. A custom
@@ -62,7 +70,7 @@ before any request is sent, with identical results for live and mocked resources
   - **Another origin:** refused with `SecurityError` **before** the destination is contacted. The
     message names origins only, never the `Location` path or query.
   - **CDN workflows:** list the destination in `redirectOrigins: ["https://cdn.example.com"]`
-    (operation setting or per-call option; exact `http(s)` origins, no wildcards). A listed origin
+    (operation setting or `ctx.request` option; exact `http(s)` origins, no wildcards). A listed origin
     is followed **with no headers, cookies, credentials or body**, only for `GET`/`HEAD` (a `303`
     turns a `POST` into a bare `GET`; a `307`/`308` `POST` is refused). A listed origin cannot
     redirect on to an unlisted one. A signed CDN URL needs no credentials, so nothing is lost.

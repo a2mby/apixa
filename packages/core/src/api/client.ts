@@ -37,7 +37,7 @@ export function buildClient(config: unknown): Record<string, Record<string, unkn
   };
   const root: LayerOptions = {
     headers: config.headers as LayerOptions["headers"],
-    timeout: config.timeout as number | undefined,
+    timeout: config.timeout as LayerOptions["timeout"],
     retry: config.retry as LayerOptions["retry"],
     middleware: config.middleware as LayerOptions["middleware"],
     transforms: config.transforms as LayerOptions["transforms"],

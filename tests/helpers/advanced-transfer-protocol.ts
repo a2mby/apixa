@@ -176,7 +176,7 @@ export function protocolServer() {
     },
   };
   const client = (override: Partial<AdvancedTransferConfig<Result>> = {}, operation: object = {}) =>
-    defineApi<{ files: { entity: { id: string; size?: number; document: string } } }>()({
+    defineApi<{ files: { id: string; size?: number; document: string } }>()({
       baseURL: "https://api.example.com",
       transport,
       resources: {

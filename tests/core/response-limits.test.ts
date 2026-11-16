@@ -98,11 +98,11 @@ describe("maxResponseSize across response types", () => {
     expect(blob.size).toBe(12);
   });
 
-  it("a per-call limit wins over the operation's, both ways", async () => {
+  it("a per-call limit may only narrow the operation ceiling", async () => {
     const stub: StubFetch = async () => chunkedResponse(parts);
     await expect(
       limited(5, stub).docs.download({ params: { id: "1" }, maxResponseSize: 100 }),
-    ).resolves.toBeDefined();
+    ).rejects.toThrow(/exceeds/);
     const error = await limited(100, stub)
       .docs.download({ params: { id: "1" }, maxResponseSize: 5 })
       .catch((e) => e);
@@ -175,7 +175,7 @@ describe("maxResponseSize across response types", () => {
       return chunkedResponse(parts);
     };
     await limited(5, stub)
-      .docs.download({ params: { id: "1" }, retry: { retries: 3, baseDelayMs: 0 } })
+      .docs.download({ params: { id: "1" }, retry: { count: 3, delay: 0 } })
       .catch(() => {});
     expect(calls).toBe(1);
   });
@@ -320,7 +320,7 @@ describe("custom transports are limited by the pipeline", () => {
     },
   });
   const client = (transport: Transport, rt: string, extra: object) =>
-    defineApi<{ d: { path: "/d"; entity: { id: string } } }>()({
+    defineApi<{ d: { id: string } }>()({
       baseURL: "https://api.example.com",
       transport,
       resources: {

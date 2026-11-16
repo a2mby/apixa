@@ -32,12 +32,12 @@ Exact delivery evidence and frozen checkboxes live in each folder and in
 
 ## Active: v3.0.0 — Core architecture overhaul (`3.0.0-rc.0` RC)
 
-**Spec:** [versions/v3.0.0/](../versions/v3.0.0/) · [umbrella issue #112](https://github.com/a2mby/apixa/issues/112)
+**Spec:** [versions/v3.0.0/](../versions/v3.0.0/) · [umbrella issue #112](https://github.com/a2mby/apixa/issues/112) · [ADR-007](./decisions/ADR-007-apixa-v3-unified-api-contract.md)
 
 Implemented and verified the approved breaking redesign across operations (13 builtins, derived HTTP
-kinds, `{ body }` write calls and `{ params }`), unified `middleware` hook objects (`{ onRequest?, onResponse?, onError? }`), query/body serialization,
-response processing (`unwrap`, `parse`, `validate`, `source`), safe transforms, and per-operation
-pagination, preserving existing advanced capabilities. Prepared and verified `apixa@3.0.0-rc.0` without
+kinds, positional `(id, body, options?)` write calls and `{ params }`), unified `middleware` hook objects (`{ onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }`), query/body serialization,
+response processing (`unwrap`, `parse`, `validate`, `source`, `schema.response`, `emptyResponse`), safe transforms, and `paginationConfig` / per-operation
+`pagination`, preserving existing advanced capabilities. Prepared `apixa@3.0.0-rc.0` without
 publishing to npm.
 
 ## In progress: v1.9.0 — DX and bug fixes
@@ -204,7 +204,7 @@ milestone, not part of this roadmap's active line.
 
 ## Later: developer experience follow-ups
 
-- Optional schema validation hooks (without baking in a schema library)
+- ~~Optional schema validation hooks~~ — per-operation Standard Schema V1 `schema` and optional `apixa/validation` (ADR-006, v3.0.0 RC; owner verification pending)
 - Operation `deprecated` / versioning metadata
 - Dataset catalog codegen from `datasets/manifest.json` (tooling, not library surface)
 - `crud<>()` preset

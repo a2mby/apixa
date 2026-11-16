@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { defineApi } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
 import type { CreateBodyOf } from "../helpers/types.js";
@@ -16,7 +17,7 @@ type User = {
   documents: string[];
   banner?: string | null;
 };
-type AppApi = { users: { path: "/users"; entity: User } };
+type AppApi = { users: User };
 
 const baseURL = "https://api.example.com";
 
@@ -58,25 +59,25 @@ const snake = () =>
     },
   });
 
-type Overridden = {
-  users: {
-    path: "/users";
-    entity: User;
-    operations: { create: { body: { avatar: string; tag: number } } };
-  };
-};
+type Overridden = { users: User };
 const overridden = () =>
   defineApi<Overridden>()({
     baseURL,
     resources: {
-      users: { path: "/users", fileFields: ["avatar"], operations: { create: true } },
+      users: {
+        path: "/users",
+        fileFields: ["avatar"],
+        operations: {
+          create: { schema: { body: z.object({ avatar: z.string(), tag: z.number() }) } },
+        },
+      },
     },
   });
 
 type Simple = ReturnType<typeof simple>["users"];
 type CreateBody = Parameters<Simple["create"]>[0];
-type UpdateBody = Parameters<Simple["update"]>[1]["body"];
-type PatchBody = Parameters<Simple["patch"]>[1]["body"];
+type UpdateBody = Parameters<Simple["update"]>[1];
+type PatchBody = Parameters<Simple["patch"]>[1];
 
 describe("fileFields type contract", () => {
   it("keeps read types as string / string[]", () => {
@@ -107,7 +108,7 @@ describe("fileFields type contract", () => {
     expectTypeOf<Bulk[number]["name"]>().toEqualTypeOf<string>();
   });
 
-  it("keeps explicitly declared operation body types", () => {
+  it("takes the body type of a schema over the entity-derived one", () => {
     type Custom = ReturnType<typeof overridden>["users"];
     expectTypeOf<Parameters<Custom["create"]>[0]>().toEqualTypeOf<{
       avatar: string;
@@ -146,23 +147,19 @@ describe("fileFields type contract", () => {
   it("leaves resources without fileFields exactly as before", () => {
     type Plain = ReturnType<typeof plain>["users"];
     expectTypeOf<Parameters<Plain["create"]>[0]>().toEqualTypeOf<CreateBodyOf<User>>();
-    expectTypeOf<Parameters<Plain["update"]>[1]["body"]>().toEqualTypeOf<Partial<User>>();
+    expectTypeOf<Parameters<Plain["update"]>[1]>().toEqualTypeOf<Partial<User>>();
   });
 
   it("reverts to entity inputs when an operation forces dataFormat json", () => {
     type J = ReturnType<typeof jsonCreate>["users"];
     expectTypeOf<Parameters<J["create"]>[0]["avatar"]>().toEqualTypeOf<string>();
     // Other eligible operations keep file inputs.
-    expectTypeOf<Parameters<J["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<
-      File | Blob | undefined
-    >();
+    expectTypeOf<Parameters<J["update"]>[1]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
   });
 
   it("accepts dataFormat multipart on a write builtin", () => {
     type S = ReturnType<typeof snake>["users"];
-    expectTypeOf<Parameters<S["update"]>[1]["body"]["avatar"]>().toEqualTypeOf<
-      File | Blob | undefined
-    >();
+    expectTypeOf<Parameters<S["update"]>[1]["avatar"]>().toEqualTypeOf<File | Blob | undefined>();
   });
 
   it("rejects invalid configuration at compile time", () => {

@@ -421,7 +421,7 @@ describe("native query parity and read operations", () => {
     const transport = createFakeTransport((request) => ({
       body: request.url.includes("/42") ? ada : [ada],
     }));
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://example.com",
       transport,
       resources: { users: { path: "/organizations/:orgId/users" } },
@@ -515,10 +515,10 @@ describe("native query parity and read operations", () => {
       attempts++;
       return attempts === 1 ? { status: 503, body: { error: "temporary" } } : { body: [ada] };
     });
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://example.test",
       transport,
-      retry: { retries: 1, baseDelayMs: 0, jitter: false },
+      retry: { count: 1, delay: 0, jitter: false },
       resources: { users: { path: "/users" } },
     });
     const { result } = renderHook(

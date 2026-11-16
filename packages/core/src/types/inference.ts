@@ -2,11 +2,19 @@ import type { ResolveMockFixtures } from "../mock/fixtures.js";
 import type { AllBuiltinOpName, OperationFnContext } from "./builtins.js";
 import type {
   ApiRootConfig,
+  LogicalPaginationInput,
+  PaginatedResult,
   FileFieldOptions,
   OperationDefinition,
   OperationRunDefinition,
   OperationPreset,
+  CursorResult,
+  OffsetResult,
+  OpenOffsetResult,
+  OpenPageResult,
+  PageResult,
   PaginationPreset,
+  PaginationStrategy,
   QueryOptions,
   ResourceDefinition,
   ResourcePagination,
@@ -16,12 +24,20 @@ import type { MockDatasetCatalog, MockDatasetId } from "./mock-datasets.js";
 import type { KeyCase, KeyTransformConfig, TransformKeys } from "./transform.js";
 import type {
   ApiResponse,
+  BatchResponse,
+  GetManySort,
   BinaryResponseType,
   RequestOptions,
   ResponseType,
   ResponseTypeData,
 } from "./transport.js";
 import type { OPERATION_METADATA, OperationMetadata } from "../api/metadata.js";
+import type {
+  InferSchemaInput,
+  InferSchemaOutput,
+  OperationSchema,
+  StandardSchemaV1,
+} from "./standard-schema.js";
 
 export type { BuiltinOpName, ExtendedBuiltinOpName, AllBuiltinOpName } from "./builtins.js";
 export type { MockDatasetIds } from "./mock-datasets.js";
@@ -153,11 +169,19 @@ export type RootTypesOf<Config> = {
   responseParser: Config extends { response: { parse: infer P } } ? P : never;
 };
 
-type ResponseKeys<R, Root extends RootTypes> =
-  KeysOf<R, "response"> extends KeyCase ? KeysOf<R, "response"> : Root["responseKeys"];
+type ResponseKeys<R, Root extends RootTypes> = R extends {
+  transforms: { response: false };
+}
+  ? undefined
+  : KeysOf<R, "response"> extends KeyCase
+    ? KeysOf<R, "response">
+    : Root["responseKeys"];
 
-type ResponseTransform<R, Root extends RootTypes> =
-  TransformRuleOf<R, "response"> extends KeyTransformConfig
+type ResponseTransform<R, Root extends RootTypes> = R extends {
+  transforms: { response: false };
+}
+  ? undefined
+  : TransformRuleOf<R, "response"> extends KeyTransformConfig
     ? TransformRuleOf<R, "response">
     : Root["responseTransform"] extends KeyTransformConfig
       ? Root["responseTransform"]
@@ -165,16 +189,15 @@ type ResponseTransform<R, Root extends RootTypes> =
 
 type HasMock<R> = R extends { mock: infer M } ? ([M] extends [undefined] ? false : true) : false;
 
-/** Entity as stored / returned by the backend (or mock data), before response transforms. */
-type SourceEntity<R, Meta> = Meta extends { entity: infer E }
-  ? [undefined] extends [E]
-    ? R extends { mock: infer M }
-      ? MockEntityOf<M>
-      : unknown
-    : E
-  : R extends { mock: infer M }
+/**
+ * Entity as stored / returned by the backend (or mock data), before response transforms. `Meta` is
+ * the resource's `ApiState` entry (the entity type itself); `unknown` when none is declared.
+ */
+type SourceEntity<R, Meta> = unknown extends Meta
+  ? R extends { mock: infer M }
     ? MockEntityOf<M>
-    : unknown;
+    : unknown
+  : Meta;
 
 /** Public entity: source entity with the configured response key convention applied. */
 export type EntityOf<R, Meta, Root extends RootTypes = RootTypes> = TransformKeys<
@@ -272,36 +295,53 @@ type FileFieldCandidates<E> = {
       : never;
 }[keyof E & string];
 
-/** `getAll` items: array metadata `list`, else entity array; pagination owns the envelope. */
-export type ListOf<R, Meta = {}, Root extends RootTypes = RootTypes> = Meta extends {
-  list: infer L;
-}
-  ? [undefined] extends [L]
-    ? EntityOf<R, Meta, Root>[]
-    : [L] extends [readonly unknown[]]
-      ? TransformKeys<L, ResponseTransform<R, Root>>
-      : EntityOf<R, Meta, Root>[]
-  : EntityOf<R, Meta, Root>[];
+/** `getAll` items: the entity array. A `schema.response` replaces the whole public result instead. */
+export type ListOf<R, Meta = unknown, Root extends RootTypes = RootTypes> = EntityOf<
+  R,
+  Meta,
+  Root
+>[];
 
-export type QueryOf<Meta> = Meta extends { query: infer Q }
-  ? [undefined] extends [Q]
-    ? QueryParams
-    : Q
-  : QueryParams;
+/**
+ * Strategy of a pagination setting. A trailing `?` marks a custom object configuration, whose
+ * `total` / `nextCursor` are optional (the standard envelope and presets require them).
+ */
+type PagMode = PaginationStrategy | "page?" | "offset?";
+
+/** Custom `fields` objects are strict for exactly the optional fields they declare. */
+type CustomMode<P, T extends PaginationStrategy> = P extends { parseList: unknown }
+  ? T extends "cursor"
+    ? "cursor"
+    : `${T}?`
+  : P extends { fields: infer F }
+    ? T extends "page"
+      ? F extends { total: string }
+        ? "page"
+        : "page?"
+      : T extends "offset"
+        ? F extends { total: string; pageSize: string }
+          ? "offset"
+          : "offset?"
+        : "cursor"
+    : T;
 
 type PaginationModeOf<P> = [P] extends [false | undefined]
   ? undefined
-  : P extends true | "page" | PaginationPreset
+  : P extends true | PaginationPreset
     ? "page"
-    : P extends "cursor"
-      ? "cursor"
-      : P extends { type: infer T extends "page" | "cursor" }
-        ? T
-        : P extends { preset: PaginationPreset }
-          ? "page"
+    : P extends PaginationStrategy
+      ? P
+      : P extends { preset: PaginationPreset }
+        ? P extends { strategy: infer T extends PaginationStrategy }
+          ? T
+          : "page"
+        : P extends { strategy: infer T extends PaginationStrategy }
+          ? CustomMode<P, T>
           : undefined;
 
-type Pagination<R> = R extends { pagination: infer P } ? PaginationModeOf<P> : undefined;
+type ResourcePaginationOf<R> = R extends { paginationConfig: infer P } ? P : undefined;
+
+type Pagination<R> = PaginationModeOf<ResourcePaginationOf<R>>;
 
 type EffectiveOpPagination<R, Op, DefaultResource = undefined> = [Op] extends [never]
   ? DefaultResource
@@ -309,7 +349,7 @@ type EffectiveOpPagination<R, Op, DefaultResource = undefined> = [Op] extends [n
     ? [OP] extends [false]
       ? undefined
       : [OP] extends [true]
-        ? DefaultResource extends "page" | "cursor"
+        ? DefaultResource extends PagMode
           ? DefaultResource
           : "page"
         : [OP] extends [undefined]
@@ -329,25 +369,36 @@ type OptInPagination<R, Op> = [Op] extends [never]
 
 type GetAllPagination<R> = EffectiveOpPagination<R, RuntimeOperation<R, "getAll">, Pagination<R>>;
 
-type PaginationModeQuery<Query, Mode> = Mode extends "page"
+type PaginationModeQuery<Query, Mode> = Mode extends "page" | "page?"
   ? Query & { page?: number; pageSize?: number }
   : Mode extends "cursor"
-    ? Query & { cursor?: string; pageSize?: number }
-    : Query;
+    ? Query & { cursor?: string; before?: string; pageSize?: number }
+    : Mode extends "offset" | "offset?"
+      ? Query & { offset?: number; pageSize?: number }
+      : Query;
 
-type WrapPaginated<Res, Mode> = Mode extends "page" | "cursor"
+/** Normalized result for a strategy over items of type `Item`. */
+type ResultFor<Item, Mode> = Mode extends "page"
+  ? PageResult<Item>
+  : Mode extends "page?"
+    ? OpenPageResult<Item>
+    : Mode extends "cursor"
+      ? CursorResult<Item>
+      : Mode extends "offset"
+        ? OffsetResult<Item>
+        : Mode extends "offset?"
+          ? OpenOffsetResult<Item>
+          : never;
+
+type WrapPaginated<Res, Mode> = [Mode] extends [PagMode]
   ? unknown extends Res
-    ? Mode extends "page"
-      ? { data: unknown[]; total: number; page: number; pageSize: number }
-      : { data: unknown[]; nextCursor: string | null }
+    ? ResultFor<unknown, Mode>
     : Res extends readonly (infer Item)[]
-      ? Mode extends "page"
-        ? { data: Item[]; total: number; page: number; pageSize: number }
-        : { data: Item[]; nextCursor: string | null }
+      ? ResultFor<Item, Mode>
       : Res
   : Res;
 
-type ApplyOpPagination<Op, Mode> = Mode extends "page" | "cursor"
+type ApplyOpPagination<Op, Mode> = [Mode] extends [PagMode]
   ? Omit<Op, "response" | "query"> & {
       response: WrapPaginated<InferResponse<Op>, Mode>;
       query: PaginationModeQuery<InferQuery<Op>, Mode>;
@@ -355,21 +406,25 @@ type ApplyOpPagination<Op, Mode> = Mode extends "page" | "cursor"
   : Op;
 
 /** Shared live/mock pagination contract (Part E26). */
-export type PaginatedListOf<R, Meta = {}, Root extends RootTypes = RootTypes> =
-  GetAllPagination<R> extends "page"
-    ? { data: ListOf<R, Meta, Root>; total: number; page: number; pageSize: number }
-    : GetAllPagination<R> extends "cursor"
-      ? { data: ListOf<R, Meta, Root>; nextCursor: string | null }
-      : ListOf<R, Meta, Root>;
+export type PaginatedListOf<R, Meta = unknown, Root extends RootTypes = RootTypes> = [
+  GetAllPagination<R>,
+] extends [PagMode]
+  ? ListOf<R, Meta, Root> extends readonly (infer Item)[]
+    ? ResultFor<Item, GetAllPagination<R>>
+    : never
+  : ListOf<R, Meta, Root>;
 
-export type PaginationQueryOf<R, Meta> = PaginationModeQuery<QueryOf<Meta>, GetAllPagination<R>>;
+export type PaginationQueryOf<R, Meta = unknown> = PaginationModeQuery<
+  QueryParams,
+  GetAllPagination<R>
+>;
 
-/** Filter object for `findFirst`: known entity fields, else generic query params. */
-type FilterOf<R, Meta, Root extends RootTypes> = Meta extends { query: infer Q }
-  ? [undefined] extends [Q]
-    ? DefaultFilter<R, Meta, Root>
-    : Q
-  : DefaultFilter<R, Meta, Root>;
+/** Filter object for `findFirst`: a `schema.query` input, else known entity fields, else generic query params. */
+type FilterOf<R, Meta, Root extends RootTypes, Rt = never> = [SchemaPart<Rt, "query">] extends [
+  never,
+]
+  ? DefaultFilter<R, Meta, Root>
+  : InferSchemaInput<SchemaPart<Rt, "query">>;
 type DefaultFilter<R, Meta, Root extends RootTypes> =
   EntityOf<R, Meta, Root> extends infer E
     ? Known<E> extends true
@@ -415,7 +470,7 @@ type EntityBuiltinOps<R, Meta, Root extends RootTypes> = {
     body: WithFileInputs<UpdateOf<R, Meta, Root>, FileNamesFor<R, "patch">>;
     response: EntityOf<R, Meta, Root>;
   };
-  count: { path: "/count"; response: number; query: QueryOf<Meta> };
+  count: { path: "/count"; response: number; query: QueryParams };
   createMany: {
     path: "/bulk";
     body: WithFileInputs<CreateOf<R, Meta, Root>, FileNamesFor<R, "createMany">>[];
@@ -514,7 +569,7 @@ type ParsedBuiltinResult<Name, T, Mode> = Name extends "exists"
       : Name extends "findFirst" | "getBy"
         ? (T extends readonly (infer Item)[] ? ParsedEntity<Item> : ParsedEntity<T>) | null
         : Name extends "getAll" | "getMany"
-          ? Mode extends "page" | "cursor"
+          ? [Mode] extends [PagMode]
             ? WrapPaginated<Extract<T, readonly unknown[] | { data: readonly unknown[] }>, Mode>
             : Extract<T, readonly unknown[]>
           : Name extends "createMany"
@@ -525,11 +580,17 @@ type ParsedBuiltinResult<Name, T, Mode> = Name extends "exists"
 
 type InheritedParser<R, Op, Root extends RootTypes> = [Op] extends [never]
   ? InheritedParser<R, {}, Root>
-  : Op extends { response: { parse: unknown } }
-    ? Op
+  : Op extends { response: { parse: infer P } }
+    ? [P] extends [never | undefined | false]
+      ? never
+      : { response: { parse: P } }
     : R extends { response: { parse: infer P } }
-      ? { response: { parse: P } }
-      : { response: { parse: Root["responseParser"] } };
+      ? [P] extends [never | undefined | false]
+        ? never
+        : { response: { parse: P } }
+      : [Root["responseParser"]] extends [never | undefined | false]
+        ? never
+        : { response: { parse: Root["responseParser"] } };
 
 /** A literal `response.parse` function overrides the inferred `response` type unless metadata sets it. */
 type ApplyResponseParser<Op, RawOp = Op, Name = never, Mode = undefined> = Op extends {
@@ -541,9 +602,9 @@ type ApplyResponseParser<Op, RawOp = Op, Name = never, Mode = undefined> = Op ex
     : RawOp extends {
           response: { parse: (...args: never[]) => infer R };
         }
-      ? [R] extends [void | undefined]
+      ? [Awaited<R>] extends [void | undefined]
         ? Op
-        : unknown extends R
+        : unknown extends Awaited<R>
           ? Op
           : Omit<Op, "response"> & {
               response: [Name] extends [never]
@@ -552,17 +613,6 @@ type ApplyResponseParser<Op, RawOp = Op, Name = never, Mode = undefined> = Op ex
             }
       : Op;
 
-/** Data type for one call: a literal non-JSON per-call `responseType` replaces `Data`. */
-type CallData<Data, O> = O extends { responseType: infer RT extends ResponseType }
-  ? [ResponseType] extends [RT]
-    ? Data
-    : DataFor<Data, RT>
-  : Data;
-type DataFor<Data, RT> = RT extends BinaryResponseType
-  ? ResponseTypeData<RT>
-  : RT extends "auto"
-    ? unknown
-    : Data;
 type InferQuery<Op> = Op extends { query: infer Q } ? Q : QueryParams;
 type DefaultMethod<Name extends string> = Name extends keyof Conventions
   ? Conventions[Name]["method"]
@@ -582,8 +632,8 @@ type InferBody<Op> = Op extends { body: infer B } ? B : unknown;
 export type CallResult<Data, O> = [O] extends [undefined]
   ? Data
   : O extends { full: true }
-    ? ApiResponse<CallData<Data, O>>
-    : CallData<Data, O>;
+    ? ApiResponse<Data>
+    : Data;
 
 type MergeOp<Base, Override> = [Override] extends [never]
   ? Base
@@ -614,23 +664,49 @@ export type ResourceOpsOf<R> = R extends { operations: infer Ops }
     : {}
   : {};
 
-type MetaOperation<Meta, Name extends string> = Meta extends { operations?: infer Ops }
-  ? Name extends keyof NonNullable<Ops>
-    ? NonNullable<Ops>[Name]
+// ---------------------------------------------------------------------------------------------
+// Schemas (ADR-006): the runtime `schema` of an operation defines its body / query input and its
+// response output. Path parameters stay outside schemas.
+// ---------------------------------------------------------------------------------------------
+
+/** One validator of a runtime operation's `schema`; `never` when the operation does not declare it. */
+type SchemaPart<Op, K extends "body" | "query" | "response"> = Op extends {
+  schema: infer S;
+}
+  ? S extends { [P in K]: infer V }
+    ? V extends StandardSchemaV1
+      ? V
+      : never
     : never
   : never;
-type PayloadFields<Op, R, Root extends RootTypes> = Op extends object
-  ? {
-      [K in Extract<keyof Op, "body" | "response" | "query">]: K extends "response"
-        ? TransformKeys<Op[K], ResponseTransform<R, Root>>
-        : Op[K];
-    }
-  : {};
-type ApplyPayload<Base, Meta, Name extends string, R, Root extends RootTypes> = Base extends (
-  ...args: never[]
-) => unknown
+
+type WithSchemaBody<Base, S> = [S] extends [never]
   ? Base
-  : MergeOp<Base, PayloadFields<MetaOperation<Meta, Name>, R, Root>>;
+  : Omit<Base, "body"> & { body: InferSchemaInput<S & StandardSchemaV1> };
+type WithSchemaQuery<Base, S> = [S] extends [never]
+  ? Base
+  : Omit<Base, "query"> & { query: InferSchemaInput<S & StandardSchemaV1> };
+type WithSchemaResponse<Base, S> = [S] extends [never]
+  ? Base
+  : Omit<Base, "response"> & { response: InferSchemaOutput<S & StandardSchemaV1> };
+
+/** Request side: body and query input come from the schemas (applied before pagination wraps the query). */
+type ApplySchemaRequest<Base, Rt> = Base extends (...args: never[]) => unknown
+  ? Base
+  : WithSchemaQuery<WithSchemaBody<Base, SchemaPart<Rt, "body">>, SchemaPart<Rt, "query">>;
+
+/**
+ * Response side: applied after pagination wrapping, because a response schema validates the final
+ * public result (for example the whole page envelope), never just the items.
+ */
+type ApplySchemaResponse<Base, Rt> = Base extends (...args: never[]) => unknown
+  ? Base
+  : WithSchemaResponse<Base, SchemaPart<Rt, "response">>;
+
+/** Query input of a request-style builtin that has no other query type. */
+type SchemaQueryOr<Rt, Fallback> = [SchemaPart<Rt, "query">] extends [never]
+  ? Fallback
+  : InferSchemaInput<SchemaPart<Rt, "query">>;
 
 // ---- operation selection (mirrors operation/expand.ts exactly) ----
 
@@ -695,8 +771,30 @@ type EffectiveOpDef<
   Meta,
   Root extends RootTypes,
 > = Name extends "getAll"
-  ? ApplyOpPagination<
-      ApplyPayload<
+  ? ApplySchemaResponse<
+      ApplyOpPagination<
+        ApplySchemaRequest<
+          ApplyResponseParser<
+            ApplyResponseType<
+              MergeOp<
+                EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
+                SanitizeRuntimeOp<
+                  Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+                >
+              >
+            >,
+            InheritedParser<R, RuntimeOperation<R, Name>, Root>,
+            Name,
+            GetAllPagination<R>
+          >,
+          RuntimeOperation<R, Name>
+        >,
+        GetAllPagination<R>
+      >,
+      RuntimeOperation<R, Name>
+    >
+  : ApplySchemaResponse<
+      ApplySchemaRequest<
         ApplyResponseParser<
           ApplyResponseType<
             MergeOp<
@@ -707,31 +805,11 @@ type EffectiveOpDef<
             >
           >,
           InheritedParser<R, RuntimeOperation<R, Name>, Root>,
-          Name,
-          GetAllPagination<R>
+          Name
         >,
-        Meta,
-        Name,
-        R,
-        Root
+        RuntimeOperation<R, Name>
       >,
-      GetAllPagination<R>
-    >
-  : ApplyPayload<
-      ApplyResponseParser<
-        ApplyResponseType<
-          MergeOp<
-            EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
-            SanitizeRuntimeOp<Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never>
-          >
-        >,
-        InheritedParser<R, RuntimeOperation<R, Name>, Root>,
-        Name
-      >,
-      Meta,
-      Name,
-      R,
-      Root
+      RuntimeOperation<R, Name>
     >;
 type RuntimeOperation<R, Name extends string> = Name extends keyof ResourceOpsOf<R>
   ? ResourceOpsOf<R>[Name]
@@ -763,12 +841,15 @@ type GetByCall<
 >(
   field: K,
   value: LookupValue<R, Meta, Root, NoInfer<K>>,
-  ...options: [Params] extends [never] ? [options?: O] : [options: O]
+  ...options: [Params] extends [never]
+    ? [options?: O & ForbiddenCallOptions]
+    : [options: O & ForbiddenCallOptions]
 ) => Promise<CallResult<InferResponse<Op>, O>>;
 
-type SpecialResponse<Name extends string, R, Meta, Root extends RootTypes, Default> =
-  ApplyPayload<
-    ApplyResponseParser<
+type SpecialResponse<Name extends string, R, Meta, Root extends RootTypes, Default> = [
+  SchemaPart<RuntimeOperation<R, Name>, "response">,
+] extends [never]
+  ? ApplyResponseParser<
       ApplyResponseType<
         SanitizeRuntimeOp<
           [RuntimeOperation<R, Name>] extends [never] ? {} : RuntimeOperation<R, Name>
@@ -777,36 +858,56 @@ type SpecialResponse<Name extends string, R, Meta, Root extends RootTypes, Defau
       InheritedParser<R, RuntimeOperation<R, Name>, Root>,
       Name,
       OptInPagination<R, RuntimeOperation<R, Name>>
-    >,
-    Meta,
-    Name,
-    R,
-    Root
-  > extends { response: infer Res }
+    > extends { response: infer Res }
     ? unknown extends Res
       ? Default
       : Res
-    : Default;
+    : Default
+  : InferSchemaOutput<SchemaPart<RuntimeOperation<R, Name>, "response">>;
 
 type SpecialClientFn<Name extends string, R, Meta, Root extends RootTypes> = Name extends "exists"
   ? CallWithOptions<
       [id: IdOf<R, Meta, Root>],
-      ResourceParamName<R>,
-      QueryParams,
+      Exclude<
+        PathParamName<
+          FullPath<
+            R,
+            "exists",
+            [RuntimeOperation<R, "exists">] extends [never] ? {} : RuntimeOperation<R, "exists">
+          >
+        >,
+        FirstPathParam<
+          EffectivePath<
+            "exists",
+            [RuntimeOperation<R, "exists">] extends [never] ? {} : RuntimeOperation<R, "exists">
+          >
+        >
+      >,
+      SchemaQueryOr<RuntimeOperation<R, "exists">, QueryParams>,
       SpecialResponse<"exists", R, Meta, Root, boolean>
     >
   : Name extends "getMany"
-    ? CallWithOptions<
-        [ids: IdOf<R, Meta, Root>[]],
-        ResourceParamName<R>,
+    ? BatchCall<
+        R,
+        Meta,
+        Root,
+        PathParamName<
+          FullPath<
+            R,
+            "getMany",
+            [RuntimeOperation<R, "getMany">] extends [never] ? {} : RuntimeOperation<R, "getMany">
+          >
+        >,
         PaginationModeQuery<
-          [MetaOperation<Meta, "getMany">] extends [{ query: infer Q }] ? Q : QueryParams,
+          SchemaQueryOr<RuntimeOperation<R, "getMany">, QueryParams>,
           OptInPagination<R, RuntimeOperation<R, "getMany">>
         >,
-        WrapPaginated<
-          SpecialResponse<"getMany", R, Meta, Root, EntityOf<R, Meta, Root>[]>,
-          OptInPagination<R, RuntimeOperation<R, "getMany">>
-        >
+        [SchemaPart<RuntimeOperation<R, "getMany">, "response">] extends [never]
+          ? WrapPaginated<
+              SpecialResponse<"getMany", R, Meta, Root, EntityOf<R, Meta, Root>[]>,
+              OptInPagination<R, RuntimeOperation<R, "getMany">>
+            >
+          : SpecialResponse<"getMany", R, Meta, Root, EntityOf<R, Meta, Root>[]>
       >
     : Name extends "findFirst"
       ? CallWithOptions<
@@ -818,12 +919,46 @@ type SpecialClientFn<Name extends string, R, Meta, Root extends RootTypes> = Nam
               [RuntimeOperation<R, Name>] extends [never] ? {} : RuntimeOperation<R, Name>
             >
           >,
-          FilterOf<R, Meta, Root>,
+          FilterOf<R, Meta, Root, RuntimeOperation<R, "findFirst">>,
           SpecialResponse<"findFirst", R, Meta, Root, EntityOf<R, Meta, Root> | null>
         >
       : Name extends "getBy"
         ? GetByCall<R, Meta, Root>
         : never;
+
+type BatchResult<Data, O> = [O] extends [undefined]
+  ? Data
+  : O extends { full: true }
+    ? BatchResponse<Data>
+    : Data;
+type BatchOptions<R, Meta, Root extends RootTypes, Query, Result> = OperationOptions<
+  Query,
+  Result
+> & {
+  sortBy?: GetManySort<
+    unknown extends EntityOf<R, Meta, Root>
+      ? string
+      : Extract<keyof EntityOf<R, Meta, Root>, string>
+  >;
+};
+type BatchCall<R, Meta, Root extends RootTypes, Params extends string, Query, Result> = [
+  Params,
+] extends [never]
+  ? <O extends BatchOptions<R, Meta, Root, Query, Result> | undefined = undefined>(
+      ids: IdOf<R, Meta, Root>[],
+      options?: (O | BatchOptions<R, Meta, Root, Query, Result>) & ForbiddenCallOptions,
+    ) => Promise<BatchResult<Result, O>>
+  : <
+      O extends BatchOptions<R, Meta, Root, Query, Result> & {
+        params: { [P in Params]: string | number };
+      },
+    >(
+      ids: IdOf<R, Meta, Root>[],
+      options: O & ForbiddenCallOptions,
+    ) => Promise<BatchResult<Result, O>>;
+
+/** Definition-only controls cannot be smuggled through inferred generic options. */
+type ForbiddenCallOptions = { responseType?: never; redirectOrigins?: never };
 
 type SpecialName = "exists" | "getMany" | "findFirst" | "getBy";
 
@@ -859,14 +994,19 @@ type FirstPathParam<Path extends string> = Path extends
       ? Param
       : never;
 
+type OperationOptions<Query, Result> = RequestOptions<Query> &
+  ([Result] extends [PaginatedResult]
+    ? { pagination?: LogicalPaginationInput }
+    : { pagination?: never });
+
 type CallWithOptions<Args extends unknown[], Params extends string, Query, Result> = [
   Params,
 ] extends [never]
-  ? <O extends RequestOptions<Query> | undefined = undefined>(
-      ...args: [...Args, options?: O | RequestOptions<Query>]
+  ? <O extends OperationOptions<Query, Result> | undefined = undefined>(
+      ...args: [...Args, options?: (O | OperationOptions<Query, Result>) & ForbiddenCallOptions]
     ) => Promise<CallResult<Result, O>>
-  : <O extends RequestOptions<Query> & { params: { [K in Params]: string | number } }>(
-      ...args: [...Args, options: O]
+  : <O extends OperationOptions<Query, Result> & { params: { [K in Params]: string | number } }>(
+      ...args: [...Args, options: O & ForbiddenCallOptions]
     ) => Promise<CallResult<Result, O>>;
 
 type IdentityCall<
@@ -888,50 +1028,48 @@ type IdentityMutationCall<
   Meta,
   Root extends RootTypes,
   Op = EffectiveOpDef<Name, R, Meta, Root>,
-  Params extends string = Exclude<
-    PathParamName<FullPath<R, Name, Op>>,
-    FirstPathParam<EffectivePath<Name, Op>>
-  >,
-> = <
-  O extends RequestOptions<InferQuery<Op>> & { body: InferBody<Op> } & ([Params] extends [never]
-      ? {}
-      : { params: { [K in Params]: string | number } }),
->(
-  id: IdOf<R, Meta, Root>,
-  options: O,
-) => Promise<CallResult<InferResponse<Op>, O>>;
+> = CallWithOptions<
+  HasBody<Name, Op> extends true
+    ? [id: IdOf<R, Meta, Root>, body: InferBody<Op>]
+    : [id: IdOf<R, Meta, Root>],
+  Exclude<PathParamName<FullPath<R, Name, Op>>, FirstPathParam<EffectivePath<Name, Op>>>,
+  InferQuery<Op>,
+  InferResponse<Op>
+>;
 
 type ListCall<R, Meta, Root extends RootTypes, Op = EffectiveOpDef<"getAll", R, Meta, Root>> =
   HasBody<"getAll", Op> extends true
     ? PathParamName<FullPath<R, "getAll", Op>> extends never
-      ? <O extends RequestOptions<InferQuery<Op>> | undefined = undefined>(
+      ? <O extends OperationOptions<InferQuery<Op>, InferResponse<Op>> | undefined = undefined>(
           body: InferBody<Op>,
-          options?: O | RequestOptions<InferQuery<Op>>,
+          options?: (O | OperationOptions<InferQuery<Op>, InferResponse<Op>>) &
+            ForbiddenCallOptions,
         ) => Promise<CallResult<InferResponse<Op>, O>>
       : <
-          O extends RequestOptions<InferQuery<Op>> & {
+          O extends OperationOptions<InferQuery<Op>, InferResponse<Op>> & {
             params: PathParamsOf<FullPath<R, "getAll", Op>>;
           },
         >(
           body: InferBody<Op>,
-          options: O,
+          options: O & ForbiddenCallOptions,
         ) => Promise<CallResult<InferResponse<Op>, O>>
     : PathParamName<FullPath<R, "getAll", Op>> extends never
-      ? <O extends RequestOptions<InferQuery<Op>> | undefined = undefined>(
-          options?: O | RequestOptions<InferQuery<Op>>,
+      ? <O extends OperationOptions<InferQuery<Op>, InferResponse<Op>> | undefined = undefined>(
+          options?: (O | OperationOptions<InferQuery<Op>, InferResponse<Op>>) &
+            ForbiddenCallOptions,
         ) => Promise<CallResult<InferResponse<Op>, O>>
       : <
-          O extends RequestOptions<InferQuery<Op>> & {
+          O extends OperationOptions<InferQuery<Op>, InferResponse<Op>> & {
             params: PathParamsOf<FullPath<R, "getAll", Op>>;
           },
         >(
-          options: O,
+          options: O & ForbiddenCallOptions,
         ) => Promise<CallResult<InferResponse<Op>, O>>;
 
 /** An operation-level `transforms.response` overrides resource and root for that operation's types. */
 type WithOpTransforms<R, Op> = [Op] extends [never]
   ? R
-  : Op extends { transforms: { response: infer Rule extends KeyTransformConfig } }
+  : Op extends { transforms: { response: infer Rule extends KeyTransformConfig | false } }
     ? Omit<R, "transforms"> & { transforms: { response: Rule } }
     : R;
 type CustomOpName<R> = Exclude<keyof ResourceOpsOf<R>, AllBuiltinOpName>;
@@ -941,18 +1079,18 @@ type CustomClientFn<R, Meta, Root extends RootTypes, Name extends CustomOpName<R
   ? CustomCall<
       WithOpTransforms<R, ResourceOpsOf<R>[Name]>,
       Extract<Name, string>,
-      ApplyOpPagination<
-        ApplyPayload<
-          ApplyResponseParser<
-            ApplyResponseType<SanitizeRuntimeOp<ResourceOpsOf<R>[Name]>>,
-            InheritedParser<R, ResourceOpsOf<R>[Name], Root>
+      ApplySchemaResponse<
+        ApplyOpPagination<
+          ApplySchemaRequest<
+            ApplyResponseParser<
+              ApplyResponseType<SanitizeRuntimeOp<ResourceOpsOf<R>[Name]>>,
+              InheritedParser<R, ResourceOpsOf<R>[Name], Root>
+            >,
+            ResourceOpsOf<R>[Name]
           >,
-          Meta,
-          Extract<Name, string>,
-          WithOpTransforms<R, ResourceOpsOf<R>[Name]>,
-          Root
+          OptInPagination<R, ResourceOpsOf<R>[Name]>
         >,
-        OptInPagination<R, ResourceOpsOf<R>[Name]>
+        ResourceOpsOf<R>[Name]
       >
     >
   : StripCtx<FnOf<ResourceOpsOf<R>[Name]>>;
@@ -965,7 +1103,7 @@ type CustomCall<
 > = CallWithOptions<
   HasBody<Name, Op> extends true
     ? [Params] extends [never]
-      ? [unknown] extends [InferBody<Op>]
+      ? [undefined] extends [InferBody<Op>]
         ? [body?: InferBody<Op>]
         : [body: InferBody<Op>]
       : [body: InferBody<Op>]
@@ -1018,7 +1156,7 @@ export type ApixaClient = { readonly [apixaClient]: true };
 /** Runtime config controls method names and paths; metadata and mock data control payload types. */
 export type ResourceClient<
   R extends { path: string } = { path: string },
-  Meta = {},
+  Meta = unknown,
   Root extends RootTypes = RootTypes,
 > = {
   [Name in KnownOpName<R>]: ClientFnFor<Name, R, Meta, Root>;
@@ -1034,26 +1172,26 @@ export type ApiClient<Meta, Config> = {
   readonly [K in keyof ResourcesOf<Config>]: ResourcesOf<Config>[K] extends { path: string }
     ? ResourceClient<
         ResourcesOf<Config>[K],
-        K extends keyof Meta ? Meta[K] : {},
+        K extends keyof Meta ? Meta[K] : unknown,
         RootTypesOf<Config>
       >
     : never;
 } & ApixaClient;
 
 export type ApisClient<Defs, Configs> = {
-  readonly [K in keyof Configs]: ApiClient<K extends keyof Defs ? Defs[K] : {}, Configs[K]>;
+  readonly [K in keyof Configs]: ApiClient<K extends keyof Defs ? Defs[K] : unknown, Configs[K]>;
 };
 
 // ---------------------------------------------------------------------------------------------
 // Input constraints and compile-time validation (exact keys, metadata/runtime agreement).
 // ---------------------------------------------------------------------------------------------
 
-/** `defineApi()` input with no metadata. */
-export type InferredApiInput = ApiRootConfig;
+/** `defineApi()` input with no metadata. `S` is the `schema` option type (see `OperationDefinition`). */
+export type InferredApiInput<S = OperationSchema> = ApiRootConfig<S>;
 
 /** `defineApi<T>()` input: every resource declared in `T` must exist under `resources`. */
-export type ApiInput<T> = Omit<ApiRootConfig, "resources"> & {
-  resources: { [K in keyof T]: ResourceDefinition } & Record<string, ResourceDefinition>;
+export type ApiInput<T, S = OperationSchema> = Omit<ApiRootConfig<S>, "resources"> & {
+  resources: { [K in keyof T]: ResourceDefinition<S> } & Record<string, ResourceDefinition<S>>;
 };
 
 export type InferredApisInput = Record<string, InferredApiInput>;
@@ -1129,11 +1267,40 @@ type ValidateOpPagination<Name, Op> = Op extends { pagination: infer P }
         : { pagination: ConfigTypeError<`invalid pagination setting`> }
   : unknown;
 
-type ValidateResourcePagination<R> = R extends { pagination: infer P }
-  ? [P] extends [ResourcePagination | undefined]
+type SchemaPlacement = "body" | "query" | "response";
+
+/** Compile-time mirror of the runtime `schema` checks that TypeScript can decide from literals. */
+type ValidateOpSchema<Name, Op> = Op extends { schema: infer S }
+  ? [S] extends [undefined]
     ? unknown
-    : { pagination: ConfigTypeError<`invalid pagination setting`> }
+    : S extends object
+      ? {
+          schema: {
+            [
+              K in Exclude<keyof S, SchemaPlacement>
+            ]: ConfigTypeError<`Unknown schema key "${K & string}". Use { body?, query?, response? }`>;
+          } & {
+            [K in Extract<keyof S, SchemaPlacement>]: S[K] extends StandardSchemaV1
+              ? unknown
+              : ConfigTypeError<"Expected a Standard Schema V1-compatible validator">;
+          };
+        } & (S extends { body: unknown }
+          ? HasBody<Name & string, Op> extends true
+            ? unknown
+            : { schema: { body: ConfigTypeError<"this operation has no request body"> } }
+          : unknown)
+      : { schema: ConfigTypeError<"schema must be an object { body?, query?, response? }"> }
   : unknown;
+
+type ValidateResourcePagination<R> = R extends { pagination: unknown }
+  ? {
+      pagination: ConfigTypeError<`renamed to paginationConfig; operation pagination stays the on/off switch`>;
+    }
+  : R extends { paginationConfig: infer P }
+    ? [P] extends [ResourcePagination | undefined]
+      ? unknown
+      : { paginationConfig: ConfigTypeError<`invalid pagination setting`> }
+    : unknown;
 
 type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
   ? Name extends AllBuiltinOpName
@@ -1147,7 +1314,11 @@ type ValidateOperation<Name, Op> = Op extends (...args: never[]) => unknown
       : ValidateOperationShape<Name, Op>
     : ValidateOperationShape<Name, Op>;
 
-type ValidateTransformRule<R> = R extends object ? Exact<R, KeyTransformConfig> : unknown;
+type ValidateTransformRule<R> = [R] extends [false | undefined]
+  ? unknown
+  : R extends object
+    ? Exact<R, KeyTransformConfig>
+    : ConfigTypeError<"Expected { keys, exclude?, preserve?, maxDepth? } or false">;
 type ValidateTransformsConfig<T> = Exact<T, { request: unknown; response: unknown }> &
   (T extends { request: infer Req } ? { request: ValidateTransformRule<Req> } : unknown) &
   (T extends { response: infer Res } ? { response: ValidateTransformRule<Res> } : unknown);
@@ -1158,10 +1329,19 @@ type ValidateResponseOptions<Resp> = Resp extends object
 type ValidateMiddlewareHooks<M> = [M] extends [undefined]
   ? unknown
   : M extends readonly unknown[]
-    ? ConfigTypeError<"middleware must be an object { onRequest?, onResponse?, onError? }">
+    ? ConfigTypeError<"middleware must be an object { onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }">
     : M extends object
-      ? Exact<M, { onRequest: unknown; onResponse: unknown; onError: unknown }>
-      : ConfigTypeError<"middleware must be an object { onRequest?, onResponse?, onError? }">;
+      ? Exact<
+          M,
+          {
+            onRequest: unknown;
+            onAttempt: unknown;
+            onAttemptResponse: unknown;
+            onResponse: unknown;
+            onError: unknown;
+          }
+        >
+      : ConfigTypeError<"middleware must be an object { onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }">;
 
 type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
   ? Exact<Op, { kind: unknown; run: unknown; presigned?: unknown }> &
@@ -1189,6 +1369,7 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
           ValidateIdempotency<Name, Op> &
           ValidateDataFormat<Name, Op> &
           ValidateOpPagination<Name, Op> &
+          ValidateOpSchema<Name, Op> &
           (Op extends { transforms: infer T }
             ? { transforms: ValidateTransformsConfig<T> }
             : unknown) &
@@ -1208,19 +1389,6 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
       : Op extends false | undefined
         ? unknown
         : ConfigTypeError<`operation "${Name & string}" must be a declaration or a boolean`>;
-
-/**
- * Metadata operations with no runtime definition. While a context-sensitive function (a custom
- * `run` or `mock` handler) is being checked, `R` is still the open `ResourceDefinition` constraint
- * (its `path` is `string`, not a literal), so nothing can be reported as missing yet.
- */
-type MissingCustomOps<Meta, R> = Meta extends { operations: infer M }
-  ? R extends { path: infer P }
-    ? string extends P
-      ? never
-      : Exclude<keyof M, AllBuiltinOpName | keyof ResourceOpsOf<R>>
-    : Exclude<keyof M, AllBuiltinOpName | keyof ResourceOpsOf<R>>
-  : never;
 
 type ValidateMock<M, Meta> = M extends { data: infer D }
   ? Exact<
@@ -1253,15 +1421,13 @@ type MockValidationEntity<M> =
           : unknown
     : unknown;
 
-type MockMatchesMeta<M, Meta> = Meta extends { entity: infer E }
-  ? [undefined] extends [E]
-    ? unknown
-    : Known<MockValidationEntity<M>> extends true
-      ? MockValidationEntity<M> extends E
-        ? unknown
-        : ConfigTypeError<"mock data does not match the declared entity type">
-      : unknown
-  : unknown;
+type MockMatchesMeta<M, Meta> = unknown extends Meta
+  ? unknown
+  : Known<MockValidationEntity<M>> extends true
+    ? MockValidationEntity<M> extends Meta
+      ? unknown
+      : ConfigTypeError<"mock data does not match the declared entity type">
+    : unknown;
 
 /**
  * `fileFields` against the public entity. Array form: each name must be a file-capable entity key
@@ -1304,17 +1470,13 @@ type ValidateTransfer<Name, Op, R> = Op extends { transfer: { source: infer S } 
         : unknown)
   : unknown;
 
-type ValidateOperationMap<Ops, R, Meta> = {
+type ValidateOperationMap<Ops, R> = {
   [O in keyof Ops]: ValidateOperation<O, Ops[O]> & ValidateTransfer<O, Ops[O], R>;
-} & {
-  [
-    O in MissingCustomOps<Meta, R>
-  ]: ConfigTypeError<"declared in metadata but not defined in runtime operations">;
 };
 
-type ValidateOperations<Ops, R, Meta> = Ops extends string | readonly unknown[]
+type ValidateOperations<Ops, R> = Ops extends string | readonly unknown[]
   ? unknown
-  : ValidateOperationMap<OperationOverrides<Ops>, R, Meta>;
+  : ValidateOperationMap<OperationOverrides<Ops>, R>;
 
 type ValidateResource<R, Meta, Root extends RootTypes> = Exact<R, ResourceDefinition> &
   (R extends { idKey: infer K }
@@ -1328,17 +1490,9 @@ type ValidateResource<R, Meta, Root extends RootTypes> = Exact<R, ResourceDefini
     : unknown) &
   (R extends { operations: infer Ops }
     ? {
-        operations: ValidateOperations<Ops, R, Meta>;
+        operations: ValidateOperations<Ops, R>;
       }
-    : [MissingCustomOps<Meta, R>] extends [never]
-      ? unknown
-      : {
-          operations: {
-            [
-              O in MissingCustomOps<Meta, R>
-            ]: ConfigTypeError<"declared in metadata but not defined in runtime operations">;
-          };
-        }) &
+    : unknown) &
   (R extends { mock: infer M } ? { mock: ValidateMock<M, Meta> } : unknown) &
   (R extends { fileFields: infer F }
     ? { fileFields: ValidateFileFields<F, EntityOf<R, Meta, Root>> }
@@ -1355,7 +1509,7 @@ export type ValidateConfig<Meta, Config> = Exact<Config, ApiRootConfig> &
         resources: {
           [K in keyof Res]: ValidateResource<
             Res[K],
-            K extends keyof Meta ? Meta[K] : {},
+            K extends keyof Meta ? Meta[K] : unknown,
             RootTypesOf<Config>
           >;
         };
@@ -1386,8 +1540,13 @@ export type ValidateApisConfig<Defs, Configs> = {
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 type NonObjectOp = boolean | Function | OperationPreset | readonly AllBuiltinOpName[];
 // `run` repeats the real `OperationFn` so a function operation keeps its contextual parameter types.
-type OpShape = Omit<OperationDefinition, "path" | "mock"> & { run?: OperationRunDefinition["run"] };
-type ResShape<Except extends keyof ResourceDefinition> = Omit<ResourceDefinition, Except>;
+type OpShape<S = OperationSchema> = Omit<OperationDefinition<S>, "path" | "mock"> & {
+  run?: OperationRunDefinition["run"];
+};
+type ResShape<Except extends keyof ResourceDefinition, S = OperationSchema> = Omit<
+  ResourceDefinition<S>,
+  Except
+>;
 type SelectionShape = OperationPreset | readonly AllBuiltinOpName[];
 
 /** Inference sites only: they read `mock`, `path` and operation `path` leaves of the config. */
@@ -1395,10 +1554,11 @@ export type HandlerCapture<
   M extends Record<string, unknown>,
   RP extends Record<string, unknown>,
   OP extends Record<string, Record<string, unknown>>,
+  S = OperationSchema,
 > = {
-  resources?: { [K in keyof M]: { mock?: M[K] } & ResShape<"mock"> };
+  resources?: { [K in keyof M]: { mock?: M[K] } & ResShape<"mock", S> };
 } & {
-  resources?: { [K in keyof RP]: { path?: RP[K] } & ResShape<"path"> };
+  resources?: { [K in keyof RP]: { path?: RP[K] } & ResShape<"path", S> };
 } & {
   resources?: {
     [K in keyof OP]: {
@@ -1407,9 +1567,9 @@ export type HandlerCapture<
         | {
             [O in keyof OP[K]]: O extends "preset"
               ? SelectionShape
-              : ({ path?: OP[K][O] } & OpShape) | NonObjectOp;
+              : ({ path?: OP[K][O] } & OpShape<S>) | NonObjectOp;
           };
-    } & ResShape<"operations">;
+    } & ResShape<"operations", S>;
   };
 };
 
@@ -1424,24 +1584,6 @@ type HandlerEntity<Mock> = [unknown] extends [Mock]
         : Record<string, unknown>
     : never;
 
-type HandlerState<Meta, K, O> = K extends keyof Meta
-  ? Meta[K] extends { operations?: infer Ops }
-    ? O extends keyof NonNullable<Ops>
-      ? NonNullable<Ops>[O]
-      : never
-    : never
-  : never;
-type HandlerQuery<P> = [P] extends [never]
-  ? Record<string, unknown>
-  : P extends { query: infer Q }
-    ? Q
-    : Record<string, unknown>;
-type HandlerBody<P> = [P] extends [never] ? unknown : P extends { body: infer B } ? B : unknown;
-type HandlerResult<P> = [P] extends [never]
-  ? unknown
-  : P extends { response: infer Res }
-    ? Res
-    : unknown;
 type HandlerParams<Base, Rel> = Base extends string
   ? Rel extends string
     ? PathParamsOf<ConcatPaths<Base, Rel>>
@@ -1450,26 +1592,26 @@ type HandlerParams<Base, Rel> = Base extends string
 
 /** Types the `mock` handler of every custom declarative operation. Never infers (`NoInfer`). */
 export type HandlerOverlay<
-  Meta,
   M extends Record<string, unknown>,
   RP extends Record<string, unknown>,
   OP extends Record<string, Record<string, unknown>>,
+  S = OperationSchema,
 > = NoInfer<{
   resources?: {
-    [K in keyof OP]: ResShape<"operations"> & {
+    [K in keyof OP]: ResShape<"operations", S> & {
       operations?:
         | SelectionShape
         | {
             [O in keyof OP[K]]: O extends AllBuiltinOpName | "preset"
               ? unknown
               : | NonObjectOp
-                | (OpShape & {
+                | (OpShape<S> & {
                     mock?: OperationMockHandler<
                       K extends keyof M ? HandlerEntity<M[K]> : Record<string, unknown>,
                       HandlerParams<K extends keyof RP ? RP[K] : "", OP[K][O]>,
-                      HandlerQuery<HandlerState<Meta, K, O>>,
-                      HandlerBody<HandlerState<Meta, K, O>>,
-                      HandlerResult<HandlerState<Meta, K, O>>
+                      Record<string, unknown>,
+                      unknown,
+                      unknown
                     >;
                   });
           };
@@ -1481,17 +1623,19 @@ export type HandlerOverlay<
 
 /** Client-level options of one `defineApis` entry (everything except `resources`). */
 type ClientShape = Omit<ApiRootConfig, "resources">;
+
 export type ApisHandlerCapture<
   M extends Record<string, Record<string, unknown>>,
   RP extends Record<string, Record<string, unknown>>,
   OP extends Record<string, Record<string, Record<string, unknown>>>,
+  S = OperationSchema,
 > = {
   [C in keyof M]: ClientShape & {
-    resources?: { [K in keyof M[C]]: { mock?: M[C][K] } & ResShape<"mock"> };
+    resources?: { [K in keyof M[C]]: { mock?: M[C][K] } & ResShape<"mock", S> };
   };
 } & {
   [C in keyof RP]: ClientShape & {
-    resources?: { [K in keyof RP[C]]: { path?: RP[C][K] } & ResShape<"path"> };
+    resources?: { [K in keyof RP[C]]: { path?: RP[C][K] } & ResShape<"path", S> };
   };
 } & {
   [C in keyof OP]: ClientShape & {
@@ -1502,30 +1646,30 @@ export type ApisHandlerCapture<
           | {
               [O in keyof OP[C][K]]: O extends "preset"
                 ? SelectionShape
-                : ({ path?: OP[C][K][O] } & OpShape) | NonObjectOp;
+                : ({ path?: OP[C][K][O] } & OpShape<S>) | NonObjectOp;
             };
-      } & ResShape<"operations">;
+      } & ResShape<"operations", S>;
     };
   };
 };
 
 /** `defineApis` version of {@link HandlerOverlay}. Never infers (`NoInfer`). */
 export type ApisHandlerOverlay<
-  Defs,
   M extends Record<string, Record<string, unknown>>,
   RP extends Record<string, Record<string, unknown>>,
   OP extends Record<string, Record<string, Record<string, unknown>>>,
+  S = OperationSchema,
 > = NoInfer<{
   [C in keyof OP]: ClientShape & {
     resources?: {
-      [K in keyof OP[C]]: ResShape<"operations"> & {
+      [K in keyof OP[C]]: ResShape<"operations", S> & {
         operations?:
           | SelectionShape
           | {
               [O in keyof OP[C][K]]: O extends AllBuiltinOpName | "preset"
                 ? unknown
                 : | NonObjectOp
-                  | (OpShape & {
+                  | (OpShape<S> & {
                       mock?: OperationMockHandler<
                         C extends keyof M
                           ? K extends keyof M[C]
@@ -1536,9 +1680,9 @@ export type ApisHandlerOverlay<
                           C extends keyof RP ? (K extends keyof RP[C] ? RP[C][K] : "") : "",
                           OP[C][K][O]
                         >,
-                        HandlerQuery<HandlerState<C extends keyof Defs ? Defs[C] : {}, K, O>>,
-                        HandlerBody<HandlerState<C extends keyof Defs ? Defs[C] : {}, K, O>>,
-                        HandlerResult<HandlerState<C extends keyof Defs ? Defs[C] : {}, K, O>>
+                        Record<string, unknown>,
+                        unknown,
+                        unknown
                       >;
                     });
             };

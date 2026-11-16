@@ -62,7 +62,7 @@ describe("hierarchical headers", () => {
     let attempts = 0;
     const api = defineApi({
       baseURL: "https://api.example.com",
-      retry: { retries: 2, baseDelayMs: 0, jitter: false },
+      retry: { count: 2, delay: 0, jitter: false },
       headers: () => ({ "X-Call": String(++calls) }),
       transport: createFakeTransport(() => (++attempts < 3 ? { status: 503 } : { body: [] })),
       resources: { users: { path: "/users" } },

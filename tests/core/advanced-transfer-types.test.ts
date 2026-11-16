@@ -20,7 +20,7 @@ it("preserves body/result inference and versioned checkpoint types", () => {
 
 // Compile-only negative contract: never executes network work.
 function compileContract(config: AdvancedTransferConfig) {
-  defineApi<{ files: { entity: { id: string; file: string } } }>()({
+  defineApi<{ files: { id: string; file: string } }>()({
     baseURL: "https://api.example",
     resources: {
       files: {
@@ -45,7 +45,7 @@ function compileContract(config: AdvancedTransferConfig) {
       },
     },
   });
-  const api = defineApi<{ files: { entity: { id: string; file: string } } }>()({
+  const api = defineApi<{ files: { id: string; file: string } }>()({
     baseURL: "https://api.example",
     resources: {
       files: { path: "/files", fileFields: ["file"], operations: { create: { transfer: config } } },

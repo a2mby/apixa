@@ -20,7 +20,7 @@ const makeApi = () =>
           { id: "1", name: "Ada" },
           { id: "2", name: "Grace" },
         ],
-        pagination: "page",
+        paginationConfig: "page",
         operations: { first: { kind: "read", run: (ctx) => ctx.request<unknown>({ path: "/1" }) } },
       },
     },

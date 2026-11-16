@@ -45,7 +45,7 @@ export function defineApis<Defs extends { [K in keyof Defs]: object }>(): <
     NoInfer<ApisInput<Defs>> &
     ValidateApisConfig<Defs, NoInfer<Configs>> &
     ApisHandlerCapture<M, RP, OP> &
-    ApisHandlerOverlay<Defs, M, RP, OP>,
+    ApisHandlerOverlay<M, RP, OP>,
 ) => ApisClient<Defs, Configs>;
 
 export function defineApis<
@@ -58,7 +58,7 @@ export function defineApis<
     NoInfer<InferredApisInput> &
     ValidateApisConfig<{}, NoInfer<Configs>> &
     ApisHandlerCapture<M, RP, OP> &
-    ApisHandlerOverlay<{}, M, RP, OP>,
+    ApisHandlerOverlay<M, RP, OP>,
 ): ApisClient<{}, Configs>;
 
 export function defineApis(configs?: unknown): unknown {

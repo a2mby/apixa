@@ -8,10 +8,7 @@ describe("honest session and request observation", () => {
     const snapshots: TransferSnapshot[] = [];
     server.faults.failPart = 1;
     await server
-      .client(
-        { concurrency: 3 },
-        { retry: { retries: 1, methods: ["PUT"], baseDelayMs: 0, maxDelayMs: 0 } },
-      )
+      .client({ concurrency: 3 }, { retry: { count: 1, methods: ["PUT"], delay: 0, maxDelay: 0 } })
       .files.create(
         { document: source() },
         {

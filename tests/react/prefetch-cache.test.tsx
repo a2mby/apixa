@@ -15,7 +15,7 @@ const grace: User = { id: "2", name: "Grace" };
 
 function recordingApi() {
   const requests: TransportRequest[] = [];
-  const api = defineApi<{ users: { entity: User } }>()({
+  const api = defineApi<{ users: User }>()({
     baseURL: "https://api.example.com",
     transport: createFakeTransport((request) => {
       requests.push(request);

@@ -11,20 +11,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
 
-type HttpApi = {
-  users: {
-    path: "/users";
-    entity: User;
-    operations: {
-      getAll: { query: { limit?: number; active?: boolean }; response: User[] };
-      getPost: {
-        method: "GET";
-        path: "/:userId/posts/:postId";
-        response: { id: string };
-      };
-    };
-  };
-};
+type HttpApi = { users: User };
 
 describe("request execution", () => {
   it("applies path parameters and query strings to the final URL", async () => {

@@ -33,7 +33,7 @@ function heldTransport() {
 }
 
 function api(transport: Transport) {
-  return defineApi<{ users: { entity: User; query: { search: string } } }>()({
+  return defineApi<{ users: User }>()({
     baseURL: "https://x.dev",
     transport,
     resources: {

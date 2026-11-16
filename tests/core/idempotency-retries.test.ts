@@ -25,7 +25,7 @@ function script(steps: Step[]) {
   return { transport, attempts, keys };
 }
 
-const retry = { retries: 2, baseDelayMs: 0, jitter: false, methods: ["POST" as const] };
+const retry = { count: 2, delay: 0, jitter: false as const, methods: ["POST" as const] };
 let counter = 0;
 const sequential = () => `key-${++counter}`;
 
@@ -57,7 +57,7 @@ describe("idempotency keys across Core retry paths", () => {
     expect(keys()).toEqual(["key-1", "key-1", "key-1"]);
   });
 
-  it("exhausted retries: every attempt has the key, the call rejects, the next call gets a new one", async () => {
+  it("exhausted count: every attempt has the key, the call rejects, the next call gets a new one", async () => {
     const { client, keys } = api([503]);
     await expect(client.users.create({ name: "Ada" })).rejects.toBeInstanceOf(HttpError);
     expect(keys()).toEqual(["key-1", "key-1", "key-1"]);

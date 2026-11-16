@@ -61,21 +61,21 @@ that hasn't implemented it 404s, the same as calling any unconfigured endpoint �
 pretend the route exists, it just doesn't require you to opt in by name first. (`getBySlug`, `upsert`,
 and `search` were removed in v3; define custom operations when a backend exposes them.)
 
-| Name         | Method | Default path       | Basis                                                                 |
-| ------------ | ------ | ------------------ | --------------------------------------------------------------------- |
-| `getAll`     | GET    | _(resource path)_  | convention                                                            |
-| `getById`    | GET    | `/:id`             | convention                                                            |
-| `create`     | POST   | _(resource path)_  | convention                                                            |
-| `update`     | PUT    | `/:id`             | convention — `(id, { body, ...options })`                             |
-| `delete`     | DELETE | `/:id`             | convention                                                            |
-| `patch`      | PATCH  | `/:id`             | convention — `(id, { body, ...options })`                             |
-| `count`      | GET    | `/count`           | convention                                                            |
-| `createMany` | POST   | `/bulk`            | convention                                                            |
-| `deleteMany` | DELETE | `/bulk`            | convention                                                            |
-| `getMany`    | GET    | _(resource path)_  | own request with repeated identity-key query values; expects an array |
-| `exists`     | GET    | `/:id`             | own request; maps 404 → `false`                                       |
-| `findFirst`  | GET    | _(resource path)_  | own list request; returns first result or `null`                      |
-| `getBy`      | GET    | _(given per call)_ | own request; `getBy(field, value)` or `getBy("/path/:x", value)`      |
+| Name         | Method | Default path       | Basis                                                              |
+| ------------ | ------ | ------------------ | ------------------------------------------------------------------ |
+| `getAll`     | GET    | _(resource path)_  | convention                                                         |
+| `getById`    | GET    | `/:id`             | convention                                                         |
+| `create`     | POST   | _(resource path)_  | convention                                                         |
+| `update`     | PUT    | `/:id`             | convention — `(id, body, options?)`                                |
+| `delete`     | DELETE | `/:id`             | convention                                                         |
+| `patch`      | PATCH  | `/:id`             | convention — `(id, body, options?)`                                |
+| `count`      | GET    | `/count`           | convention — normalizes finite integer / `{ count }` / `{ total }` |
+| `createMany` | POST   | `/bulk`            | convention                                                         |
+| `deleteMany` | DELETE | `/bulk`            | convention                                                         |
+| `getMany`    | GET    | _(resource path)_  | own request with repeated identity-key query values; strict batch  |
+| `exists`     | GET    | `/:id`             | own request; maps 404 → `false`                                    |
+| `findFirst`  | GET    | _(resource path)_  | own list request; returns first result or `null`                   |
+| `getBy`      | GET    | _(given per call)_ | own request; `getBy(field, value)` or `getBy("/path/:x", value)`   |
 
 `createMany` and `deleteMany` are the public names for the former bulk operations. Their default
 wire path remains `/bulk`; `deleteMany` sends its ID array in the DELETE body.
@@ -90,7 +90,7 @@ the configured API origin; cross-origin paths are rejected before the request is
 When a resource path has parameters, pass their named values in `options.params`:
 `exists(id, { params: { orgId } })`, `getMany(ids, { params: { orgId } })`,
 `findFirst({ params: { orgId }, query })`, or `getBy(field, value, { params: { orgId } })`.
-Detail writes take `(id, { body, params?, ... })`: `update(id, { body })` and `patch(id, { body })`.
+Detail writes take positional bodies `(id, body, options?)`: `update(id, body, options?)` and `patch(id, body, options?)`.
 Declarative custom reads take `({ params?, query?, ... })`; declarative custom writes default to
 `hasBody: true` (`(body, options?)`) unless `hasBody: false` is set.
 
@@ -126,7 +126,7 @@ const api = defineApi({
   construction (`ConfigError`).
 - `headers`, `timeout`, `retry`, `middleware`, `response`, and
   `transforms` are accepted at the root, resource, and operation levels. The most specific
-  value wins (`false` disables an inherited `retry` or `response` hook). Headers also accept a
+  value wins (`false` disables an inherited `retry`, `transforms.request` / `transforms.response`, or `response` hook). Headers also accept a
   per-call value and may be static, a sync provider, or an async provider (evaluated on every logical call).
 - `queryArrayFormat` (`"repeat"` | `"comma"` | `"brackets"`), `query`
   (`{ nulls?: "omit" | "empty" | "null", emptyArrays?: "omit" | "empty", booleans?: "string" | "number" }`),
@@ -136,10 +136,12 @@ const api = defineApi({
   `SerializationError`.
   Comma format joins values before encoding: `["a,b", "c"]` and `["a", "b,c"]` produce the same value.
   Use `repeat` or `brackets` when values may contain commas; nested arrays/objects use indexed brackets instead of comma joining.
-- `retry: 2` is shorthand for `{ retries: 2 }`. By default only `GET`, `HEAD`, and `OPTIONS` are
-  retried. Writes need an explicit `methods` entry. A `Retry-After` longer than `maxDelayMs`
-  stops retrying. `timeout` is one budget for the whole call, including backoff.
-- `transforms: { request: KeyTransformConfig, response: KeyTransformConfig }` supports `camelCase`,
+- `retry: 2` is shorthand for `{ count: 2 }`. By default `GET`, `HEAD`, `OPTIONS`, `PUT`, and `DELETE`
+  are retried (`POST` and `PATCH` need an explicit `methods` entry). `retry`
+  supports `delay`, `maxDelay`, `backoff: "exponential" | "linear"`, and
+  `jitter: "full" | "equal" | false` (default `"equal"`). A `Retry-After` longer than `maxDelay` stops retrying.
+  `timeout` accepts `number` (overall budget, including backoff) or `{ total?: number, perAttempt?: number }`.
+- `transforms: { request?: KeyTransformConfig | false, response?: KeyTransformConfig | false }` supports `camelCase`,
   `snake_case`, `PascalCase`, and `kebab-case`, with optional `exclude`, `preserve`, and `maxDepth`
   (default `64`). Conversion is recursive over plain objects and arrays, leaves values and special
   objects untouched, and never mutates its input. Colliding keys, cycles, or depth overflow throw
@@ -148,15 +150,19 @@ const api = defineApi({
   validates decoded payloads; `ApiResponse.source` keeps the raw parsed body prior to response stages.
 - Error middleware receives `(error, { request, replay })`. `replay()` re-runs the call once (fresh headers),
   e.g. refresh a token on 401 and `return replay()`; it is `undefined` inside a replay.
-- Register middleware under `middleware: { onRequest?, onResponse?, onError? }` with arrays of hook
+- Register middleware under `middleware: { onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }` with arrays of hook
   functions. Hooks run from client to resource to operation, in array order within each list.
 - `onRequest` middleware sees `request.query` already transformed by `transforms.request` (and
   renamed by live pagination `params`), while `request.body` key transforms run after `onRequest`.
   Mutations to `request.query` or `request.url` stay synchronized across transport, mocks, URLs, and
-  response/error `request` metadata (`request.query` wins on conflicts). `onResponse` runs after
-  `response` processing with `ApiResponse.source` intact.
+  response/error `request` metadata (`request.query` wins on conflicts). `onAttempt({ request, attempt })` and
+  `onAttemptResponse({ request, attempt, response, retry })` run per live HTTP attempt (with bounded `retry()`). `onResponse`
+  runs after `response` processing (`unwrap`, transforms, `parse`, shaping, `validate`) and before
+  `schema.response` and final structural/pagination checks, with `ApiResponse.source` intact.
 - `getMany`, `findFirst`, and unpaginated `getAll` expect an array response; configured `pagination`
-  expects a complete page/cursor envelope (use configured pagination for envelope list responses).
+  expects a complete page/cursor/offset envelope (use configured pagination for envelope list responses).
+  `getMany([])` fast-paths with zero network/mock requests (`skipped: true, reason: "empty-ids", status: null, headers: null` on `{ full: true }`),
+  enforces strict ID membership against `idKey` (allowing page subsets when paginated while always rejecting unexpected `extraIds` and `duplicateIds`), and supports local `options.sortBy`.
   Invalid shapes raise `ResponseShapeError`, whose `data` and `response` retain the parsed source
   and response details; an empty array is valid.
 - An operation whose body type is unknown (e.g. a custom POST) may be called without a body.
@@ -174,7 +180,7 @@ const api = defineApi({
 | `mock: { data, idKey, seed }` | as above; `idKey` checked | `seed: { limit, offset }`           |
 
 - All 13 builtins run directly against the store; none calls another.
-  - `getMany` returns results in request order and omits missing IDs.
+  - `getMany` returns results in request order (or `options.sortBy`), omits missing IDs, and skips dispatch on `[]`.
   - `findFirst` and `count` match flat fields by string equality.
   - `createMany` is atomic; `deleteMany` ignores missing IDs.
 - Overridden builtin paths keep their builtin semantics.
@@ -183,26 +189,23 @@ const api = defineApi({
   with code `MOCK_UNSUPPORTED`. No request is ever sent.
 - Each client has its own stores. `resetMock(api.users)` or `resetMock(api)` restores the
   seeded state.
-- `pagination` is one contract for live and mocked resources: `{ data, total, page, pageSize }`
-  or `{ data, nextCursor }`. It can be configured at the resource level (inherited by `getAll`) or
-  per operation on `getAll`, `getMany`, and declarative custom operations (`pagination: false` opts
-  `getAll` out of resource pagination; `true` reuses resource pagination or defaults to `"page"`). The
-  mock engine produces the page envelope. For a live resource the string form (`"page"` / `"cursor"`,
-  preset shorthands `"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"`, or
-  `true` for `"page"`) validates that the server already returns the expected envelope (or maps the
-  named preset), preserving extension metadata. To map a backend's own shape, use an object:
-  `{ type?, preset }` (`type` defaults to `"page"` when omitted with `preset`), `{ type, fields, params }`
-  (dot paths for response fields; `params` renames the `page` / `pageSize` / `cursor` query keys),
-  or `{ type, parseList(body, { status }) }` which wins over both. Fields are declared, never
-  guessed; a missing or wrong-typed mapped field throws `ParseError`. The mapping runs on live calls
-  before response key transforms (which then apply to the rows). Shorthand, mappings and callback
-  outputs all require a data array; page envelopes require integer `total >= 0`, `page >= 1`,
-  `pageSize >= 1`, and cursor envelopes require `nextCursor` to be a string or null. Empty and
-  out-of-range pages are valid. Final envelopes are checked again after response parsers/validators on
-  both live and mock calls.
-  Import the types from `apixa`: `Page<T>`, `CursorPage<T>`, `PageResult<T>`, `ResolvedPagination`,
-  `PaginationMode`, `PaginationQueryOf`, `ResourcePagination`, `PaginationPreset`, `PaginationFields`,
-  and `PaginationParams`.
+- Pagination is one contract for live and mocked resources, per strategy: page `{ data, total, page,
+pageSize }`, offset `{ data, total, offset, pageSize }`, cursor `{ data, nextCursor }`, each with
+  optional metadata (`pageCount`, `hasMore`, `nextOffset`, `previousCursor`, …). The shared resource
+  configuration is `paginationConfig` (resource `pagination` is rejected with `ConfigError`). Built-in `getAll` follows it; every other operation opts in with its own `pagination`
+  (`true` reuses the shared configuration; `false` is off; a strategy, preset or object **replaces** it
+  with no merging). Logical request keys (`page`, `pageSize`, `cursor`, `before`, `offset`) are passed in `options.pagination` or `options.query`, validated
+  and mapped to backend names (`params`, `pageBase`, `defaultPageSize`, `maxPageSize`, or the live-only
+  `buildRequest` adapter for body/headers); ambiguous or colliding values are rejected. Live responses
+  map through `preset`, `fields` or `parseList(body, { status, headers, request })` from the raw
+  payload (a configured `response.unwrap` does not apply), then `transforms.response` runs on rows only;
+  `response.parse`, `response.validate`, `middleware.onResponse`, and `schema.response` run before the final contract is validated. Navigation helpers `nextPageInput` / `previousPageInput` /
+  `paginationContextKey` build inputs without sending requests. Full semantics:
+  [pagination guide](./guides/humans/pagination.md).
+  Import the types from `apixa`: `Page<T>`, `CursorPage<T>`, `OffsetPage<T>` (mocking), `PageResult<T>`,
+  `CursorResult<T>`, `OffsetResult<T>`, `PaginatedResult<T>`, `ResolvedPagination`, `PaginationMode`,
+  `PaginationQueryOf`, `ResourcePagination`, `PaginationPreset`, `PaginationFields`, and
+  `PaginationParams`.
   Per-preset state types name what `getAll` resolves to: `LaravelPagination<T>`,
   `LaravelPaginatorPagination<T>`, `LaravelCursorPagination<T>`, `StrapiPagination<T>`,
   `PayloadPagination<T>` and `NestjsPagination<T>` (all structurally `Page<T>` / `CursorPage<T>`).

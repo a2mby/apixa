@@ -8,7 +8,7 @@ import { useResourceQuery } from "../../packages/react/src/use-resource-query.js
 /** Compile-time contract: files and transfers through the hooks keep full inference (no `any`). */
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type Doc = { id: string; name: string; photo?: string | null; gallery?: string[] | null };
-const api = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+const api = defineApi<{ docs: Doc }>()({
   baseURL: "https://x.dev",
   resources: {
     docs: {

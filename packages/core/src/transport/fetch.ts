@@ -95,7 +95,7 @@ async function replayBody(input: TransportRequest): Promise<PreparedBody> {
 
 export function createFetchTransport(fetchImpl: typeof fetch = fetch): Transport {
   return {
-    capabilities: { presigned: true },
+    capabilities: { presigned: true, redirectOrigins: true },
     async request(input: TransportRequest): Promise<TransportResponse> {
       let response: Response;
 

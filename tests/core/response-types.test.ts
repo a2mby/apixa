@@ -23,7 +23,7 @@ function respond(init: {
 type Doc = { id: string; fileName: string };
 function makeApi(init: Parameters<typeof respond>[0], transforms = {}) {
   const { transport, calls } = respond(init);
-  const api = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  const api = defineApi<{ docs: Doc }>()({
     baseURL: "https://api.example.com",
     transport,
     resources: {
@@ -31,6 +31,10 @@ function makeApi(init: Parameters<typeof respond>[0], transforms = {}) {
         path: "/docs",
         transforms,
         operations: {
+          blob: { method: "GET", responseType: "blob" },
+          arrayBuffer: { method: "GET", responseType: "arrayBuffer" },
+          text: { method: "GET", responseType: "text" },
+          stream: { method: "GET", responseType: "stream" },
           raw: { method: "GET", path: "/:id/raw", responseType: "auto" },
         },
       },
@@ -39,10 +43,10 @@ function makeApi(init: Parameters<typeof respond>[0], transforms = {}) {
   return { api, calls };
 }
 
-describe("responseType (per call), existing behavior", () => {
+describe("declared responseType", () => {
   it("blob: byte-exact, keeps the content type", async () => {
     const { api } = makeApi({ body: BYTES, headers: { "content-type": "application/pdf" } });
-    const out = await api.docs.getById("1", { responseType: "blob" });
+    const out = await api.docs.blob();
     expect(out).toBeInstanceOf(Blob);
     expect(out.type).toBe("application/pdf");
     expect(new Uint8Array(await out.arrayBuffer())).toEqual(BYTES);
@@ -50,19 +54,19 @@ describe("responseType (per call), existing behavior", () => {
 
   it("arrayBuffer: byte-exact", async () => {
     const { api } = makeApi({ body: BYTES });
-    const out = (await api.docs.getById("1", { responseType: "arrayBuffer" })) as unknown;
+    const out = (await api.docs.arrayBuffer()) as unknown;
     expect(out).toBeInstanceOf(ArrayBuffer);
     expect(new Uint8Array(out as ArrayBuffer)).toEqual(BYTES);
   });
 
   it("text: never JSON-parsed", async () => {
     const { api } = makeApi({ body: '{"a":1}', headers: { "content-type": "application/json" } });
-    expect(await api.docs.getById("1", { responseType: "text" })).toBe('{"a":1}');
+    expect(await api.docs.text()).toBe('{"a":1}');
   });
 
   it("stream: the response body stream", async () => {
     const { api } = makeApi({ body: BYTES });
-    const out = (await api.docs.getById("1", { responseType: "stream" })) as unknown;
+    const out = (await api.docs.stream()) as unknown;
     expect(out).toBeInstanceOf(ReadableStream);
     const read = await new Response(out as ReadableStream).arrayBuffer();
     expect(new Uint8Array(read)).toEqual(BYTES);
@@ -87,9 +91,9 @@ describe("responseType (per call), existing behavior", () => {
     expect(await d.api.docs.raw({ params: { id: "1" } })).toBe("not json");
   });
 
-  it("default JSON 204 is null", async () => {
+  it("default entity JSON rejects 204", async () => {
     const { api } = makeApi({ status: 204 });
-    expect(await api.docs.getById("1")).toBeNull();
+    await expect(api.docs.getById("1")).rejects.toBeInstanceOf(ParseError);
   });
 
   it("full: true exposes status, headers and the raw response for binary data", async () => {
@@ -101,10 +105,7 @@ describe("responseType (per call), existing behavior", () => {
         "content-disposition": 'attachment; filename="a.pdf"',
       },
     });
-    const res = (await api.docs.getById("1", {
-      responseType: "blob",
-      full: true,
-    })) as unknown as ApiResponse<Blob>;
+    const res = (await api.docs.blob({ full: true })) as unknown as ApiResponse<Blob>;
     expect(res.status).toBe(200);
     expect(res.data).toBeInstanceOf(Blob);
     expect(res.headers.get("content-type")).toBe("application/pdf");
@@ -116,12 +117,10 @@ describe("responseType (per call), existing behavior", () => {
   it("response key transforms leave Blob and ArrayBuffer untouched", async () => {
     const t = { response: { keys: "camelCase" } };
     const blob = makeApi({ body: BYTES }, t);
-    const out = (await blob.api.docs.getById("1", { responseType: "blob" })) as unknown;
+    const out = (await blob.api.docs.blob()) as unknown;
     expect(out).toBeInstanceOf(Blob);
     const buf = makeApi({ body: BYTES }, t);
-    expect(await buf.api.docs.getById("1", { responseType: "arrayBuffer" })).toBeInstanceOf(
-      ArrayBuffer,
-    );
+    expect(await buf.api.docs.arrayBuffer()).toBeInstanceOf(ArrayBuffer);
     const json = makeApi(
       { body: '{"file_name":"a"}', headers: { "content-type": "application/json" } },
       t,
@@ -131,7 +130,7 @@ describe("responseType (per call), existing behavior", () => {
 
   it("ctx.request forwards responseType to the transport", async () => {
     const { transport } = respond({ body: BYTES });
-    const api = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+    const api = defineApi<{ docs: Doc }>()({
       baseURL: "https://api.example.com",
       transport,
       resources: {
@@ -157,7 +156,7 @@ import { ConfigError, HttpError } from "@apixa/core";
 
 function build(init: Parameters<typeof respond>[0], resource: Record<string, unknown> = {}) {
   const { transport, calls } = respond(init);
-  const api = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  const api = defineApi<{ docs: Doc }>()({
     baseURL: "https://api.example.com",
     transport,
     resources: {
@@ -204,11 +203,11 @@ describe("operation-level responseType", () => {
     expect(await override.api.docs.getById("1")).toBeInstanceOf(Blob);
   });
 
-  it("a per-call responseType wins over the operation's", async () => {
+  it("rejects a per-call decoding override", async () => {
     const { api } = build({ body: "plain" });
-    expect(await api.docs.download({ ...{ responseType: "text" }, params: { id: "1" } })).toBe(
-      "plain",
-    );
+    await expect(
+      api.docs.download({ params: { id: "1" }, responseType: "text" } as never),
+    ).rejects.toBeInstanceOf(ConfigError);
   });
 
   it("no responseType: JSON behavior is unchanged", async () => {
@@ -251,7 +250,7 @@ describe("empty (204/205) bodies", () => {
       expect(buffer).toBeInstanceOf(ArrayBuffer);
       expect(buffer.byteLength).toBe(0);
       expect(await api.docs.tail({ params: { id: "1" } })).toBeNull();
-      expect(await api.docs.getById("1")).toBeNull(); // default JSON stays null
+      await expect(api.docs.getById("1")).rejects.toBeInstanceOf(ParseError); // default JSON stays null
     },
   );
 });
@@ -290,8 +289,11 @@ describe("failed downloads", () => {
 
 describe("binary data bypasses JSON shaping", () => {
   it("getAll with a binary responseType is not wrapped by toArray or sliced", async () => {
-    const { api } = build({ body: BYTES }, { slice: 1 });
-    const out = await api.docs.getAll({ responseType: "blob" });
+    const { api } = build(
+      { body: BYTES },
+      { slice: 1, operations: { getAll: { responseType: "blob" } } },
+    );
+    const out = await api.docs.getAll();
     expect(out).toBeInstanceOf(Blob);
   });
 

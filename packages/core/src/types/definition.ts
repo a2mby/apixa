@@ -5,10 +5,11 @@ import type { AllBuiltinOpName, OperationFn } from "./builtins.js";
 import type { HeadersSource, HttpMethod, QueryParams } from "./http.js";
 import type { MiddlewareOptions } from "./middleware.js";
 import type { MockDatasetId } from "./mock-datasets.js";
-import type { RetryOption } from "./retry.js";
+import type { RetryOption, TimeoutOption } from "./retry.js";
 import type { ResponseType, TransferObserver, ApiRequest } from "./transport.js";
 import type { TransformsConfig } from "./transform.js";
 import type { Transport } from "./transport.js";
+import type { OperationSchema } from "./standard-schema.js";
 
 /**
  * A plain object keyed by the known builtin operation names (suggested for autocomplete/override)
@@ -58,8 +59,9 @@ export interface ResponseOptions<T = unknown> {
    */
   unwrap?: string | false | ((source: unknown, ctx: ResponseHookContext) => unknown);
   /**
-   * Parse / coerce the unwrapped & key-transformed body before builtin shape checks. Non-`ApiError`
-   * throws are wrapped in `ValidationError`. Pass `false` to disable an inherited parser.
+   * Parse / coerce the unwrapped & key-transformed body before builtin normalization, response
+   * middleware and `schema.response`. Non-`ApiError` throws are wrapped in `ValidationError`.
+   * Pass `false` to disable an inherited parser.
    */
   parse?: ((data: unknown, ctx: ResponseHookContext) => T) | false;
   /**
@@ -73,8 +75,11 @@ export interface ResponseOptions<T = unknown> {
 /** Settings shared by root, resource, and operation levels (most specific wins). */
 export interface LayerOptions extends MiddlewareOptions {
   headers?: HeadersSource;
-  /** Overall budget per call in ms, including retries and backoff. */
-  timeout?: number;
+  /**
+   * Time budget per call. A number is the total deadline in ms (attempts, waits and hooks);
+   * `{ total?, perAttempt? }` also bounds each transport attempt. Most specific layer wins.
+   */
+  timeout?: TimeoutOption;
   retry?: RetryOption;
   transforms?: TransformsConfig;
   response?: ResponseOptions;
@@ -172,15 +177,19 @@ export interface MultipartOptions {
   arrays?: "brackets" | "indices" | "repeat";
 }
 
-export interface OperationDefinition extends LayerOptions {
+/**
+ * `S` is the type of the `schema` option. Core uses {@link OperationSchema} (Standard Schema V1
+ * validators only); `apixa/validation` widens it to also accept plain-object shapes.
+ */
+export interface OperationDefinition<S = OperationSchema> extends LayerOptions {
   transfer?: AdvancedTransferConfig;
   presigned?: PresignedPolicy;
   method?: HttpMethod;
   /**
    * How this operation's response body is read: `"blob"`, `"arrayBuffer"`, `"text"`, `"stream"` or
    * the default `"json"`. A literal value types the result (`Blob`, `ArrayBuffer`, `string`,
-   * `ReadableStream<Uint8Array> | null`) unless `defineApi<T>()` metadata declares a `response`.
-   * A per-call `responseType` option wins over this one.
+   * `ReadableStream<Uint8Array> | null`) unless the operation declares a `schema.response`.
+   * Fixed by the operation: a call cannot override it.
    */
   responseType?: ResponseType;
   /** Default transfer observer for this operation; a per-call `onTransfer` option wins. */
@@ -198,15 +207,17 @@ export interface OperationDefinition extends LayerOptions {
   fileLimits?: FileLimits;
   /**
    * Largest accepted response body in bytes. Rejected early from a trustworthy `Content-Length`
-   * and otherwise counted while reading (nothing is buffered beyond the limit). A per-call
-   * `maxResponseSize` wins. A failed (non-2xx) response keeps its `HttpError`; an oversized error body is dropped (`data: null`).
+   * and otherwise counted while reading (nothing is buffered beyond the limit). This is
+   * the operation's ceiling: a per-call `maxResponseSize` may only lower it. A failed (non-2xx) response keeps its `HttpError`; an oversized error body is dropped (`data: null`).
    */
   maxResponseSize?: number;
   /**
    * Exact origins a redirect of this operation may lead to (for example a CDN), followed without
    * request headers, cookies, credentials or body and only for `GET` / `HEAD`. Every other
    * cross-origin redirect fails with `SecurityError`; same-origin redirects keep working
-   * (not in browsers, which hide redirect destinations). A per-call `redirectOrigins` wins.
+   * (not in browsers, which hide redirect destinations, so every redirect is refused there).
+   * Trusted operation policy: neither a call nor middleware can replace or widen it, and a custom
+   * transport must declare `capabilities.redirectOrigins`.
    */
   redirectOrigins?: readonly string[];
   /**
@@ -235,10 +246,18 @@ export interface OperationDefinition extends LayerOptions {
   mock?: unknown;
   /**
    * Opt-in pagination for list operations (`getAll`, `getMany`, and custom declarative operations).
-   * `false` disables resource-level pagination on `getAll`; `true` uses the resource's pagination
-   * or `"page"`.
+   * `true` uses the resource `paginationConfig` (or the standard `"page"` contract without one);
+   * `false` disables it (including on `getAll`); a strategy name, preset or object **replaces** the
+   * resource configuration completely (nothing is merged).
    */
   pagination?: ResourcePagination;
+  /**
+   * Standard Schema V1 validators for this operation: `{ body?, query?, response? }` (explicit
+   * object only). `body` / `query` types come from the schema input and `response` from its output.
+   * `schema.response` validates the final payload, after `response.parse` and `onResponse`
+   * middleware; `emptyResponse` declares an intentionally empty body. Not available on `run` operations.
+   */
+  schema?: S;
 }
 
 /** A function operation with metadata — same execution as passing the function directly. */
@@ -249,14 +268,15 @@ export interface OperationRunDefinition {
   run: OperationFn;
 }
 
-export type OperationValue = boolean | OperationDefinition | OperationFn | OperationRunDefinition;
+export type OperationValue<S = OperationSchema> =
+  boolean | OperationDefinition<S> | OperationFn | OperationRunDefinition;
 
 /** Builtin operation sets supported by the unified operation selector. */
 export type OperationPreset = "crud" | "read" | "all";
-export type OperationSelection =
+export type OperationSelection<S = OperationSchema> =
   | OperationPreset
   | readonly AllBuiltinOpName[]
-  | (OperationsBag<OperationValue | OperationPreset | readonly AllBuiltinOpName[]> & {
+  | (OperationsBag<OperationValue<S> | OperationPreset | readonly AllBuiltinOpName[]> & {
       preset: OperationPreset | readonly AllBuiltinOpName[];
     });
 
@@ -281,11 +301,11 @@ export type MockOption =
     };
 
 /** Runtime resource definition under `resources`. */
-export interface ResourceDefinition extends LayerOptions {
+export interface ResourceDefinition<S = OperationSchema> extends LayerOptions {
   path: string;
   /** Entity identity field. Default: `"id"`. */
   idKey?: string;
-  operations?: OperationsBag<OperationValue> | OperationSelection;
+  operations?: OperationsBag<OperationValue<S>> | OperationSelection<S>;
   /** Entity fields that hold files: typed `File | Blob` inputs on eligible writes. */
   fileFields?: FileFieldsConfig;
   /** Multipart encoding overrides for every operation of this resource. */
@@ -295,19 +315,19 @@ export interface ResourceDefinition extends LayerOptions {
   /** Data source for client-scoped Mocking. A mocked resource never touches the network. */
   mock?: MockOption;
   /**
-   * List envelope contract shared by live and mocked resources. Mocked: the engine produces it.
-   * Live: the string form expects the server to already return it; an object maps the server's
-   * own shape to it (`preset`, `fields`/`params`, or `parseList`). Every form validates the complete
-   * envelope, including callback output. Page numbers/sizes are positive integers; totals are
-   * non-negative integers; cursors are strings or null.
+   * Shared pagination configuration for this resource (recommended). Built-in `getAll` paginates
+   * automatically when this is set; every other operation opts in with its own `pagination`
+   * (`true` reuses this configuration). It never activates pagination on a custom operation by itself.
+   * Mocked: the engine produces the contract. Live: the string form expects the server to already
+   * return it; an object maps the server's own shape (`preset`, `fields`/`params`, or `parseList`).
    */
-  pagination?: ResourcePagination;
+  paginationConfig?: ResourcePagination;
   /** Cap array `getAll` responses: first N rows or `{ start, end }`. Not mock seeding. */
   slice?: number | { start: number; end: number };
 }
 
 /** Root `defineApi` configuration. Resources live only under `resources`. */
-export interface ApiRootConfig extends LayerOptions {
+export interface ApiRootConfig<S = OperationSchema> extends LayerOptions {
   baseURL: string;
   transport?: Transport;
   /** Array encoding for query strings. Default: `"repeat"`. */
@@ -316,88 +336,189 @@ export interface ApiRootConfig extends LayerOptions {
   query?: QueryOptions;
   /** Replaces Core's query string builder entirely. */
   querySerializer?: (query: QueryParams) => string;
-  resources: Record<string, ResourceDefinition>;
+  resources: Record<string, ResourceDefinition<S>>;
 }
 
-/** Developer metadata for `defineApi<T>()`: types only, keyed by resource name. */
-export type ApiState = Record<string, ResourceState>;
+/**
+ * Developer metadata for `defineApi<T>()`: a map of resource name to its entity type, types only
+ * (`interface ApiState { products: Product }`). Operation contracts come from each operation's
+ * runtime `schema`, never from this map. Runtime config owns paths, selection and mocks.
+ */
+export type ApiState = Record<string, unknown>;
+
+/** Keys of the removed pre-ADR-006 `ResourceState` wrapper. */
+type LegacyStateKey = "entity" | "list" | "query" | "operations";
 
 /**
- * Self-referential constraint for `defineApi<T>()`: every key of `T` must be a `ResourceState`.
- * Works for both `type AppApi = {…}` and `interface AppApi {…}`.
+ * A recognizable old wrapper: every key is a removed `ResourceState` key and it declares `entity`
+ * or `operations`. A domain entity that merely has a property named `entity` has other keys too and
+ * is never flagged.
  */
-export type ApiStateOf<T> = { [K in keyof T]: ResourceState };
+type IsLegacyWrapper<E> = [E] extends [object]
+  ? [keyof E] extends [never]
+    ? false
+    : [Exclude<keyof E, LegacyStateKey>] extends [never]
+      ? [Extract<keyof E, "entity" | "operations">] extends [never]
+        ? false
+        : true
+      : false
+  : false;
 
-export type ResourceTypeOnlyKey = "entity" | "list" | "query";
-export type OperationTypeOnlyKey = "body" | "response" | "query";
-
-/** Payload metadata for one operation. */
-export type OperationState = {
-  body?: unknown;
-  response?: unknown;
-  query?: unknown;
+type LegacyStateError<K> = {
+  readonly "apixa config error": `ApiState.${K & string} uses the removed { entity, list, query, operations } wrapper. Declare the entity itself (${K & string}: Product) and move operation types into each operation's \`schema\` (see docs/decisions/006).`;
 };
 
 /**
- * Resource metadata — types only. Runtime config owns paths, selection, and mocks; a key here
- * never creates a runtime resource or operation.
+ * Self-referential constraint for `defineApi<T>()`: each key of `T` is that resource's entity
+ * type. Works for both `type AppApi = {…}` and `interface AppApi {…}`; the old
+ * `{ entity, operations }` wrapper is rejected with a migration message.
  */
-export type ResourceState = {
-  /** Entity for reads and write responses. */
-  entity?: unknown;
-  /** Override the `getAll` list type (default `Entity[]`). */
-  list?: unknown;
-  /** Default query type for list reads. */
-  query?: unknown;
-  /**
-   * Payload types for operations that the runtime config actually defines (a function type is
-   * accepted for custom operations; the runtime function's own signature still wins).
-   */
-  operations?: Record<string, OperationState | ((...args: never[]) => unknown)>;
+export type ApiStateOf<T> = {
+  [K in keyof T]: IsLegacyWrapper<T[K]> extends true ? LegacyStateError<K> : unknown;
 };
 
-/** Response field paths (dot notation) a live backend uses for apixa's page contract. */
+/** Response field paths (dot notation) a live backend uses for apixa's pagination contract. */
 export interface PaginationFields {
   data?: string;
   total?: string;
   page?: string;
   pageSize?: string;
+  /** Total number of pages (optional metadata). */
+  pageCount?: string;
+  /** Whether the backend reports another page / more rows (optional metadata). */
+  hasMore?: string;
+  offset?: string;
+  nextOffset?: string;
+  previousOffset?: string;
   nextCursor?: string;
+  previousCursor?: string;
 }
 
-/** Backend query names for apixa's `page` / `pageSize` / `cursor`. */
+/**
+ * Backend query names for apixa's logical `page` / `pageSize` / `cursor` / `before` / `offset`.
+ * `before` (continue backwards from a cursor) is only sent when mapped here.
+ */
 export interface PaginationParams {
   page?: string;
   pageSize?: string;
   cursor?: string;
+  before?: string;
+  offset?: string;
 }
+
+/** Logical pagination values (strategy-neutral), as handed to `buildRequest`. */
+export interface LogicalPaginationInput {
+  page?: number;
+  pageSize?: number;
+  cursor?: string;
+  before?: string;
+  offset?: number;
+}
+
+/** What `buildRequest` may add to the live request. Bodies must be plain objects. */
+export interface PaginationRequestParts {
+  query?: Record<string, unknown>;
+  body?: Record<string, unknown>;
+  headers?: Record<string, string>;
+}
+
+/** Context given to `parseList` (response adapter): everything needed to decode unusual protocols. */
+export interface PaginationResponseContext {
+  status: number;
+  /** Response headers. Browsers expose cross-origin headers only if the server sends `Access-Control-Expose-Headers`. */
+  headers: Headers;
+  request: {
+    method: string;
+    params?: Record<string, string | number>;
+    /** The structured query the request was sent with (wire names). */
+    query?: Record<string, unknown>;
+    /** The logical pagination input that was resolved for this call (after defaults). */
+    pagination: LogicalPaginationInput;
+  };
+}
+
+/** Pagination strategies. */
+export type PaginationStrategy = "page" | "cursor" | "offset";
 
 /** Built-in backend mappings for `pagination.preset`. */
 export type PaginationPreset = "laravel" | "laravel-paginator" | "strapi" | "payload" | "nestjs";
 
-/** Declared pagination for a resource or list operation: boolean, mode, preset shorthand, or mapping object. */
+/** Declared pagination: boolean, strategy, preset shorthand, or mapping object. */
 export type ResourcePagination =
   | boolean
-  | "page"
-  | "cursor"
+  | PaginationStrategy
   | PaginationPreset
   | {
-      type?: "page" | "cursor";
+      strategy?: PaginationStrategy;
       /**
        * Named backend mapping; mutually exclusive with `fields`. `"laravel"` (resource collection),
        * `"laravel-paginator"` (`paginate()` / `cursorPaginate()`; page or cursor), `"strapi"`,
        * `"payload"` and `"nestjs"` (nestjs-typeorm-paginate) map page mode. When `preset` is set
-       * without `type`, `"page"` is inferred.
+       * without `strategy`, `"page"` is inferred.
        */
       preset?: PaginationPreset;
       fields?: PaginationFields;
       params?: PaginationParams;
-      /** Escape hatch for shapes `fields` cannot describe; wins over `preset` / `fields`. */
-      parseList?: (body: any, ctx: { status: number }) => unknown;
+      /** Backend page numbering for `page` (0 or 1). Logical pages stay one-based. Default 1. */
+      pageBase?: 0 | 1;
+      /** Sent when the caller supplies no page size (explicit, never guessed). */
+      defaultPageSize?: number;
+      /** Reject (never clamp) a requested page size above this. */
+      maxPageSize?: number;
+      /**
+       * Response adapter for shapes `fields` cannot describe; wins over `preset` / `fields`. Returns
+       * logical (one-based page) values using the contract field names.
+       */
+      parseList?: (body: any, ctx: PaginationResponseContext) => unknown;
+      /**
+       * Request adapter (live only): receives the validated logical input and decides placement in
+       * query, body or headers. Replaces `params` (use one or the other).
+       */
+      buildRequest?: (
+        input: LogicalPaginationInput,
+        ctx: { method: string; query: Record<string, unknown>; body: unknown },
+      ) => PaginationRequestParts;
     };
 
-type PageShape<T> = { data: T[]; total: number; page: number; pageSize: number };
-type CursorShape<T> = { data: T[]; nextCursor: string | null };
+/** Page strategy result. `total` is required for `"page"`, presets and `true`; optional for custom objects. */
+export type PageResult<T = unknown> = {
+  data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  pageCount?: number;
+  hasMore?: boolean;
+};
+/** `PageResult` for custom mappings that may not report a total. */
+export type OpenPageResult<T = unknown> = Omit<PageResult<T>, "total"> & { total?: number };
+/** Cursor strategy result. Cursors are opaque; `nextCursor: null` means the backend reports the end. */
+export type CursorResult<T = unknown> = {
+  data: T[];
+  nextCursor: string | null;
+  previousCursor?: string | null;
+  hasMore?: boolean;
+};
+/** Offset strategy result. */
+export type OffsetResult<T = unknown> = {
+  data: T[];
+  offset: number;
+  pageSize: number;
+  total: number;
+  nextOffset?: number | null;
+  previousOffset?: number | null;
+  hasMore?: boolean;
+};
+/** `OffsetResult` for custom mappings that may omit total / pageSize. */
+export type OpenOffsetResult<T = unknown> = Omit<OffsetResult<T>, "total" | "pageSize"> & {
+  total?: number;
+  pageSize?: number;
+};
+/** Any normalized paginated result. */
+export type PaginatedResult<T = unknown> =
+  PageResult<T> | OpenPageResult<T> | CursorResult<T> | OffsetResult<T> | OpenOffsetResult<T>;
+
+type PageShape<T> = PageResult<T>;
+type CursorShape<T> = CursorResult<T>;
 
 /**
  * What `getAll` resolves to for a resource using that preset, for typing component state:
@@ -406,9 +527,9 @@ type CursorShape<T> = { data: T[]; nextCursor: string | null };
  * the state comes from.
  */
 export type LaravelPagination<T> = PageShape<T>;
-/** `preset: "laravel-paginator"` with `type: "page"` (`paginate()`). */
+/** `preset: "laravel-paginator"` with `strategy: "page"` (`paginate()`). */
 export type LaravelPaginatorPagination<T> = PageShape<T>;
-/** `preset: "laravel-paginator"` with `type: "cursor"` (`cursorPaginate()`). */
+/** `preset: "laravel-paginator"` with `strategy: "cursor"` (`cursorPaginate()`). */
 export type LaravelCursorPagination<T> = CursorShape<T>;
 /** `preset: "strapi"`. */
 export type StrapiPagination<T> = PageShape<T>;

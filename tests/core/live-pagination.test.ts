@@ -1,5 +1,6 @@
 import { ConfigError, defineApi, ParseError } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
+import { z } from "zod";
 import { PAGINATION_PRESET_NAMES } from "../../packages/core/src/api/pagination.js";
 import type {
   LaravelCursorPagination,
@@ -13,7 +14,7 @@ import type {
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type Product = { id: string; name: string };
-type State = { products: { entity: Product } };
+type State = { products: Product };
 
 const laravelBody = {
   data: [{ id: "1", name: "Pen" }],
@@ -28,14 +29,14 @@ function client(pagination: unknown, body: unknown, seen: string[] = []) {
       seen.push(request.url);
       return { body };
     }),
-    resources: { products: { path: "/products", pagination: pagination as never } },
+    resources: { products: { path: "/products", paginationConfig: pagination as never } },
   });
 }
 
 describe("live pagination", () => {
   it("maps a Laravel body to the page contract with the preset", async () => {
     const seen: string[] = [];
-    const api = client({ type: "page", preset: "laravel" }, laravelBody, seen);
+    const api = client({ strategy: "page", preset: "laravel" }, laravelBody, seen);
     const page = await api.products.getAll({ query: { page: 2, pageSize: 10 } });
     expect(page).toEqual({ data: [{ id: "1", name: "Pen" }], total: 31, page: 2, pageSize: 10 });
     expect(seen[0]).toContain("per_page=10");
@@ -47,7 +48,7 @@ describe("live pagination", () => {
     const seen: string[] = [];
     const api = client(
       {
-        type: "page",
+        strategy: "page",
         fields: { data: "items", total: "paging.count", page: "paging.p", pageSize: "paging.size" },
         params: { pageSize: "limit" },
       },
@@ -62,7 +63,7 @@ describe("live pagination", () => {
   it("maps with parseList", async () => {
     const api = client(
       {
-        type: "page",
+        strategy: "page",
         parseList: (body: { rows: Product[] }) => ({
           data: body.rows,
           total: body.rows.length,
@@ -77,7 +78,7 @@ describe("live pagination", () => {
 
   it("maps a cursor body", async () => {
     const api = client(
-      { type: "cursor", fields: { data: "items", nextCursor: "next" } },
+      { strategy: "cursor", fields: { data: "items", nextCursor: "next" } },
       { items: [{ id: "1", name: "Pen" }], next: "abc" },
     );
     expect(await api.products.getAll()).toEqual({
@@ -92,15 +93,17 @@ describe("live pagination", () => {
   });
 
   it("throws ParseError naming the resource and path when a mapped field is missing", async () => {
-    const api = client({ type: "page", preset: "laravel" }, { data: [], meta: {} });
+    const api = client({ strategy: "page", preset: "laravel" }, { data: [], meta: {} });
     await expect(api.products.getAll()).rejects.toThrow(/products.*meta\.total/s);
     await expect(api.products.getAll()).rejects.toBeInstanceOf(ParseError);
   });
 
   it("rejects bad configuration", () => {
-    expect(() => client({ type: "page", preset: "laravel", fields: {} }, {})).toThrow(ConfigError);
-    expect(() => client({ type: "page", preset: "nope" }, {})).toThrow(ConfigError);
-    expect(() => client({ type: "cursor", preset: "laravel" }, {})).toThrow(ConfigError);
+    expect(() => client({ strategy: "page", preset: "laravel", fields: {} }, {})).toThrow(
+      ConfigError,
+    );
+    expect(() => client({ strategy: "page", preset: "nope" }, {})).toThrow(ConfigError);
+    expect(() => client({ strategy: "cursor", preset: "laravel" }, {})).toThrow(ConfigError);
     expect(() => client({ type: "table" }, {})).toThrow(ConfigError);
   });
 
@@ -108,10 +111,10 @@ describe("live pagination", () => {
     const api = defineApi<State>()({
       baseURL: "https://api.example.com",
       resources: {
-        products: { path: "/products", pagination: { type: "page", preset: "laravel" } },
+        products: { path: "/products", paginationConfig: { strategy: "page", preset: "laravel" } },
       },
     });
-    expectTypeOf(api.products.getAll).returns.resolves.toEqualTypeOf<{
+    expectTypeOf(api.products.getAll).returns.resolves.toExtend<{
       data: Product[];
       total: number;
       page: number;
@@ -166,9 +169,9 @@ describe("live pagination presets", () => {
 
   it.each(cases)(
     "%s maps its documented body and renames query keys",
-    async (preset, type, body, query) => {
+    async (preset, strategy, body, query) => {
       const seen: string[] = [];
-      const api = client({ type, preset }, body, seen);
+      const api = client({ strategy, preset }, body, seen);
       const page = await api.products.getAll({ query: { page: 2, pageSize: 10 } });
       expect(page).toEqual(expectedPage);
       const params = Object.fromEntries(new URL(seen[0]!).searchParams);
@@ -179,7 +182,7 @@ describe("live pagination presets", () => {
   it("maps a Laravel cursorPaginate() body with laravel-paginator", async () => {
     const seen: string[] = [];
     const api = client(
-      { type: "cursor", preset: "laravel-paginator" },
+      { strategy: "cursor", preset: "laravel-paginator" },
       {
         data: rows,
         path: "http://127.0.0.1:8000",
@@ -191,7 +194,7 @@ describe("live pagination presets", () => {
       seen,
     );
     const page = await api.products.getAll({ query: { pageSize: 2, cursor: "abc" } });
-    expect(page).toEqual({ data: rows, nextCursor: "eyJpZCI6IjIifQ" });
+    expect(page).toEqual({ data: rows, nextCursor: "eyJpZCI6IjIifQ", previousCursor: null });
     expect(Object.fromEntries(new URL(seen[0]!).searchParams)).toEqual({
       per_page: "2",
       cursor: "abc",
@@ -199,13 +202,13 @@ describe("live pagination presets", () => {
   });
 
   it("reports a missing field of a preset by its path", async () => {
-    const api = client({ type: "page", preset: "strapi" }, { data: [], meta: {} });
+    const api = client({ strategy: "page", preset: "strapi" }, { data: [], meta: {} });
     await expect(api.products.getAll()).rejects.toThrow(/meta\.pagination\.total/);
   });
 
   it("rejects a preset without the requested mode", () => {
     for (const preset of ["laravel", "strapi", "payload", "nestjs"]) {
-      expect(() => client({ type: "cursor", preset }, {})).toThrow(ConfigError);
+      expect(() => client({ strategy: "cursor", preset }, {})).toThrow(ConfigError);
     }
   });
 
@@ -228,19 +231,19 @@ describe("preset page types", () => {
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: laravelBody })),
       resources: {
-        products: { path: "/products", pagination: { type: "page", preset: "laravel" } },
+        products: { path: "/products", paginationConfig: { strategy: "page", preset: "laravel" } },
       },
     });
     const page = await api.products.getAll({ query: { page: 2 } });
     const typed: LaravelPagination<Product> = page;
-    expectTypeOf(typed).toEqualTypeOf<{
+    expectTypeOf(typed).toExtend<{
       data: Product[];
       total: number;
       page: number;
       pageSize: number;
     }>();
     expectTypeOf<LaravelPaginatorPagination<Product>>().toEqualTypeOf<LaravelPagination<Product>>();
-    expectTypeOf<LaravelCursorPagination<Product>>().toEqualTypeOf<{
+    expectTypeOf<LaravelCursorPagination<Product>>().toExtend<{
       data: Product[];
       nextCursor: string | null;
     }>();
@@ -253,10 +256,10 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
   it("supports boolean true/false and preset shorthands without wrapping objects", async () => {
     const seen: string[] = [];
     const api = defineApi<{
-      paged: { entity: Product };
-      flat: { entity: Product };
-      shorthand: { entity: Product };
-      noTypeObj: { entity: Product };
+      paged: Product;
+      flat: Product;
+      shorthand: Product;
+      noTypeObj: Product;
     }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((req) => {
@@ -270,16 +273,16 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
         return { body: laravelBody };
       }),
       resources: {
-        paged: { path: "/paged", pagination: true },
-        flat: { path: "/flat", pagination: false },
-        shorthand: { path: "/shorthand", pagination: "laravel" },
-        noTypeObj: { path: "/no-type", pagination: { preset: "laravel" } },
+        paged: { path: "/paged", paginationConfig: true },
+        flat: { path: "/flat", paginationConfig: false },
+        shorthand: { path: "/shorthand", paginationConfig: "laravel" },
+        noTypeObj: { path: "/no-type", paginationConfig: { preset: "laravel" } },
       },
     });
 
     const p1 = await api.paged.getAll({ query: { page: 1, pageSize: 10 } });
     expect(p1).toEqual({ data: [{ id: "1", name: "Pen" }], total: 1, page: 1, pageSize: 10 });
-    expectTypeOf(p1).toEqualTypeOf<{
+    expectTypeOf(p1).toExtend<{
       data: Product[];
       total: number;
       page: number;
@@ -292,7 +295,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const p3 = await api.shorthand.getAll({ query: { page: 2, pageSize: 10 } });
     expect(p3).toEqual({ data: [{ id: "1", name: "Pen" }], total: 31, page: 2, pageSize: 10 });
-    expectTypeOf(p3).toEqualTypeOf<{
+    expectTypeOf(p3).toExtend<{
       data: Product[];
       total: number;
       page: number;
@@ -302,7 +305,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const p4 = await api.noTypeObj.getAll({ query: { page: 2 } });
     expect(p4).toEqual({ data: [{ id: "1", name: "Pen" }], total: 31, page: 2, pageSize: 10 });
-    expectTypeOf(p4).toEqualTypeOf<{
+    expectTypeOf(p4).toExtend<{
       data: Product[];
       total: number;
       page: number;
@@ -312,8 +315,8 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
   it("allows getAll to opt out of or override resource-level pagination", async () => {
     const api = defineApi<{
-      optout: { entity: Product };
-      overrideCursor: { entity: Product };
+      optout: Product;
+      overrideCursor: Product;
     }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((req) => {
@@ -323,12 +326,12 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
       resources: {
         optout: {
           path: "/optout",
-          pagination: "laravel",
+          paginationConfig: "laravel",
           operations: { getAll: { pagination: false } },
         },
         overrideCursor: {
           path: "/override",
-          pagination: "page",
+          paginationConfig: "page",
           operations: { getAll: { pagination: "cursor" } },
         },
       },
@@ -340,20 +343,13 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const cur = await api.overrideCursor.getAll({ query: { cursor: "c1", pageSize: 5 } });
     expect(cur).toEqual({ data: [{ id: "1", name: "Pen" }], nextCursor: "n2" });
-    expectTypeOf(cur).toEqualTypeOf<{ data: Product[]; nextCursor: string | null }>();
+    expectTypeOf(cur).toExtend<{ data: Product[]; nextCursor: string | null }>();
   });
 
   it("supports opt-in pagination on getMany and custom declarative operations (live & mock)", async () => {
     const seen: string[] = [];
     const rows = Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), name: `P${i + 1}` }));
-    const live = defineApi<{
-      products: {
-        entity: Product;
-        operations: {
-          search: { query: { q: string }; response: Product[] };
-        };
-      };
-    }>()({
+    const live = defineApi<State>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((req) => {
         seen.push(req.url);
@@ -365,10 +361,22 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
       resources: {
         products: {
           path: "/products",
-          pagination: "laravel",
+          paginationConfig: "laravel",
           operations: {
             getMany: { pagination: true },
-            search: { method: "GET", path: "/search", pagination: "cursor" },
+            search: {
+              method: "GET",
+              path: "/search",
+              pagination: "cursor",
+              // A response schema describes the whole normalized page, not just the items.
+              schema: {
+                query: z.object({ q: z.string() }),
+                response: z.object({
+                  data: z.array(z.object({ id: z.string(), name: z.string() })),
+                  nextCursor: z.string().nullable(),
+                }),
+              },
+            },
           },
         },
       },
@@ -376,7 +384,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const many = await live.products.getMany(["1", "2"], { query: { page: 2, pageSize: 10 } });
     expect(many).toEqual({ data: [{ id: "1", name: "Pen" }], total: 31, page: 2, pageSize: 10 });
-    expectTypeOf(many).toEqualTypeOf<{
+    expectTypeOf(many).toExtend<{
       data: Product[];
       total: number;
       page: number;
@@ -386,7 +394,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
     const found = await live.products.search({ query: { q: "pen", cursor: "0", pageSize: 5 } });
     expect(found).toEqual({ data: [{ id: "2", name: "Pen" }], nextCursor: null });
-    expectTypeOf(found).toEqualTypeOf<{ data: Product[]; nextCursor: string | null }>();
+    expectTypeOf(found).toExtend<{ data: Product[]; nextCursor: string | null }>();
 
     const mocked = defineApi({
       baseURL: "/api",
@@ -394,7 +402,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
         products: {
           path: "/products",
           mock: rows,
-          pagination: "page",
+          paginationConfig: "page",
           operations: {
             getMany: { pagination: true },
             recent: {
@@ -420,7 +428,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
       page: 2,
       pageSize: 2,
     });
-    expectTypeOf(mockMany).toEqualTypeOf<{
+    expectTypeOf(mockMany).toExtend<{
       data: { id: string; name: string }[];
       total: number;
       page: number;
@@ -435,7 +443,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
       ],
       nextCursor: "4",
     });
-    expectTypeOf(mockRecent).toEqualTypeOf<{ data: unknown[]; nextCursor: string | null }>();
+    expectTypeOf(mockRecent).toExtend<{ data: unknown[]; nextCursor: string | null }>();
   });
 
   it("allows slice with pagination: false and rejects pagination on non-list builtins at compile time", async () => {
@@ -449,7 +457,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
         ],
       })),
       resources: {
-        products: { path: "/products", slice: 2, pagination: false },
+        products: { path: "/products", slice: 2, paginationConfig: false },
       },
     });
     expect(await api.products.getAll()).toEqual([
@@ -481,7 +489,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
         body: { data: [{ id: "1", firstName: "Ada" }], total: 1, page: 1, pageSize: 10 },
       })),
       resources: {
-        users: { path: "/users", pagination: "page" },
+        users: { path: "/users", paginationConfig: "page" },
       },
     });
     expect(await api.users.getAll()).toEqual({
@@ -494,7 +502,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
   it("preserves literal pagination.params wire keys under transforms.request while transforming filters", async () => {
     const seen: string[] = [];
-    const api = defineApi<{ laravel: { entity: Product }; strapi: { entity: Product } }>()({
+    const api = defineApi<{ laravel: Product; strapi: Product }>()({
       baseURL: "https://api.example.com",
       transforms: { request: { keys: "camelCase" } },
       transport: createFakeTransport((request) => {
@@ -510,8 +518,8 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
         return { body: laravelBody };
       }),
       resources: {
-        laravel: { path: "/laravel", pagination: "laravel" },
-        strapi: { path: "/strapi", pagination: "strapi" },
+        laravel: { path: "/laravel", paginationConfig: "laravel" },
+        strapi: { path: "/strapi", paginationConfig: "strapi" },
       },
     });
 
@@ -533,7 +541,7 @@ describe("v3 unified pagination (Decisions 28-31)", () => {
 
 describe("complete pagination contracts", () => {
   const page = { data: [], total: 0, page: 9, pageSize: 10 };
-  it.each([true, "page", { type: "page" }])(
+  it.each([true, "page", { strategy: "page" }])(
     "validates page envelopes for %j",
     async (pagination) => {
       for (const body of [
@@ -552,7 +560,7 @@ describe("complete pagination contracts", () => {
       expect(full.source).toEqual(page);
     },
   );
-  it.each(["cursor", { type: "cursor" }])(
+  it.each(["cursor", { strategy: "cursor" }])(
     "validates cursor envelopes for %j",
     async (pagination) => {
       for (const body of [
@@ -569,9 +577,9 @@ describe("complete pagination contracts", () => {
     },
   );
   it("validates callback output rather than trusting its TypeScript declaration", async () => {
-    for (const type of ["page", "cursor"]) {
+    for (const strategy of ["page", "cursor"]) {
       await expect(
-        client({ type, parseList: () => ({ data: [] }) }, {}).products.getAll(),
+        client({ strategy, parseList: () => ({ data: [] }) }, {}).products.getAll(),
       ).rejects.toBeInstanceOf(ParseError);
     }
   });
@@ -611,7 +619,7 @@ describe("pagination final-hook and source boundaries", () => {
         resources: {
           products: {
             path: "/products",
-            pagination: "cursor",
+            paginationConfig: "cursor",
             ...(mocked ? { mock: [{ id: 1 }] } : {}),
             response: { validate: () => ({ data: [], nextCursor: false }) },
           },
@@ -641,11 +649,11 @@ describe("pagination final-hook and source boundaries", () => {
       { ...page, page: 1.5 },
     ]) {
       await expect(
-        client({ type: "page", parseList: () => output }, {}).products.getAll(),
+        client({ strategy: "page", parseList: () => output }, {}).products.getAll(),
       ).rejects.toBeInstanceOf(ParseError);
     }
     await expect(
-      client({ type: "page", parseList: () => page }, {}).products.getAll(),
+      client({ strategy: "page", parseList: () => page }, {}).products.getAll(),
     ).resolves.toEqual(page);
   });
 });

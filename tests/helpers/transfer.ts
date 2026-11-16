@@ -75,7 +75,7 @@ export function transferClient(
     responseType,
     ...extra.operation,
   });
-  return defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  return defineApi<{ docs: Doc }>()({
     baseURL: "https://api.example.com",
     transport: createFetchTransport(fetchImpl as unknown as typeof fetch),
     ...extra.root,

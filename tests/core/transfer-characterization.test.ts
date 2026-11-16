@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  */
 
 function api(fetchImpl: typeof fetch) {
-  return defineApi<{ docs: { path: "/docs"; entity: { id: string } } }>()({
+  return defineApi<{ docs: { id: string } }>()({
     baseURL: "https://api.example.com",
     transport: createFetchTransport(fetchImpl),
     resources: {

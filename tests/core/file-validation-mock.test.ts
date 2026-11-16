@@ -44,7 +44,7 @@ describe("mocked and live resources share one validator", () => {
 
 describe("a rejected mocked write changes nothing", () => {
   const make = () =>
-    defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
+    defineApi<{ pets: Pet }>()({
       baseURL: "https://api.example.com",
       resources: {
         pets: {
@@ -73,7 +73,7 @@ describe("a rejected mocked write changes nothing", () => {
     const created = await api.pets.create({ name: "good", photo: file(5, "keep.png") } as never);
     const ref = created.photo as string;
     expect(
-      await rejection(api.pets.update(created.id as never, { body: { photo: file(50) } as never })),
+      await rejection(api.pets.update(created.id as never, { photo: file(50) } as never)),
     ).toBeInstanceOf(ValidationError);
     expect((await api.pets.getById(created.id)).photo).toBe(ref);
     expect(mockFiles(api).get(ref)!.meta.name).toBe("keep.png");
@@ -93,7 +93,7 @@ describe("a rejected mocked write changes nothing", () => {
 
 describe("mocked downloads respect response limits using the exact size", () => {
   const make = (extra: Record<string, unknown>) =>
-    defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
+    defineApi<{ pets: Pet }>()({
       baseURL: "https://api.example.com",
       resources: {
         pets: {

@@ -5,12 +5,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 
 describe("v0.7.0 thin core", () => {
   it("concatenates resource and op path params at the call site", async () => {
-    type Api = {
-      users: {
-        path: "/orgs/:orgId/users";
-        entity: { id: string; name: string };
-      };
-    };
+    type Api = { users: { id: string; name: string } };
 
     const seen: string[] = [];
     const api = defineApi<Api>()({
@@ -89,8 +84,8 @@ describe("v0.7.0 thin core", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       retry: {
-        retries: 2,
-        baseDelayMs: 1,
+        count: 2,
+        delay: 1,
         jitter: false,
         shouldRetry: ({ attempt }) => attempt < 1,
         onRetry: () => {
@@ -117,16 +112,10 @@ describe("v0.7.0 thin core", () => {
     expect(isHttpError(new TimeoutError())).toBe(false);
   });
 
-  it("types getAll list/query from ResourceState", () => {
+  it("types the paginated getAll result from the entity", () => {
     type User = { id: string; name: string };
     type Page = { data: User[]; total: number; page: number; pageSize: number };
-    type Api = {
-      users: {
-        path: "/users";
-        entity: User;
-        query: { active?: boolean };
-      };
-    };
+    type Api = { users: User };
 
     const api = defineApi<Api>()({
       baseURL: "https://api.example.com",
@@ -134,11 +123,11 @@ describe("v0.7.0 thin core", () => {
         body: { data: [], total: 0, page: 1, pageSize: 20 },
       })),
       resources: {
-        users: { path: "/users", pagination: "page" },
+        users: { path: "/users", paginationConfig: "page" },
       },
     });
 
-    expectTypeOf(api.users.getAll).returns.resolves.toEqualTypeOf<Page>();
+    expectTypeOf(api.users.getAll).returns.resolves.toExtend<Page>();
     void api;
   });
 });

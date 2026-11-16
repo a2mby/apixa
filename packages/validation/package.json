@@ -1,0 +1,59 @@
+{
+  "name": "@apixa/validation",
+  "version": "3.0.0-rc.0",
+  "description": "Zod-friendly defineApi for Apixa: plain-object schema shapes become z.object. Compiled into the `apixa/validation` subpath.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a2mby/apixa.git",
+    "directory": "packages/validation"
+  },
+  "homepage": "https://github.com/a2mby/apixa#readme",
+  "bugs": {
+    "url": "https://github.com/a2mby/apixa/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external @apixa/core --external zod",
+    "dev": "tsup src/index.ts --format esm --dts --watch --external @apixa/core --external zod",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@apixa/core": "workspace:*",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2",
+    "zod": "^4.6.7"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "apixa",
+    "zod",
+    "validation",
+    "standard-schema",
+    "typescript"
+  ],
+  "private": true
+}

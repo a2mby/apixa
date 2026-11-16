@@ -2,6 +2,30 @@
 
 Project log. Newest entry first.
 
+## 2026-11-16 — Per-operation schemas, pagination, and the v3 call contract
+
+Landed Standard Schema validation on operations, the optional `apixa/validation` subpath, and the pagination and call-contract work already in the tree (`count` normalization, `getMany` batch identity, structured timeout and retry) under v3.0.0. Core stays validator-agnostic; Zod is an optional peer loaded only by `apixa/validation`. The committed Out line that deferred a Zod adapter now records this optional subpath as an owner-requested exception, not a required dependency.
+
+## 2026-11-15 — Per-operation schemas, flat `ApiState`, and `apixa/validation`
+
+Implemented ADR-006 (approved): Standard Schema V1 `schema` on operations, `SchemaValidationError`,
+`ApiState` as a resource → entity map, and the optional `apixa/validation` subpath for Zod (plain-object
+shapes read as `z.object`), as an owner-requested extension; the earlier "no Zod adapter" scope line was
+updated. The implementation lives in a private workspace (`@apixa/validation`) because core must not import Zod.
+Decisions made while implementing: missing body/query validate as `undefined`; pagination controls
+bypass `schema.query`; mock-handler parameters are untyped (schema-derived typing exhausted the type
+checker); advanced transfers honor body/response schemas. Only focused tests and targeted checks were run.
+Full verification, manual testing and release are the owner's.
+
+## 2026-11-15 — Pagination architecture
+
+Added `paginationConfig` (with `pagination` as a resource-level alias), offset pagination, optional
+metadata with honest navigation availability, shared live/mock logical-input validation and collision
+detection, `buildRequest` / `parseList` adapters, navigation helpers, and the
+[pagination guide](./guides/humans/pagination.md). Decisions: paginated operations decode the raw payload
+(configured `response.unwrap` does not apply); the final contract is validated before response
+middleware; navigation helpers take an explicit strategy because results carry no discriminant.
+
 ## 2026-11-14 — Align v3 documentation and READMEs with runtime
 
 Updated `packages/{core,mocking,react}/README.md`, `CHANGELOG.md`, living docs, and human guides

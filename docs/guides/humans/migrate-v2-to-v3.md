@@ -54,31 +54,23 @@ await api.users.search({ query: { name: "Ada" } });
 // Or filter directly with getAll:
 await api.users.getAll({ query: { name: "Ada" } });
 // Replace upsert with update or an explicit write operation:
-await api.users.update("1", { body: { name: "Ada" } });
+await api.users.update("1", { name: "Ada" });
 ```
 
 > **Note on custom declarative operations:** Declarative reads (`GET`/`HEAD`/`OPTIONS`) take one `options` object (`{ params, query, headers, ... }`). Declarative writes (`POST`/`PUT`/`PATCH`/`DELETE`) default to `hasBody: true` (`(body, options?)`); set `hasBody: false` if a custom write endpoint takes no body and should be called with `{ params: { id } }`.
 
-## 2. `update` and `patch` require `options.body`
+## 2. `update` and `patch` take positional `(id, body, options?)`
 
-In v3, `params`, `query`, and `body` occupy stable positions. Detail writes take `(id, options)` where the request payload lives under `options.body` (in Core, `apixa/react`, and `defineMockApi`). Calling `update(id, body)` or `patch(id, body)` without `{ body }` is both a TypeScript error and a runtime `ValidationError`.
+In v3 (finalized in [ADR-007](../../decisions/ADR-007-apixa-v3-unified-api-contract.md)), every body-bearing built-in write takes `body` as a positional argument and `options` as the trailing parameter: `create(body, options?)`, `update(id, body, options?)`, `patch(id, body, options?)`, `createMany(items, options?)`, and `deleteMany(ids, options?)`. Passing `{ body }` in the second argument of `update` or `patch` is rejected at compile time when `body` is not an entity field, and missing `body` throws `ValidationError` at runtime.
 
 ```ts
-// Before (v2)
 await api.users.update("42", { name: "Ada Lovelace" });
 await api.users.patch("42", { active: true }, { headers: { "X-Reason": "audit" } });
-
-// After (v3)
-await api.users.update("42", { body: { name: "Ada Lovelace" } });
-await api.users.patch("42", {
-  body: { active: true },
-  headers: { "X-Reason": "audit" },
-});
 ```
 
 ### React hooks (`apixa/react`)
 
-Inherited mutations and optimistic updaters mirror the exact Core parameter tuple:
+Inherited mutations and optimistic updaters mirror the exact Core parameter tuple (`[id, body, options?]`):
 
 ```tsx
 const users = useResourceMutation(api.users, {
@@ -87,14 +79,14 @@ const users = useResourceMutation(api.users, {
     update: {
       optimistic: {
         detail: ([id]) => id,
-        update: (current, [, { body }]) => ({ ...current, ...body }),
+        update: (current, [, body]) => ({ ...current, ...body }),
       },
     },
   },
 });
 
-await users.update("42", { body: { name: "Grace" } });
-await users.patch("42", { body: { active: false } });
+await users.update("42", { name: "Grace" });
+await users.patch("42", { active: false });
 ```
 
 ### `defineMockApi()` (`apixa/mocking`)
@@ -102,13 +94,13 @@ await users.patch("42", { body: { active: false } });
 `defineMockApi()` shares the same 13 built-in names (`MOCK_BUILTINS`) and v3 `update` / `patch` signatures:
 
 ```ts
-await mockApi.users.update("1", { body: { name: "Ada" } });
-await mockApi.users.patch("1", { body: { email: new Blob(["fixture"], { type: "text/plain" }) } });
+await mockApi.users.update("1", { name: "Ada" });
+await mockApi.users.patch("1", { email: new Blob(["fixture"], { type: "text/plain" }) });
 ```
 
-## 3. Unified `middleware` hook lists
+## 3. Unified `middleware` hook lists (with attempt hooks)
 
-Separate `middleware`, `requestMiddleware`, `responseMiddleware`, and `errorMiddleware` properties are consolidated into a single `middleware: { onRequest?, onResponse?, onError? }` object at root, resource, and operation levels:
+Separate `middleware`, `requestMiddleware`, `responseMiddleware`, and `errorMiddleware` properties are consolidated into a single `middleware: { onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }` object at root, resource, and operation levels:
 
 ```ts
 // Before (v2)
@@ -153,9 +145,16 @@ const api = defineApi({
 - `onRequest` middleware sees `request.query` already transformed by `transforms.request` (and
   renamed by live pagination `params`), while `request.body` transforms run after `onRequest`.
   Mutations to `request.query` or `request.url` stay synchronized across live transport, mocks,
-  URLs, and `response.request` / `error.request` metadata (`request.query` wins on conflicts).
+  URLs, and `response.request` / `error.request` metadata (`request.query` wins on conflicts),
+  and are re-validated against `schema.query` and pagination collision rules before dispatch.
+- `onAttempt({ request, attempt })` runs before each live HTTP transport attempt with an isolated
+  per-attempt `Headers` clone (`attempt` is 1-based).
+- `onAttemptResponse({ request, attempt, response, retry })` runs after each live HTTP transport
+  attempt before retry evaluation; calling `retry()` requests a bounded retry within the remaining
+  `retry.count` and timeout budget.
 - `onResponse` runs after `response` processing (`unwrap`, response transforms, `parse`, shaping,
-  `validate`) with `ApiResponse.source` preserved; returning `undefined` keeps the current response.
+  `validate`) and **before** `schema.response` and final built-in structural/pagination checks,
+  with `ApiResponse.source` preserved; returning `undefined` keeps the current response.
 - `onError` runs on failures: throwing replaces the error for later handlers, returning a non-`undefined`
   value recovers the call, returning `undefined` passes the original error on, and `replay` is
   `undefined` inside a replay.
@@ -186,12 +185,12 @@ const api = defineApi({
 
 Nested plain objects encode using bracket notation (`filter[role]=admin`), `Date` encodes as ISO-8601, and unsupported values (`NaN`, `Infinity`, symbols, functions, circular references, nesting beyond depth 64) throw `SerializationError`.
 
-## 6. Response pipeline, `response.unwrap` / `parse` / `validate`, and `source`
+## 6. Response pipeline, `response.unwrap` / `parse` / `validate`, `schema.response`, and `source`
 
-Configure response envelope extraction, parsing, and validation at root, resource, or operation level (most specific wins; pass `false` on a hook to disable an inherited rule):
+Configure response envelope extraction, parsing, and validation at root, resource, or operation level (most specific wins; pass `false` on a hook or transform rule to disable an inherited rule):
 
 ```ts
-const api = defineApi<{ users: { entity: User } }>()({
+const api = defineApi<{ users: User }>()({
   baseURL: "https://api.example.com",
   response: {
     unwrap: "data",
@@ -221,41 +220,55 @@ const full = await api.users.getById("1", { full: true });
 // full.source -> original parsed transport/mock body prior to response stages
 ```
 
+- `response.parse` and `schema.response` can be used together: `response.parse` runs before `onResponse`, and `schema.response` runs **after** `onResponse` and before final built-in structural/pagination checks.
+- Use `emptyResponse` (`import { emptyResponse } from "apixa"`) as `schema: { response: emptyResponse }` to type empty/204/205 operations as `Promise<void>`.
 - Invalid collection payloads (for example `getMany` or `findFirst` receiving a non-array) now throw `ResponseShapeError` instead of silently collapsing to `[]`; valid empty arrays remain valid.
-- Key transforms accept `KeyTransformConfig` (`{ keys, exclude?, preserve?, maxDepth? }`) and throw `TransformError` on cycles, excessive depth (default `64`), or key collisions.
+- Key transforms accept `KeyTransformConfig` (`{ keys, exclude?, preserve?, maxDepth? }`) or `false` (to disable an inherited transform rule) and throw `TransformError` on cycles, excessive depth (default `64`), or key collisions.
 
-## 7. Per-operation pagination and strict `slice`
+## 7. Pagination (`paginationConfig`, operation `pagination`, and call `options.pagination`)
 
-Pagination can be configured on a resource (inherited by `getAll`) **or** per operation on `getAll`,
-`getMany`, and declarative custom operations:
+Pagination is configured on a resource via `paginationConfig` (inherited by `getAll`) or per operation via `pagination` on `getAll`, `getMany`, and declarative custom operations:
 
 ```ts
-const api = defineApi<{ users: { entity: User } }>()({
+const api = defineApi<{ users: User }>()({
   baseURL: "https://api.example.com",
   resources: {
     users: {
       path: "/users",
+      paginationConfig: { strategy: "page", preset: "laravel" },
       operations: {
-        getAll: { pagination: { type: "page", preset: "laravel" } },
         exportAll: { kind: "read", method: "GET", path: "/all", pagination: false },
       },
     },
   },
 });
 
-const page = await api.users.getAll({ query: { page: 2, pageSize: 25 } });
+const page = await api.users.getAll({ pagination: { page: 2, pageSize: 25 } });
+// Logical pagination keys are also accepted in options.query:
+// await api.users.getAll({ query: { page: 2, pageSize: 25 } });
 ```
 
-- Accepted forms: `true` (`"page"`), `"page"`, `"cursor"`, preset shorthands (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"` — defaulting to `"page"`), `false` (disables resource pagination on `getAll`), or `{ type?, preset | fields | parseList, params }` (`type` defaults to `"page"` when omitted with `preset`; `"laravel-paginator"` supports both `"page"` and `"cursor"`).
-- Operation-level `pagination` cleanly shadows resource-level `pagination` (`pagination: false` opts `getAll` out; `pagination: true` reuses resource pagination or defaults to `"page"`).
-- `slice` uses strict `Array.prototype.slice` semantics on client-side lists and now throws `ConfigError` if combined with `pagination`.
+- **Strict key roles:** Resource definitions accept `paginationConfig` only (resource `pagination` is rejected with `ConfigError`). Operation definitions accept `pagination` only. Call options accept logical pagination keys in `options.pagination` or `options.query` (passing any logical key in both `options.pagination` and `options.query` throws `ValidationError`; passing `options.pagination` on a non-paginated operation throws `ConfigError`).
+- Accepted forms: `true` (`"page"`), `"page"`, `"cursor"`, `"offset"`, preset shorthands (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"` — defaulting to `"page"`), `false` (disables resource pagination on `getAll`), or `{ strategy?, preset | fields | parseList, params }`.
+- Operation-level `pagination` cleanly shadows resource-level `paginationConfig` (`pagination: false` opts `getAll` out; `pagination: true` reuses resource `paginationConfig` or defaults to `"page"`).
+- `slice` uses strict `Array.prototype.slice` semantics on client-side lists and throws `ConfigError` if combined with `pagination`.
+- New `"offset"` strategy, `pageBase`, `defaultPageSize`, `maxPageSize`, `buildRequest` and `parseList` with `{ status, headers, request }`.
+- Result types: `PageResult` is the page contract (the old union is `PaginatedResult`); results gained optional metadata, so exact-type assertions need updating. Custom page/offset mappings no longer need a `total` unless they declare it. `laravel-paginator` cursor results include `previousCursor`.
+- Paginated operations ignore a configured `response.unwrap` and reject non-JSON `responseType`.
 
-## Final v3 contract stabilization
+## 8. Built-in `getMany`, `count`, retry/timeout, and per-call option boundaries (ADR-007)
 
-- Pagination shorthand (`true`, `"page"`, `"cursor"`) now validates complete envelopes, just like mapped configurations. `parseList` outputs and final parser/validator results are checked too. Page metadata uses integers (`total >= 0`, `page >= 1`, `pageSize >= 1`); cursor metadata requires `nextCursor: string | null`. Empty/out-of-range pages remain valid. Existing presets and operation overrides remain supported.
-- Live parsers receive the decoded, unwrapped/transformed HTTP payload before builtin shaping. Mocks already produce logical values (`findFirst`: entity/null, `exists`: boolean); their parsers receive those values. Write shared parsers to handle the appropriate input. Mock data does not need backend envelope unwrapping or backend pagination mappings. Both paths check final builtin shapes after parsers and validators; non-JSON and advanced-transfer responses retain their existing paths.
-- TypeScript infers `findFirst` and `getBy` as entity-or-null after shaping, `exists` as boolean, and `count` as number. Collection and entity parser transformations remain typed; `{ full: true }` wraps the final result. Explicit operation metadata continues to take precedence over inferred parser types.
-- Known `getBy` fields correlate with their value types: `getBy("id", 42)` and `getBy("slug", "macbook")`. Optional string/number fields require defined values. Structured, boolean, Date and other non-string/number fields are excluded; model an explicit custom operation for those lookups. Untyped resources retain string fields and string/number values. Union fields accept the corresponding union of value types.
-- Comma arrays are ambiguous when elements contain commas: `["a,b", "c"]` and `["a", "b,c"]` serialize identically. Prefer `repeat` or `brackets` in that case. Query bracket keys are percent-encoded; structured array elements use indexed bracket notation.
+- **`getMany(ids, options?)`:**
+  - `getMany([])` short-circuits immediately with zero network or mock requests, returning `[]` (or `{ data: [], skipped: true, reason: "empty-ids", status: null, headers: null }` when `{ full: true }`).
+  - Live responses enforce strict ID membership against the resource's `idKey` (default `"id"`): unexpected `extraIds`, `duplicateIds`, or items missing a string/number `[idKey]` throw `ResponseShapeError` (and non-paginated `getMany` also rejects `missingIds`, while paginated `getMany` allows page subsets of the requested IDs). Returned records are reordered to match input `ids` (or local `options.sortBy`).
+  - Optional `options.sortBy` (`field` or `{ field, order?: "asc" | "desc", type?: "string" | "number" }`) sorts the returned batch locally in both live and mock execution without sending a query param.
+- **`count(options?)`:** Normalizes non-negative safe integers, digit strings (`"42"`), and `{ count }`, `{ total }`, `{ data }`, `{ records }`, `{ quantity }`, `{ numberOfUsers }`, or `{ statistics: { count } }` envelopes (after `response.unwrap`), rejecting floats, `NaN`, negatives, or malformed objects with `ResponseShapeError`.
+- **Retries and timeouts:**
+  - Default retryable HTTP methods are `["GET", "HEAD", "OPTIONS", "PUT", "DELETE"]` (`POST` and `PATCH` remain opt-in when `methods` is configured).
+  - `retry` uses `count`, `delay`, `maxDelay`, `backoff: "exponential" | "linear"`, and `jitter: "full" | "equal" | false` (default `"equal"`; legacy `retries`, `baseDelayMs`, and `maxDelayMs` throw `ConfigError`).
+  - `timeout` accepts `number` (total budget) or `{ total?: number, perAttempt?: number }`.
+- **Per-call `RequestOptions` cleanup:**
+  - `responseType` and `redirectOrigins` are operation-definition (and `ctx.request`) settings only and are rejected on per-call `RequestOptions` with `ConfigError`.
+  - Per-call `maxResponseSize` may only tighten (narrow) an operation's configured `maxResponseSize`; attempting to exceed the operation limit throws `ConfigError`.
 
 This is release-candidate stabilization. A merged PR, local verification and stable npm publication are separate events; no publication is performed by this work.

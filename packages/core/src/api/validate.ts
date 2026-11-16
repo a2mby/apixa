@@ -1,3 +1,4 @@
+import { resolveTimeout } from "../request/retry.js";
 import { assertRedirectOrigins } from "../http/redirect-origins.js";
 import { validateAdvanced } from "../transfer/advanced.js";
 import { validatePresignedPolicy } from "../http/url.js";
@@ -13,6 +14,7 @@ import type { MiddlewareHooks } from "../types/middleware.js";
 import type { TransformsConfig } from "../types/transform.js";
 import { assertResourceSlice } from "../utils/slice.js";
 import { assertLimits, assertRules, normalizeAcceptEntry } from "../validation/rules.js";
+import { isStandardSchema } from "../schema/validate.js";
 
 /**
  * Construction-time validation. Everything TypeScript cannot prove (dynamic spreads, untyped
@@ -45,7 +47,7 @@ export const RESOURCE_KEYS = new Set([
   "response",
   "operations",
   "mock",
-  "pagination",
+  "paginationConfig",
   "slice",
   "fileFields",
   "fileLimits",
@@ -77,6 +79,7 @@ export const OPERATION_KEYS = new Set([
   "redirectOrigins",
   "responseAccept",
   "pagination",
+  "schema",
 ]);
 
 const RUN_KEYS = new Set(["kind", "run", "presigned"]);
@@ -103,7 +106,7 @@ export function validateMethodKind(
     );
   }
 }
-const HOOK_KEYS = new Set(["onRequest", "onResponse", "onError"]);
+const HOOK_KEYS = new Set(["onRequest", "onAttempt", "onAttemptResponse", "onResponse", "onError"]);
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
@@ -262,14 +265,7 @@ export function validateLayer(where: string, layer: Record<string, unknown>): vo
     );
   }
   if (headers === null) throw new ConfigError(`${where}.headers must not be null.`);
-  if (
-    timeout !== undefined &&
-    (typeof timeout !== "number" || !Number.isFinite(timeout) || timeout < 0)
-  ) {
-    throw new ConfigError(
-      `${where}.timeout must be a non-negative number of milliseconds (got ${String(timeout)}).`,
-    );
-  }
+  resolveTimeout(timeout as never, `${where}.timeout`);
   if (middleware !== undefined) validateHooks(`${where}.middleware`, middleware);
   if (transforms !== undefined) validateTransforms(`${where}.transforms`, transforms);
   if (response !== undefined) validateResponseOptions(`${where}.response`, response);
@@ -277,7 +273,9 @@ export function validateLayer(where: string, layer: Record<string, unknown>): vo
 
 function validateHooks(where: string, value: unknown): asserts value is MiddlewareHooks {
   if (!isPlainObject(value)) {
-    throw new ConfigError(`${where} must be an object { onRequest?, onResponse?, onError? }.`);
+    throw new ConfigError(
+      `${where} must be an object { onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }.`,
+    );
   }
   assertKnownKeys(where, value, HOOK_KEYS);
   for (const key of HOOK_KEYS) {
@@ -306,15 +304,15 @@ function validatePatternList(where: string, value: unknown): void {
 function validateTransforms(where: string, value: unknown): asserts value is TransformsConfig {
   if (!isPlainObject(value))
     throw new ConfigError(
-      `${where} must be { request?: { keys, ... }, response?: { keys, ... } }.`,
+      `${where} must be { request?: { keys, ... } | false, response?: { keys, ... } | false }.`,
     );
   for (const [direction, rule] of Object.entries(value)) {
     if (direction !== "request" && direction !== "response")
       unknownKey(where, direction, new Set(["request", "response"]));
-    if (rule === undefined) continue;
+    if (rule === undefined || rule === false) continue;
     if (!isPlainObject(rule))
       throw new ConfigError(
-        `${where}.${direction} must be { keys, exclude?, preserve?, maxDepth? }.`,
+        `${where}.${direction} must be { keys, exclude?, preserve?, maxDepth? } or false.`,
       );
     assertKnownKeys(`${where}.${direction}`, rule, TRANSFORM_RULE_KEYS);
     if (!isKeyCase(rule.keys)) {
@@ -344,6 +342,11 @@ export function validateResource(
   const where = `resources.${name}`;
   if (!isPlainObject(value))
     throw new ConfigError(`${where} must be a resource object like { path: "/${name}" }.`);
+  if (Object.hasOwn(value, "pagination")) {
+    throw new ConfigError(
+      `${where}.pagination was renamed to \`paginationConfig\` (shared configuration). Operation-level \`pagination\` stays the on/off switch.`,
+    );
+  }
   assertKnownKeys(where, value, RESOURCE_KEYS);
   if (typeof value.path !== "string" || !value.path.startsWith("/")) {
     throw new ConfigError(`${where}.path must be a string starting with "/" (e.g. "/${name}").`);
@@ -351,17 +354,19 @@ export function validateResource(
   if (value.idKey !== undefined && (typeof value.idKey !== "string" || value.idKey === "")) {
     throw new ConfigError(`${where}.idKey must be a non-empty string.`);
   }
-  validatePagination(where, value.pagination);
+  validatePagination(where, value.paginationConfig, "paginationConfig");
   if (value.slice !== undefined) {
-    if (value.pagination !== undefined && value.pagination !== false) {
-      throw new ConfigError(`${where}: slice cannot be combined with pagination.`);
-    }
-    if (
-      isPlainObject(value.operations) &&
-      isPlainObject(value.operations.getAll) &&
-      value.operations.getAll.pagination !== undefined &&
-      value.operations.getAll.pagination !== false
-    ) {
+    const getAllOverride = isPlainObject(value.operations)
+      ? isPlainObject(value.operations.getAll)
+        ? value.operations.getAll.pagination
+        : undefined
+      : undefined;
+    // `getAll` paginates from the shared configuration unless its own `pagination` says otherwise.
+    const sharedActive =
+      value.paginationConfig !== undefined &&
+      value.paginationConfig !== false &&
+      getAllOverride === undefined;
+    if (sharedActive || (getAllOverride !== undefined && getAllOverride !== false)) {
       throw new ConfigError(`${where}: slice cannot be combined with pagination.`);
     }
     try {
@@ -435,6 +440,11 @@ function validateOperation(where: string, name: string, value: unknown): void {
       );
   }
   if ("run" in value) {
+    if (Object.hasOwn(value, "schema")) {
+      throw new ConfigError(
+        `${where}.schema: a { kind, run } operation executes your function, so Apixa cannot place a schema around it. Validate inside run, or use a declarative operation ({ method, path, schema }).`,
+      );
+    }
     assertKnownKeys(where, value, RUN_KEYS);
     if (value.presigned !== undefined) validatePresignedPolicy(value.presigned as PresignedPolicy);
     if (typeof value.run !== "function")
@@ -455,6 +465,9 @@ function validateOperation(where: string, name: string, value: unknown): void {
       );
   }
   if (value.presigned !== undefined) validatePresignedPolicy(value.presigned as PresignedPolicy);
+  if (value.schema !== undefined) {
+    validateSchemaOption(`${where}.schema`, value.schema);
+  }
   if (value.mock !== undefined) {
     if (builtin) {
       throw new ConfigError(
@@ -518,6 +531,32 @@ function validateOperation(where: string, name: string, value: unknown): void {
   }
   validateOperationFileConfig(where, value);
   validateLayer(where, value);
+}
+
+const SCHEMA_KEYS = new Set(["body", "query", "response"]);
+
+/**
+ * Static shape of an operation's `schema`. A validator is recognized by its Standard Schema V1
+ * interface (`~standard`), never by a `.parse()` method, and is never executed here.
+ */
+function validateSchemaOption(where: string, value: unknown): void {
+  if (!isPlainObject(value)) {
+    throw new ConfigError(
+      `${where}: Expected an object { body?, query?, response? } (got ${typeName(value)}). A bare schema is not accepted.`,
+    );
+  }
+  assertKnownKeys(where, value, SCHEMA_KEYS);
+  let declared = 0;
+  for (const key of SCHEMA_KEYS) {
+    if (value[key] === undefined) continue;
+    declared++;
+    if (!isStandardSchema(value[key])) {
+      throw new ConfigError(`${where}.${key}: Expected a Standard Schema V1-compatible validator.`);
+    }
+  }
+  if (declared === 0) {
+    throw new ConfigError(`${where}: Declare at least one of body, query or response.`);
+  }
 }
 
 const FILE_RULE_KEYS = [

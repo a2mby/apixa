@@ -8,7 +8,7 @@ import {
   type StubFetch,
 } from "../helpers/transfer.js";
 
-const RETRY = { retries: 2, baseDelayMs: 0, maxDelayMs: 0, methods: ["GET", "PUT", "POST"] };
+const RETRY = { count: 2, delay: 0, maxDelay: 0, methods: ["GET", "PUT", "POST"] };
 
 describe("validation and onTransfer", () => {
   it("a pre-send rejection emits no event and never reaches the transport", async () => {

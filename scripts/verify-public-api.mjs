@@ -24,6 +24,7 @@ const PACKAGES = [
   ["@apixa/core", "packages/core"],
   ["@apixa/mocking", "packages/mocking"],
   ["@apixa/react", "packages/react"],
+  ["@apixa/validation", "packages/validation"],
 ];
 
 /** Every public entry: specifier -> built JS and declaration file. */

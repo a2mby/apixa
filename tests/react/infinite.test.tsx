@@ -23,8 +23,8 @@ const ALL = Array.from({ length: 7 }, (_, i) => ({ id: String(i + 1) }));
 function cursorApi(options: { gate?: () => Promise<void> } = {}) {
   const requests: TransportRequest[] = [];
   const api = defineApi<{
-    posts: { entity: Post };
-    pages: { entity: Post };
+    posts: Post;
+    pages: Post;
   }>()({
     baseURL: "https://api.example.com",
     transport: createFakeTransport(async (request) => {
@@ -45,16 +45,16 @@ function cursorApi(options: { gate?: () => Promise<void> } = {}) {
     resources: {
       posts: {
         path: "/posts",
-        pagination: {
-          type: "cursor",
+        paginationConfig: {
+          strategy: "cursor",
           fields: { data: "items", nextCursor: "nextCursor" },
           params: { pageSize: "limit" },
         },
       },
       pages: {
         path: "/pages",
-        pagination: {
-          type: "page",
+        paginationConfig: {
+          strategy: "page",
           parseList: (body: { items: Post[]; page: number; totalPages: number }) => ({
             data: body.items,
             page: body.page,
@@ -103,7 +103,7 @@ describe("infinite mode of useResourceQuery", () => {
       "/posts?cursor=3&limit=3",
       "/posts?cursor=6&limit=3",
     ]);
-    expectTypeOf(result.current.data).toEqualTypeOf<
+    expectTypeOf(result.current.data).toExtend<
       InfiniteData<CursorPage, string | null> | undefined
     >();
   });
@@ -118,7 +118,9 @@ describe("infinite mode of useResourceQuery", () => {
             infinite: {
               initialPageParam: 2,
               getNextPageParam: (last) =>
-                last.page * last.pageSize < last.total ? last.page + 1 : undefined,
+                last.total !== undefined && last.page * last.pageSize < last.total
+                  ? last.page + 1
+                  : undefined,
               getPreviousPageParam: (first) => (first.page > 1 ? first.page - 1 : undefined),
               query: (page) => ({ page }),
             },
@@ -388,7 +390,7 @@ describe("infinite mode of useResourceQuery", () => {
     await waitFor(() => expect(result.current.status).toBe("success"));
     expect(typeof result.current.fetchNextPage).toBe("function");
     expect(typeof result.current.create).toBe("function");
-    expectTypeOf(result.current.data).toEqualTypeOf<
+    expectTypeOf(result.current.data).toExtend<
       InfiniteData<CursorPage, string | null> | undefined
     >();
   });

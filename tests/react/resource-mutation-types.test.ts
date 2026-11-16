@@ -10,7 +10,7 @@ import type { CreateBodyOf } from "../helpers/types.js";
 type User = { id: string; name: string; email: string };
 declare const external: { archive(id: string): Promise<{ archived: true }> };
 
-const api = defineApi<{ users: { entity: User }; org: { entity: User } }>()({
+const api = defineApi<{ users: User; org: User }>()({
   baseURL: "https://api.example.com",
   resources: {
     users: {
@@ -134,7 +134,7 @@ describe("resource-wide useResourceMutation types", () => {
   });
 
   it("advanced controllers preserve parameterized Core tuples without requiring getAll", () => {
-    const writeOnly = defineApi<{ org: { entity: User } }>()({
+    const writeOnly = defineApi<{ org: User }>()({
       baseURL: "https://api.example.com",
       resources: {
         org: {

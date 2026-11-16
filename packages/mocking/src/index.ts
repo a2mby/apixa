@@ -28,6 +28,7 @@ export type {
   MockOperationValue,
   Page,
   CursorPage,
+  OffsetPage,
   PaginationConfig,
   PageParams,
   ResourceInput,

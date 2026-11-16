@@ -29,7 +29,7 @@ const RESOURCE_OPTIONS = [
   "type",
   "slice",
   "seed",
-  "pagination",
+  "paginationConfig",
   "operations",
   "storage",
   "fixtures",
@@ -128,6 +128,12 @@ function assertResource(name: string, resource: unknown): asserts resource is Mo
       `${label} must be a dataset id string or an object like { type: "users-mock" }.`,
     );
   }
+  if (Object.hasOwn(resource, "pagination")) {
+    throw new MockApiError(
+      "INVALID_CONFIG",
+      `${label}: \`pagination\` was renamed to \`paginationConfig\`.`,
+    );
+  }
   for (const key of Object.keys(resource)) {
     if (!RESOURCE_OPTIONS.includes(key)) {
       throw new MockApiError(
@@ -136,8 +142,8 @@ function assertResource(name: string, resource: unknown): asserts resource is Mo
       );
     }
   }
-
-  const { type, slice, seed, pagination, operations } = resource;
+  const { type, slice, seed, operations } = resource;
+  const pagination = resource.paginationConfig;
   if (!isDatasetId(type)) {
     throw new MockApiError(
       "UNKNOWN_DATASET",
@@ -149,7 +155,7 @@ function assertResource(name: string, resource: unknown): asserts resource is Mo
   if (seed !== undefined) assertSeed(seed, label);
   if (pagination !== undefined) {
     try {
-      validatePagination(label, pagination);
+      validatePagination(label, pagination, "paginationConfig");
     } catch (error) {
       const translated = new MockApiError("INVALID_CONFIG", (error as Error).message);
       (translated as { cause?: unknown }).cause = error;
@@ -175,7 +181,7 @@ function assertResource(name: string, resource: unknown): asserts resource is Mo
  *   operations: "read",
  *   resources: {
  *     users: { type: "users-mock", operations: { count: false } },
- *     products: { type: "products-mock", pagination: true, operations: "crud" },
+ *     products: { type: "products-mock", paginationConfig: true, operations: "crud" },
  *   },
  * });
  * const { data, total } = await api.products.getAll({ page: 1, pageSize: 10 });
@@ -240,7 +246,7 @@ export function defineMockApi(config: unknown): unknown {
       fileFields: resource.fileFields,
       fileLimits: resource.fileLimits,
       seed: resource.seed,
-      pagination: resource.pagination,
+      pagination: resource.paginationConfig,
       operations: expandOperations(selected as Parameters<typeof expandOperations>[0]),
     });
   }

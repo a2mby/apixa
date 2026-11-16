@@ -158,7 +158,7 @@ describe("download progress", () => {
       },
     };
     const { defineApi } = await import("@apixa/core");
-    const api = defineApi<{ d: { path: "/d"; entity: { id: string } } }>()({
+    const api = defineApi<{ d: { id: string } }>()({
       baseURL: "https://api.example.com",
       transport,
       resources: { d: { path: "/d" } },

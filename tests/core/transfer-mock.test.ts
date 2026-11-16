@@ -11,7 +11,7 @@ const forbidden: Transport = {
 type Doc = { id: string; name: string };
 
 function makeApi() {
-  return defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  return defineApi<{ docs: Doc }>()({
     baseURL: "https://api.example.com",
     transport: forbidden,
     resources: {

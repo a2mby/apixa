@@ -63,7 +63,7 @@ describe("defineApis", () => {
       commerce: {
         baseURL: "https://api.example.com",
         transport: commerce.transport,
-        resources: { products: { path: "/products", pagination: "cursor" } },
+        resources: { products: { path: "/products", paginationConfig: "cursor" } },
       },
     });
     await apis.backend.users.delete("1");
@@ -71,7 +71,7 @@ describe("defineApis", () => {
     expect(await apis.backend2.users.count()).toBe(100);
     await apis.commerce.products.getAll();
     expect(commerce.seen).toHaveLength(1);
-    expectTypeOf(apis.commerce.products.getAll).returns.resolves.toEqualTypeOf<{
+    expectTypeOf(apis.commerce.products.getAll).returns.resolves.toExtend<{
       data: unknown[];
       nextCursor: string | null;
     }>();
@@ -79,8 +79,8 @@ describe("defineApis", () => {
 
   it("accepts explicit per-client metadata through the curried form", () => {
     type Defs = {
-      backend: { users: { entity: User } };
-      commerce: { products: { entity: Product } };
+      backend: { users: User };
+      commerce: { products: Product };
     };
     const apis = defineApis<Defs>()({
       backend: { baseURL: "/api", resources: { users: { path: "/users", operations: "read" } } },

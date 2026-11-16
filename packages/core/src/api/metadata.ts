@@ -10,7 +10,7 @@ export const OPERATION_METADATA: unique symbol = Symbol.for("apixa.operations");
 export interface OperationMetadata<Kind extends OperationKind = OperationKind> {
   /** Builtins: their convention. Custom: required `kind` from the definition. */
   readonly kind: Kind;
-  /** True when the name is one of the 16 builtins (whether generated or overridden). */
+  /** True when the name is one of the 13 builtins (whether generated or overridden). */
   readonly builtin: boolean;
   /** `"function"` for a function / `{ run }` operation, otherwise `"request"`. */
   readonly implementation: "request" | "function";
@@ -31,6 +31,31 @@ export function getOperationMetadata(
   return value && typeof value === "object"
     ? (value as Readonly<Record<string, OperationMetadata>>)
     : undefined;
+}
+
+/** Per-resource synchronous query preparers of operations configured with `schema.query`. */
+const QUERY_PREPARERS = new WeakMap<
+  object,
+  Readonly<Record<string, (query: unknown) => unknown>>
+>();
+
+/** @internal Called once per resource client at construction. */
+export function registerQueryPreparers(
+  resource: object,
+  preparers: Readonly<Record<string, (query: unknown) => unknown>>,
+): void {
+  QUERY_PREPARERS.set(resource, preparers);
+}
+
+/**
+ * The query an operation will actually send: validated and parsed by its `schema.query`,
+ * synchronously (it throws `SchemaValidationError` for an invalid query). Returns `query` itself
+ * when the operation has no query schema. Integrations use it so cache keys describe the real
+ * request; the returned object is recognized by the operation, which then does not validate it again.
+ */
+export function prepareOperationQuery<Q>(resource: object, operation: string, query: Q): Q {
+  const prepare = QUERY_PREPARERS.get(resource)?.[operation];
+  return prepare ? (prepare(query) as Q) : query;
 }
 
 /** Per-client key generators of operations configured with `idempotency` (generators only, never keys). */

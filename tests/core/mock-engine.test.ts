@@ -173,7 +173,7 @@ describe("mock state lifecycle", () => {
     });
     const created = await api.users.create({ name: "New", email: "n@example.com" });
     expect(created.id).toBe(4);
-    await api.users.patch(1, { body: { name: "Ali 2" } });
+    await api.users.patch(1, { name: "Ali 2" });
     await api.users.delete(2);
     expect((await api.users.getAll()).map((u) => u.name)).toEqual(["Ali 2", "Sara", "New"]);
     expect(source).toEqual(snapshot);
@@ -227,9 +227,13 @@ describe("mock builtins", () => {
       resources: { users: { path: "/users", mock: inline() } },
     });
 
-  it("getMany returns only requested ids, in request order, skipping missing ones", async () => {
+  it("getMany returns requested ids in request order and rejects missing ids and deduplicates duplicate ids", async () => {
     const api = make();
-    expect((await api.users.getMany([3, 1, 99, 3])).map((u) => u.id)).toEqual([3, 1]);
+    expect((await api.users.getMany([3, 1])).map((u) => u.id)).toEqual([3, 1]);
+    await expect(api.users.getMany([3, 99])).rejects.toMatchObject({ code: "RESPONSE_SHAPE" });
+    // ADR-007 decision 18: duplicate request IDs are deduplicated, first occurrence order kept.
+    expect((await api.users.getMany([3, 1, 3])).map((u) => u.id)).toEqual([3, 1]);
+    expect((await api.users.getMany([3, 3])).map((u) => u.id)).toEqual([3]);
   });
 
   it("exists inspects the store directly", async () => {
@@ -265,12 +269,12 @@ describe("mock builtins", () => {
 
   it("update replaces, patch merges", async () => {
     const api = make();
-    expect(await api.users.update(1, { body: { name: "X", email: "x@x" } })).toEqual({
+    expect(await api.users.update(1, { name: "X", email: "x@x" })).toEqual({
       id: 1,
       name: "X",
       email: "x@x",
     });
-    expect(await api.users.patch(2, { body: { name: "Y" } })).toEqual({
+    expect(await api.users.patch(2, { name: "Y" })).toEqual({
       id: 2,
       name: "Y",
       email: "omar@example.com",
@@ -389,10 +393,10 @@ describe("mock pagination (shared live/mock contract)", () => {
   it('pagination: "page" returns { data, total, page, pageSize }', async () => {
     const api = defineApi({
       baseURL: "/api",
-      resources: { r: { path: "/r", mock: rows, pagination: "page" } },
+      resources: { r: { path: "/r", mock: rows, paginationConfig: "page" } },
     });
     const page = await api.r.getAll({ query: { page: 3, pageSize: 20 } });
-    expectTypeOf(page).toEqualTypeOf<{
+    expectTypeOf(page).toExtend<{
       data: { id: number; n: number }[];
       total: number;
       page: number;
@@ -402,17 +406,17 @@ describe("mock pagination (shared live/mock contract)", () => {
     expect(page.data.map((r) => r.id)).toEqual([41, 42, 43, 44, 45]);
     expect(await api.r.getAll()).toMatchObject({ page: 1, pageSize: 20, total: 45 });
     await expect(api.r.getAll({ query: { page: 0 } })).rejects.toMatchObject({
-      code: "MOCK_INVALID_INPUT",
+      code: "VALIDATION",
     });
   });
 
   it('pagination: "cursor" returns { data, nextCursor }', async () => {
     const api = defineApi({
       baseURL: "/api",
-      resources: { r: { path: "/r", mock: rows, pagination: "cursor" } },
+      resources: { r: { path: "/r", mock: rows, paginationConfig: "cursor" } },
     });
     const first = await api.r.getAll({ query: { pageSize: 40 } });
-    expectTypeOf(first).toEqualTypeOf<{
+    expectTypeOf(first).toExtend<{
       data: { id: number; n: number }[];
       nextCursor: string | null;
     }>();

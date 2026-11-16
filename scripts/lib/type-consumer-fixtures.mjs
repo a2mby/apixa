@@ -12,7 +12,7 @@ type NoAnyMembers<T> = [AnyKeys<T>] extends [never] ? true : false;
 
 const API = `
 type User = { id: string; name: string; email: string };
-const api = defineApi<{ users: { entity: User } }>()({
+const api = defineApi<{ users: User }>()({
   baseURL: "https://example.test",
   resources: {
     users: {
@@ -33,7 +33,7 @@ const ADVANCED_TYPES = `
 import { createTransferControl, type AdvancedTransferConfig, type TransferCheckpoint, type TransferSnapshot } from "apixa/core";
 const control = createTransferControl();
 const advancedConfig = {} as AdvancedTransferConfig;
-const advanced = defineApi<{ uploads: { entity: { id: string; file: string } } }>()({ baseURL: "https://example.test", resources: { uploads: { path: "/uploads", fileFields: ["file"], operations: { create: { transfer: advancedConfig } } } } });
+const advanced = defineApi<{ uploads: { id: string; file: string } }>()({ baseURL: "https://example.test", resources: { uploads: { path: "/uploads", fileFields: ["file"], operations: { create: { transfer: advancedConfig } } } } });
 const pending = advanced.uploads.create({ file: new Blob(["x"]) }, { transfer: { control, onSession(snapshot) { const typed: TransferSnapshot = snapshot; void typed; }, saveCheckpoint(checkpoint) { const typed: TransferCheckpoint = checkpoint; void typed; } } });
 type AdvancedResult = Assert<Equal<Awaited<typeof pending>, { id: string; file: string }>>;
 // @ts-expect-error a checkpoint must use the versioned schema
@@ -43,7 +43,7 @@ advanced.uploads.create({ file: new Blob([]) }, { transfer: { checkpoint: { vers
 /** Binary downloads: shared by every fixture (operation-level and per-call `responseType`). */
 const DOWNLOAD_API = `
 type Doc = { id: string; name: string };
-const files = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+const files = defineApi<{ docs: Doc }>()({
   baseURL: "https://example.test",
   resources: {
     docs: {
@@ -74,7 +74,7 @@ async function storageTypes() {
   type _ref = Assert<Equal<typeof row.file, string>>;
   const file = mockFiles(seeded).get(row.file);
   type _meta = Assert<Equal<NonNullable<typeof file>["meta"]["disk"], string | undefined>>;
-  await seeded.docs.patch(1, { body: { file: new Blob(["next"]) } });
+  await seeded.docs.patch(1, { file: new Blob(["next"]) });
   const listed = mockFiles(seeded).list({ disk: "test", path: "docs" });
   type _list = Assert<NotAny<typeof listed[number]>>;
 }
@@ -90,7 +90,7 @@ const core = defineCore({ baseURL: "https://example.test", resources: { u: { pat
 void core;
 void defineMockApi;
 export async function main() {
-  const lookupApi = defineApi<{ products: { entity: { id: number; slug: string; nickname?: string; settings: object } } }>()({
+  const lookupApi = defineApi<{ products: { id: number; slug: string; nickname?: string; settings: object } }>()({
     baseURL: "https://example.test", resources: { products: { path: "/products" } },
   });
   await lookupApi.products.getBy("id", 42);
@@ -119,10 +119,10 @@ export async function main() {
   type _one = Assert<Equal<typeof one, User>>;
   const archived = await api.users.archive("1");
   type _archived = Assert<Equal<typeof archived, User>>;
-  const updated = await api.users.update("1", { body: { name: "Ada" } });
+  const updated = await api.users.update("1", { name: "Ada" });
   type _updated = Assert<Equal<typeof updated, User>>;
-  // @ts-expect-error v3 update requires options.body
-  await api.users.update("1", { name: "Ada" });
+  // @ts-expect-error ADR-007 decision 12: the old { body } update form is removed
+  await api.users.update("1", { body: { name: "Ada" } });
   type _err = Assert<NotAny<ApiError>>;
 
   // v3.0.0: QueryOptions, ResponseOptions, KeyTransformConfig, per-op pagination, response.source
@@ -138,7 +138,7 @@ export async function main() {
   > = ({ store, params }) => store.get(params.id);
   void mockHandler;
   const v3 = defineApi<{
-    items: { entity: { id: string; firstName: string }; query: { role?: string } };
+    items: { id: string; firstName: string };
   }>()({
     baseURL: "https://example.test",
     query: qOpts,
@@ -161,7 +161,7 @@ export async function main() {
   });
   const page = await v3.items.getAll({ query: { page: 1, role: "admin" } });
   type _v3page = Assert<
-    Equal<typeof page, { data: { id: string; firstName: string }[]; total: number; page: number; pageSize: number }>
+    Equal<typeof page, PageResult<{ id: string; firstName: string }>>
   >;
   type _pageResult = Assert<NotAny<PageResult>>;
   type _resolvedPagination = Assert<NotAny<ResolvedPagination>>;
@@ -182,8 +182,9 @@ export async function main() {
   type _d6 = Assert<Equal<(typeof full)["headers"], Headers>>;
   const posted = await files.docs.report({ format: "pdf" });
   type _d7 = Assert<Equal<typeof posted, Blob>>;
-  const perCall = await files.docs.getById("1", { responseType: "blob" });
-  type _d8 = Assert<Equal<typeof perCall, Blob>>;
+  // @ts-expect-error ADR-007 decision 20: responseType is fixed by the operation, not a per-call option
+  const perCall = files.docs.getById("1", { responseType: "blob" });
+  void perCall;
   const viaCtx = await files.docs.viaCtx("1");
   type _d9 = Assert<Equal<typeof viaCtx, Blob>>;
   const typedCtx = await files.docs.typedCtx();
@@ -213,7 +214,7 @@ export async function main() {
   type _t8 = Assert<Equal<typeof support, TransferSupport>>;
 
   // v1.4.0: file rules, limits and typed violations from packed declarations.
-  const rules = defineApi<{ pets: { path: "/pets"; entity: { id: string; photo?: string | null } } }>()({
+  const rules = defineApi<{ pets: { id: string; photo?: string | null } }>()({
     baseURL: "https://example.test",
     resources: {
       pets: {
@@ -224,10 +225,10 @@ export async function main() {
       },
     },
   });
-  const exported = await rules.pets.export({ maxResponseSize: 5, redirectOrigins: ["https://cdn.example.com"] });
+  const exported = await rules.pets.export({ maxResponseSize: 5 });
   type _v1 = Assert<Equal<typeof exported, Blob>>;
-  // @ts-expect-error redirectOrigins is a list of origins, not a string
-  await rules.pets.export({ redirectOrigins: "https://cdn.example.com" });
+  // @ts-expect-error ADR-007 decision 21: redirectOrigins is operation policy, not a per-call option
+  await rules.pets.export({ redirectOrigins: ["https://cdn.example.com"] });
   try {
     await rules.pets.create({ photo: new File([], "a.png") });
   } catch (error) {
@@ -281,7 +282,7 @@ export function App() {
   type _tx3 = Assert<NotAny<typeof watched>>;
   type _tx4 = Assert<Equal<(typeof watched)["data"], Blob | undefined>>;
   // v1.6.0: files through the hooks keep full inference.
-  const fileApi = defineApi<{ docs: { path: "/docs"; entity: { id: string; name: string; photo?: string | null } } }>()({
+  const fileApi = defineApi<{ docs: { id: string; name: string; photo?: string | null } }>()({
     baseURL: "https://example.test",
     resources: { docs: { path: "/docs", fileFields: { photo: { maxSize: 5, accept: ["image/*"] } }, operations: { download: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" } } } },
   });

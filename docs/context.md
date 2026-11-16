@@ -79,7 +79,7 @@ import { defineApi } from "apixa";
 type User = { id: string; name: string; email: string };
 
 type AppApi = {
-  users: { entity: User };
+  users: User;
 };
 
 const api = defineApi<AppApi>()({
@@ -96,7 +96,7 @@ const user = await api.users.getById("123");
 
 Reads (`getAll`, `getById`, `getMany`, `getBy`, `findFirst`, `count`, `exists`) and `create` /
 `delete` / `createMany` / `deleteMany` take their documented arguments, while `update` and `patch`
-take `(id, { body, params?, ... })` and resource path parameters use `options.params`. `create` /
+take positional `(id, body, options?)` and resource path parameters use `options.params`. `create` /
 `update` bodies are derived from `entity` (`Omit` / `Partial` on `"id"`). The runtime configuration
 supplies resource names, paths, and operation selection; `AppApi` supplies payload types without
 repeating paths. Both curried generic and direct inferred forms remain supported. Root builtins
@@ -136,13 +136,13 @@ await api.users.archive("123"); // custom function operation
 
 See the full table in [`docs/conventions.md`](./conventions.md#operation-customization).
 
-**Implemented in v3.0.0 (`3.0.0-rc.0`):** consolidated 13 built-in defaults, `operations` presets/lists/named
+**Implemented in v3.0.0 (`3.0.0-rc.0`, finalized by ADR-007):** consolidated 13 built-in defaults, `operations` presets/lists/named
 overrides reflected in TypeScript, `createMany` / `deleteMany` replacing the old bulk names,
-independent `exists` / `findFirst` / `getMany` / `getBy` execution, `{ body }` write signatures for
+independent `exists` / `findFirst` / `getMany` / `getBy` / `count` execution (`getMany` strict batch semantics, empty fast-path, local `sortBy`), positional `(id, body, options?)` write signatures for
 `update` / `patch`, `{ params }` for path parameters, derived HTTP kinds for declarative operations,
-unified `middleware: { onRequest: [], onResponse: [], onError: [] }` hooks, structured `query` serialization,
-explicit `response` processing (`unwrap` / `parse` / `validate` / `source`), bounded/excluded
-`transforms`, and unified per-operation `pagination` with live/mock parity. TanStack's list hook
+unified `middleware: { onRequest, onAttempt, onAttemptResponse, onResponse, onError }` hooks, structured `query` serialization,
+explicit `response` processing (`unwrap` / `parse` / `validate` / `source` / `schema.response` / `emptyResponse`), bounded/excluded
+`transforms`, and unified `paginationConfig` (resource) / `pagination` (operation) / `options.pagination` (call) with live/mock parity. TanStack's list hook
 supports resources with disabled detail and mutation methods.
 
 Prefer clear semantics. For example, `update()` is a clearer default than an ambiguous operation such as `appendUser()`.

@@ -1,4 +1,5 @@
 import { defineApi, type BuiltinHeaders } from "@apixa/core";
+import { z } from "zod";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import type { CreateBodyOf } from "../helpers/types.js";
 import { createFakeTransport } from "../helpers/fake-transport.js";
@@ -6,10 +7,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 type User = { id: string; name: string; email: string };
 
 type AppApi = {
-  users: {
-    path: "/users";
-    entity: User;
-  };
+  users: User;
 };
 
 describe("defineApi<T> entity-only state typing", () => {
@@ -28,7 +26,7 @@ describe("defineApi<T> entity-only state typing", () => {
     });
 
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
-    expectTypeOf<Parameters<typeof api.users.update>[1]["body"]>().toEqualTypeOf<Partial<User>>();
+    expectTypeOf<Parameters<typeof api.users.update>[1]>().toEqualTypeOf<Partial<User>>();
 
     const users = await api.users.getAll();
     expectTypeOf(users).toEqualTypeOf<User[]>();
@@ -39,7 +37,7 @@ describe("defineApi<T> entity-only state typing", () => {
 
   it("does not require root keys on AppApi", async () => {
     type ResourcesOnly = {
-      users: { path: "/users"; entity: User };
+      users: User;
     };
 
     const api = defineApi<ResourcesOnly>()({
@@ -87,21 +85,8 @@ describe("defineApi<T> entity-only state typing", () => {
     expectTypeOf(await api.users.getAll()).toEqualTypeOf<unknown[]>();
   });
 
-  it("refines custom operations from state operations bag", async () => {
-    type SearchApi = {
-      users: {
-        path: "/users";
-        entity: User;
-        operations: {
-          search: {
-            method: "GET";
-            path: "/search";
-            query: { q: string };
-            response: User[];
-          };
-        };
-      };
-    };
+  it("types custom operations from their runtime schema, not from state", async () => {
+    type SearchApi = { users: User };
 
     const api = defineApi<SearchApi>()({
       baseURL: "https://api.example.com",
@@ -110,7 +95,16 @@ describe("defineApi<T> entity-only state typing", () => {
         users: {
           path: "/users",
           operations: {
-            search: { method: "GET", path: "/search" },
+            search: {
+              method: "GET",
+              path: "/search",
+              schema: {
+                query: z.object({ q: z.string() }),
+                response: z.array(
+                  z.object({ id: z.string(), name: z.string(), email: z.string() }),
+                ),
+              },
+            },
           },
         },
       },
@@ -130,12 +124,8 @@ describe("defineApi<T> accepts interfaces", () => {
       id: string;
       name: string;
     }
-    interface UsersResource {
-      path: "/users";
-      entity: User;
-    }
     interface AppApi {
-      users: UsersResource;
+      users: User;
     }
 
     const api = defineApi<AppApi>()({

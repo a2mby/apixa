@@ -16,7 +16,7 @@ import { step, withFaults, type Fault } from "../helpers/fault-injection.js";
  */
 type Server = ReturnType<typeof protocolServer>;
 const clientWith = (server: Server, faults: Fault[], override: object = {}) =>
-  defineApi<{ files: { entity: { id: string; size?: number; document: string } } }>()({
+  defineApi<{ files: { id: string; size?: number; document: string } }>()({
     baseURL: "https://api.example.com",
     transport: withFaults(server.transport, faults),
     resources: {
@@ -144,7 +144,7 @@ describe("L17: duplicate delivery and retries", () => {
       { match: step.part(1), before: lost("blip") },
     ]).files.create(
       { document: source() },
-      { retry: { retries: 1, methods: ["PUT"], baseDelayMs: 0, maxDelayMs: 0, jitter: false } },
+      { retry: { count: 1, methods: ["PUT"], delay: 0, maxDelay: 0, jitter: false } },
     );
     expect(sent.length).toBe(2);
     const keys = sent.map((r) => r.headers.get("idempotency-key"));

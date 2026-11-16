@@ -99,8 +99,8 @@ describe("configuration fails early with descriptive errors", () => {
     ],
     [
       "invalid pagination mode",
-      { ...base, resources: { u: { path: "/u", pagination: "table" } } },
-      /pagination must be true, false, "page" or "cursor", a preset/,
+      { ...base, resources: { u: { path: "/u", paginationConfig: "table" } } },
+      /paginationConfig must be true, false, "page", "cursor" or "offset", a preset/,
     ],
     [
       "pagination on non-list builtin",
@@ -170,8 +170,8 @@ describe("configuration fails early with descriptive errors", () => {
     ],
     [
       "invalid retry",
-      { ...base, retry: { retries: 1.5 }, resources: {} },
-      /retry\.retries must be a non-negative integer/,
+      { ...base, retry: { count: 1.5 }, resources: {} },
+      /retry\.count must be a non-negative integer/,
     ],
     [
       "invalid transport",
@@ -188,7 +188,7 @@ describe("configuration fails early with descriptive errors", () => {
     expect(
       build({
         ...base,
-        resources: { u: { path: "/u", operations: { getAll: { retry: { retries: -1 } } } } },
+        resources: { u: { path: "/u", operations: { getAll: { retry: { count: -1 } } } } },
       }),
     ).toThrow(/resources\.u\.operations\.getAll\.retry/);
   });

@@ -67,7 +67,9 @@ describe("defineMockApi autocomplete (TypeScript language service)", () => {
 
   it("suggests the resource config inside resources.<name>", () => {
     const names = complete("defineMockApi({ resources: { users: { | } } });");
-    expect(names).toEqual(expect.arrayContaining(["type", "slice", "pagination", "operations"]));
+    expect(names).toEqual(
+      expect.arrayContaining(["type", "slice", "paginationConfig", "operations"]),
+    );
   });
 
   it("suggests dataset ids for `type`", () => {

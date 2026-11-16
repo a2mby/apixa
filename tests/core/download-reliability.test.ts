@@ -40,7 +40,7 @@ function client(
   resource: Record<string, unknown> = {},
   root: Record<string, unknown> = {},
 ) {
-  return defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  return defineApi<{ docs: Doc }>()({
     baseURL: "https://api.example.com",
     transport,
     ...root,
@@ -128,7 +128,7 @@ describe("failures and retries", () => {
         ? slowBody(signal, "fail")
         : new Response(BYTES, { status: 200, headers: { "content-type": "application/pdf" } }),
     );
-    const api = client(transport, {}, { retry: { retries: 1, baseDelayMs: 1, jitter: false } });
+    const api = client(transport, {}, { retry: { count: 1, delay: 1, jitter: false } });
     const blob = await api.docs.download({ params: { id: "1" } });
     expect(calls).toHaveLength(2);
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(BYTES);
@@ -143,7 +143,7 @@ describe("failures and retries", () => {
           })
         : new Response(BYTES, { status: 200 }),
     );
-    const api = client(transport, {}, { retry: { retries: 1, baseDelayMs: 1, jitter: false } });
+    const api = client(transport, {}, { retry: { count: 1, delay: 1, jitter: false } });
     expect(await api.docs.download({ params: { id: "1" } })).toBeInstanceOf(Blob);
     expect(calls).toHaveLength(2);
   });
@@ -156,7 +156,7 @@ describe("failures and retries", () => {
           headers: { "content-type": "application/json" },
         }),
     );
-    const api = client(transport, {}, { retry: { retries: 1, baseDelayMs: 1, jitter: false } });
+    const api = client(transport, {}, { retry: { count: 1, delay: 1, jitter: false } });
     const error = (await api.docs
       .download({ params: { id: "1" } })
       .catch((e: unknown) => e)) as HttpError;
@@ -181,7 +181,7 @@ describe("failures and retries", () => {
 
   it("a write is not retried by default, even though its response is binary", async () => {
     const { transport, calls } = stub(() => new Response("nope", { status: 503 }));
-    const api = client(transport, {}, { retry: { retries: 3, baseDelayMs: 1, jitter: false } });
+    const api = client(transport, {}, { retry: { count: 3, delay: 1, jitter: false } });
     await expect(api.docs.export({ format: "pdf" })).rejects.toBeInstanceOf(HttpError);
     expect(calls).toHaveLength(1);
   });
@@ -197,7 +197,7 @@ describe("failures and retries", () => {
             method: "POST",
             path: "/upload",
             responseType: "blob",
-            retry: { retries: 3, baseDelayMs: 1, jitter: false, methods: ["POST"] },
+            retry: { count: 3, delay: 1, jitter: false, methods: ["POST"] },
           },
         },
       },

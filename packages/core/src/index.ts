@@ -5,9 +5,21 @@ export {
   mockFiles,
   validatePagination,
   resolvePagination,
+  nextPageInput,
+  previousPageInput,
+  paginationContextKey,
 } from "./api/index.js";
-export type { PageResult, ResolvedPagination } from "./api/index.js";
-export { OPERATION_METADATA, getOperationMetadata, createIdempotencyKey } from "./api/metadata.js";
+export type {
+  ResolvedPagination,
+  PaginationNavigation,
+  PaginationNavOptions,
+} from "./api/index.js";
+export {
+  OPERATION_METADATA,
+  getOperationMetadata,
+  createIdempotencyKey,
+  prepareOperationQuery,
+} from "./api/metadata.js";
 export type { OperationMetadata } from "./api/metadata.js";
 
 export {
@@ -17,6 +29,7 @@ export {
   ParseError,
   ResponseShapeError,
   ValidationError,
+  SchemaValidationError,
   TimeoutError,
   AbortError,
   ConfigError,
@@ -29,7 +42,10 @@ export {
   isTimeoutError,
   isMockError,
 } from "./errors/index.js";
-export type { ApiErrorCode, MockErrorCode } from "./errors/index.js";
+export type { ApiErrorCode, MockErrorCode, SchemaPhase } from "./errors/index.js";
+
+/** Standard Schema V1 detection, shared with schema-library integrations such as `apixa/validation`. */
+export { isStandardSchema, emptyResponse } from "./schema/index.js";
 
 export { createFetchTransport } from "./transport/index.js";
 

@@ -92,7 +92,7 @@ function deferred() {
 export async function runAdvanced<T>(
   config: AdvancedTransferConfig<T>,
   body: unknown,
-  options: RequestOptions,
+  options: RequestOptions & { responseType?: import("../types/transport.js").ResponseType },
   runtime: Runtime,
 ): Promise<ApiResponse<T>> {
   validateAdvanced(config);

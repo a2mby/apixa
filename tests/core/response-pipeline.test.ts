@@ -94,7 +94,7 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
         },
       });
 
-      await expect(api.items.getById("1")).resolves.toBeNull();
+      await expect(api.items.getById("1")).rejects.toBeInstanceOf(ResponseShapeError);
       await expect(api.items.clear205()).resolves.toBeNull();
       expect(unwrapCalled).toBe(0);
       expect(parseCalled).toBe(0);
@@ -106,8 +106,8 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
     it("inherits root -> resource -> operation response options and supports false opt-out", async () => {
       const seenContexts: ResponseHookContext[] = [];
       const api = defineApi<{
-        users: { entity: { id: number; fullName: string } };
-        health: { entity: { ok: boolean } };
+        users: { id: number; fullName: string };
+        health: { ok: boolean };
       }>()({
         baseURL: "https://api.example.com",
         transport: createFakeTransport((req) => {
@@ -255,13 +255,13 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
         resources: { users: { path: "/users" } },
       });
 
-      await expect(api.users.count()).rejects.toBeInstanceOf(ResponseShapeError);
+      await expect(api.users.count()).resolves.toBe(3);
       await expect(api.users.createMany([{}])).rejects.toBeInstanceOf(ResponseShapeError);
       await expect(api.users.getById("bad")).rejects.toBeInstanceOf(ResponseShapeError);
-      await expect(api.users.getById("204")).resolves.toBeNull();
+      await expect(api.users.getById("204")).rejects.toBeInstanceOf(ResponseShapeError);
       await expect(api.users.create({})).rejects.toBeInstanceOf(ResponseShapeError);
-      await expect(api.users.update("1", { body: {} })).rejects.toBeInstanceOf(ResponseShapeError);
-      await expect(api.users.patch("1", { body: {} })).rejects.toBeInstanceOf(ResponseShapeError);
+      await expect(api.users.update("1", {})).rejects.toBeInstanceOf(ResponseShapeError);
+      await expect(api.users.patch("1", {})).rejects.toBeInstanceOf(ResponseShapeError);
       await expect(api.users.getAll()).rejects.toBeInstanceOf(ResponseShapeError);
     });
   });
@@ -330,7 +330,7 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
     it("still applies builtin fromHttp shaping and checks after inherited response.parse", async () => {
       const parseCalls: string[] = [];
       const api = defineApi<{
-        users: { entity: { id: number; parsed?: boolean } };
+        users: { id: number; parsed?: boolean };
       }>()({
         baseURL: "https://api.example.com",
         transport: createFakeTransport((req) => {
@@ -581,7 +581,7 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
           envelope: { path: "/envelope" },
           sliced: { path: "/sliced", slice: 1 },
           plain: { path: "/plain" },
-          laravel: { path: "/laravel", pagination: "laravel" },
+          laravel: { path: "/laravel", paginationConfig: "laravel" },
         },
       });
 
@@ -637,6 +637,9 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
           files: {
             path: "/files",
             operations: {
+              getById: { responseType: "text" },
+              getBy: { responseType: "text" },
+              blobOp: { method: "GET", responseType: "blob" },
               textOp: { kind: "read", method: "GET", path: "/note", responseType: "text" },
             },
           },
@@ -647,16 +650,16 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
       expectTypeOf(textRes).toEqualTypeOf<string>();
       expect(textRes).toBe("hello_world");
 
-      const getByIdText = await api.files.getById("1", { responseType: "text" });
+      const getByIdText = await api.files.getById("1");
       expectTypeOf(getByIdText).toEqualTypeOf<string>();
       expect(getByIdText).toBe("hello_world");
 
-      const getByIdBlob = await api.files.getById("1", { responseType: "blob" });
+      const getByIdBlob = await api.files.blobOp();
       expectTypeOf(getByIdBlob).toEqualTypeOf<Blob>();
       expect(getByIdBlob).toBeInstanceOf(Blob);
       expect(await getByIdBlob.text()).toBe("hello_world");
 
-      const getByText = await api.files.getBy("slug", "intro", { responseType: "text" });
+      const getByText = await api.files.getBy("slug", "intro");
       expectTypeOf(getByText).toEqualTypeOf<string>();
       expect(getByText).toBe("hello_world");
 
@@ -708,7 +711,7 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
 
     it("does not let root/resource response.unwrap strip pagination metadata before Laravel parsePage", async () => {
       const api = defineApi<{
-        items: { entity: { id: string; itemName: string } };
+        items: { id: string; itemName: string };
       }>()({
         baseURL: "https://api.example.com",
         transport: createFakeTransport(() => ({
@@ -721,7 +724,7 @@ describe("response pipeline (v3 Decisions 22-27)", () => {
         response: { unwrap: "data" },
         transforms: { response: { keys: "camelCase" } },
         resources: {
-          items: { path: "/items", pagination: "laravel" },
+          items: { path: "/items", paginationConfig: "laravel" },
         },
       });
 
@@ -815,8 +818,8 @@ describe("write response contracts", () => {
       });
       for (const call of [
         () => api.users.create({ name: "Grace" }),
-        () => api.users.update(1, { body: { name: "Grace" } }),
-        () => api.users.patch(1, { body: { name: "Grace" } }),
+        () => api.users.update(1, { name: "Grace" }),
+        () => api.users.patch(1, { name: "Grace" }),
         () => api.users.createMany([{ name: "Grace" }]),
       ]) {
         await expect(call()).rejects.toBeInstanceOf(ResponseShapeError);

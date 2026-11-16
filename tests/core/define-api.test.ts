@@ -6,10 +6,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 type User = { id: string; name: string; email: string };
 
 type UsersApi = {
-  users: {
-    path: "/users";
-    entity: User;
-  };
+  users: User;
 };
 
 describe("defineApi", () => {
@@ -123,7 +120,7 @@ describe("defineApi", () => {
     expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<User["id"]>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<CreateBodyOf<User>>();
     expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<User["id"]>();
-    expectTypeOf<Parameters<typeof api.users.update>[1]["body"]>().toEqualTypeOf<Partial<User>>();
+    expectTypeOf<Parameters<typeof api.users.update>[1]>().toEqualTypeOf<Partial<User>>();
 
     const created = await api.users.create({ name: "Ada", email: "ada@example.com" });
     const user = await api.users.getById("1");

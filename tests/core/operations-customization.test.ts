@@ -5,10 +5,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 type User = { id: string; name: string; email: string };
 
 type UsersApi = {
-  users: {
-    path: "/users";
-    entity: User;
-  };
+  users: User;
 };
 
 describe("operations customization", () => {

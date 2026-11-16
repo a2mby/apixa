@@ -47,7 +47,7 @@ describe("mock slice", () => {
 
   it("rejects slice together with mock pagination", () => {
     expect(() =>
-      defineMockApi({ users: { type: "products-mock", slice: 5, pagination: true } }),
+      defineMockApi({ users: { type: "products-mock", slice: 5, paginationConfig: true } }),
     ).toThrow(/slice.*pagination|pagination.*slice/i);
   });
 

@@ -5,7 +5,10 @@ import { describe, expect, it } from "vitest";
 
 /** The same dataset behind both APIs; every assertion compares them, not hard-coded output. */
 function pair(
-  options: { pagination?: "page" | "cursor"; slice?: number | { start: number; end: number } } = {},
+  options: {
+    paginationConfig?: "page" | "cursor";
+    slice?: number | { start: number; end: number };
+  } = {},
 ) {
   const core = defineApi({
     baseURL: "https://x.dev",
@@ -26,8 +29,8 @@ describe("getAll: defineMockApi follows the Core mocked contract", () => {
     expect(await mock.getAll({ companyId: "no-such" } as never)).toEqual([]);
   });
 
-  it("page pagination: same envelope, out-of-range page, empty result", async () => {
-    const { core, mock } = pair({ pagination: "page" });
+  it("page paginationConfig: same envelope, out-of-range page, empty result", async () => {
+    const { core, mock } = pair({ paginationConfig: "page" });
     for (const query of [
       undefined,
       { page: 2, pageSize: 10 },
@@ -48,7 +51,7 @@ describe("getAll: defineMockApi follows the Core mocked contract", () => {
   });
 
   it("cursor pagination matches too", async () => {
-    const { core, mock } = pair({ pagination: "cursor" });
+    const { core, mock } = pair({ paginationConfig: "cursor" });
     for (const query of [
       { pageSize: 30 },
       { cursor: 30, pageSize: 30 },
@@ -59,10 +62,10 @@ describe("getAll: defineMockApi follows the Core mocked contract", () => {
   });
 
   it("invalid paging values fail with the same cause", async () => {
-    const { core, mock } = pair({ pagination: "page" });
+    const { core, mock } = pair({ paginationConfig: "page" });
     for (const query of [{ page: 0 }, { pageSize: -1 }, { page: "x" }]) {
       await expect(core.getAll({ query } as never)).rejects.toMatchObject({
-        code: "MOCK_INVALID_INPUT",
+        code: "VALIDATION",
       });
       await expect(mock.getAll(query as never)).rejects.toMatchObject({
         code: "INVALID_PAGINATION",

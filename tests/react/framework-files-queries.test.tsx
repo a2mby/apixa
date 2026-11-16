@@ -51,7 +51,7 @@ function makeApi(extra: Record<string, unknown> = {}) {
     );
     return new Response(body, { headers: { "content-type": "application/octet-stream" } });
   }) as typeof fetch;
-  const api = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  const api = defineApi<{ docs: Doc }>()({
     baseURL: "https://x.dev/v1",
     transport: createFetchTransport(fetchImpl),
     resources: {
@@ -78,7 +78,7 @@ describe("F2/F5: streams held by a query", () => {
           reject(init!.signal!.reason);
         });
       })) as typeof fetch;
-    const api = defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+    const api = defineApi<{ docs: Doc }>()({
       baseURL: "https://x.dev/v1",
       transport: createFetchTransport(fetchImpl),
       resources: {

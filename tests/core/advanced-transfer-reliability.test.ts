@@ -6,10 +6,7 @@ describe("part retries through existing reliability infrastructure", () => {
     const server = protocolServer();
     server.faults.failPart = 1;
     await server
-      .client(
-        {},
-        { retry: { retries: 1, methods: ["PUT"], baseDelayMs: 0, maxDelayMs: 0, jitter: false } },
-      )
+      .client({}, { retry: { count: 1, methods: ["PUT"], delay: 0, maxDelay: 0, jitter: false } })
       .files.create({ document: source() });
     const writes = server.requests.filter((r) => r.method === "PUT");
     expect(writes.map((r) => new URL(r.url).pathname.split("/").at(-1))).toEqual([
@@ -39,7 +36,7 @@ describe("part retries through existing reliability infrastructure", () => {
       server
         .client(
           { protocol: { ...server.config.protocol, replaySafeParts: false } },
-          { retry: { retries: 3, methods: ["PUT"] } },
+          { retry: { count: 3, methods: ["PUT"] } },
         )
         .files.create({ document: source() }),
     ).rejects.toThrow();
@@ -52,7 +49,7 @@ it("an explicit error-middleware replay keeps the same part key and cannot repla
   server.faults.failPart = 1;
   let replays = 0;
   const { defineApi } = await import("apixa/core");
-  const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+  const api = defineApi<{ files: { id: string; document: string } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
     middleware: {
@@ -112,7 +109,7 @@ it("outer error replay reconciles a checkpoint instead of creating a second sess
   const server = protocolServer();
   server.faults.failPart = 1;
   const { defineApi } = await import("apixa/core");
-  const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+  const api = defineApi<{ files: { id: string; document: string } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
     middleware: {
@@ -139,7 +136,7 @@ it("generic error middleware cannot replay a protocol write marked unsafe", asyn
   const server = protocolServer();
   server.faults.failPart = 1;
   const { defineApi } = await import("apixa/core");
-  const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+  const api = defineApi<{ files: { id: string; document: string } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
     middleware: {
@@ -173,7 +170,7 @@ it("per-call retry:false disables an operation's part retries", async () => {
   server.faults.failPart = 1;
   await expect(
     server
-      .client({}, { retry: { retries: 1, methods: ["PUT"], baseDelayMs: 0, maxDelayMs: 0 } })
+      .client({}, { retry: { count: 1, methods: ["PUT"], delay: 0, maxDelay: 0 } })
       .files.create({ document: source() }, { retry: false }),
   ).rejects.toThrow();
   expect(server.requests.filter((r) => r.url.endsWith("/parts/1"))).toHaveLength(1);
@@ -184,7 +181,7 @@ it("per-call retry and headers propagate to backend steps", async () => {
   await server.client().files.create(
     { document: source() },
     {
-      retry: { retries: 1, methods: ["PUT"], baseDelayMs: 0, maxDelayMs: 0 },
+      retry: { count: 1, methods: ["PUT"], delay: 0, maxDelay: 0 },
       headers: { "x-tenant": "caller" },
       maxResponseSize: 1000,
     },

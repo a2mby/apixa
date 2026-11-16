@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   AbortError,
   ConfigError,
@@ -13,7 +14,7 @@ import { protocolServer, source } from "../helpers/advanced-transfer-protocol.js
 describe("advanced transfer pipeline integration", () => {
   it("validates the whole source before creating any session", async () => {
     const server = protocolServer();
-    const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+    const api = defineApi<{ files: { id: string; document: string } }>()({
       baseURL: "https://api.example.com",
       transport: server.transport,
       resources: {
@@ -208,7 +209,7 @@ it("streams bounded parts over a real slow socket without reading the whole sour
       });
       return result.raw;
     });
-    const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+    const api = defineApi<{ files: { id: string; document: string } }>()({
       baseURL: "https://protocol.example",
       transport,
       resources: {
@@ -236,7 +237,7 @@ it("streams bounded parts over a real slow socket without reading the whole sour
 
 it("binary-part replacement by middleware cannot silently change the hashed bytes", async () => {
   const server = protocolServer();
-  const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+  const api = defineApi<{ files: { id: string; document: string } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
     middleware: {
@@ -263,7 +264,7 @@ it.each(["update", "patch"] as const)(
   "%s override uses the same advanced strategy",
   async (name) => {
     const server = protocolServer();
-    const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+    const api = defineApi<{ files: { id: string; document: string } }>()({
       baseURL: "https://api.example.com",
       transport: server.transport,
       resources: {
@@ -277,27 +278,33 @@ it.each(["update", "patch"] as const)(
         },
       },
     });
-    await expect(
-      api.files[name]("original", { body: { document: source() } }),
-    ).resolves.toHaveProperty("size", 13);
+    await expect(api.files[name]("original", { document: source() })).resolves.toHaveProperty(
+      "size",
+      13,
+    );
     expect(server.completions).toBe(1);
   },
 );
 it("an explicitly declared custom request operation also preserves the final domain result", async () => {
   const server = protocolServer();
-  const api = defineApi<{
-    files: {
-      entity: { id: string; document: string };
-      operations: { upload: { body: { document: Blob }; response: { id: string; size: number } } };
-    };
-  }>()({
+  const api = defineApi<{ files: { id: string; document: string } }>()({
     baseURL: "https://api.example.com",
     transport: server.transport,
     resources: {
       files: {
         path: "/files",
         fileFields: ["document"],
-        operations: { upload: { kind: "write", method: "POST", transfer: server.config } },
+        operations: {
+          upload: {
+            kind: "write",
+            method: "POST",
+            transfer: server.config,
+            schema: {
+              body: z.object({ document: z.instanceof(Blob) }),
+              response: z.object({ id: z.string(), size: z.number() }),
+            },
+          },
+        },
       },
     },
   });

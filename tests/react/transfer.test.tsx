@@ -29,7 +29,7 @@ function makeApi() {
       },
     });
   }) as typeof fetch;
-  return defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  return defineApi<{ docs: Doc }>()({
     baseURL: "https://x.dev/v1",
     transport: createFetchTransport(fetchImpl),
     resources: {

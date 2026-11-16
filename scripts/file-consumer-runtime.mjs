@@ -266,7 +266,7 @@ const png = (size) => new File([new Uint8Array(size)], "secret-name.png", { type
   assert.ok(rejected instanceof ValidationError);
   assert.equal(mockFiles(mocked).size, filesBefore, "rejected write left the store");
   await act(async () => {
-    await current.patch(1, { body: { photo: new File(["changed"], "new.txt") } });
+    await current.patch(1, { photo: new File(["changed"], "new.txt") });
   });
   assert.equal(
     mockFiles(mocked)

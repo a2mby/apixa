@@ -14,6 +14,11 @@ import {
   type ResourceRuntime,
 } from "../request/index.js";
 import { convertKey } from "../transform/keys.js";
+import { isEmptyResponse, prepareQuery, type PreparedSchemas } from "../schema/index.js";
+import { normalizeCount, prepareBatchIds, finalizeBatch } from "../operation/results.js";
+import { READ_ONLY_RETRY_METHODS, resolveTimeout } from "../request/retry.js";
+import { controlQueryKeys } from "./pagination-request.js";
+import type { HttpMethod, QueryParams } from "../types/http.js";
 import {
   resolveFieldRules,
   resolveResponseAccept,
@@ -35,11 +40,12 @@ import { resolveOperationPagination, resolvePagination } from "./pagination.js";
 import {
   OPERATION_METADATA,
   registerIdempotencyGenerators,
+  registerQueryPreparers,
   type OperationMetadata,
 } from "./metadata.js";
 import type { HeadersSource } from "../types/http.js";
 import type { RetryOption } from "../types/retry.js";
-import type { ApiResponse, RequestOptions } from "../types/transport.js";
+import type { ApiResponse, GetManyOptions, RequestOptions } from "../types/transport.js";
 import { randomUUID } from "../utils/uuid.js";
 import { applyResourceSliceToListResult, type ResourceSlice } from "../utils/slice.js";
 
@@ -54,21 +60,29 @@ function pick<T>(...values: Array<T | undefined>): T | undefined {
 }
 
 /** Merge root → resource → operation layers once, at construction. */
-function prepareLayers(where: string, layers: Array<LayerOptions | undefined>) {
+function prepareLayers(
+  where: string,
+  layers: Array<LayerOptions | undefined>,
+  defaultRetryMethods?: HttpMethod[],
+) {
   const present = layers.filter((l): l is LayerOptions => l !== undefined);
   const retry = pick<RetryOption>(...present.map((l) => l.retry));
+  const rawReqTransform = pick(...present.map((l) => l.transforms?.request));
+  const rawResTransform = pick(...present.map((l) => l.transforms?.response));
   const rawUnwrap = pick(...present.map((l) => l.response?.unwrap));
   const rawParse = pick(...present.map((l) => l.response?.parse));
   const rawValidate = pick(...present.map((l) => l.response?.validate));
   return {
     headers: present.map((l) => l.headers).filter((h): h is HeadersSource => h !== undefined),
-    timeout: pick(...present.map((l) => l.timeout)),
-    retry: resolveRetryConfig(retry, `${where}.retry`),
+    timeout: resolveTimeout(pick(...present.map((l) => l.timeout)), `${where}.timeout`),
+    retry: resolveRetryConfig(retry, `${where}.retry`, defaultRetryMethods),
     onRequest: present.flatMap((layer) => layer.middleware?.onRequest ?? []),
+    onAttempt: present.flatMap((layer) => layer.middleware?.onAttempt ?? []),
+    onAttemptResponse: present.flatMap((layer) => layer.middleware?.onAttemptResponse ?? []),
     onResponse: present.flatMap((layer) => layer.middleware?.onResponse ?? []),
     onError: present.flatMap((layer) => layer.middleware?.onError ?? []),
-    requestTransform: pick(...present.map((l) => l.transforms?.request)),
-    responseTransform: pick(...present.map((l) => l.transforms?.response)),
+    requestTransform: rawReqTransform === false ? undefined : rawReqTransform,
+    responseTransform: rawResTransform === false ? undefined : rawResTransform,
     responseUnwrap: rawUnwrap === false ? undefined : rawUnwrap,
     responseParse: rawParse === false ? undefined : rawParse,
     responseValidate: rawValidate === false ? undefined : rawValidate,
@@ -186,11 +200,9 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
     name,
     path: resourcePath,
   };
-  const livePagination = resolvePagination(name, def.pagination as ResourcePagination | undefined);
-  if (livePagination) {
-    runtime.pagination = livePagination.mode;
-    runtime.livePagination = livePagination;
-  }
+  const resourcePagination = def.paginationConfig as ResourcePagination | undefined;
+  const sharedPagination = resolvePagination(name, resourcePagination);
+  if (sharedPagination) runtime.pagination = sharedPagination;
   if (def.mock !== undefined) {
     const source = normalizeMockSource(name, def.mock, def.idKey as string | undefined);
     runtime.mock = { source, store: new MockStore(source), files: client.files };
@@ -218,6 +230,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   const out: Record<string, Fn> = {};
   const metadata: Record<string, OperationMetadata> = {};
   const generators: Record<string, () => string> = {};
+  const queryPreparers: Record<string, (query: unknown) => unknown> = {};
   for (const [opName, definition] of Object.entries(operations)) {
     const where = `resources.${name}.operations.${opName}`;
     const convention = isBuiltinName(opName) ? BUILTIN_CONVENTIONS[opName] : undefined;
@@ -264,13 +277,21 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       hasBody,
       pagination: resolveOperationPagination(
         name,
-        def.pagination as ResourcePagination | undefined,
+        resourcePagination,
         opName,
         declared.pagination,
         convention !== undefined,
       ),
-      ...prepareLayers(where, [root, resourceLayer, declared]),
+      ...prepareLayers(
+        where,
+        [root, resourceLayer, declared],
+        declared.transfer !== undefined ? READ_ONLY_RETRY_METHODS : undefined,
+      ),
     };
+    if (declared.schema !== undefined) {
+      op.schema = prepareSchemas(where, declared, op, hasBody);
+      op.emptyResponse = isEmptyResponse(declared.schema.response);
+    }
     Object.assign(op, prepareFiles(def, declared, op.requestTransform?.keys, where));
     if (declared.transfer !== undefined) {
       op.transfer = declared.transfer;
@@ -285,10 +306,20 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
         )
           throw new ConfigError("Transfer source must name a declared file field.");
       }
-      op.transferLayers = prepareLayers(where, [root, resourceLayer]);
+      op.transferLayers = prepareLayers(where, [root, resourceLayer], READ_ONLY_RETRY_METHODS);
     }
     if (declared.presigned !== undefined) op.presigned = declared.presigned;
     if (declared.responseType !== undefined) op.responseType = declared.responseType;
+    if (
+      op.pagination &&
+      op.responseType !== undefined &&
+      op.responseType !== "json" &&
+      op.responseType !== "auto"
+    ) {
+      throw new ConfigError(
+        `${where}: pagination needs a JSON response; responseType "${op.responseType}" cannot be normalized.`,
+      );
+    }
     if (declared.onTransfer !== undefined) op.onTransfer = declared.onTransfer;
     if (declared.mock !== undefined) {
       op.mockHandler = declared.mock as PreparedOperation["mockHandler"];
@@ -313,6 +344,13 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       optionsIndex: optionsIndexOf(opName, op),
       idempotency: op.idempotency !== undefined,
     });
+    if (op.schema?.query) {
+      const schema = op.schema.query;
+      const site = { resource: name, operation: opName, phase: "query" } as const;
+      const controls = op.pagination ? controlQueryKeys(op.pagination) : undefined;
+      queryPreparers[opName] = (query) =>
+        prepareQuery(schema, query as QueryParams | undefined, site, controls);
+    }
     const run = (call: CallInput) => runOperation(client, runtime, op, call);
     out[opName] = convention
       ? builtinOperation(opName as BuiltinConventionName, op, run, {
@@ -327,7 +365,33 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   Object.defineProperty(out, OPERATION_METADATA, { value: Object.freeze(metadata) });
   if (Object.keys(generators).length > 0)
     registerIdempotencyGenerators(out, Object.freeze(generators));
+  if (Object.keys(queryPreparers).length > 0)
+    registerQueryPreparers(out, Object.freeze(queryPreparers));
   return { client: out, store: runtime.mock?.store };
+}
+
+/**
+ * Resolve an operation's `schema` against its effective configuration. Rejects what cannot be
+ * honored instead of ignoring it: a body schema where no body is sent, and a response schema next
+ * to an effective `response.parse` (inherited ones count unless disabled with `parse: false`).
+ */
+function prepareSchemas(
+  where: string,
+  declared: OperationDefinition,
+  op: PreparedOperation,
+  hasBody: boolean,
+): PreparedSchemas {
+  const schema = declared.schema!;
+  if (schema.body && !hasBody) {
+    throw new ConfigError(
+      `${where}.schema.body: this operation sends no request body (hasBody is false), so a body schema would never run.`,
+    );
+  }
+  const out: PreparedSchemas = {};
+  if (schema.body) out.body = schema.body;
+  if (schema.query) out.query = schema.query;
+  if (schema.response) out.response = schema.response;
+  return out;
 }
 
 const defaultIdempotencyKey = () => randomUUID();
@@ -339,7 +403,7 @@ function isRunDefinition(value: unknown): value is OperationRunDefinition {
 /** Trailing `RequestOptions` slot index for every request-backed operation. */
 function optionsIndexOf(name: string, op: PreparedOperation): number {
   if (!isBuiltinName(name)) return op.hasBody ? 1 : 0;
-  if (name === "getBy") return 2;
+  if (name === "getBy" || ((name === "update" || name === "patch") && op.hasBody)) return 2;
   if (
     name === "getAll" ||
     name === "findFirst" ||
@@ -416,10 +480,8 @@ function builtinOperation(
           name === "exists"
             ? typeof data === "boolean"
             : name === "count"
-              ? typeof data === "number" && Number.isFinite(data)
-              : isRecord(data) ||
-                (data === null &&
-                  (name === "getBy" || name === "findFirst" || status === 204 || status === 205));
+              ? typeof data === "number" && Number.isSafeInteger(data) && data >= 0
+              : isRecord(data) || (data === null && (name === "getBy" || name === "findFirst"));
         if (!valid)
           throw new ResponseShapeError(
             `${response.request.resource}.${name}: invalid final ${name} response.`,
@@ -439,9 +501,8 @@ function builtinOperation(
         const params = options?.params;
         return run({
           params: { ...params, ...(idParam ? { [idParam]: id as string | number } : {}) },
-          query: idParam
-            ? options?.query
-            : { ...(options?.query ?? {}), [ctx.idKey]: id as string | number },
+          query: options?.query,
+          ...(idParam ? {} : { queryExtra: { [ctx.idKey]: id as string | number } }),
           options,
           allow404: true,
           fromHttp: (_data, status) => status !== 404,
@@ -449,18 +510,35 @@ function builtinOperation(
         });
       };
     case "getMany":
-      return (ids, input) => {
-        const options = input as RequestOptions | undefined;
-        const params = options?.params;
-        return run({
-          params,
-          query: { ...(options?.query ?? {}), [ctx.idKey]: ids as Array<string | number> },
+      return async (inputIds, input) => {
+        const options = input as GetManyOptions | undefined;
+        const ids = prepareBatchIds(inputIds);
+        if (ids.length === 0)
+          return options?.full
+            ? { data: [], skipped: true, reason: "empty-ids", status: null, headers: null }
+            : [];
+        const finalIdKey = op.responseTransform
+          ? convertKey(ctx.idKey, op.responseTransform.keys)
+          : ctx.idKey;
+        const result = await run({
+          params: options?.params,
+          query: options?.query,
+          queryExtra: { [ctx.idKey]: ids },
           options,
           paginated: ctx.paginated,
           fromHttp: (data, _status, response) =>
             ctx.paginated ? expectPaginatedRecord(data, response) : toArray(data, response),
+          finalize: (data, _status, response) => {
+            if (ctx.paginated && isRecord(data))
+              return {
+                ...data,
+                data: finalizeBatch(data.data, ids, finalIdKey, options?.sortBy, response, true),
+              };
+            return finalizeBatch(data, ids, finalIdKey, options?.sortBy, response, false);
+          },
           intent: (wire) => ({ op: "getMany", ids, query: wire.query }),
         });
+        return options?.full ? { ...(result as ApiResponse<unknown>), skipped: false } : result;
       };
     case "findFirst":
       return (input) => {
@@ -488,9 +566,8 @@ function builtinOperation(
         return run({
           params: options?.params,
           ...(path !== undefined ? { path } : {}),
-          query: hasTemplate
-            ? options?.query
-            : { ...(options?.query ?? {}), [wireField]: value as string | number },
+          query: options?.query,
+          ...(hasTemplate ? {} : { queryExtra: { [wireField]: value as string | number } }),
           options,
           allow404: true,
           fromHttp: (data, status, response) => {
@@ -510,23 +587,17 @@ function builtinOperation(
   }
 
   return (...args) => {
-    if (
-      (name === "update" || name === "patch") &&
-      op.hasBody &&
-      (!isRecord(args[1]) || !("body" in args[1]))
-    ) {
-      return Promise.reject(
-        new ValidationError(`${name}: the request body is required in options.body.`),
-      );
-    }
     const isIdentity =
       name === "getById" || name === "delete" || name === "update" || name === "patch";
     let params: RequestOptions["params"];
     let body: unknown;
     let options: RequestOptions | undefined;
     if (isIdentity) {
-      options = args[1] as RequestOptions | undefined;
-      body = (args[1] as (RequestOptions & { body?: unknown }) | undefined)?.body;
+      const writeBody = (name === "update" || name === "patch") && op.hasBody;
+      options = args[writeBody ? 2 : 1] as RequestOptions | undefined;
+      body = writeBody ? args[1] : undefined;
+      if (writeBody && body === undefined)
+        return Promise.reject(new ValidationError(`${name}: a positional body is required.`));
       params = {
         ...options?.params,
         ...(idParam ? { [idParam]: args[0] as string | number } : {}),
@@ -567,18 +638,11 @@ function builtinOperation(
         call.fromHttp = (data, _status, response) => toArray(data, response);
       }
     } else if (name === "count") {
-      call.fromHttp = (data, _status, response) => {
-        if (typeof data === "number" && Number.isFinite(data)) return data;
-        throw new ResponseShapeError(
-          `${response.request.resource}.${response.request.operation}: expected a numeric count response.`,
-          { status: response.status, data: response.data, response },
-        );
-      };
+      call.fromHttp = (data, _status, response) => normalizeCount(data, response);
     } else if (name === "createMany") {
       call.fromHttp = (data, _status, response) => toArray(data, response);
     } else if (name === "getById" || name === "create" || name === "update" || name === "patch") {
       call.fromHttp = (data, status, response) => {
-        if ((status === 204 || status === 205) && data === null) return null;
         if (isRecord(data)) return data;
         throw new ResponseShapeError(
           `${response.request.resource}.${response.request.operation}: expected an object response.`,
@@ -586,6 +650,7 @@ function builtinOperation(
         );
       };
     }
+    if (name === "delete" || name === "deleteMany") call.shape = () => undefined;
     if (name === "getAll" && ctx.slice !== undefined) {
       const slice = ctx.slice;
       call.shape = (data: unknown) => applyResourceSliceToListResult(data, slice);
@@ -640,9 +705,7 @@ function functionOperation(
         signal: init.signal,
         timeout: init.timeout,
         retry: init.retry,
-        responseType: init.responseType,
         maxResponseSize: init.maxResponseSize,
-        redirectOrigins: init.redirectOrigins,
         presigned: init.presigned,
         onTransfer: init.onTransfer,
         meta: init.meta,
@@ -655,6 +718,8 @@ function functionOperation(
         params: init.params,
         query: init.query,
         body: init.body,
+        responseType: init.responseType,
+        redirectOrigins: init.redirectOrigins,
         dataFormat: init.dataFormat,
         hasBody: init.body !== undefined,
         routed: true,

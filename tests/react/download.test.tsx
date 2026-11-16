@@ -22,7 +22,7 @@ const bytesOf = (blob: Blob) =>
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 
 function makeApi() {
-  return defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  return defineApi<{ docs: Doc }>()({
     baseURL: "https://x.dev/v1",
     resources: {
       docs: {

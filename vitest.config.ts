@@ -27,6 +27,7 @@ export default defineConfig({
       { find: /^apixa\/mocking$/, replacement: resolve(root, "src/mocking/index.ts") },
       { find: /^apixa\/react\/advanced$/, replacement: resolve(root, "src/react/advanced.ts") },
       { find: /^apixa\/react$/, replacement: resolve(root, "src/react/index.ts") },
+      { find: /^apixa\/validation$/, replacement: resolve(root, "src/validation.ts") },
       { find: /^apixa\/core$/, replacement: resolve(root, "src/core.ts") },
       { find: /^apixa$/, replacement: resolve(root, "src/index.ts") },
       {
@@ -34,6 +35,10 @@ export default defineConfig({
         replacement: resolve(root, "packages/mocking/src/dataset-modules/$1.ts"),
       },
       { find: "@apixa/core", replacement: resolve(root, "packages/core/src/index.ts") },
+      {
+        find: "@apixa/validation",
+        replacement: resolve(root, "packages/validation/src/index.ts"),
+      },
       {
         find: "@apixa/internal-shared",
         replacement: resolve(root, "packages/internal/shared/src/index.ts"),

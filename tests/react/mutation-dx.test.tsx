@@ -128,7 +128,7 @@ describe("direct mutation state on callable operations", () => {
   });
 
   it("types: state fields are typed per operation; disabled operations are absent", () => {
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://x.dev",
       resources: { users: { path: "/users", operations: { delete: false } } },
     });
@@ -195,14 +195,14 @@ describe("idempotency keys through TanStack mutation retries", () => {
     expect(keys()).toEqual(["mine"]);
   });
 
-  it("nested Core and TanStack retries: one key for every attempt, a new key next call", async () => {
+  it("nested Core and TanStack count: one key for every attempt, a new key next call", async () => {
     // Core retries once inside each TanStack attempt; TanStack retries the whole call once.
     const requests: TransportRequest[] = [];
     let i = 0;
     const statuses = [503, 503, 503, 200, 200];
     const client = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 1, baseDelayMs: 0, jitter: false, methods: ["POST"] },
+      retry: { count: 1, delay: 0, jitter: false, methods: ["POST"] },
       transport: createFakeTransport((request) => {
         requests.push(request);
         const status = statuses[Math.min(i++, statuses.length - 1)]!;
@@ -230,7 +230,7 @@ describe("idempotency keys through TanStack mutation retries", () => {
     const requests: TransportRequest[] = [];
     const client = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 1, baseDelayMs: 0, jitter: false, methods: ["POST"] },
+      retry: { count: 1, delay: 0, jitter: false, methods: ["POST"] },
       transport: createFakeTransport((request) => {
         requests.push(request);
         return { status: 503, body: {} };
@@ -263,7 +263,7 @@ describe("idempotency keys through TanStack mutation retries", () => {
         wrapper: wrap(newClient()),
       },
     );
-    await act(() => result.current.update("1", { body: { name: "x" } }));
+    await act(() => result.current.update("1", { name: "x" }));
     expect(keys()).toEqual([null]);
   });
 });

@@ -175,9 +175,10 @@ function verifyInstall({ expectedManifest, expectedStamp }) {
   log(`  real directory, ${installed.length} files, no symlinks, matches the packed tarball`);
 
   // Every public entry resolves inside node_modules/apixa and loads under the consumer's Node.
-  const specifiers = Object.keys(pkg.exports).map((key) =>
-    key === "." ? "apixa" : `apixa${key.slice(1)}`,
-  );
+  // `apixa/validation` needs the optional peer `zod`, which this clean consumer does not install.
+  const specifiers = Object.keys(pkg.exports)
+    .filter((key) => key !== "./validation")
+    .map((key) => (key === "." ? "apixa" : `apixa${key.slice(1)}`));
   const probe = `
     const out = {};
     for (const spec of ${JSON.stringify(specifiers)}) {

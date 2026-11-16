@@ -13,7 +13,7 @@ describe("paginated reads copy only the returned page", () => {
   it("clones the page, not the dataset", async () => {
     const api = defineApi({
       baseURL: "https://x.dev",
-      resources: { users: { path: "/users", mock: rows(2000), pagination: "page" } },
+      resources: { users: { path: "/users", mock: rows(2000), paginationConfig: "page" } },
     }).users;
     await api.getById("1"); // load + seed first
     const spy = vi.spyOn(globalThis, "structuredClone");
@@ -28,7 +28,7 @@ describe("paginated reads copy only the returned page", () => {
     const data = rows(500).map((r, i) => ({ ...r, group: i % 5 === 0 ? "x" : "y" }));
     const api = defineApi({
       baseURL: "https://x.dev",
-      resources: { users: { path: "/users", mock: data, pagination: "page" } },
+      resources: { users: { path: "/users", mock: data, paginationConfig: "page" } },
     }).users;
     await api.getById("1");
     const spy = vi.spyOn(globalThis, "structuredClone");
@@ -46,7 +46,7 @@ describe("paginated reads copy only the returned page", () => {
   it("returned rows are copies: editing them never reaches the store", async () => {
     const api = defineApi({
       baseURL: "https://x.dev",
-      resources: { users: { path: "/users", mock: rows(30), pagination: "page" } },
+      resources: { users: { path: "/users", mock: rows(30), paginationConfig: "page" } },
     }).users;
     const page = await api.getAll();
     page.data[0]!.name = "HACKED";
@@ -120,7 +120,7 @@ describe("working rows share objects with the seed until a write replaces them",
     const one = mk();
     const two = mk();
     await one.users.delete("1");
-    await one.users.patch("2", { body: { name: "one" } });
+    await one.users.patch("2", { name: "one" });
     expect(await two.users.count()).toBe(10);
     expect((await two.users.getById("2")).name).toBe("u1");
     resetMock(one);

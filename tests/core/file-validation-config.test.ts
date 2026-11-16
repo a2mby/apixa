@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { file, petApi, rejection } from "../helpers/validation.js";
 
 const build = (resource: Record<string, unknown>) => () =>
-  defineApi<{ pets: { path: "/pets"; entity: { id: string; photo?: string | null } } }>()({
+  defineApi<{ pets: { id: string; photo?: string | null } }>()({
     baseURL: "https://api.example.com",
     resources: { pets: { path: "/pets", ...resource } },
   } as never);

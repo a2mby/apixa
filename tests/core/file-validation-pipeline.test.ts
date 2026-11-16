@@ -12,7 +12,7 @@ describe("the validation checkpoint", () => {
     const error = await rejection(
       api.pets.create(
         { photo: file(50) },
-        { retry: { retries: 3, baseDelayMs: 0, methods: ["POST"] }, onTransfer: c.observer },
+        { retry: { count: 3, delay: 0, methods: ["POST"] }, onTransfer: c.observer },
       ),
     );
     expect(error).toBeInstanceOf(ValidationError);
@@ -116,15 +116,12 @@ describe("the validation checkpoint", () => {
       const r = await original(input);
       return ++n === 1 ? { ...r, status: 503, body: null } : r;
     };
-    const api = defineApi<{ pets: { path: "/pets"; entity: { id: string } } }>()({
+    const api = defineApi<{ pets: { id: string } }>()({
       baseURL: "https://api.example.com",
       transport,
       resources: { pets: { path: "/pets", fileFields: { photo: { maxSize: 10 } } } },
     } as never) as never as { pets: { create(b: unknown, o?: object): Promise<unknown> } };
-    await api.pets.create(
-      { photo: file(5) },
-      { retry: { retries: 2, baseDelayMs: 0, methods: ["POST"] } },
-    );
+    await api.pets.create({ photo: file(5) }, { retry: { count: 2, delay: 0, methods: ["POST"] } });
     expect(n).toBe(2);
   });
 

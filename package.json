@@ -64,6 +64,10 @@
       "types": "./dist/mocking/node.d.ts",
       "import": "./dist/mocking/node.js"
     },
+    "./validation": {
+      "types": "./dist/validation.d.ts",
+      "import": "./dist/validation.js"
+    },
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
@@ -81,11 +85,11 @@
   ],
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/react build && pnpm build:package",
+    "build": "pnpm --filter @apixa/core build && pnpm --filter @apixa/mocking build && pnpm --filter @apixa/react build && pnpm --filter @apixa/validation build && pnpm build:package",
     "build:package": "tsup --config tsup.publish.config.ts --tsconfig tsconfig.publish.json && node scripts/build-declarations.mjs && node scripts/preserve-client-directive.mjs",
     "prepack": "pnpm build:package",
     "dev": "pnpm --filter @apixa/core dev",
-    "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/internal-shared typecheck && pnpm --filter @apixa/mocking typecheck && pnpm --filter @apixa/react typecheck && tsc --noEmit -p tests/tsconfig.json",
+    "typecheck": "pnpm --filter @apixa/core typecheck && pnpm --filter @apixa/internal-shared typecheck && pnpm --filter @apixa/mocking typecheck && pnpm --filter @apixa/react typecheck && pnpm --filter @apixa/validation typecheck && tsc --noEmit -p tests/tsconfig.json",
     "test": "pnpm ai:test && vitest run",
     "consumer:local": "node scripts/local-package-consumer.mjs",
     "verify:consumers": "node scripts/mocking-consumer.mjs && node scripts/verify-react-consumers.mjs && node scripts/verify-unified-consumer.mjs && node scripts/verify-type-consumers.mjs",
@@ -103,13 +107,17 @@
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.90.1",
-    "react": "^18.0.0 || ^19.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "zod": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "@tanstack/react-query": {
       "optional": true
     },
     "react": {
+      "optional": true
+    },
+    "zod": {
       "optional": true
     }
   },
@@ -128,7 +136,9 @@
     "react-dom": "^19.1.1",
     "tsup": "^8.4.0",
     "typescript": "^5.8.2",
-    "vitest": "^3.2.4"
+    "valibot": "^1.5.0",
+    "vitest": "^3.2.4",
+    "zod": "^4.6.7"
   },
   "engines": {
     "node": ">=22"

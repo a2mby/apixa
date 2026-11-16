@@ -100,7 +100,7 @@ describe("advanced transfer Batch 0: existing execution seams", () => {
 
   it("validates a middleware-replaced whole source before a custom upload request", async () => {
     let sends = 0;
-    const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+    const api = defineApi<{ files: { id: string; document: string } }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => {
         sends++;

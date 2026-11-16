@@ -339,7 +339,7 @@ describe("middleware pipeline", () => {
     let attempts = 0;
     const api = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 3, baseDelayMs: 0 },
+      retry: { count: 3, delay: 0 },
       transport: createFakeTransport(() => (++attempts < 3 ? { status: 503 } : { body: [] })),
       middleware: {
         onRequest: [(r) => (req++, r)],

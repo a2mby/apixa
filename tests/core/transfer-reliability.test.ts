@@ -10,7 +10,7 @@ import {
   type StubFetch,
 } from "../helpers/transfer.js";
 
-const RETRY = { retries: 2, baseDelayMs: 0, maxDelayMs: 0, methods: ["GET", "PUT", "POST"] };
+const RETRY = { count: 2, delay: 0, maxDelay: 0, methods: ["GET", "PUT", "POST"] };
 
 describe("retries and transfer events", () => {
   it("each attempt starts a new sequence; progress restarts at 0; error says whether a retry follows", async () => {
@@ -70,7 +70,7 @@ describe("retries and transfer events", () => {
     const error = await transferClient(async () => new Response("x", { status: 503 }))
       .docs.download({
         params: { id: "1" },
-        retry: { ...RETRY, retries: 1 },
+        retry: { ...RETRY, count: 1 },
         onTransfer: c.observer,
       })
       .catch((e) => e);
@@ -278,7 +278,7 @@ describe("middleware, custom transports, defaults", () => {
         return { status: 200, headers: raw.headers, raw, body: await raw.blob() };
       },
     };
-    const api = defineApi<{ d: { path: "/d"; entity: { id: string } } }>()({
+    const api = defineApi<{ d: { id: string } }>()({
       baseURL: "https://api.example.com",
       transport,
       resources: {
@@ -330,7 +330,7 @@ describe("middleware, custom transports, defaults", () => {
       keys.push(new Headers(init.headers).get("idempotency-key"));
       return ++n === 1 ? new Response("x", { status: 503 }) : new Response("ok");
     };
-    const client = defineApi<{ docs: { path: "/docs"; entity: { id: string } } }>()({
+    const client = defineApi<{ docs: { id: string } }>()({
       baseURL: "https://api.example.com",
       transport: createFetchTransport(fetchImpl as unknown as typeof fetch),
       resources: {

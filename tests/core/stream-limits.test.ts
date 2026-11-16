@@ -88,7 +88,7 @@ describe("upload stream limits", () => {
     const c = collector();
     const error = (await limited(15, consume(log))
       .docs.push(source(5), {
-        retry: { retries: 3, baseDelayMs: 0, methods: ["PUT"] },
+        retry: { count: 3, delay: 0, methods: ["PUT"] },
         onTransfer: c.observer,
       })
       .catch((e) => e)) as ValidationError;
@@ -166,7 +166,7 @@ describe("over a real socket (loopback)", () => {
       },
       { highWaterMark: 0 },
     );
-    const api = defineApi<{ d: { path: "/d"; entity: { id: string } } }>()({
+    const api = defineApi<{ d: { id: string } }>()({
       baseURL: url,
       transport: createFetchTransport(),
       resources: {
