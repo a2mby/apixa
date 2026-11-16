@@ -346,6 +346,18 @@ export interface ApiRootConfig<S = OperationSchema> extends LayerOptions {
  */
 export type ApiState = Record<string, unknown>;
 
+declare const resourceEntity: unique symbol;
+
+/**
+ * Phantom marker applied by `createResource<T>`. It carries the entity type and adds no runtime field.
+ * Root, resource, and operation settings still inherit exactly as they do on a plain resource object.
+ */
+export type ResourceEntityBrand<T> = { readonly [resourceEntity]: T };
+
+/** Entity type carried by `createResource<T>`, or `unknown` when the resource is a plain object. */
+export type EntityBrandOf<R> =
+  R extends ResourceEntityBrand<infer T> ? ([unknown] extends [T] ? unknown : T) : unknown;
+
 /** Keys of the removed pre-ADR-006 `ResourceState` wrapper. */
 type LegacyStateKey = "entity" | "list" | "query" | "operations";
 

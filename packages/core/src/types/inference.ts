@@ -16,6 +16,7 @@ import type {
   PaginationPreset,
   PaginationStrategy,
   QueryOptions,
+  EntityBrandOf,
   ResourceDefinition,
   ResourcePagination,
 } from "./definition.js";
@@ -1167,12 +1168,22 @@ export type ResourceClient<
 
 type ResourcesOf<Config> = Config extends { resources: infer Res } ? Res : {};
 
+/**
+ * Entity for one resource. An explicit `defineApi<ApiState>()` entry wins. Otherwise use the
+ * entity carried by `createResource<T>`. A plain resource stays `unknown` (mock data can still fill it).
+ */
+type ResourceEntity<Meta, K, R> = [K] extends [keyof Meta]
+  ? [unknown] extends [Meta[K]]
+    ? EntityBrandOf<R>
+    : Meta[K]
+  : EntityBrandOf<R>;
+
 /** Client type: one property per `resources` key in the runtime config. */
 export type ApiClient<Meta, Config> = {
   readonly [K in keyof ResourcesOf<Config>]: ResourcesOf<Config>[K] extends { path: string }
     ? ResourceClient<
         ResourcesOf<Config>[K],
-        K extends keyof Meta ? Meta[K] : unknown,
+        ResourceEntity<Meta, K, ResourcesOf<Config>[K]>,
         RootTypesOf<Config>
       >
     : never;
@@ -1216,7 +1227,9 @@ export type StructuralApisInput = Record<string, StructuralApiInput>;
 export type ConfigTypeError<Message extends string> = { readonly "apixa config error": Message };
 
 type Exact<T, Shape> = {
-  [K in Exclude<keyof T, keyof Shape>]: ConfigTypeError<`Unknown option "${K & string}"`>;
+  [
+    K in Exclude<keyof T, keyof Shape> as K extends string ? K : never
+  ]: ConfigTypeError<`Unknown option "${K & string}"`>;
 };
 
 type RequiredKind<M> = M extends "GET" | "HEAD" | "OPTIONS" ? "read" : "write";

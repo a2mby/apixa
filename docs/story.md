@@ -2,6 +2,18 @@
 
 Project log. Newest entry first.
 
+## 2026-11-16 — Carry a resource entity with createResource
+
+`createResource<T>()(definition)` returns the same resource object with `T` attached, so `defineApi()` can type that resource without `defineApi<ApiState>()`. Explicit `ApiState` still wins, and root → resource → operation inheritance is unchanged. Added under v3.0.0 at the owner's request; it was not in the written scope before this change.
+
+## 2026-11-16 — One ship-changes issue per outcome, one pull request
+
+`/ship-changes` now opens one issue for each outcome in the working tree and lands them together on one branch and one pull request. A shared file no longer collapses those outcomes into a single issue.
+
+## 2026-11-16 — Ignore JetBrains .idea files
+
+`/.idea` is gitignored beside `/.vscode`, so a JetBrains IDE session stays off the working-tree listing.
+
 ## 2026-11-16 — Per-operation schemas, pagination, and the v3 call contract
 
 Landed Standard Schema validation on operations, the optional `apixa/validation` subpath, and the pagination and call-contract work already in the tree (`count` normalization, `getMany` batch identity, structured timeout and retry) under v3.0.0. Core stays validator-agnostic; Zod is an optional peer loaded only by `apixa/validation`. The committed Out line that deferred a Zod adapter now records this optional subpath as an owner-requested exception, not a required dependency.

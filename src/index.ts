@@ -3,7 +3,7 @@
 // at `apixa/react`. Importing this file never loads React, TanStack Query or Node built-ins.
 
 // Define APIs.
-export { defineApi, defineApis, emptyResponse } from "@apixa/core";
+export { createResource, defineApi, defineApis, emptyResponse } from "@apixa/core";
 
 // Pagination navigation helpers (pure: they build call inputs and never send requests).
 export { nextPageInput, previousPageInput, paginationContextKey } from "@apixa/core";
@@ -65,6 +65,7 @@ export type {
   OperationSchema,
   SchemaPhase,
   ResourceDefinition,
+  ResourceEntityBrand,
   ResourcePagination,
   PaginationPreset,
   LaravelPagination,

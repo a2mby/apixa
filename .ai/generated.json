@@ -106,7 +106,7 @@
       "mode": 420
     },
     ".claude/skills/ship-changes/SKILL.md": {
-      "sha256": "cb20c26fd0451df6a9eabe87e244b857fea9f5e33fd887abb531cea48bd72a62",
+      "sha256": "b37c7287e888aa6564c7294bfcab8ea253a6c9d3ab3e1a2d3b346736a57cd28e",
       "mode": 420
     },
     ".claude/skills/start-version/SKILL.md": {
@@ -158,7 +158,7 @@
       "mode": 420
     },
     ".cursor/commands/ship-changes.md": {
-      "sha256": "5d5d1a30b981b07e9e11d9b81e5632a6ac4b35760b6432fbaa6aa995f13d1b64",
+      "sha256": "1a408e0cf71c8149539f190a06a8920ba02ce95053697cb353b26cc7ed375374",
       "mode": 420
     },
     ".cursor/commands/start-version.md": {
@@ -238,7 +238,7 @@
       "mode": 420
     },
     ".gemini/commands/ship-changes.toml": {
-      "sha256": "36265ff6685d2885fa4262ac5a0732c784ed7256bb14df5d94076e9752412670",
+      "sha256": "6f5be1826f1d6651eb1aa54206c156623f369c4a850731486b2c4865584f706b",
       "mode": 420
     },
     ".gemini/commands/start-version.toml": {
@@ -290,7 +290,7 @@
       "mode": 420
     },
     ".opencode/commands/ship-changes.md": {
-      "sha256": "02b3844b2b156652a5669996e278d5cd68c07bbc2eac0796f051ef16bd0a9c15",
+      "sha256": "3f106e0463591787589f2e23fee451b904a8e538d8818fd143c74b3da467344c",
       "mode": 420
     },
     ".opencode/commands/start-version.md": {

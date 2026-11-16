@@ -1,11 +1,11 @@
 ---
 name: ship-changes
-description: "Read the current changes, open one or more issues, and land each on main with no brief and no pause"
+description: "Read the current changes, open one issue per outcome, and land them on main in one pull request"
 ---
 
-The developer ran `/ship-changes` with no brief. The work is already in the working tree. Read it, decide what the issue or issues are, then land each one on `main`. This command does `/plan-change` and `/git-push` back to back, with no stop between them. Do not ask for a yes. The command is the yes.
+The developer ran `/ship-changes` with no brief. The work is already in the working tree. Read it, open one issue per outcome the diff solves, then land every issue on `main` through one branch and one pull request. Do not ask for a yes. The command is the yes.
 
-This command is self-contained. Everything it needs is written below.
+This command is self-contained. Everything it needs is written below. Do not run `/plan-change` or `/git-push` once per issue. Those workflows open a branch and a pull request per issue, and this command exists to avoid that wait.
 
 ## Stop first
 
@@ -33,25 +33,24 @@ A tooling or config file is shippable only when the diff shows it was written on
 
 ## Decide the issues
 
-Split the shippable files into groups. One group is one outcome a teammate could review and revert on its own.
+Count the outcomes in the diff. Open one issue for each outcome. A diff that solves three things gets three issues. A shared file is not a reason to merge two outcomes into one issue. One outcome still gets one issue.
 
-- Put each file in exactly one group. Do not split a file across groups. If one file mixes two outcomes, keep it in the group it mostly serves and say so in the reply.
+- Put each file on exactly one issue: the outcome it mostly serves. When a file also serves another outcome, say so in the reply.
 - Keep a test with the behavior it covers. Keep docs with the change they describe.
-- Prefer fewer, larger groups over many tiny ones. One group is fine when the work is one outcome. Split when the outcomes are independent (for example a Core change and an unrelated docs or tooling change).
-- Order the groups so each one still builds on its own. Put a group that others depend on first.
+- Order the issues so a later outcome can build on an earlier one.
 
-If the brief-less diff asks for something in the active version's **Out** of scope, say so in the issue body and in chat. Do not pretend it is in scope.
+If the brief-less diff asks for something in the active version's **Out** of scope, say so in that issue's body and in chat. Do not pretend it is in scope.
 
 Name each issue by its outcome. "Require explicit kind on custom operations" is a title. "Updates" and "Working on core" are not.
 
-## For each group, in order
+The issues stay separate. The branch does not. Every issue in this run shares one branch, one commit, and one pull request.
 
-### 1. Write the issue
+## 1. Write every issue
 
-Body, in this order:
+Create every issue before the branch. Body, in this order:
 
 ```markdown
-Asked for: ship the current working-tree changes (no brief); this group covers <short description>
+Asked for: ship the current working-tree changes (no brief); this issue covers <short description>
 
 Active version: vX.Y.Z
 
@@ -68,11 +67,11 @@ Tests:
 - tests/<area>/<name>.test.ts — <what behavior this covers>
 ```
 
-Touches lists every file in the group. Include `docs/story.md` and any `docs/` or `versions/vX.Y.Z/*` file you will update.
+Touches lists every file on that issue. Include `docs/story.md` and any `docs/` or `versions/vX.Y.Z/*` file you will update for that outcome.
 
-Tests are required for any change to runtime behavior, public API, types that affect callers, error paths, URL/body/headers, or operation generation. Put concrete files and behaviors in the Tests section and on Touches. If the group has behavior changes and no tests, write the tests now as part of this group. Use an injectable or fake `Transport`; no live network as the primary suite. Write `Tests: none (no functional change)` only for docs-only or process-only groups, and say why in chat.
+Tests are required for any change to runtime behavior, public API, types that affect callers, error paths, URL/body/headers, or operation generation. Put concrete files and behaviors in the Tests section and on Touches. If an issue has behavior changes and no tests, write the tests now as part of that issue. Use an injectable or fake `Transport`; no live network as the primary suite. Write `Tests: none (no functional change)` only for docs-only or process-only issues, and say why in chat.
 
-Label it `task`. The repo is `a2mby/apixa`.
+Label each issue `task`. The repo is `a2mby/apixa`.
 
 ```bash
 gh issue create --repo a2mby/apixa --title "<outcome>" --label "task" --body "$(cat <<'EOF'
@@ -81,9 +80,9 @@ EOF
 )"
 ```
 
-### 2. Make the branch
+## 2. Make one branch
 
-Always start from latest `main`. N is the new issue number. The slug is short, lowercase, and hyphenated.
+Always start from latest `main`. N is the lowest issue number from this run. The slug names the shipment: short, lowercase, and hyphenated.
 
 ```bash
 git fetch origin
@@ -92,17 +91,17 @@ git pull --ff-only origin main
 git switch -c task/N-slug
 ```
 
-The dirty tree comes with you. Files from later groups stay dirty and unstaged. If the pull or switch would overwrite a dirty file, stop and name the files.
+The dirty tree comes with you. If the pull or switch would overwrite a dirty file, stop and name the files.
 
-### 3. Do the work
+## 3. Do the work
 
-The change already exists in the tree. Finish it: add the tests the issue lists, fix anything the checks below expose, and update the docs the issue lists. Do not widen the scope beyond the group's Touches.
+The change already exists in the tree. Finish every issue: add the tests each issue lists, fix anything the checks below expose, and update the docs each issue lists. Stay inside the Touches lists. Do not widen the shipment past them.
 
 Update `docs/context.md` when the current picture changed.
 
 If acceptance criteria for the active version were completed, check them off in `versions/vX.Y.Z/acceptance-criteria.md` and note completion in the story entry.
 
-Add an entry at the **top** of `docs/story.md` (newest first). Do not edit an older entry.
+Add one entry per issue at the **top** of `docs/story.md` (newest first). Write the last issue's entry first so the first issue stays on top. Do not edit an older entry.
 
 ```markdown
 ## YYYY-MM-DD — Short outcome title
@@ -112,18 +111,18 @@ Two or three sentences. What landed, and what it changed about the repo. Name th
 
 Use today's date. Name the outcome. "Updated docs" is not an entry.
 
-### 4. Check
+## 4. Check once
 
-Run these from the repo root. Stop and report the failure if any fails. Do not hide it with `any`, `@ts-ignore`, or a skipped test.
+Run these once, from the repo root, for the whole shipment. Stop and report the failure if any fails. Do not hide it with `any`, `@ts-ignore`, or a skipped test.
 
 ```bash
 corepack pnpm typecheck
 corepack pnpm test
 ```
 
-Skip a check only when the group is docs-only, and say that you skipped it.
+Skip a check only when every issue is docs-only, and say that you skipped it.
 
-### 5. Format
+## 5. Format
 
 From the repo root, **always** run before staging, even when nothing looks dirty:
 
@@ -131,28 +130,29 @@ From the repo root, **always** run before staging, even when nothing looks dirty
 npm run format
 ```
 
-Stage the group's Touches files plus any Prettier-only diffs, even outside Touches. Stop for any non-format edit outside Touches and name the file. Do not add it quietly.
+Stage every Touches file from every issue, plus any Prettier-only diffs, even outside Touches. Stop for any non-format edit outside those Touches lists and name the file. Do not add it quietly.
 
-### 6. Commit
+## 6. Commit once
 
-Subject is `type: why`, present tense, under 72 characters, no trailing period. Types used here are `feat`, `fix`, `docs`, and `chore`.
+One commit covers every issue. Subject is `type: why`, present tense, under 72 characters, no trailing period. Types used here are `feat`, `fix`, `docs`, and `chore`. The subject names the shipment.
 
-The body is one or two sentences a teammate would want in `git log`. Skip the body only when the subject already says the why.
+The body names each issue number and its outcome, one line each.
 
 ```bash
-git add <files on the Touches list> <prettier-touched files>
+git add <files on every Touches list> <prettier-touched files>
 git commit -m "$(cat <<'EOF'
 type: why
 
-Why this change exists.
+#N <outcome>
+#M <outcome>
 
 EOF
 )"
 ```
 
-Leave the other groups' files unstaged.
+Leave unshipped files unstaged.
 
-### 7. Update from main, then push
+## 7. Update from main, then push once
 
 Before push and before merge, always pull latest `main` into the task branch. Never push or merge from a stale base.
 
@@ -172,18 +172,20 @@ git push -u origin HEAD
 
 If the branch was already on the remote and the rebase rewrote commits, use `git push --force-with-lease`.
 
-### 8. Pull request
+## 8. One pull request
 
-If this branch already has an open pull request, use it. Do not open a second one.
+If this branch already has an open pull request, use it. Do not open a second one for another issue in this shipment.
 
-If it does not, create one. The first line is `Closes #N`. The title matches the issue outcome.
+The title names the shipment. The first lines close every issue from this run.
 
 ```bash
-gh pr create --repo a2mby/apixa --base main --title "<outcome>" --body "$(cat <<'EOF'
+gh pr create --repo a2mby/apixa --base main --title "<shipment>" --body "$(cat <<'EOF'
 Closes #N
+Closes #M
 
 ## Summary
-- What changed, in one line per point.
+- #N — what that issue changed, in one line.
+- #M — what that issue changed, in one line.
 
 ## Test plan
 - [ ] What a person can check.
@@ -192,20 +194,16 @@ EOF
 )"
 ```
 
-### 9. Merge
+## 9. Merge
 
-Run the update-from-main steps from step 7 again. If the rebase moved commits, push with `--force-with-lease`. Then merge:
+Run the update-from-main steps from step 7 again. If the rebase moved commits, push with `--force-with-lease`. Then merge that pull request:
 
 ```bash
-gh pr merge N --repo a2mby/apixa --squash --delete-branch
+gh pr merge <pull-request-number> --repo a2mby/apixa --squash --delete-branch
 ```
 
-Confirm `main` is checked out, it matches `origin/main`, and the task branch is gone. `Closes #N` closes the issue. Do not close it by hand before the merge.
-
-### 10. Next group
-
-Return to step 1 for the next group. The remaining dirty files are still in the tree. Run `git status --short` to confirm only the remaining groups' files and the files you chose not to ship are left.
+Confirm `main` is checked out, it matches `origin/main`, and the task branch is gone. Each `Closes #N` line closes that issue. Do not close an issue by hand before the merge.
 
 ## Reply
 
-For each group, send the issue URL, the pull request URL, the squash commit on `main`, and the story sentences you added. Then list what was left unshipped and why. Say plainly if a check was skipped or a file was kept in a group it only partly belongs to.
+Send each issue URL and the story sentences for that issue. Then send the one pull request URL and the squash commit on `main`. Then list what was left unshipped and why. Say plainly if a check was skipped or a file was kept on an issue it only partly belongs to.

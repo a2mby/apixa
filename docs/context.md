@@ -94,6 +94,11 @@ const users = await api.users.getAll();
 const user = await api.users.getById("123");
 ```
 
+`createResource<User>()({ path: "/users" })` is that same resource object with `User` attached.
+`defineApi({ resources: { users: createResource<User>()({ path: "/users" }) } })` then types the
+resource as `User` without `defineApi<AppApi>()`. An explicit `defineApi<AppApi>()` entry still
+wins when both are present. Root settings keep inheriting root → resource → operation.
+
 Reads (`getAll`, `getById`, `getMany`, `getBy`, `findFirst`, `count`, `exists`) and `create` /
 `delete` / `createMany` / `deleteMany` take their documented arguments, while `update` and `patch`
 take positional `(id, body, options?)` and resource path parameters use `options.params`. `create` /

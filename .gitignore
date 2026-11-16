@@ -11,6 +11,7 @@ coverage
 .turbo
 .vite
 /.vscode
+/.idea
 
 # Local manual-testing environments (backends, frontends, experiments) are never tracked in git.
 manual-testing/
