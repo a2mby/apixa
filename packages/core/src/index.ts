@@ -1,4 +1,5 @@
 export {
+  createResource,
   defineApi,
   defineApis,
   resetMock,

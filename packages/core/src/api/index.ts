@@ -1,4 +1,5 @@
 export { defineApi } from "./define-api.js";
+export { createResource } from "./create-resource.js";
 export { defineApis } from "./define-apis.js";
 export { resetMock, mockFiles } from "./reset.js";
 export { validatePagination, resolvePagination } from "./pagination.js";

@@ -40,7 +40,8 @@ Values: `defineApi`, `defineApis`, `defineMockApi`; `ApiError`, `NetworkError`, 
 `SerializationError`, `TransformError`, `MockError`, `MockApiError`, `InvalidSliceError`, `isApiError`, `isHttpError`,
 `isTimeoutError`, `isMockError`; `createFetchTransport`, `computeBackoffMs`, `parseRetryAfter`,
 `isRetryableStatus`; `convertKey`, `transformKeys`, `KEY_CASES`; `OPERATION_METADATA`,
-`getOperationMetadata`; `nextPageInput`, `previousPageInput`, `paginationContextKey`; `emptyResponse`. The exact list is `tests/facade/curated-root-exports.json`, shared by the
+`getOperationMetadata`; `nextPageInput`, `previousPageInput`, `paginationContextKey`; `emptyResponse`;
+`createResource`. The exact list is `tests/facade/curated-root-exports.json`, shared by the
 unit test and the packed-consumer check. Types are listed in `src/index.ts`.
 
 Everything else (`MockStore`, `resetMock`, `registerMockDatasetLoader`, `createIdempotencyKey`,

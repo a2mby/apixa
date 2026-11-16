@@ -41,6 +41,7 @@ export type {
   MockData,
   MockOption,
   ResourceDefinition,
+  ResourceEntityBrand,
   ResourcePagination,
   PaginationPreset,
   LaravelPagination,

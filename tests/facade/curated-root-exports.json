@@ -20,6 +20,7 @@
   "computeBackoffMs",
   "convertKey",
   "createFetchTransport",
+  "createResource",
   "defineApi",
   "defineApis",
   "defineMockApi",
