@@ -65,7 +65,7 @@ const localFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   return Response.json([{ id: "1", name: "report.bin" }] satisfies StoredFile[]);
 }) as typeof fetch;
 
-export const filesApi = defineApi<{ files: { entity: StoredFile } }>()({
+export const filesApi = defineApi<{ files: StoredFile }>()({
   baseURL: "https://example.test",
   transport: createFetchTransport(localFetch),
   resources: {

@@ -5,7 +5,10 @@ export type ApiErrorCode =
   | "PARSE"
   /** Parsed data failed the operation's expected response structure. */
   | "RESPONSE_SHAPE"
+  /** A file rule, path parameter or `response.validate` hook rejected a value. */
   | "VALIDATION"
+  /** An operation `schema` rejected a value; `error.phase` is `"body"`, `"query"` or `"response"`. */
+  | "VALIDATION_ERROR"
   | "TIMEOUT"
   | "ABORT"
   /** Invalid client configuration (thrown by `defineApi()` / `defineApis()`). */

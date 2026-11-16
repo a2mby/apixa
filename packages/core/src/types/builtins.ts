@@ -1,7 +1,7 @@
 import type { AdvancedTransferConfig, PresignedRequest } from "./advanced-transfer.js";
 import type { RequestOptions } from "./transport.js";
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
-import type { RetryOption } from "./retry.js";
+import type { RetryOption, TimeoutOption } from "./retry.js";
 import type { DataFormat } from "./definition.js";
 import type {
   ApiResponse,
@@ -40,8 +40,12 @@ export interface OperationFnRequestInit {
   /** Body encoding; default JSON, or multipart automatically when the body holds `File` / `Blob`. */
   dataFormat?: DataFormat;
   headers?: HeadersInitLike;
-  timeout?: number;
+  timeout?: TimeoutOption;
   retry?: RetryOption;
+  /**
+   * How this subrequest's body is read. A `ctx.request()` constructs a new request, so it declares
+   * its own decoding; generated operation calls cannot (their `responseType` is fixed).
+   */
   responseType?: ResponseType;
   /** Largest accepted response body in bytes for this request. */
   maxResponseSize?: number;

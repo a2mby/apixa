@@ -1,9 +1,10 @@
 import { defineApi, type OperationFnContext } from "@apixa/core";
 import { describe, expectTypeOf, it } from "vitest";
+import { z } from "zod";
 import type { CreateBodyOf } from "../helpers/types.js";
 
 type User = { id: string; name: string };
-type AppApi = { users: { entity: User; list: User[] } };
+type AppApi = { users: User };
 
 const explicit = defineApi<AppApi>()({
   baseURL: "https://api.example.com",
@@ -65,7 +66,7 @@ describe("configuration-driven client inference", () => {
   });
 
   it("uses runtime paths for multiple parameters and ignores a legacy metadata path", () => {
-    type Legacy = { users: { path: "/legacy/:legacy"; entity: User } };
+    type Legacy = { users: User };
     const api = defineApi<Legacy>()({
       baseURL: "https://api.example.com",
       resources: {
@@ -107,7 +108,7 @@ describe("configuration-driven client inference", () => {
     expectTypeOf(api.users.getMany).parameter(0).toEqualTypeOf<User["id"][]>();
     if (false) {
       // @ts-expect-error update is not selected
-      api.users.update("1", { body: {} });
+      api.users.update("1", {});
       // @ts-expect-error count is not selected
       api.users.count();
       // @ts-expect-error explicit override removes deleteMany
@@ -190,20 +191,12 @@ describe("configuration-driven client inference", () => {
   });
 
   it("requires runtime resources and custom implementations", () => {
-    type Two = { users: { entity: User }; posts: { entity: unknown } };
-    type WithArchive = { users: { entity: User; operations: { archive: { response: User } } } };
+    type Two = { users: User; posts: unknown };
     if (false) {
       defineApi<Two>()({
         baseURL: "https://api.example.com",
         // @ts-expect-error posts declared in metadata is missing at runtime
         resources: {
-          users: { path: "/users" },
-        },
-      });
-      defineApi<WithArchive>()({
-        baseURL: "https://api.example.com",
-        resources: {
-          // @ts-expect-error archive metadata requires a runtime implementation
           users: { path: "/users" },
         },
       });
@@ -229,12 +222,19 @@ describe("configuration-driven client inference", () => {
         },
       });
     }
-    const api = defineApi<WithArchive>()({
+    const api = defineApi<AppApi>()({
       baseURL: "https://api.example.com",
       resources: {
         users: {
           path: "/users",
-          operations: { archive: { kind: "write", method: "POST", path: "/:id/archive" } },
+          operations: {
+            archive: {
+              kind: "write",
+              method: "POST",
+              path: "/:id/archive",
+              schema: { response: z.object({ id: z.string(), name: z.string() }) },
+            },
+          },
         },
       },
     });

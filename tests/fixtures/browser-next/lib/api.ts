@@ -52,8 +52,8 @@ const transport = {
 };
 
 export const api = defineApi<{
-  users: { entity: User };
-  posts: { entity: Post };
+  users: User;
+  posts: Post;
 }>()({
   baseURL: "https://example.test",
   transport,
@@ -68,8 +68,8 @@ export const api = defineApi<{
     posts: {
       path: "/posts",
       operations: "read",
-      pagination: {
-        type: "cursor",
+      paginationConfig: {
+        strategy: "cursor",
         fields: { data: "items", nextCursor: "nextCursor" },
         params: { pageSize: "limit" },
       },

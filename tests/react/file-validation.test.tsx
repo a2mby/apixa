@@ -21,7 +21,7 @@ function makeApi() {
       headers: { "content-type": "application/json" },
     });
   }) as typeof fetch;
-  const api = defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
+  const api = defineApi<{ pets: Pet }>()({
     baseURL: "https://x.dev/v1",
     transport: createFetchTransport(fetchImpl),
     resources: {

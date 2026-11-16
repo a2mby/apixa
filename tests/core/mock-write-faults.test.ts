@@ -146,9 +146,7 @@ describe("replacement", () => {
     const created = (await api.docs.create({ file: blob("original") } as never)) as unknown as Doc;
     const broken = blob("new");
     broken.arrayBuffer = () => Promise.reject(new Error("disk error"));
-    await expect(
-      api.docs.update(created.id, { body: { file: broken } as never }),
-    ).rejects.toThrow();
+    await expect(api.docs.update(created.id, { file: broken } as never)).rejects.toThrow();
     const row = (await api.docs.getById(created.id)) as unknown as Doc;
     expect(row.file).toBe(created.file);
     expect(mockFiles(api)!.get(created.file)!.text()).toBe("original");
@@ -166,7 +164,7 @@ describe("replacement", () => {
         release = r;
       });
     const pending = api.docs
-      .update(created.id, { ...{ signal: controller.signal }, body: { file: slow } as never })
+      .update(created.id, { file: slow } as never, { ...{ signal: controller.signal } })
       .catch((e: unknown) => e);
     await new Promise((r) => setTimeout(r, 5));
     controller.abort();
@@ -174,10 +172,8 @@ describe("replacement", () => {
     expect(((await pending) as Error).name).toBe("AbortError");
     expect(mockFiles(api)!.get(created.file)!.text()).toBe("original");
     const replaced = (await api.docs.update(created.id, {
-      body: {
-        file: blob("final"),
-      } as never,
-    })) as unknown as Doc;
+      file: blob("final"),
+    } as never)) as unknown as Doc;
     expect(mockFiles(api)!.has(created.file)).toBe(false);
     expect(mockFiles(api)!.get(replaced.file)!.text()).toBe("final");
     await expectConsistent(api);
@@ -190,10 +186,8 @@ describe("replacement", () => {
     } as never)) as unknown as Doc;
     const [a, b] = created.files!;
     const updated = (await api.docs.update(created.id, {
-      body: {
-        files: [a!, blob("c")],
-      } as never,
-    })) as unknown as Doc;
+      files: [a!, blob("c")],
+    } as never)) as unknown as Doc;
     expect(mockFiles(api)!.has(a!)).toBe(true);
     expect(mockFiles(api)!.has(b!)).toBe(false);
     expect(updated.files![0]).toBe(a);
@@ -261,8 +255,8 @@ describe("concurrent managed writes", () => {
     const a = (await api.docs.create({ file: blob("shared") } as never)) as unknown as Doc;
     const b = (await api.docs.create({ file: a.file } as never)) as unknown as Doc;
     await Promise.all([
-      api.docs.update(a.id, { body: { file: blob("a2") } as never }),
-      api.docs.update(b.id, { body: { file: blob("b2") } as never }),
+      api.docs.update(a.id, { file: blob("a2") } as never),
+      api.docs.update(b.id, { file: blob("b2") } as never),
     ]);
     expect(mockFiles(api)!.has(a.file)).toBe(false); // both owners moved on: now an orphan, collected
     await expectConsistent(api);

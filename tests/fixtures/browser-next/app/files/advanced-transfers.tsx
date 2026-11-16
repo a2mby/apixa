@@ -22,7 +22,7 @@ export function AdvancedTransfers() {
     setStatus("running");
     try {
       const result = await mutation.create(
-        { document: source.current },
+        { document: source.current, size: source.current.size },
         {
           transfer: {
             control: control.current,

@@ -67,7 +67,7 @@ export function petApi(
     },
     ...config.resource,
   };
-  const api = defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
+  const api = defineApi<{ pets: Pet }>()({
     baseURL: "https://api.example.com",
     transport,
     resources: { pets: resource },

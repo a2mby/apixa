@@ -120,7 +120,7 @@ describe("transfer events through the hooks", () => {
     const events: TransferEvent[] = [];
     await act(async () => {
       await result.current.send(new Blob([new Uint8Array(2)]) as never, {
-        retry: { retries: 2, baseDelayMs: 0, maxDelayMs: 0, methods: ["PUT"] },
+        retry: { count: 2, delay: 0, maxDelay: 0, methods: ["PUT"] },
         onTransfer: (e: TransferEvent) => void events.push(e),
       });
     });
@@ -140,7 +140,7 @@ describe("transfer events through the hooks", () => {
         return { status: 200, headers: raw.headers, raw, body: [{ id: "1", name: "x" }] };
       },
     };
-    const api = defineApi<{ docs: { path: "/docs"; entity: { id: string; name: string } } }>()({
+    const api = defineApi<{ docs: { id: string; name: string } }>()({
       baseURL: "https://x.dev",
       transport,
       resources: { docs: { path: "/docs" } },

@@ -12,7 +12,7 @@ import { describe, expectTypeOf, it } from "vitest";
 /** v1.4.0 compile-time contract. Calls live in never-invoked functions. */
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type Pet = { id: string; name: string; photo?: string | null; docs?: string[] | null; age: number };
-type AppApi = { pets: { path: "/pets"; entity: Pet } };
+type AppApi = { pets: Pet };
 const baseURL = "https://api.example.com";
 
 const client = () =>

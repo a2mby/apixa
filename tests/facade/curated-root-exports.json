@@ -11,6 +11,7 @@
   "OPERATION_METADATA",
   "ParseError",
   "ResponseShapeError",
+  "SchemaValidationError",
   "SecurityError",
   "SerializationError",
   "TimeoutError",
@@ -23,6 +24,7 @@
   "defineApis",
   "defineMockApi",
   "detectTransferSupport",
+  "emptyResponse",
   "getOperationMetadata",
   "isApiError",
   "isHttpError",
@@ -30,7 +32,10 @@
   "isRetryableStatus",
   "isTimeoutError",
   "mockFiles",
+  "nextPageInput",
+  "paginationContextKey",
   "parseContentDisposition",
   "parseRetryAfter",
+  "previousPageInput",
   "transformKeys"
 ]

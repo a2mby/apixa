@@ -15,7 +15,7 @@ const bob: User = { id: "2", name: "Bob", active: false };
 function makeApi() {
   let users = [ada, bob];
   const requests: TransportRequest[] = [];
-  const api = defineApi<{ users: { entity: User } }>()({
+  const api = defineApi<{ users: User }>()({
     baseURL: "https://api.example.com",
     transport: createFakeTransport((request) => {
       requests.push(request);

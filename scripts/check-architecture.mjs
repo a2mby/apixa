@@ -41,10 +41,17 @@ const PACKAGES = {
     external: ["react", "@tanstack/react-query"],
     publishable: false,
   },
+  // Zod-friendly `defineApi` behind the optional `apixa/validation` subpath. Zod stays an optional peer.
+  "@apixa/validation": {
+    dir: "packages/validation",
+    workspace: ["@apixa/core"],
+    external: ["zod"],
+    publishable: false,
+  },
   // The facade is the repository root package. It may only re-export the public packages.
   apixa: {
     dir: ".",
-    workspace: ["@apixa/core", "@apixa/mocking", "@apixa/react"],
+    workspace: ["@apixa/core", "@apixa/mocking", "@apixa/react", "@apixa/validation"],
     external: [],
     publishable: true,
   },
@@ -513,7 +520,7 @@ for (const [file, { pkg }] of graph) {
       if (FRAMEWORK_PACKAGES.test(dep)) fail("release", `${name} must not depend on ${dep}`);
     }
   }
-  for (const dep of ["react", "@tanstack/react-query"]) {
+  for (const dep of ["react", "@tanstack/react-query", "zod"]) {
     if (
       !m.peerDependencies?.[dep] ||
       !m.peerDependenciesMeta?.[dep]?.optional ||
@@ -615,7 +622,7 @@ for (const [name, dir] of builtDirs) {
       if (
         name === "apixa" &&
         !isBuiltin(spec) &&
-        !/^(react|react-dom|@tanstack\/react-query)(\/|$)/.test(spec)
+        !/^(react|react-dom|@tanstack\/react-query|zod)(\/|$)/.test(spec)
       ) {
         fail("facade-dist", `${rel(file)} imports an undeclared external ${spec}`);
       }
@@ -738,6 +745,11 @@ for (const [subpath, target] of Object.entries(manifests.apixa.exports)) {
       for (const spec of specifiersOf(text)) {
         if (!subpath.startsWith("./react") && FRAMEWORK_PACKAGES.test(spec))
           fail("facade-dist", `${rel(file)} leaks ${spec} into ${subpath}`);
+        if (subpath !== "./validation" && /^zod(\/|$)/.test(spec))
+          fail(
+            "facade-dist",
+            `${rel(file)} leaks zod into ${subpath}; only apixa/validation may load it`,
+          );
         if (subpath !== "./mocking/node" && isBuiltin(spec))
           fail("node-leak", `${rel(file)} leaks ${spec} into ${subpath}`);
       }

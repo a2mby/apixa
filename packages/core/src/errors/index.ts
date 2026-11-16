@@ -3,6 +3,11 @@ export { NetworkError } from "./network-error.js";
 export { HttpError } from "./http-error.js";
 export { ParseError, ResponseShapeError } from "./parse-error.js";
 export { ValidationError, fileValidationError } from "./validation-error.js";
+export {
+  SchemaValidationError,
+  formatIssuePath,
+  type SchemaPhase,
+} from "./schema-validation-error.js";
 export { TimeoutError } from "./timeout-error.js";
 export { AbortError } from "./abort-error.js";
 export { ConfigError } from "./config-error.js";

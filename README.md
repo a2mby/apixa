@@ -39,6 +39,7 @@ framework you do not use:
 | -------------------------------------------- | ------------------------------------------------------------- |
 | `apixa`, `apixa/core`, `apixa/mocking*`      | nothing                                                       |
 | `apixa/react`, `apixa/react/advanced`        | `react` (^18 or ^19) and `@tanstack/react-query` (^5.90.1)    |
+| `apixa/validation`                           | `zod` (^4); plain-object schema shapes become `z.object`      |
 | future framework subpaths (e.g. `apixa/vue`) | that framework's own peers, documented when the subpath ships |
 
 npm does not install optional peers for you. `apixa/react` uses the copies in _your_ application;
@@ -134,13 +135,13 @@ const api = defineApi({
 await api.users.getAll();
 await api.users.getById("123");
 await api.users.create({ name: "Ada", email: "ada@example.com" });
-await api.users.update("123", { body: { name: "Ada Lovelace" } });
-await api.users.patch("123", { body: { name: "Ada L." } });
+await api.users.update("123", { name: "Ada Lovelace" });
+await api.users.patch("123", { name: "Ada L." });
 await api.users.delete("123");
 ```
 
-Typed payloads use a Zustand-style **resource-only** state generic (no `type()` helper).
-`create` / `update` are derived from `entity` (`Omit<Entity,"id">` / `Partial<Entity>`).
+Entity types use a **resource-only** state generic (`ApiState`: resource name → entity; custom operation payloads come from each operation's `schema`, see [docs/guides/humans/schemas.md](docs/guides/humans/schemas.md)) (no `type()` helper).
+`create` / `update` are derived from the entity (`Omit<Entity,"id">` / `Partial<Entity>`).
 Root config (`baseURL`, `headers`, …) is typed by Core — not listed on `AppApi`:
 
 ```ts
@@ -149,9 +150,7 @@ import { defineApi } from "apixa";
 type User = { id: string; name: string; email: string };
 
 type AppApi = {
-  users: {
-    entity: User;
-  };
+  users: User;
 };
 
 const api = defineApi<AppApi>()({
@@ -204,23 +203,26 @@ Pass `transport` to inject a custom HTTP implementation (used in tests). The def
 
 ### Request reliability (implemented)
 
-Per-call cancel and timeout via `RequestOptions` (call → operation → resource → api). Abort → `AbortError`; timeout → `TimeoutError`.
+Per-call cancel and timeout via `RequestOptions` (call → operation → resource → api). `timeout` accepts a total millisecond deadline or `{ total?, perAttempt? }`. Abort → `AbortError`; timeout → `TimeoutError`.
 
 ```ts
 import { defineApi, isHttpError } from "apixa";
 
 const controller = new AbortController();
-await api.users.getAll({ signal: controller.signal, timeout: 5_000 });
+await api.users.getAll({
+  signal: controller.signal,
+  timeout: { total: 5_000, perAttempt: 2_000 },
+});
 controller.abort();
 ```
 
-Opt-in retries (default methods `GET` / `HEAD` / `OPTIONS`; network errors, `408` / `429` / `5xx`):
+Opt-in retries (default methods `GET` / `HEAD` / `OPTIONS` / `PUT` / `DELETE`; network errors, `408` / `429` / `5xx`):
 
 ```ts
 const api = defineApi({
   baseURL: "https://api.example.com",
-  timeout: 10_000,
-  retry: { retries: 2, baseDelayMs: 200 },
+  timeout: { total: 10_000, perAttempt: 3_000 },
+  retry: { count: 2, delay: 200, maxDelay: 2_000, backoff: "exponential", jitter: "equal" },
   middleware: {
     onRequest: [
       (request) => {
@@ -236,7 +238,7 @@ const api = defineApi({
 });
 ```
 
-Unified `middleware` hook lists (`{ onRequest?, onResponse?, onError? }`) and `response`
+Unified `middleware` hook lists (`{ onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }`) and `response`
 (`{ unwrap?, parse?, validate? }`) run inside Core's request pipeline. See
 [`packages/core/README.md`](./packages/core/README.md) and the
 [v2-to-v3 migration guide](./docs/guides/humans/migrate-v2-to-v3.md).
@@ -252,11 +254,11 @@ const mockApi = defineMockApi({
   resources: {
     users: { type: "users-mock" },
     products: { type: "products-mock", slice: 50 },
-    comments: { type: "comments-mock", pagination: true },
+    comments: { type: "comments-mock", paginationConfig: true },
   },
 });
 
-const { data, total } = await mockApi.comments.getAll({ query: { page: 1, pageSize: 10 } });
+const { data, total } = await mockApi.comments.getAll({ page: 1, pageSize: 10 });
 ```
 
 Typed data: `import { users, type User } from "apixa/mocking/datasets"`.
@@ -270,7 +272,7 @@ import "apixa/mocking/register";
 const api = defineApi({
   baseURL: "https://api.example.com",
   resources: {
-    users: { path: "/users", mock: "users-mock", pagination: "page" },
+    users: { path: "/users", mock: "users-mock", paginationConfig: "page" },
     payments: { path: "/payments" }, // real network
   },
 });
@@ -288,15 +290,17 @@ Apixa is being designed around a small, extensible core that can grow into a bro
 published on npm with single-package distribution, `apixa/react`, full file uploads/downloads,
 transfer progress/streaming, file validation, mock storage, framework files, advanced transfers,
 security hardening, and the Laravel playground); and the **v3.0.0** Core architecture overhaul
-(13 consolidated builtins, `{ body }` detail writes, unified `middleware` hook arrays, explicit
-`query` & `response` pipelines, `source` preservation, safe bounded `transforms`, per-operation
+(13 consolidated builtins, positional `update(id, body, options?)` / `patch(id, body, options?)`,
+Standard Schema V1 `schema` and optional `apixa/validation`, `emptyResponse`, unified `middleware`
+with logical and attempt hooks, `timeout: { total, perAttempt }`, strict `getMany` batch identity
+verification and local `sortBy`, expanded `count()` normalization, explicit `query` & `response`
+pipelines, `source` preservation, safe bounded `transforms`, `paginationConfig` + per-operation
 `pagination` with live/mock parity, and strict client-side `slice`). Detailed status and sign-offs:
 [versions/README.md](./versions/README.md).
 
 **Planned later (not implemented):**
 
 - `crud<>()` preset.
-- Built-in schema library adapters (use `response.validate` hooks today; no schema library in Core).
 - Live filtering, sorting, and search query conventions beyond the current opt-in pagination envelope.
 - Online dataset catalog (browse/download) — local datasets only today.
 - Vue, Angular, or other framework integrations. TanStack Query integration is implemented as `apixa/react`.

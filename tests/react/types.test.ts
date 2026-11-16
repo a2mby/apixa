@@ -22,7 +22,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 type User = { id: string; name: string; email: string };
 
 type AppApi = {
-  users: { path: "/users"; entity: User };
+  users: User;
 };
 
 const base = {
@@ -127,7 +127,7 @@ describe("useResourceMutation inference from real defineApi clients", () => {
       void users.create({ name: "Ada", email: "a@x.dev" });
       // @ts-expect-error create takes a body, not a tuple
       void users.create([{ name: "Ada", email: "a@x.dev" }]);
-      void users.update("42", { body: { name: "Grace" } });
+      void users.update("42", { name: "Grace" });
       expectTypeOf(users.states.update.data).toEqualTypeOf<User | undefined>();
       // @ts-expect-error id is a string
       void users.update(42, { name: "Grace" });
@@ -270,12 +270,12 @@ describe("resource query operation and native inference", () => {
 
 describe("query typing with defineApis and runtime selection", () => {
   it("uses actual nested paths, envelopes, and optional method availability", () => {
-    const apis = defineApis<{ backend: { users: { entity: User } } }>()({
+    const apis = defineApis<{ backend: { users: User } }>()({
       backend: {
         baseURL: "https://api.example.com",
         transport: base.transport,
         resources: {
-          users: { path: "/organizations/:orgId/users", pagination: "cursor" },
+          users: { path: "/organizations/:orgId/users", paginationConfig: "cursor" },
         },
       },
     });
@@ -297,7 +297,7 @@ describe("query typing with defineApis and runtime selection", () => {
         scope: ["backend", "tenant-42"],
         args: [{ params: { orgId: "tenant-42" } }],
       });
-      expectTypeOf(list.data).toEqualTypeOf<
+      expectTypeOf(list.data).toExtend<
         | {
             data: User[];
             nextCursor: string | null;

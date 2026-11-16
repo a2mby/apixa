@@ -180,7 +180,7 @@ try {
     );
     if (name === "apixa") {
       assert.deepEqual(Object.keys(manifest.dependencies ?? {}), []);
-      for (const dep of ["react", "@tanstack/react-query"]) {
+      for (const dep of ["react", "@tanstack/react-query", "zod"]) {
         assert.equal(manifest.peerDependenciesMeta?.[dep]?.optional, true, `${dep} optional peer`);
       }
       assert.deepEqual(
@@ -195,6 +195,7 @@ try {
             (n) => `./mocking/datasets/${n}`,
           ),
           "./mocking/node",
+          "./validation",
           "./react",
           "./react/advanced",
         ],
@@ -305,7 +306,9 @@ const full = await downloads.docs.file({ params: { id: "1" }, full: true });
 assert.ok(full.data instanceof Blob && full.data.type === "application/pdf", "operation-level responseType yields a Blob");
 assert.deepEqual(new Uint8Array(await full.data.arrayBuffer()), bytes, "byte-exact download");
 assert.equal(root.parseContentDisposition(full.headers).filename, "résumé.pdf", "Content-Disposition filename*");
-assert.ok((await downloads.docs.getById("1", { responseType: "arrayBuffer" })) instanceof ArrayBuffer, "per-call responseType");
+// ADR-007 decision 20: responseType is fixed by the operation; a per-call override is rejected.
+const overridden = await downloads.docs.file({ params: { id: "1" }, responseType: "arrayBuffer" }).catch((e) => e);
+assert.ok(overridden instanceof root.ConfigError, "per-call responseType override is rejected");
 const gone = await downloads.docs.file({ params: { id: "missing" } }).catch((e) => e);
 assert.ok(gone instanceof root.HttpError && gone.status === 404 && gone.data.message === "gone", "failed download keeps a readable body");
 const served = root.defineApi({
@@ -626,7 +629,7 @@ const sameSymbol: typeof coreMetadata = rootMetadata;
 const requestIdentity = (request: RootRequest): CoreRequest => request;
 void [sameSymbol, requestIdentity, products, companies, orders, posts, comments];
 type Account = { id: string; name: string };
-const api = defineApi<{ accounts: { entity: Account } }>()({
+const api = defineApi<{ accounts: Account }>()({
   baseURL: "/api",
   resources: { accounts: { path: "/accounts", operations: { stats: { kind: "read", method: "GET", path: "/stats" } } } },
 });
@@ -641,7 +644,7 @@ const metadata: Readonly<Record<string, OperationMetadata>> | undefined = getOpe
 const client: ApiClient<any, any> | undefined = undefined;
 const failure = (e: unknown) => e instanceof HttpError && e instanceof ApiError;
 const first: User | undefined = users[0];
-const custom = defineApi<{ accounts: { entity: Account } }>()({
+const custom = defineApi<{ accounts: Account }>()({
   baseURL: "/api",
   resources: {
     accounts: {
@@ -779,7 +782,7 @@ import { QueryClient as ServerQueryClient, createResourceQueryOptions, dehydrate
 import { QueryClient as TanStackQueryClient } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 type User = { id: string; name: string };
-const api = defineApi<{ users: { entity: User } }>()({
+const api = defineApi<{ users: User }>()({
   baseURL: "https://example.test",
   resources: { users: { path: "/users", operations: { archive: { kind: "write", run: async (ctx, id: string) => ctx.request<User>({ method: "POST", path: \`/\${id}/archive\` }) } } } },
 });

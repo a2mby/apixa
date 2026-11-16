@@ -28,8 +28,8 @@ describe("mock writes reject prototype-changing keys", () => {
     const a = api();
     const calls = [
       () => a.users.create({ id: "9", ...evil(payload) } as never),
-      () => a.users.update("1", { body: evil(payload) as never }),
-      () => a.users.patch("1", { body: evil(payload) as never }),
+      () => a.users.update("1", evil(payload) as never),
+      () => a.users.patch("1", evil(payload) as never),
       () => a.users.createMany([evil(payload)] as never),
     ];
     for (const call of calls) {
@@ -56,7 +56,7 @@ describe("mock writes reject prototype-changing keys", () => {
 
   it("ordinary nested objects are still fine", async () => {
     const a = api();
-    const row = await a.users.patch("1", { body: { profile: { city: "London" } } as never });
+    const row = await a.users.patch("1", { profile: { city: "London" } } as never);
     expect(row).toMatchObject({ profile: { city: "London" } });
   });
 });
@@ -77,7 +77,7 @@ describe("queries read own properties only", () => {
 
   it("reset restores the seeded rows", async () => {
     const a = api();
-    await a.users.patch("1", { body: { name: "changed" } });
+    await a.users.patch("1", { name: "changed" });
     resetMock(a);
     expect(await a.users.getById("1")).toEqual({ id: "1", name: "A" });
   });

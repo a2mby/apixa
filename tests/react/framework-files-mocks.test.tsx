@@ -33,7 +33,7 @@ type MockCtx = {
 };
 
 function makeApi(storage: Record<string, unknown> = { disk: "react" }) {
-  return defineApi<{ pets: { path: "/pets"; entity: Pet } }>()({
+  return defineApi<{ pets: Pet }>()({
     baseURL: "https://example.test",
     transport: forbidden,
     resources: {

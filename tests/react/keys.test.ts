@@ -56,7 +56,7 @@ describe("createResourceKeys", () => {
     const controlled = createResourceQueryOptions(api.users, {
       queryKey: ["users"],
       operation: "getById",
-      args: ["42", { signal: new AbortController().signal, timeout: 500, retry: { retries: 2 } }],
+      args: ["42", { signal: new AbortController().signal, timeout: 500, retry: { count: 2 } }],
     });
     expect(controlled.queryKey).toEqual(base.queryKey);
   });

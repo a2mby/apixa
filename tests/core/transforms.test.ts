@@ -194,7 +194,7 @@ describe("transforms in defineApi", () => {
 
   it("types explicitly declared entities in the public convention", async () => {
     type BackendUser = { user_id: number; display_name: string };
-    const api = defineApi<{ users: { entity: BackendUser } }>()({
+    const api = defineApi<{ users: BackendUser }>()({
       baseURL: "https://x.dev",
       transforms: { response: { keys: "camelCase" } },
       transport: createFakeTransport(() => ({ body: [{ user_id: 1, display_name: "A" }] })),
@@ -213,7 +213,7 @@ describe("transforms in defineApi", () => {
       resources: {
         paged: {
           path: "/paged",
-          pagination: "page",
+          paginationConfig: "page",
           mock: [
             { id: 1, team_name: "alpha" },
             { id: 2, team_name: "alpha" },
@@ -223,7 +223,7 @@ describe("transforms in defineApi", () => {
         },
         cursor: {
           path: "/cursor",
-          pagination: "cursor",
+          paginationConfig: "cursor",
           mock: [
             { id: 1, team_name: "alpha" },
             { id: 2, team_name: "alpha" },

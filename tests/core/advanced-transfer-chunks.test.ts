@@ -99,7 +99,7 @@ describe("advanced source slicing and scheduling", () => {
 });
 
 it.each(["blob", "arrayBuffer", "text"] as const)(
-  "preserves per-call %s response inference on the final completion request",
+  "preserves declared %s response inference on the final completion request",
   async (responseType) => {
     const server = protocolServer();
     const transport = createFetchTransport(async (url, init) => {
@@ -119,18 +119,18 @@ it.each(["blob", "arrayBuffer", "text"] as const)(
         })
       ).raw;
     });
-    const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+    const api = defineApi<{ files: { id: string; document: string } }>()({
       baseURL: "https://api.example.com",
       transport,
       resources: {
         files: {
           path: "/files",
           fileFields: ["document"],
-          operations: { create: { transfer: server.config } },
+          operations: { create: { transfer: server.config, responseType } },
         },
       },
     });
-    const result = await api.files.create({ document: source() }, { responseType });
+    const result = await api.files.create({ document: source() });
     if (responseType === "blob") expect(result).toBeInstanceOf(Blob);
     if (responseType === "arrayBuffer") expect(result).toBeInstanceOf(ArrayBuffer);
     if (responseType === "text") expect(typeof result).toBe("string");
@@ -139,7 +139,7 @@ it.each(["blob", "arrayBuffer", "text"] as const)(
 it("rejects unowned streamed completion before initiating a session", async () => {
   const server = protocolServer();
   await expect(
-    server.client().files.create({ document: source() }, { responseType: "stream" }),
+    server.client().files.create({ document: source() }, { responseType: "stream" } as never),
   ).rejects.toBeInstanceOf(ConfigError);
   expect(server.requests).toHaveLength(0);
 });

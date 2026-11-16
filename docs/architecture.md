@@ -72,33 +72,44 @@ Every call then runs through `request/pipeline.ts`:
    operation < request.
 2. Resolve dynamic headers. Static, sync, and async providers run once per logical call and
    merge case-insensitively.
+   2a. **Request schemas (ADR-006).** When the operation declares `schema`, `schema.query` runs
+   synchronously on the caller's query (SDK pagination controls bypass it) and `schema.body`
+   (async allowed) on the body, once per logical call, before pagination composition, middleware,
+   file rules and dispatch. Parsed values replace the caller's for every later stage and for an
+   error-middleware replay. Failures are `SchemaValidationError` (no dispatch, no mock mutation).
 3. Build the initial destination URL and apply `transforms.request` (with optional `exclude` /
-   `preserve` / `maxDepth`, plus live pagination `params` renaming) to `request.query`.
+   `preserve` / `maxDepth`, plus live pagination: logical `page` / `pageSize` / `cursor` / `offset` values are validated, collision-checked and mapped to backend names, or placed in the body/headers by `buildRequest`) to `request.query`.
 4. Run unified `middleware.onRequest` hooks (root → resource → operation, in array order). Request
    middleware sees the transformed `request.query` and the pre-transform `request.body`. After
    hooks run, mutations to `request.url` and `request.query` are synchronized (`request.query` wins
-   on key conflicts) and re-serialized via `querySerializer` or `buildQueryString`.
+   on key conflicts), checked against wire pagination collisions, re-validated against `schema.query`
+   (preserving pagination wire mappings), and re-serialized via `querySerializer` or `buildQueryString`.
 5. Apply `transforms.request` to `request.body` (leaving `File` / `Blob` values untouched), run
    opt-in file/body validation (`ValidationError` before dispatch), and serialize the request body.
 6. For HTTP only, check the final URL against the API origin after middleware. Any other
    origin is a `SecurityError`, and nothing is sent.
-7. Execute. For HTTP, transport attempts run with retry, exponential backoff with jitter, and
-   `Retry-After`. Middleware does not re-run on retries. For a mocked resource, the resolved
+7. Execute. For HTTP, transport attempts run with retry (including `onAttempt` and `onAttemptResponse`
+   with bounded `retry()`), exponential or linear backoff with jitter, and
+   `Retry-After`. Request middleware (`onRequest`) does not re-run on retries. For a mocked resource, the resolved
    builtin runs against its `MockStore`, custom declarative operations run their `mock` handler, or
-   `ctx.request()` is routed by method and relative path. No transport is involved. Writes carrying
+   `ctx.request()` is routed by method and relative path (`getMany([])` short-circuits before dispatch in both live and mock paths). No transport is involved. Writes carrying
    `File` / `Blob` values first move them into the client's virtual file store (see "File handling");
    records keep string references.
 8. Run response processing in order (skipped for non-JSON `responseType`): preserve raw parsed
-   payload as `source`; on live paginated calls map the page envelope before transforming page rows
+   payload as `source`; on live paginated calls decode the envelope from the raw payload (`response.unwrap` does not apply) and transform only the rows
    (`TransformError` on cycles/depth/collisions), otherwise run `response.unwrap` and response key
    transforms; run `response.parse` on JSON responses, apply builtin shaping (`exists`, `getMany`,
-   `findFirst`, `getAll`, `slice`, `ResponseShapeError` on invalid shapes), and run
+   `findFirst`, `count`, `getAll`, `slice`, `ResponseShapeError` on invalid shapes), and run
    `response.validate` (`ValidationError` on non-`ApiError` throws).
 9. Run unified `middleware.onResponse` hooks with the processed `ApiResponse` (preserving `source`).
-10. Return the data, or the `ApiResponse` envelope (including `source`) when `{ full: true }` is passed.
+10. **Response schema & final invariants (ADR-006 / ADR-007).** `schema.response` (or `emptyResponse`)
+    validates the post-middleware value about to be returned (for a paginated call, the whole page),
+    followed by final built-in structural and pagination contract checks. Empty 204/205 is validated as
+    `undefined`; an allowed 404 skips it.
+11. Return the data, or the `ApiResponse` envelope (including `source`, and `skipped: true` on `getMany([])`) when `{ full: true }` is passed.
 
-One controller per call combines the overall timeout and the caller's signal. A timeout covers
-retries and backoff, and is reported as `TimeoutError`, never as `AbortError`. On failure, error
+One controller per call combines the overall timeout (`timeout: number | { total?, perAttempt? }`) and the caller's signal. A total timeout covers
+retries and backoff, while an optional `perAttempt` timeout bounds each individual transport attempt; both are reported as `TimeoutError`, never as `AbortError`. On failure, error
 middleware runs (root → resource → operation). A handler that throws replaces the error; one
 that returns a value other than `undefined` recovers the call.
 
@@ -116,13 +127,11 @@ TanStack types and are not guarded (they need the package at runtime anyway).
 
 ## Downloads and binary responses (v1.2.0, implemented)
 
-`responseType` already reached the Fetch transport per call; v1.2.0 completes it inside the same
-operation system. A declarative operation can declare `responseType` (precedence: call option >
-operation > JSON); `pipeline.ts` validates it, passes it to the transport and, for non-JSON types,
+A declarative operation can declare `responseType` (and function operations can pass `responseType` to `ctx.request`; per-call `RequestOptions.responseType` was removed in ADR-007); `pipeline.ts` validates it, passes it to the transport and, for non-JSON types,
 skips key transforms and JSON shaping (`fromHttp`, `slice`). `transport/read-body.ts` reads a
 successful body as requested but always reads an error body by content type, and returns typed
 empty values for 204/205. Types: `ResponseTypeData` plus `ApplyResponseType` (runtime literal,
-beneath `defineApi<T>()` metadata) and `CallData` (per call, `ctx.request` overloads).
+beneath `defineApi<T>()` metadata) and `CallData` (`ctx.request` overloads).
 Metadata is the existing `ApiResponse`; `http/content-disposition.ts` is a pure parser. Mock
 operations read the v1.1.0 `MockFileStorage` through a read-only `files` handle, and
 `finalizeMockResponse` (`mock/files.ts`) coerces results to `responseType` and synthesizes the
@@ -170,7 +179,7 @@ policy. Apixa never deletes a remote file because a frontend record changed and 
 Resource bounds: advanced upload memory is `concurrency x chunkSize` plus one hash chunk; checkpoint bookkeeping is O(1)
 per acknowledgment (sorted ledger, running size total, frozen shared manifest); a raw `Blob` with `onTransfer` streams.
 Redirects of ordinary requests are inspected hop by hop in `transport/redirects.ts` (`fetchSafely`): same-origin followed,
-cross-origin refused before it is contacted, `redirectOrigins` followed bare (GET/HEAD), browsers (opaque redirects) fail
+cross-origin refused before it is contacted, `redirectOrigins` (operation config or `ctx.request`) followed bare (GET/HEAD), browsers (opaque redirects) fail
 closed; presigned steps keep `redirect: "error"`. Known limits kept visible: a cached stream is consumer-owned (cancelling an unlocked replaced stream would read as an
 empty success), custom transports must bound their own reads, custom headers follow cross-origin redirects, `session.id`
 is opaque input. Evidence: `tests/core/advanced-transfer-{races,faults}`, `file-{security-boundaries,memory-bounds,
@@ -196,7 +205,7 @@ Opt-in rules live where files are already declared: `FileFieldOptions` (`minSize
 `max`, `accept`, `reject`, `unknownType`, `noExtension`, `filename`) and `fileLimits`
 (`maxTotalSize`, `maxFiles`, `maxBodySize`) on the resource, overridable key-wise per operation
 (`fileFields` for declared fields, `fileLimits`); `maxResponseSize` / `responseAccept` belong to
-operations (a per-call `maxResponseSize` wins). `prepareFiles` resolves them once into
+operations (a per-call `maxResponseSize` may only tighten the operation limit). `prepareFiles` resolves them once into
 `PreparedOperation.fileRules`, which is `undefined` unless something is configured, so unconfigured
 calls do no work. There is no per-call opt-out.
 
@@ -340,13 +349,14 @@ resolution over every package's real import graph, plus the built output). Marke
 or **planned**. Rationale: [ADR 005](./decisions/005-single-package-distribution.md).
 Export contracts: [public-api.md](./public-api.md).
 
-| Package                  | Owns                                                                                                                                                      | May import                                                       | Status               |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------- |
-| `@apixa/core`            | Definitions, operations, request lifecycle, middleware, transforms, retry, errors, types, metadata, the `MockStore` bridge                                | nothing (no framework, no Node)                                  | implemented, private |
-| `@apixa/mocking`         | `defineMockApi`, dataset catalog/loaders/modules, mock errors, `register`, Node utilities                                                                 | Core; `node:*` only from `node.ts`                               | implemented, private |
-| `@apixa/internal-shared` | Framework-neutral integration algorithms (resource keys, operation classification)                                                                        | Core only                                                        | implemented, private |
-| `@apixa/react`           | `useResource*` hooks, `ApixaProvider`, `QueryClient`, `ApixaHydrationBoundary`, controllers, query options, cache sync, optimistic layers, mutation store | Core, shared, `react`, `@tanstack/react-query`                   | implemented, private |
-| `apixa`                  | Entry points and curated re-exports only (the repository root package)                                                                                    | `@apixa/core`, `@apixa/mocking`, `@apixa/react` (private source) | implemented, public  |
+| Package                  | Owns                                                                                                                                                      | May import                                                                            | Status               |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------- |
+| `@apixa/core`            | Definitions, operations, request lifecycle, middleware, transforms, retry, errors, types, metadata, the `MockStore` bridge                                | nothing (no framework, no Node)                                                       | implemented, private |
+| `@apixa/mocking`         | `defineMockApi`, dataset catalog/loaders/modules, mock errors, `register`, Node utilities                                                                 | Core; `node:*` only from `node.ts`                                                    | implemented, private |
+| `@apixa/internal-shared` | Framework-neutral integration algorithms (resource keys, operation classification)                                                                        | Core only                                                                             | implemented, private |
+| `@apixa/react`           | `useResource*` hooks, `ApixaProvider`, `QueryClient`, `ApixaHydrationBoundary`, controllers, query options, cache sync, optimistic layers, mutation store | Core, shared, `react`, `@tanstack/react-query`                                        | implemented, private |
+| `@apixa/validation`      | Zod-friendly `defineApi` (plain-object schema shapes become `z.object`) and `z`, behind the optional `apixa/validation` subpath                           | Core, `zod` (optional peer of `apixa`)                                                | implemented, private |
+| `apixa`                  | Entry points and curated re-exports only (the repository root package)                                                                                    | `@apixa/core`, `@apixa/mocking`, `@apixa/react`, `@apixa/validation` (private source) | implemented, public  |
 
 ```text
 @apixa/core  ◀── @apixa/mocking
@@ -430,6 +440,7 @@ modules must not change emitted behavior, error text, or declaration shapes of p
 packages/core/
 packages/mocking/          # datasets entry (lazy loadDataset + eager records), defineMockApi adapter, Node loaders
 packages/react/            # @apixa/react: native Query reads + separate Mutation writes, provider, QueryClient
+packages/validation/       # @apixa/validation: Zod shorthand `defineApi`, compiled into `apixa/validation`
 packages/internal/shared/  # private, never published: framework-neutral keys + operation classification
 datasets/                  # version-controlled JSON fixtures
 templates/                 # postponed until stable API (templates/README.md only)

@@ -54,7 +54,7 @@ describe("resource slice", () => {
     expect(() =>
       defineApi({
         baseURL: "https://api.example.com",
-        resources: { users: { path: "/users", slice: 3, pagination: "page" } },
+        resources: { users: { path: "/users", slice: 3, paginationConfig: "page" } },
       }),
     ).toThrow(/slice.*pagination|pagination.*slice/i);
   });

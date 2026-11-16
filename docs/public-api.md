@@ -22,6 +22,7 @@ names are for development; the public distribution imports none of those names. 
 | `apixa/mocking/register`                                                                           | Lets `mock: "<dataset-id>"` load named datasets                                                                                              | no                    | **yes**     |
 | `apixa/mocking/datasets` (+ `/users`, `/products`, `/companies`, `/orders`, `/posts`, `/comments`) | Typed records and `loadDataset`; each module on its own                                                                                      | no                    | none        |
 | `apixa/mocking/node`                                                                               | Filesystem dataset loaders (`node:fs`)                                                                                                       | no                    | none        |
+| `apixa/validation`                                                                                 | Zod-friendly `defineApi` (plain-object shapes become `z.object`) and `z`. Needs the optional peer `zod` (`^4`); only this entry loads it     | no                    | none        |
 | `apixa/react`                                                                                      | `ApixaProvider`, `QueryClient`, `ApixaHydrationBoundary`, `useResource`, `useResourceQuery`, `useResourceMutation` and types. `"use client"` | yes                   | none        |
 | `apixa/react/advanced`                                                                             | `QueryClient`, `dehydrate`, prefetch helpers, controllers, query options, optimistic layers. Server-safe: never reaches `react`              | TanStack only         | none        |
 
@@ -35,11 +36,11 @@ unpublished root manifest). `@apixa/tanstack-query` was never published to npm.
 ### Curated root
 
 Values: `defineApi`, `defineApis`, `defineMockApi`; `ApiError`, `NetworkError`, `HttpError`,
-`ParseError`, `ResponseShapeError`, `ValidationError`, `TimeoutError`, `AbortError`, `ConfigError`, `SecurityError`,
+`ParseError`, `ResponseShapeError`, `ValidationError`, `SchemaValidationError`, `TimeoutError`, `AbortError`, `ConfigError`, `SecurityError`,
 `SerializationError`, `TransformError`, `MockError`, `MockApiError`, `InvalidSliceError`, `isApiError`, `isHttpError`,
 `isTimeoutError`, `isMockError`; `createFetchTransport`, `computeBackoffMs`, `parseRetryAfter`,
 `isRetryableStatus`; `convertKey`, `transformKeys`, `KEY_CASES`; `OPERATION_METADATA`,
-`getOperationMetadata`. The exact list is `tests/facade/curated-root-exports.json`, shared by the
+`getOperationMetadata`; `nextPageInput`, `previousPageInput`, `paginationContextKey`; `emptyResponse`. The exact list is `tests/facade/curated-root-exports.json`, shared by the
 unit test and the packed-consumer check. Types are listed in `src/index.ts`.
 
 Everything else (`MockStore`, `resetMock`, `registerMockDatasetLoader`, `createIdempotencyKey`,
@@ -112,40 +113,73 @@ No symbol or import path changed; the generated export snapshot is unchanged. On
 - **Secure redirects (breaking security correction, owner-approved).** The built-in fetch transport no longer lets the
   runtime follow redirects of ordinary requests (which forwards custom headers such as `X-Api-Key` to the target).
   It inspects every hop: same-origin hops are followed unchanged; a cross-origin hop fails with `SecurityError` before
-  the destination is contacted; an origin listed in the new optional `redirectOrigins` (operation config, per-call and
+  the destination is contacted; an origin listed in the new optional `redirectOrigins` (operation config and
   `ctx.request` option; also `TransportRequest.redirectOrigins`) is followed with no headers, cookies, credentials or
   body, `GET`/`HEAD` only. Browsers hide redirect destinations, so any redirect fails closed there. Presigned steps are
   unchanged. **Migration:** an API that redirected to another origin must list that origin or return the URL in a JSON
   body and use a `presigned` descriptor. This is the only public type addition in v1.8.0 (one optional property); no
   export was added or removed.
 
+## ADR-006 & ADR-007 changes (schemas, flat `ApiState`, and unified v3 API contract)
+
+- Added: operation option `schema: { body?, query?, response? }` (Standard Schema V1) and `emptyResponse`
+  (`import { emptyResponse } from "apixa"` for `Promise<void>` empty-response operations);
+  `SchemaValidationError` (root and `apixa/core`, `code: "VALIDATION_ERROR"`, `phase: "body" | "query" | "response"`);
+  types `StandardSchemaV1`, `StandardSchemaIssue`, `InferSchemaInput`, `InferSchemaOutput`, `OperationSchema`,
+  `SchemaPhase`, `EmptyResponseSchema`, `BatchResponse`, `SkippedBatchResponse`, `GetManyOptions`, `GetManySort`,
+  `RetryBackoff`, `RetryJitter`, `TimeoutOption`, `ResolvedTimeout`, `AttemptMiddleware`, `AttemptContext`,
+  `AttemptResponseMiddleware`, `AttemptResponseContext`; `prepareOperationQuery`,
+  `isStandardSchema`, `isEmptyResponseSchema`, `StructuralApiInput`, `HandlerCapture`, `HandlerOverlay` (`apixa/core`);
+  the `apixa/validation` subpath (`defineApi`, `z`).
+- **Breaking:** removed types `ResourceState`, `OperationState`, `ResourceTypeOnlyKey`,
+  `OperationTypeOnlyKey`, `QueryOf`. `ApiState` entries are entities
+  (`interface ApiState { products: Product }`); the old `{ entity, list, query, operations }` wrapper is
+  a type error with a migration message. Migration: [schemas guide](./guides/humans/schemas.md) and
+  [ADR-007](./decisions/ADR-007-apixa-v3-unified-api-contract.md).
+
 ## v3.0.0-rc.0 changes (Core overhaul; release candidate prepared, not npm-published)
 
 Coordinated breaking v3 release candidate consolidating operation selection, typed signatures,
 query/body serialization, response processing, transforms, middleware and per-operation pagination:
 
-- **Facade & Core surface**: Added `ResponseShapeError` to root and Core exports alongside
+- **Facade & Core surface**: Added `ResponseShapeError` and `emptyResponse` to root and Core exports alongside
   `QueryOptions`, `ResponseOptions`, `ResponseHookContext`, `MiddlewareOptions`, `MiddlewareHooks`,
+  `AttemptMiddleware`, `AttemptContext`, `AttemptResponseMiddleware`, `AttemptResponseContext`,
+  `TimeoutOption`, `ResolvedTimeout`, `RetryBackoff`, `RetryJitter`,
+  `BatchResponse`, `SkippedBatchResponse`, `GetManyOptions`, `GetManySort`, `SchemaPhase`,
   `PaginationQueryOf`, `PaginatedListOf`, `OperationPreset`, `OperationSelection`, `OperationsBag`,
   `QueryArrayFormat`, `TransformsConfig`, `KeyTransformConfig`, `ResourcePagination`,
   `PaginationPreset`, `LaravelPagination`, `LaravelPaginatorPagination`, `LaravelCursorPagination`,
   `StrapiPagination`, `PayloadPagination`, `NestjsPagination`, `PaginationFields`,
-  `PaginationParams`, `PageResult`, `ResolvedPagination`, `PaginationMode`, `LayerOptions`,
-  `ApiState`, `ApiStateOf`, `ResourceState`, `OperationState`, `OperationKindsOf`, `BuiltinOpName`,
+  `PaginationParams`, `PaginationStrategy`, `PageResult`, `OpenPageResult`, `CursorResult`,
+  `OffsetResult`, `OpenOffsetResult`, `PaginatedResult`, `LogicalPaginationInput`,
+  `PaginationRequestParts`, `PaginationResponseContext`, `PaginationNavigation`,
+  `PaginationNavOptions`, `ResolvedPagination`, `PaginationMode`, `LayerOptions`,
+  `ApiState`, `ApiStateOf`, `OperationKindsOf`, `BuiltinOpName`,
   `ExtendedBuiltinOpName`, and `AllBuiltinOpName`.
 - **13 built-in operations**: Removed `getBySlug`, `upsert`, and `search` from the default builtin set
   (and `OPERATION_METADATA`); kept `getAll`, `getById`, `getMany`, `getBy`, `findFirst`, `count`,
   `exists` (7 reads) and `create`, `update`, `patch`, `delete`, `createMany`, `deleteMany` (6 writes).
   Removed deprecated `bulkCreate` / `bulkDelete` / `createBulk` / `deleteBulk` aliases.
-- **Operation calls & definitions**: Standardized `update(id, { body, ...options })` and
-  `patch(id, { body, ...options })`, resource/call `{ params }` for path parameters, declarative
+- **Operation calls & definitions**: Standardized positional `update(id, body, options?)` and
+  `patch(id, body, options?)`, resource/call `{ params }` for path parameters, declarative
   custom operations (`hasBody: false` reads take `(options?)`, body writes take `(body?, options?)`),
-  and HTTP-method-derived `kind` for declarative operations.
+  and HTTP-method-derived `kind` for declarative operations. Per-call `RequestOptions` excludes
+  definition-only `responseType` and `redirectOrigins`, and per-call `maxResponseSize` may only
+  tighten an operation's limit.
 - **Unified middleware**: Replaced `requestMiddleware` / `responseMiddleware` arrays with unified
-  `middleware: MiddlewareHooks` (`{ onRequest?, onResponse?, onError? }` arrays composed root →
+  `middleware: MiddlewareHooks` (`{ onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }` arrays composed root →
   resource → operation), where `onRequest` sees `request.query` already key-transformed before final
-  URL/query serialization and body transforms, `onResponse` runs after `response` processing with
-  `source` intact, and hooks accept `(request)` / `(response)` / `(error, { request, replay })`.
+  URL/query serialization and body transforms, `onAttempt` and `onAttemptResponse` run per live HTTP
+  attempt (with bounded `retry()`), `onResponse` runs after `response` processing (`unwrap`,
+  transforms, `parse`, shaping, `validate`) and before `schema.response` and final structural/pagination
+  checks with `source` intact, and hooks accept `(request)` / `(response)` / `(error, { request, replay })`.
+- **Pagination architecture** (root export): `nextPageInput`, `previousPageInput`, `paginationContextKey`;
+  `defineMockApi` exports the `OffsetPage` type. Resource definitions use `paginationConfig` exclusively
+  (resource `pagination` is rejected with `ConfigError`); operation definitions use `pagination`; call
+  options accept `options.pagination` or `options.query`. `PageResult` is now the page contract (the former
+  page/cursor union is `PaginatedResult`). Pagination error text now names `"offset"`.
+  See the [pagination guide](./guides/humans/pagination.md).
 - **Serialization, responses & pagination**: Added client-wide `query` (`nulls`, `emptyArrays`,
   `booleans`) alongside `queryArrayFormat` and `querySerializer`, strict JSON/explicit `responseType`,
   `response` (`unwrap`, `parse`, `validate`, `source`), bounded/excluded `transforms` (`TransformError`

@@ -1,4 +1,5 @@
 import { defineApi, defineApis, resetMock, type MockUser } from "@apixa/core";
+import { z } from "zod";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import type { CreateBodyOf } from "../helpers/types.js";
 
@@ -12,7 +13,7 @@ const base = { baseURL: "https://api.example.com" } as const;
 describe("defineApi type architecture", () => {
   it("infers both invocation styles from the same runtime config", () => {
     const inferred = defineApi({ ...base, resources: { users: { path: "/users" } } });
-    const typed = defineApi<{ users: { entity: User } }>()({
+    const typed = defineApi<{ users: User }>()({
       ...base,
       resources: { users: { path: "/users" } },
     });
@@ -23,7 +24,7 @@ describe("defineApi type architecture", () => {
   });
 
   it("runtime config is authoritative: disabled and unselected operations disappear", () => {
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       ...base,
       resources: {
         users: { path: "/users", operations: { getById: false, createMany: false } },
@@ -120,20 +121,20 @@ describe("defineApi type architecture", () => {
   });
 
   it("types page and cursor pagination", () => {
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       ...base,
       resources: {
-        users: { path: "/users", pagination: "page" },
-        feed: { path: "/feed", pagination: "cursor" },
+        users: { path: "/users", paginationConfig: "page" },
+        feed: { path: "/feed", paginationConfig: "cursor" },
       },
     });
-    expectTypeOf(api.users.getAll).returns.resolves.toEqualTypeOf<{
+    expectTypeOf(api.users.getAll).returns.resolves.toExtend<{
       data: User[];
       total: number;
       page: number;
       pageSize: number;
     }>();
-    expectTypeOf(api.feed.getAll).returns.resolves.toEqualTypeOf<{
+    expectTypeOf(api.feed.getAll).returns.resolves.toExtend<{
       data: unknown[];
       nextCursor: string | null;
     }>();
@@ -141,7 +142,7 @@ describe("defineApi type architecture", () => {
 
   it("types recursive key transforms on responses and public input types", () => {
     type Backend = { user_id: number; user_profile: { phone_number: string } };
-    const api = defineApi<{ users: { entity: Backend } }>()({
+    const api = defineApi<{ users: Backend }>()({
       ...base,
       transforms: { request: { keys: "snake_case" }, response: { keys: "camelCase" } },
       resources: {
@@ -153,21 +154,21 @@ describe("defineApi type architecture", () => {
       userId: number;
       userProfile: { phoneNumber: string };
     }>();
-    expectTypeOf<Parameters<typeof api.users.patch>[1]["body"]>().toEqualTypeOf<
+    expectTypeOf<Parameters<typeof api.users.patch>[1]>().toEqualTypeOf<
       Partial<{ userId: number; userProfile: { phoneNumber: string } }>
     >();
   });
 
   it("rejects invalid configurations at compile time", () => {
     if (false as boolean) {
-      defineApi<{ users: { entity: User }; products: { entity: User } }>()({
+      defineApi<{ users: User; products: User }>()({
         ...base,
         // @ts-expect-error products is declared in metadata but missing at runtime
         resources: { users: { path: "/users" } },
       });
+      // @ts-expect-error the removed { entity, operations } state wrapper is rejected
       defineApi<{ users: { entity: User; operations: { archive: { response: User } } } }>()({
         ...base,
-        // @ts-expect-error a metadata-only custom operation has no runtime implementation
         resources: { users: { path: "/users" } },
       });
       // @ts-expect-error unknown root option
@@ -198,7 +199,7 @@ describe("defineApi type architecture", () => {
       });
       // @ts-expect-error invalid transform name
       defineApi({ ...base, transforms: { response: { keys: "camel" } }, resources: {} });
-      defineApi<{ users: { entity: User } }>()({
+      defineApi<{ users: User }>()({
         ...base,
         // @ts-expect-error mock data must match a declared entity
         resources: { users: { path: "/users", mock: [{ id: "x" }] } },
@@ -216,15 +217,15 @@ describe("defineApi type architecture", () => {
     type Post = { id: number; title: string };
     if (false as boolean) {
       const apiWithMissingMethod = defineApi<{
-        users: { entity: User; operations: { good: { response: number } } };
-        posts: { entity: Post };
+        users: User;
+        posts: Post;
       }>()({
         ...base,
         resources: {
           users: {
             path: "/users",
             operations: {
-              good: { method: "GET", path: "/good" },
+              good: { method: "GET", path: "/good", schema: { response: z.number() } },
               // @ts-expect-error missing method on custom operation
               bad: { path: "/bad" },
             },
@@ -232,7 +233,7 @@ describe("defineApi type architecture", () => {
           posts: {
             path: "/posts",
             // @ts-expect-error invalid pagination setting
-            pagination: "bogus",
+            paginationConfig: "bogus",
           },
         },
       });
@@ -242,16 +243,14 @@ describe("defineApi type architecture", () => {
       expectTypeOf(apiWithMissingMethod.posts.getById).parameter(0).toEqualTypeOf<number>();
       expectTypeOf(apiWithMissingMethod.posts.getById).returns.resolves.toEqualTypeOf<Post>();
 
-      const apiWithInvalidMethod = defineApi<{
-        users: { entity: User; operations: { good: { response: number } } };
-      }>()({
+      const apiWithInvalidMethod = defineApi<{ users: User }>()({
         ...base,
         resources: {
           users: {
             path: "/users",
             // @ts-expect-error invalid HTTP method inside operations union
             operations: {
-              good: { method: "GET", path: "/good" },
+              good: { method: "GET", path: "/good", schema: { response: z.number() } },
               bogus: { method: "BOGUS", path: "/bogus" },
             },
           },

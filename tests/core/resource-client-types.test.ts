@@ -1,33 +1,18 @@
 import { defineApi, ResponseShapeError } from "@apixa/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
+import { z } from "zod";
 import type { CreateBodyOf } from "../helpers/types.js";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
 
-type TypedUsersApi = {
-  users: {
-    path: "/users";
-    entity: User;
-    operations: {
-      search: {
-        method: "GET";
-        path: "/search";
-        query: { q: string };
-        response: User[];
-      };
-    };
-  };
-};
+type TypedUsersApi = { users: User };
+const UserSchema = z.object({ id: z.string(), name: z.string(), email: z.string() });
 
 describe("resource client TypeScript surface", () => {
-  it("does not let envelope list metadata override the builtin array contract", async () => {
+  it("keeps the builtin array contract for getAll: an envelope body is a shape error", async () => {
     type Page = { data: User[]; total: number };
-    const api = defineApi<{
-      users: { entity: User; list: Page };
-      unknownUsers: { list: Page };
-      disabled: { entity: User; list: Page };
-    }>()({
+    const api = defineApi<{ users: User; disabled: User }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: { data: [], total: 0 } })),
       resources: {
@@ -35,7 +20,7 @@ describe("resource client TypeScript surface", () => {
         unknownUsers: { path: "/unknown" },
         disabled: {
           path: "/disabled",
-          pagination: "page",
+          paginationConfig: "page",
           operations: { getAll: { pagination: false } },
         },
       },
@@ -46,8 +31,8 @@ describe("resource client TypeScript surface", () => {
     await expect(api.users.getAll()).rejects.toBeInstanceOf(ResponseShapeError);
   });
 
-  it("keeps array list metadata and applies response transforms", async () => {
-    const api = defineApi<{ users: { list: { user_id: number }[] } }>()({
+  it("applies response transforms to the entity type", async () => {
+    const api = defineApi<{ users: { user_id: number } }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: [{ user_id: 1 }] })),
       transforms: { response: { keys: "camelCase" } },
@@ -61,13 +46,13 @@ describe("resource client TypeScript surface", () => {
   it("wraps array items once when pagination is enabled", async () => {
     type Page = { data: User[]; total: number; page: number; pageSize: number };
     const page: Page = { data: [], total: 0, page: 1, pageSize: 20 };
-    const api = defineApi<{ users: { entity: User; list: Page } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport(() => ({ body: page })),
-      resources: { users: { path: "/users", pagination: "page" } },
+      resources: { users: { path: "/users", paginationConfig: "page" } },
     });
     const users = await api.users.getAll();
-    expectTypeOf(users).toEqualTypeOf<Page>();
+    expectTypeOf(users).toExtend<Page>();
     expect(users).toEqual(page);
   });
 
@@ -91,7 +76,7 @@ describe("resource client TypeScript surface", () => {
     expectTypeOf(api.users.getById).parameter(0).toEqualTypeOf<string | number>();
     expectTypeOf(api.users.create).parameter(0).toEqualTypeOf<unknown>();
     expectTypeOf(api.users.update).parameter(0).toEqualTypeOf<string | number>();
-    expectTypeOf<Parameters<typeof api.users.update>[1]["body"]>().toEqualTypeOf<unknown>();
+    expectTypeOf<Parameters<typeof api.users.update>[1]>().toEqualTypeOf<unknown>();
     expectTypeOf(api.users.delete).parameter(0).toEqualTypeOf<string | number>();
   });
 
@@ -126,6 +111,7 @@ describe("resource client TypeScript surface", () => {
             search: {
               method: "GET",
               path: "/search",
+              schema: { query: z.object({ q: z.string() }), response: z.array(UserSchema) },
             },
           },
         },

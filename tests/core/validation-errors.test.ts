@@ -82,7 +82,7 @@ describe("ValidationError for files", () => {
   });
 
   it("the existing path-parameter ValidationError is unchanged", async () => {
-    const api = defineApi<{ pets: { path: "/pets"; entity: { id: string } } }>()({
+    const api = defineApi<{ pets: { id: string } }>()({
       baseURL: "https://api.example.com",
       resources: {
         pets: {

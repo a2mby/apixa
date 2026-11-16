@@ -17,7 +17,7 @@ const fetchImpl = (async (url: string) => {
   });
 }) as typeof fetch;
 
-const api = defineApi<{ docs: { path: "/docs"; entity: { id: string } } }>()({
+const api = defineApi<{ docs: { id: string } }>()({
   baseURL: "https://x.dev",
   transport: createFetchTransport(fetchImpl),
   resources: {

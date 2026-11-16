@@ -1,5 +1,6 @@
 import type { AdvancedTransferConfig, PresignedPolicy } from "../types/advanced-transfer.js";
 import { assertRedirectOrigins } from "../http/redirect-origins.js";
+import { isEmptyBody as isEmptyBodyValue } from "../schema/empty-response.js";
 import { runAdvanced } from "../transfer/advanced.js";
 import { assertPresigned } from "../http/url.js";
 import { joinPath } from "../http/path.js";
@@ -19,7 +20,7 @@ import {
   ValidationError,
   fileValidationError,
 } from "../errors/index.js";
-import { parseUnwrapPath } from "../api/validate.js";
+import { parseUnwrapPath, requiredKind } from "../api/validate.js";
 import {
   assertSameOrigin,
   buildQueryString,
@@ -65,19 +66,25 @@ import type {
 } from "../types/definition.js";
 import type { HeadersSource, HttpMethod, PathParams, QueryParams } from "../types/http.js";
 import type {
+  AttemptMiddleware,
+  AttemptResponseMiddleware,
   ErrorMiddleware,
   RequestMiddleware,
   ResponseMiddleware,
 } from "../types/middleware.js";
-import type { ResolvedRetryConfig } from "../types/retry.js";
+import type { ResolvedRetryConfig, ResolvedTimeout } from "../types/retry.js";
 import type { KeyTransformConfig } from "../types/transform.js";
+import type { ResolvedPagination } from "../api/pagination.js";
 import {
-  renamePaginationQuery,
-  validatePageResult,
-  type PageResult,
-  type ResolvedPagination,
-} from "../api/pagination.js";
-import type { PaginationParams } from "../types/definition.js";
+  assertNoWireCollision,
+  buildLivePaginationRequest,
+  controlQueryKeys,
+  logicalQueryKeys,
+  normalizeMockPagination,
+  normalizePaginationKeys,
+  readLogicalPagination,
+  type LogicalRead,
+} from "../api/pagination-request.js";
 import type {
   ApiRequest,
   ApiResponse,
@@ -87,12 +94,14 @@ import type {
   Transport,
 } from "../types/transport.js";
 import { isResponseType, RESPONSE_TYPES } from "../transport/read-body.js";
+import { prepareQuery, validateAsync, type PreparedSchemas } from "../schema/index.js";
 import {
   computeBackoffMs,
   decideRetry,
   delay,
   parseRetryAfter,
   resolveRetryConfig,
+  resolveTimeout,
 } from "./retry.js";
 
 /** Client-wide state, fixed at construction. */
@@ -111,12 +120,12 @@ export interface ResourceRuntime {
   name: string;
   path: string;
   mock?: { store: MockStore; source: MockSource; files: MockFileStorage };
-  pagination?: PaginationMode;
-  /** Live pagination mapping (query renames and body parsing); mocks never use it. */
-  livePagination?: {
-    params?: PaginationParams;
-    parse?: (body: unknown, status: number) => PageResult;
-  };
+  /**
+   * The shared resource pagination configuration. Only a function operation's routed
+   * `ctx.request()` falls back to it (it has no operation configuration of its own); every
+   * declared operation uses its own resolved `pagination`.
+   */
+  pagination?: ResolvedPagination;
 }
 
 /** Everything a call needs that does not depend on its arguments — resolved once. */
@@ -128,6 +137,8 @@ export interface PreparedOperation {
     | "timeout"
     | "retry"
     | "onRequest"
+    | "onAttempt"
+    | "onAttemptResponse"
     | "onResponse"
     | "onError"
     | "requestTransform"
@@ -145,9 +156,11 @@ export interface PreparedOperation {
   relativePath: string;
   hasBody: boolean;
   headers: readonly HeadersSource[];
-  timeout?: number;
+  timeout?: ResolvedTimeout;
   retry?: ResolvedRetryConfig;
   onRequest: readonly RequestMiddleware[];
+  onAttempt: readonly AttemptMiddleware[];
+  onAttemptResponse: readonly AttemptResponseMiddleware[];
   onResponse: readonly ResponseMiddleware[];
   onError: readonly ErrorMiddleware[];
   requestTransform?: KeyTransformConfig;
@@ -159,7 +172,7 @@ export interface PreparedOperation {
   mockHandler?: (context: MockHandlerContext) => unknown;
   /** Resolved pagination for this operation (`getAll`, `getMany`, or custom declarative operation). */
   pagination?: ResolvedPagination;
-  /** How the response body is read; absent → JSON. A per-call `responseType` option wins. */
+  /** How the response body is read; absent → JSON. Fixed: a generated call cannot override it. */
   responseType?: ResponseType;
   /** Default transfer observer; a per-call `onTransfer` option wins. */
   onTransfer?: TransferObserver;
@@ -174,22 +187,35 @@ export interface PreparedOperation {
   fileFields?: readonly string[];
   /** Opt-in file rules (resolved at construction); absent unless configured. */
   fileRules?: ResolvedFileRules;
-  /** Largest accepted response body in bytes; a per-call `maxResponseSize` wins. */
+  /** Largest accepted response body in bytes: a ceiling a per-call `maxResponseSize` can only lower. */
   maxResponseSize?: number;
-  /** Exact origins a redirect may lead to, credential-free; a per-call list wins. */
+  /** Exact origins a redirect may lead to, credential-free. Operation policy, never a call option. */
   redirectOrigins?: readonly string[];
   /** Accepted response `Content-Type`s, normalized. */
   responseAccept?: readonly string[];
   /** Opt-in idempotency header for writes (resolved at construction). */
   idempotency?: { header: string; generate: () => string };
+  /** Standard Schema validators (`schema` option): body and query before dispatch, response last. */
+  schema?: PreparedSchemas;
+  /** `schema.response` is the `emptyResponse` marker: the operation resolves to `undefined`. */
+  emptyResponse?: boolean;
 }
 
 /** Arguments of one call. */
 export interface CallInput {
   params?: PathParams;
   query?: QueryParams;
+  /**
+   * Query values the operation generates itself (for example a builtin's id fields). Merged after
+   * the caller's `query` has been validated, so a `schema.query` only ever sees caller input.
+   */
+  queryExtra?: Record<string, unknown>;
   body?: unknown;
-  options?: RequestOptions;
+  options?: RequestOptions & {
+    pagination?: import("../types/definition.js").LogicalPaginationInput;
+  };
+  /** Internal: `body` / `query` already went through their schemas (set before a replay). */
+  schemaValidated?: boolean;
   /** Replace the operation path for this call (dynamic `getBy` paths, `ctx.request` paths). */
   path?: string;
   relativePath?: string;
@@ -221,6 +247,18 @@ export interface CallInput {
   fromHttp?: (data: unknown, status: number, response: ApiResponse<unknown>) => unknown;
   /** Validate the final logical result on both live and normalized mock paths. */
   checkResult?: (data: unknown, status: number, response: ApiResponse<unknown>) => void;
+  /** Last step on both paths, after `checkResult`: builtin ordering of the validated result. */
+  finalize?: (data: unknown, status: number, response: ApiResponse<unknown>) => unknown;
+  /**
+   * Decoding, redirect allowlist and response-size ceiling of a request constructed inside an
+   * operation definition (`ctx.request()`, a transfer protocol step). They replace the
+   * operation's own values; generated operation calls never set them.
+   */
+  responseType?: ResponseType;
+  redirectOrigins?: readonly string[];
+  maxResponseSize?: number;
+  /** Absolute total deadline (epoch ms) of the logical call being replayed: a replay never restarts it. */
+  deadline?: number;
   /** Response shaping for both HTTP and mock (e.g. `slice` on `getAll`), before response middleware. */
   shape?: (data: unknown) => unknown;
   /** Map a live list response to the page contract (before response key transforms). */
@@ -252,51 +290,9 @@ function transformQuery(
   return applyTransform(query, rule) as QueryParams;
 }
 
-function buildLiveQuery(
-  query: QueryParams | undefined,
-  params: PaginationParams | undefined,
-  rule: KeyTransformConfig | undefined,
-): QueryParams | undefined {
-  if (!query) return undefined;
-  if (!params) return transformQuery(query, rule);
-  if (!rule) return renamePaginationQuery(query, params);
-  const rest: QueryParams = {};
-  const renamed: QueryParams = {};
-  for (const [key, value] of Object.entries(query)) {
-    if (Object.hasOwn(params, key)) {
-      renamed[params[key as keyof PaginationParams]!] = value;
-    } else {
-      rest[key] = value;
-    }
-  }
-  return { ...(transformQuery(rest, rule) ?? {}), ...renamed };
-}
-
 function transformedKeyName(key: string, rule: KeyTransformConfig): string {
   const out = applyTransform({ [key]: true }, rule);
   return isRecordValue(out) ? (Object.keys(out)[0] ?? key) : key;
-}
-
-function normalizeMockPaginatedQuery(
-  query: Record<string, unknown> | undefined,
-  rule: KeyTransformConfig | undefined,
-): Record<string, unknown> | undefined {
-  if (!query || !rule) return query;
-  const pagingMap = new Map<string, "page" | "pageSize" | "cursor">([
-    [transformedKeyName("page", rule), "page"],
-    [transformedKeyName("pageSize", rule), "pageSize"],
-    [transformedKeyName("cursor", rule), "cursor"],
-  ]);
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(query)) {
-    const canonical = pagingMap.get(k);
-    if (canonical) {
-      if (k === canonical || !Object.hasOwn(query, canonical)) out[canonical] = v;
-    } else {
-      out[k] = v;
-    }
-  }
-  return out;
 }
 
 function isRecordValue(value: unknown): value is Record<string, unknown> {
@@ -363,7 +359,11 @@ function failFromSignal(channel: TransferChannel | undefined, signal: AbortSigna
 }
 
 /** One controller per logical call: overall timeout + caller signal, cleaned up in `finally`. */
-function createCallSignal(timeout: number | undefined, external: AbortSignal | undefined) {
+function createCallSignal(
+  timeout: number | undefined,
+  external: AbortSignal | undefined,
+  deadline: number | undefined,
+) {
   const controller = new AbortController();
   let timedOut = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -372,11 +372,18 @@ function createCallSignal(timeout: number | undefined, external: AbortSignal | u
     if (external.aborted) controller.abort(external.reason);
     else external.addEventListener("abort", onAbort, { once: true });
   }
-  if (timeout !== undefined && timeout > 0 && !controller.signal.aborted) {
-    timer = setTimeout(() => {
+  if (deadline !== undefined && !controller.signal.aborted) {
+    const expire = () => {
       timedOut = true;
-      controller.abort(new TimeoutError(`Request timed out after ${timeout}ms`));
-    }, timeout);
+      controller.abort(
+        new TimeoutError(
+          timeout !== undefined ? `Request timed out after ${timeout}ms` : "Request timed out",
+        ),
+      );
+    };
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) expire();
+    else timer = setTimeout(expire, remaining);
   }
   return {
     signal: controller.signal,
@@ -452,6 +459,56 @@ function assertResponse(value: unknown, where: string): ApiResponse<unknown> {
   return res;
 }
 
+const SAFE_REPLAY_METHODS: readonly HttpMethod[] = ["GET", "HEAD", "OPTIONS", "PUT", "DELETE"];
+const HTTP_METHODS: readonly HttpMethod[] = [...SAFE_REPLAY_METHODS, "POST", "PATCH"];
+
+/** A per-attempt deadline on top of the call's signal. Only its timer is ever released. */
+function createAttemptSignal(parent: AbortSignal, ms: number | undefined) {
+  if (ms === undefined || ms <= 0) {
+    return { signal: parent, timedOut: () => false, clear: () => {} };
+  }
+  const controller = new AbortController();
+  let timedOut = false;
+  const onAbort = () => controller.abort(parent.reason);
+  if (parent.aborted) onAbort();
+  else parent.addEventListener("abort", onAbort, { once: true });
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort(new TimeoutError(`Attempt timed out after ${ms}ms`));
+  }, ms);
+  return {
+    signal: controller.signal,
+    timedOut: () => timedOut,
+    // The response (for example a stream) may outlive the attempt: it stays bound to the call's
+    // signal through the link above, only the attempt deadline stops applying.
+    clear: () => {
+      clearTimeout(timer);
+      parent.removeEventListener("abort", onAbort);
+    },
+  };
+}
+
+/** Track mutations without cloning/consuming opaque values such as streams and files. */
+function unchanged(value: unknown): () => boolean {
+  const seen = new Set<object>();
+  const checks: Array<() => boolean> = [];
+  const visit = (v: unknown) => {
+    if ((!isPlainObject(v) && !Array.isArray(v)) || seen.has(v)) return;
+    seen.add(v);
+    const keys = Object.keys(v);
+    const object = v as Record<string, unknown>;
+    const entries = keys.map((k) => [k, object[k]] as const);
+    checks.push(
+      () =>
+        Object.keys(v).length === keys.length &&
+        entries.every(([k, item]) => Object.hasOwn(v, k) && object[k] === item),
+    );
+    entries.forEach(([, item]) => visit(item));
+  };
+  visit(value);
+  return () => checks.every((check) => check());
+}
+
 /** Bound advanced logical middleware/provider work to its existing call signal. */
 function waitForSignal<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -465,11 +522,16 @@ function waitForSignal<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> 
 /**
  * The single execution lifecycle for every operation, HTTP or mocked:
  *
- * 1. effective config (pre-resolved on `op`)  2. dynamic headers  3. request middleware
- * 4. request key transform (serialization)    5. origin check (HTTP)  6. HTTP (with retry) or mock
- * 7. response key transform + op shaping      8. response middleware  9. result
+ * 1. effective config (pre-resolved on `op`)   2. `schema.query` / `schema.body` (once, before
+ *    pagination composition)                   3. dynamic headers   4. `onRequest` (once)
+ * 5. re-check of the effective request (method kind, body schema, idempotency key, origin)
+ * 6. request key transform (serialization)    7. transport attempts — `onAttempt`, send,
+ *    `onAttemptResponse`, retry / backoff — or the mock engine
+ * 8. decode → `response.unwrap` → response key transform → `response.parse` → builtin
+ *    normalization → `response.validate`      9. `onResponse` (once, final success only)
+ * 10. `schema.response` (once, on the final payload)   11. builtin result checks and ordering
  *
- * On failure, error middleware runs (root → resource → operation) and may recover.
+ * On terminal failure, `onError` runs once (root → resource → operation) and may recover.
  */
 export async function runOperation(
   client: ClientRuntime,
@@ -491,22 +553,85 @@ export async function runOperation(
     throw new ConfigError(
       "Presigned requests cannot combine path, query or ordinary header options.",
     );
-  const responseType = options.responseType ?? op.responseType ?? "json";
-  const timeout = options.timeout ?? op.timeout;
+  for (const removed of ["responseType", "redirectOrigins"] as const) {
+    if ((options as Record<string, unknown>)[removed] !== undefined) {
+      throw new ConfigError(
+        `${resource.name}.${op.name}: \`${removed}\` is not a call option. It is fixed by the operation definition (operations.${op.name}.${removed}); declare another operation for a different ${removed === "responseType" ? "response type" : "redirect policy"}.`,
+      );
+    }
+  }
+  const responseType = call.responseType ?? op.responseType ?? "json";
+  const timeout =
+    options.timeout !== undefined
+      ? resolveTimeout(options.timeout, `${resource.name}.${op.name}: options.timeout`)
+      : op.timeout;
+  const totalTimeout =
+    timeout?.total !== undefined && timeout.total > 0 ? timeout.total : undefined;
+  // A replay continues inside the budget of the logical call that started it.
+  const deadline =
+    call.deadline ?? (totalTimeout !== undefined ? Date.now() + totalTimeout : undefined);
   const observer = options.onTransfer ?? op.onTransfer;
   if (observer !== undefined && typeof observer !== "function") {
     throw new ConfigError(`${resource.name}.${op.name}: onTransfer must be a function.`);
   }
   const session: TransferSession = { observer };
-  const { signal, timedOut, cleanup } = createCallSignal(timeout, options.signal);
+  const { signal, timedOut, cleanup } = createCallSignal(totalTimeout, options.signal, deadline);
   let ownsCleanup = false;
   let boundStream: ReadableStream<Uint8Array> | undefined;
   const mocked = resource.mock !== undefined;
   let request: ApiRequest | undefined;
   let idempotencyKey = call.idempotencyKey;
 
+  const finalizeOutput = async (response: ApiResponse<unknown>): Promise<ApiResponse<unknown>> => {
+    if (boundStream && response.data !== boundStream)
+      throw new ConfigError("Response middleware must preserve the owned response stream.");
+    if (op.schema?.response) {
+      // Runs once, on the final application-facing payload: after unwrap, key transforms,
+      // parsing, builtin normalization **and** response middleware, so middleware cannot hand
+      // back data the schema would reject. Its output is the returned value. Every response
+      // type is covered (a stream is validated as the stream object, never consumed); an empty
+      // success (204 / 205) is validated as `undefined`.
+      const before = response.data;
+      const input =
+        (response.status === 204 || response.status === 205) && before === null
+          ? undefined
+          : before;
+      const parsed = await waitForSignal(
+        validateAsync(op.schema.response, input, {
+          resource: resource.name,
+          operation: op.name,
+          phase: "response",
+        }),
+        signal,
+      );
+      if (boundStream !== undefined && before === boundStream && parsed !== boundStream) {
+        throw new ConfigError(
+          `${resource.name}.${op.name}: schema.response must return the stream it validated, not another value.`,
+        );
+      }
+      response = { ...response, data: parsed };
+    }
+
+    if (!op.transfer && !op.emptyResponse && (responseType === "json" || responseType === "auto")) {
+      // Builtin invariants hold for whatever the hooks, middleware and schema produced.
+      if (call.paginated ? op.pagination : undefined) {
+        op.pagination!.validate(response.data);
+      } else {
+        call.checkResult?.(response.data, response.status, response);
+      }
+      if (call.finalize)
+        response = { ...response, data: call.finalize(response.data, response.status, response) };
+    }
+    return response;
+  };
+
   try {
     throwIfAborted(signal);
+    if (call.paginated && op.pagination && responseType !== "json" && responseType !== "auto") {
+      throw new ConfigError(
+        `${resource.name}.${op.name}: pagination needs a JSON response; responseType "${String(responseType)}" cannot be normalized.`,
+      );
+    }
     if (!isResponseType(responseType)) {
       throw new ConfigError(
         `${resource.name}.${op.name}: responseType must be one of ${RESPONSE_TYPES.map((t) => JSON.stringify(t)).join(", ")} (got ${JSON.stringify(responseType)}).`,
@@ -520,30 +645,127 @@ export async function runOperation(
         );
       }
     }
-    if (options.redirectOrigins !== undefined)
-      assertRedirectOrigins(`${resource.name}.${op.name} (call options)`, options.redirectOrigins);
-    const maxResponse = options.maxResponseSize ?? op.maxResponseSize;
+    const redirectOrigins = call.redirectOrigins ?? op.redirectOrigins;
+    if (call.redirectOrigins !== undefined)
+      assertRedirectOrigins(`${resource.name}.${op.name}`, call.redirectOrigins);
+    if (redirectOrigins?.length && !mocked && !client.transport.capabilities?.redirectOrigins) {
+      throw new ConfigError(
+        `${resource.name}.${op.name}: redirectOrigins needs a transport that enforces the redirect allowlist (capabilities.redirectOrigins).`,
+      );
+    }
+    // The operation's ceiling can be narrowed by a call, never raised.
+    const responseCeiling = call.maxResponseSize ?? op.maxResponseSize;
+    if (
+      options.maxResponseSize !== undefined &&
+      responseCeiling !== undefined &&
+      options.maxResponseSize > responseCeiling
+    ) {
+      throw new ConfigError(
+        `${resource.name}.${op.name}: options.maxResponseSize (${options.maxResponseSize}) exceeds the operation's maxResponseSize (${responseCeiling}). A call can only lower the limit.`,
+      );
+    }
+    const maxResponse = options.maxResponseSize ?? responseCeiling;
     const responseLimits =
       maxResponse !== undefined || op.responseAccept
         ? { maxResponseBytes: maxResponse, accept: op.responseAccept }
         : undefined;
     const method = call.method ?? op.method;
     const pathTemplate = call.path ?? op.path;
+    call = { ...call, params: call.params ?? options.params };
     const path = interpolatePath(pathTemplate, call.params);
-    const query =
-      call.paginated && !mocked
-        ? buildLiveQuery(
-            call.query ?? options.query,
-            op.pagination ? op.pagination.params : resource.livePagination?.params,
-            op.requestTransform,
-          )
-        : transformQuery(call.query ?? options.query, op.requestTransform);
+    const paginationConfig = call.paginated ? op.pagination : undefined;
+    const failPagination = (message: string): never => {
+      throw new ValidationError(`${resource.name}.${op.name}: ${message}`);
+    };
+    // Request schemas run once per logical call, before pagination composition, request
+    // middleware, transforms, file rules and dispatch: an invalid call reaches neither a transport
+    // nor a mock store. The parsed values replace the caller's for every later stage (and for a replay).
+    let callerQuery: QueryParams | undefined = call.schemaValidated
+      ? call.query
+      : (call.query ?? options.query);
+    if (op.schema && !call.schemaValidated) {
+      const at = (phase: "body" | "query") => ({
+        resource: resource.name,
+        operation: op.name,
+        phase,
+      });
+      let body = call.body;
+      if (op.schema.query) {
+        callerQuery = prepareQuery(
+          op.schema.query,
+          callerQuery,
+          at("query"),
+          paginationConfig ? controlQueryKeys(paginationConfig) : undefined,
+        );
+      }
+      if (op.schema.body) {
+        body = await waitForSignal(validateAsync(op.schema.body, body, at("body")), signal);
+      }
+      call = { ...call, query: callerQuery, body, schemaValidated: true };
+    }
+    const appCallerQuery = callerQuery;
+    if (options.pagination !== undefined) {
+      if (!paginationConfig)
+        throw new ConfigError("Call pagination requires a paginated operation.");
+      if (!isPlainObject(options.pagination))
+        throw new ValidationError("pagination input must be an object.");
+      for (const key of Object.keys(options.pagination)) {
+        if (!logicalQueryKeys(paginationConfig.mode).includes(key))
+          throw new ValidationError(`Invalid pagination input "${key}".`);
+        if (Object.hasOwn(callerQuery ?? {}, key))
+          throw new ValidationError(`Pagination input "${key}" is also present in query.`);
+      }
+      callerQuery = { ...callerQuery, ...options.pagination } as QueryParams;
+    }
+    if (call.queryExtra) {
+      callerQuery = { ...(callerQuery ?? {}), ...call.queryExtra } as QueryParams;
+    }
+    let paginationRead: LogicalRead | undefined;
+    let paginationBody: { value: unknown } | undefined;
+    let paginationHeaders: Record<string, string> | undefined;
+    let paginationWireQuery: Record<string, unknown> | undefined;
+    let query: QueryParams | undefined;
+    if (paginationConfig)
+      paginationRead = readLogicalPagination(
+        paginationConfig,
+        callerQuery as Record<string, unknown>,
+        failPagination,
+        { numericCursor: mocked },
+      );
+    if (paginationConfig && !mocked) {
+      // Logical pagination input is validated and placed on the wire in one step (live only).
+      const callQuery = callerQuery as Record<string, unknown> | undefined;
+      paginationRead = readLogicalPagination(paginationConfig, callQuery, failPagination);
+      const built = buildLivePaginationRequest(paginationConfig, paginationRead, {
+        method,
+        body: call.body,
+        hasBody: call.hasBody ?? op.hasBody,
+        transform: (q) =>
+          (transformQuery(q as QueryParams, op.requestTransform) ?? q) as Record<string, unknown>,
+        fail: failPagination,
+      });
+      paginationWireQuery = built.paginationQuery;
+      query =
+        Object.keys(built.query).length > 0 || callQuery ? (built.query as QueryParams) : undefined;
+      if (built.bodyChanged) paginationBody = { value: built.body };
+      paginationHeaders = built.headers;
+    } else {
+      query = transformQuery(callerQuery, op.requestTransform);
+    }
     const origin = mocked ? client.base.origin : requestOrigin(client.base);
     const headerWork = delegated
       ? Promise.resolve(new Headers(delegated.headers))
       : resolveHeaders(op.headers, options.headers);
-    const headers = op.transfer ? await waitForSignal(headerWork, signal) : await headerWork;
+    const headers = await waitForSignal(headerWork, signal);
     if (delegated) assertPresigned(delegated.url, op.presigned!, headers);
+    if (paginationHeaders) {
+      for (const [name, value] of Object.entries(paginationHeaders)) {
+        if (headers.has(name)) {
+          failPagination(`pagination header "${name}" collides with a header already set.`);
+        }
+        headers.set(name, value);
+      }
+    }
     if (!delegated)
       idempotencyKey = applyIdempotency(op, options, headers, idempotencyKey, resource.name);
     throwIfAborted(signal);
@@ -557,23 +779,71 @@ export async function runOperation(
       headers,
       params: call.params,
       query,
-      body: call.body,
+      body: paginationBody ? paginationBody.value : call.body,
       signal,
-      timeout,
+      timeout: totalTimeout,
       meta: { ...(options.meta ?? {}) },
       resource: resource.name,
       operation: op.name,
       mocked,
     };
 
+    const bodyBeforeMiddleware = request.body;
+    const bodyUnchanged = unchanged(request.body);
+    const queryBeforeMiddleware = request.query;
+    const queryUnchanged = unchanged(request.query);
     for (const hook of delegated ? (op.presigned!.requestMiddleware ?? []) : op.onRequest) {
-      const next = op.transfer
-        ? await waitForSignal(Promise.resolve(hook(request)), signal)
-        : await hook(request);
+      const next = await waitForSignal(Promise.resolve(hook(request)), signal);
       if (next !== undefined)
         request = assertRequest(next, `request middleware for ${resource.name}.${op.name}`);
       throwIfAborted(signal);
     }
+
+    if (!delegated) {
+      // Middleware may adjust the request, never the operation's contract: the effective request
+      // is checked again before anything is sent (the origin is re-checked just before dispatch).
+      const where = `request middleware for ${resource.name}.${op.name}`;
+      if (!HTTP_METHODS.includes(request.method)) {
+        throw new ConfigError(`${where} set an invalid HTTP method "${String(request.method)}".`);
+      }
+      if (requiredKind(request.method) !== requiredKind(method)) {
+        throw new ConfigError(
+          `${where} changed the method from ${method} to ${request.method}, which turns a ${requiredKind(method)} operation into a ${requiredKind(request.method)}. Declare a separate operation instead.`,
+        );
+      }
+      if (
+        op.idempotency &&
+        idempotencyKey !== undefined &&
+        request.headers.get(op.idempotency.header) !== idempotencyKey
+      ) {
+        throw new ConfigError(
+          `${where} changed the ${op.idempotency.header} header. The idempotency key of a logical call must stay stable.`,
+        );
+      }
+      if (
+        op.schema?.body &&
+        (call.hasBody ?? op.hasBody) &&
+        !call.preserveBody &&
+        (request.body !== bodyBeforeMiddleware || !bodyUnchanged())
+      ) {
+        // A replaced body is the effective logical input: it must satisfy the same schema.
+        request.body = await waitForSignal(
+          validateAsync(op.schema.body, request.body, {
+            resource: resource.name,
+            operation: op.name,
+            phase: "body",
+          }),
+          signal,
+        );
+      }
+    }
+
+    if (request.signal !== signal)
+      throw new ConfigError("Middleware cannot replace the call's cancellation signal.");
+    if (!(call.hasBody ?? op.hasBody) && request.body !== undefined)
+      throw new ConfigError(
+        "Middleware cannot add a body to an operation without a body contract.",
+      );
 
     if (delegated) {
       assertPresigned(request.url, op.presigned!, request.headers);
@@ -598,7 +868,71 @@ export async function runOperation(
                 ? [...previous, value]
                 : [previous, value];
         }
+        if (paginationConfig && !mocked) {
+          assertNoWireCollision(paginationConfig, request.query, fromUrl, failPagination);
+        }
         request.query = { ...fromUrl, ...request.query };
+      }
+      if (paginationConfig && !mocked) {
+        assertNoWireCollision(paginationConfig, request.query, Object.create(null), failPagination);
+      }
+      if (
+        op.schema?.query &&
+        (request.query !== queryBeforeMiddleware || !queryUnchanged() || queryAt >= 0)
+      ) {
+        // Hooks see wire keys. Recover the known logical keys before validating their replacement,
+        // while preserving builtin queryExtra entries and pagination wire parameters untouched.
+        const reverse = new Map(
+          Object.keys(appCallerQuery ?? {}).map((key) => [
+            op.requestTransform ? transformedKeyName(key, op.requestTransform) : key,
+            key,
+          ]),
+        );
+        const extraKeys = new Set<string>();
+        for (const key of Object.keys(call.queryExtra ?? {})) {
+          extraKeys.add(key);
+          if (op.requestTransform) extraKeys.add(transformedKeyName(key, op.requestTransform));
+        }
+        const paginationKeys = new Set<string>(
+          paginationConfig ? controlQueryKeys(paginationConfig) : [],
+        );
+        if (paginationConfig && op.requestTransform) {
+          for (const key of logicalQueryKeys(paginationConfig.mode)) {
+            paginationKeys.add(transformedKeyName(key, op.requestTransform));
+          }
+        }
+        for (const key of Object.keys(paginationWireQuery ?? {})) {
+          paginationKeys.add(key);
+        }
+        const logical: Record<string, unknown> = {};
+        const preservedExtra: Record<string, unknown> = {};
+        const preservedPagination: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(request.query ?? {})) {
+          const name = reverse.get(key) ?? key;
+          if (extraKeys.has(key) || extraKeys.has(name)) {
+            preservedExtra[key] = value;
+          } else if (paginationKeys.has(key) || paginationKeys.has(name)) {
+            preservedPagination[key] = value;
+          } else {
+            logical[name] = value;
+          }
+        }
+        const parsed = prepareQuery(
+          op.schema.query,
+          logical as QueryParams,
+          {
+            resource: resource.name,
+            operation: op.name,
+            phase: "query",
+          },
+          paginationConfig ? controlQueryKeys(paginationConfig) : undefined,
+        );
+        const transformedApp = transformQuery(parsed as QueryParams, op.requestTransform) ?? {};
+        request.query = {
+          ...transformedApp,
+          ...preservedExtra,
+          ...preservedPagination,
+        } as QueryParams;
       }
       const qs = client.querySerializer
         ? normalizeQs(serializeCustomQuery(client.querySerializer, request.query ?? {}))
@@ -657,9 +991,7 @@ export async function runOperation(
         {
           ...options,
           idempotencyKey,
-          ...(op.responseType !== undefined && options.responseType === undefined
-            ? { responseType: op.responseType }
-            : {}),
+          ...(op.responseType !== undefined ? { responseType: op.responseType } : {}),
           onTransfer: observer,
         },
         {
@@ -711,10 +1043,12 @@ export async function runOperation(
                 headers: op.headers,
                 transfer: undefined,
                 idempotency: undefined,
+                schema: undefined,
                 method: stepMethod,
                 path: joinPath(resource.path, init.path ?? ""),
                 relativePath: init.path ?? "",
                 responseType: init.responseType,
+                emptyResponse: undefined,
                 dataFormat: init.dataFormat,
                 hasBody: init.body !== undefined,
               },
@@ -725,6 +1059,10 @@ export async function runOperation(
                 params: init.params,
                 query: init.query,
                 body: init.body,
+                responseType: init.responseType,
+                redirectOrigins: init.redirectOrigins,
+                maxResponseSize: stepLimit,
+                deadline,
                 preserveBody: init.body instanceof Blob,
                 replayAllowed:
                   read ||
@@ -742,9 +1080,7 @@ export async function runOperation(
                   signal: init.signal,
                   timeout: init.timeout,
                   retry: options.retry === false ? false : (init.retry ?? options.retry),
-                  responseType: init.responseType,
                   onTransfer: init.onTransfer,
-                  maxResponseSize: stepLimit,
                   meta: init.presigned ? init.meta : { ...options.meta, ...init.meta },
                   full: init.full,
                   presigned: init.presigned,
@@ -775,6 +1111,16 @@ export async function runOperation(
         query: request.query as Record<string, unknown> | undefined,
         body: hasBody ? wireBody : undefined,
       };
+      const mockPaginationQuery = (config: ResolvedPagination) =>
+        normalizeMockPagination(
+          config,
+          normalizePaginationKeys(wire.query, config, (key) =>
+            op.requestTransform ? transformedKeyName(key, op.requestTransform) : key,
+          ),
+          (message) => {
+            throw new MockError("MOCK_INVALID_INPUT", `${mockSource.label}: ${message}`);
+          },
+        );
       const relative = interpolatePath(call.relativePath ?? op.relativePath, call.params);
       const managed = await runManagedMock(
         store,
@@ -800,11 +1146,13 @@ export async function runOperation(
               operation: op.name,
               method: mockRequest.method,
               params: { ...(call.params ?? {}) },
-              query: wire.query,
+              query: op.pagination ? mockPaginationQuery(op.pagination) : wire.query,
               body: wire.body,
               signal,
               files,
             });
+            // Ownership: an array is an unpaginated collection the engine paginates; an object is a
+            // finished page (validated against the contract below, never paginated again).
             if (op.pagination && Array.isArray(result.data)) {
               result = {
                 ...result,
@@ -812,15 +1160,15 @@ export async function runOperation(
                   mockSource.label,
                   result.data,
                   op.pagination.mode,
-                  normalizeMockPaginatedQuery(wire.query, op.requestTransform),
+                  mockPaginationQuery(op.pagination),
                 ),
               };
             }
           } else {
-            const paginationMode =
-              op.pagination?.mode ?? (call.routed ? resource.pagination : undefined);
-            const mockWire = paginationMode
-              ? { ...wire, query: normalizeMockPaginatedQuery(wire.query, op.requestTransform) }
+            const mockPagination = op.pagination ?? (call.routed ? resource.pagination : undefined);
+            const paginationMode = mockPagination?.mode;
+            const mockWire = mockPagination
+              ? { ...wire, query: mockPaginationQuery(mockPagination) }
               : wire;
             const intent = call.intent
               ? call.intent(mockWire)
@@ -891,19 +1239,23 @@ export async function runOperation(
     } else {
       if (delegated) assertPresigned(request.url, op.presigned!, request.headers);
       else assertSameOrigin(request.url, origin!);
-      const response = await sendWithRetry(
+      const response = await sendWithRetry({
         client,
-        call.dataFormat ? { ...op, dataFormat: call.dataFormat } : op,
+        op: call.dataFormat ? { ...op, dataFormat: call.dataFormat } : op,
         request,
-        sendBody,
+        wireBody: sendBody,
         options,
         signal,
-        call.allow404 === true,
+        allow404: call.allow404 === true,
         responseType,
         session,
-        responseLimits,
+        limits: responseLimits,
         limitState,
-      );
+        redirectOrigins,
+        perAttempt: timeout?.perAttempt,
+        deadline,
+        idempotencyKey,
+      });
       status = response.status;
       responseHeaders = response.headers;
       raw = response.raw;
@@ -1002,24 +1354,44 @@ export async function runOperation(
       raw,
     };
 
-    if (!op.transfer) {
-      const isJsonLike = responseType === "json" || responseType === "auto";
-      const isEmptyBody = (status === 204 || status === 205) && source === null;
-      const isAllowed404 = call.allow404 === true && status === 404;
-      const skipHooks = isEmptyBody || isAllowed404;
+    const isJsonLike = responseType === "json" || responseType === "auto";
+    const isEmptyBody = (status === 204 || status === 205) && source === null;
+    const isAllowed404 = call.allow404 === true && status === 404;
+    const skipHooks = isEmptyBody || isAllowed404;
+    const declaredEmpty = op.emptyResponse === true && !isAllowed404;
+    let response: ApiResponse<unknown>;
 
-      try {
+    try {
+      if (declaredEmpty) {
+        // `emptyResponse`: no body is expected, so nothing is unwrapped, transformed or shaped. A
+        // mocked builtin still returns its record; the declared contract discards it.
+        data = mocked || isEmptyBodyValue(data) ? undefined : data;
+      } else if (!op.transfer) {
         if (!skipHooks && isJsonLike) {
           if (!mocked) {
-            const parsePage = op.pagination ? op.pagination.parse : resource.livePagination?.parse;
-            if (call.paginated && parsePage) {
-              const page = parsePage(data, status);
+            // Paginated operations decode the raw backend envelope (field paths address it), so a
+            // configured `response.unwrap` does not apply to them; entities are then transformed
+            // while the pagination metadata keys are left alone.
+            if (paginationConfig) {
+              const page = paginationConfig.parse(data, {
+                status,
+                headers: responseHeaders,
+                request: {
+                  method: effectiveRequest.method,
+                  ...(call.params ? { params: call.params } : {}),
+                  ...(effectiveRequest.query ? { query: effectiveRequest.query } : {}),
+                  pagination: { ...(paginationRead?.logical ?? {}) },
+                },
+              });
               data = op.responseTransform
                 ? { ...page, data: applyTransform(page.data, op.responseTransform) }
                 : page;
             } else {
               if (op.responseUnwrap) {
-                data = await applyUnwrap(data, op.responseUnwrap, hookCtx, sourceResponse);
+                data = await waitForSignal(
+                  applyUnwrap(data, op.responseUnwrap, hookCtx, sourceResponse),
+                  signal,
+                );
               }
               if (op.responseTransform) {
                 if (call.paginated && isRecordValue(data) && Array.isArray(data.data)) {
@@ -1039,7 +1411,7 @@ export async function runOperation(
 
           if (op.responseParse) {
             try {
-              data = await op.responseParse(data, hookCtx);
+              data = await waitForSignal(Promise.resolve(op.responseParse(data, hookCtx)), signal);
             } catch (err) {
               if (err instanceof ApiError) throw err;
               throw new ValidationError(`${resource.name}.${op.name}: response.parse failed.`, {
@@ -1052,6 +1424,7 @@ export async function runOperation(
           }
         }
 
+        // Builtin normalization (count shapes, list / entity shaping, slice).
         if (!mocked && call.fromHttp && isJsonLike) {
           data = call.fromHttp(data, status, sourceResponse);
         }
@@ -1062,7 +1435,10 @@ export async function runOperation(
 
         if (!skipHooks && isJsonLike && op.responseValidate) {
           try {
-            const validated = await op.responseValidate(data, hookCtx);
+            const validated = await waitForSignal(
+              Promise.resolve(op.responseValidate(data, hookCtx)),
+              signal,
+            );
             if (validated !== undefined) data = validated;
           } catch (err) {
             if (err instanceof ApiError) throw err;
@@ -1074,48 +1450,45 @@ export async function runOperation(
             });
           }
         }
-        if (isJsonLike) {
-          if (call.paginated) {
-            const mode = op.pagination?.mode ?? resource.pagination;
-            if (mode) validatePageResult(data, mode, resource.name, op.name);
-          } else {
-            call.checkResult?.(data, status, sourceResponse);
-          }
-        }
-      } catch (err) {
-        if (
-          err instanceof ApiError &&
-          (err instanceof ResponseShapeError ||
-            err instanceof ParseError ||
-            err instanceof ValidationError ||
-            err instanceof TransformError)
-        ) {
-          err.status ??= status;
-          err.data ??= source;
-          err.response ??= sourceResponse;
-        }
-        throw err;
       }
-    }
 
-    let response: ApiResponse<unknown> = {
-      data,
-      source,
-      status,
-      headers: responseHeaders,
-      request: effectiveRequest,
-      raw,
-    };
-    for (const hook of op.onResponse) {
-      const next = op.transfer
-        ? await waitForSignal(Promise.resolve(hook(response)), signal)
-        : await hook(response);
-      if (next !== undefined) {
-        const prevSource = response.source;
-        const checked = assertResponse(next, `response middleware for ${resource.name}.${op.name}`);
-        response = "source" in checked ? checked : { ...checked, source: prevSource };
+      // Final logical response middleware: once, never for an intermediate retried response.
+      response = {
+        data,
+        source,
+        status,
+        headers: responseHeaders,
+        request: effectiveRequest,
+        raw,
+      };
+      for (const hook of op.onResponse) {
+        const next = await waitForSignal(Promise.resolve(hook(response)), signal);
+        if (next !== undefined) {
+          const prevSource = response.source;
+          const checked = assertResponse(
+            next,
+            `response middleware for ${resource.name}.${op.name}`,
+          );
+          response = "source" in checked ? checked : { ...checked, source: prevSource };
+        }
       }
+
+      response = await finalizeOutput(response);
+    } catch (err) {
+      if (
+        err instanceof ApiError &&
+        (err instanceof ResponseShapeError ||
+          err instanceof ParseError ||
+          err instanceof ValidationError ||
+          err instanceof TransformError)
+      ) {
+        err.status ??= status;
+        err.data ??= source;
+        err.response ??= sourceResponse;
+      }
+      throw err;
     }
+    throwIfAborted(signal);
     return options.full ? response : response.data;
   } catch (thrown) {
     // A stream already handed to this call is released if the call then fails (for example a
@@ -1144,14 +1517,29 @@ export async function runOperation(
       (recoveryCheckpoint !== undefined &&
         !signal.aborted &&
         (error instanceof NetworkError || error instanceof HttpError));
+    let replayResult: unknown;
+    let replayFinished = false;
     const replay =
-      call.replayed || delegated || call.replayAllowed === false || !safeTransferReplay
+      call.replayed ||
+      signal.aborted ||
+      delegated ||
+      call.replayAllowed === false ||
+      !safeTransferReplay ||
+      !isReplayable(request?.body) ||
+      (!SAFE_REPLAY_METHODS.includes(request?.method ?? op.method) &&
+        !op.transfer &&
+        !op.idempotency &&
+        !(
+          options.retry !== undefined ? resolveRetryConfig(options.retry) : op.retry
+        )?.methods.includes(request?.method ?? op.method))
         ? undefined
-        : () =>
-            runOperation(client, resource, op, {
+        : async () => {
+            const result = await runOperation(client, resource, op, {
               ...call,
               replayed: true,
               idempotencyKey,
+              // Same logical call: the replay keeps running against the original total deadline.
+              deadline,
               ...(op.transfer
                 ? {
                     options: {
@@ -1162,10 +1550,31 @@ export async function runOperation(
                   }
                 : {}),
             });
+            replayResult = result;
+            replayFinished = true;
+            return result;
+          };
     for (const hook of op.onError) {
       try {
-        const recovered = await hook(error, { request, replay });
-        if (recovered !== undefined) return recovered;
+        // Terminal abort/timeout hooks may observe the failure but cannot keep its budget alive.
+        const work = Promise.resolve(hook(error, { request, replay }));
+        if (signal.aborted) {
+          void work.catch(() => {});
+          continue;
+        }
+        const recovered = await waitForSignal(work, signal);
+        if (recovered !== undefined) {
+          if (replayFinished && recovered === replayResult) return recovered;
+          if (options.full)
+            return await finalizeOutput(assertResponse(recovered, "error middleware recovery"));
+          const envelope: ApiResponse<unknown> = {
+            data: recovered,
+            status: error instanceof ApiError ? (error.status ?? 0) : 0,
+            headers: new Headers(),
+            request: request!,
+          };
+          return (await finalizeOutput(envelope)).data;
+        }
       } catch (next) {
         error = next;
       }
@@ -1250,58 +1659,139 @@ function isReplayable(body: unknown): boolean {
   return !(typeof ReadableStream !== "undefined" && body instanceof ReadableStream);
 }
 
+interface SendInput {
+  client: ClientRuntime;
+  op: PreparedOperation;
+  request: ApiRequest;
+  wireBody: unknown;
+  options: RequestOptions;
+  signal: AbortSignal;
+  allow404: boolean;
+  responseType: ResponseType;
+  session: TransferSession;
+  limits: { maxResponseBytes?: number; accept?: readonly string[] } | undefined;
+  limitState: { error?: ValidationError };
+  redirectOrigins: readonly string[] | undefined;
+  /** Budget of one transport attempt in ms (absent / 0 → unbounded). */
+  perAttempt: number | undefined;
+  /** Absolute total deadline of the logical call (epoch ms). */
+  deadline: number | undefined;
+  idempotencyKey: string | undefined;
+}
+
 /**
- * Transport attempts for one logical call. Retries happen only here: no middleware or header
- * provider re-runs. Overall timeout and caller cancellation stop both attempts and backoff.
+ * Transport attempts for one logical call. Retries happen only here: logical middleware and
+ * header providers never re-run; `onAttempt` / `onAttemptResponse` run for every attempt. The
+ * total deadline and caller cancellation stop attempts and backoff; a per-attempt deadline ends
+ * one attempt and may be retried.
  */
-async function sendWithRetry(
-  client: ClientRuntime,
-  op: PreparedOperation,
-  request: ApiRequest,
-  wireBody: unknown,
-  options: RequestOptions,
-  signal: AbortSignal,
-  allow404: boolean,
-  responseType: ResponseType,
-  session: TransferSession,
-  limits: { maxResponseBytes?: number; accept?: readonly string[] } | undefined,
-  limitState: { error?: ValidationError },
-) {
+async function sendWithRetry(input: SendInput) {
+  const { client, op, request, options, signal, session, limits, limitState } = input;
   const retry =
     options.retry !== undefined ? resolveRetryConfig(options.retry, "options.retry") : op.retry;
-  const headers = new Headers(request.headers);
-  const body = serializeBody(wireBody, headers, {
+  const baseHeaders = new Headers(request.headers);
+  const body = serializeBody(input.wireBody, baseHeaders, {
     dataFormat: op.dataFormat,
     multipart: op.multipart,
   });
   const replayable = isReplayable(body);
+  // Attempt hooks belong to the API's own requests: a presigned destination never sees them.
+  const onAttempt = request.delegated ? [] : op.onAttempt;
+  const onAttemptResponse = request.delegated ? [] : op.onAttemptResponse;
+  const where = `${request.resource}.${request.operation}`;
+  let hookRetryUsed = false;
 
   for (let attempt = 0; ; attempt++) {
     throwIfAborted(signal);
     let failure: ApiError;
     let failedResponse: ApiResponse<unknown> | undefined;
+    let headers = baseHeaders;
+    let attemptRequest = request;
+    if (onAttempt.length > 0 || onAttemptResponse.length > 0) {
+      // Every attempt starts from the logical request's headers: a token or signature set for one
+      // attempt is never carried into the next.
+      attemptRequest = { ...request, headers: new Headers(baseHeaders) };
+      const bodyUnchanged = unchanged(request.body);
+      const queryUnchanged = unchanged(request.query);
+      for (const hook of onAttempt) {
+        await waitForSignal(Promise.resolve(hook({ request: attemptRequest, attempt })), signal);
+        throwIfAborted(signal);
+      }
+      if (
+        attemptRequest.url !== request.url ||
+        attemptRequest.method !== request.method ||
+        attemptRequest.body !== request.body ||
+        !bodyUnchanged() ||
+        !queryUnchanged() ||
+        attemptRequest.query !== request.query ||
+        attemptRequest.signal !== signal
+      ) {
+        throw new ConfigError(
+          `onAttempt middleware for ${where} may only change headers; the method, URL and body belong to the logical request (use onRequest).`,
+        );
+      }
+      if (!(attemptRequest.headers instanceof Headers)) {
+        throw new ConfigError(
+          `onAttempt middleware for ${where} left a request whose headers is not a Headers instance.`,
+        );
+      }
+      if (
+        op.idempotency &&
+        input.idempotencyKey !== undefined &&
+        attemptRequest.headers.get(op.idempotency.header) !== input.idempotencyKey
+      ) {
+        throw new ConfigError(
+          `onAttempt middleware for ${where} changed the ${op.idempotency.header} header. The idempotency key must stay stable across attempts.`,
+        );
+      }
+      headers = attemptRequest.headers;
+    }
     const channel = nextChannel(session, attempt);
+    const attemptSignal = createAttemptSignal(signal, input.perAttempt);
+    let retryRequested = false;
     try {
-      const response = await client.transport.request({
-        url: request.url,
-        method: request.method,
-        headers,
-        body,
-        signal,
-        responseType,
-        ...(request.delegated
-          ? { security: { credentials: "omit" as const, redirect: "error" as const } }
-          : {}),
-        ...(limits ? { limits } : {}),
-        ...((options.redirectOrigins ?? op.redirectOrigins)?.length && !request.delegated
-          ? { redirectOrigins: options.redirectOrigins ?? op.redirectOrigins }
-          : {}),
-        ...(channel ? { onTransfer: channel.sink } : {}),
-      });
+      let response;
+      try {
+        response = await waitForSignal(
+          client.transport.request({
+            url: request.url,
+            method: request.method,
+            headers,
+            body,
+            signal: attemptSignal.signal,
+            responseType: input.responseType,
+            ...(request.delegated
+              ? { security: { credentials: "omit" as const, redirect: "error" as const } }
+              : {}),
+            ...(limits ? { limits } : {}),
+            ...(input.redirectOrigins?.length && !request.delegated
+              ? { redirectOrigins: input.redirectOrigins }
+              : {}),
+            ...(channel ? { onTransfer: channel.sink } : {}),
+          }),
+          attemptSignal.signal,
+        );
+      } finally {
+        attemptSignal.clear();
+      }
       channel?.finishRequest(body !== null && body !== undefined);
+      if (onAttemptResponse.length > 0) {
+        const context = {
+          request: attemptRequest,
+          attempt,
+          response: { status: response.status, headers: response.headers, data: response.body },
+          retry: () => {
+            retryRequested = true;
+          },
+        };
+        for (const hook of onAttemptResponse) {
+          await waitForSignal(Promise.resolve(hook(context)), signal);
+          throwIfAborted(signal);
+        }
+      }
       if (
         (response.status >= 200 && response.status < 300) ||
-        (allow404 && response.status === 404)
+        (input.allow404 && response.status === 404)
       ) {
         return response;
       }
@@ -1324,13 +1814,16 @@ async function sendWithRetry(
         failFromSignal(channel, signal);
         throw error;
       }
+      if (error instanceof ConfigError) throw error;
       failure =
         limitState.error ??
-        (error instanceof ApiError
-          ? error
-          : new NetworkError(error instanceof Error ? error.message : "Network request failed", {
-              cause: error,
-            }));
+        (attemptSignal.timedOut()
+          ? new TimeoutError(`Attempt timed out after ${input.perAttempt}ms`, { cause: error })
+          : error instanceof ApiError
+            ? error
+            : new NetworkError(error instanceof Error ? error.message : "Network request failed", {
+                cause: error,
+              }));
       failure.request ??= request;
       failure.attempt = attempt;
     }
@@ -1342,17 +1835,33 @@ async function sendWithRetry(
       method: request.method,
       error: failure,
     };
+    // A hook-requested attempt (for example after a token refresh on 401): at most one per
+    // logical call, only for a replayable body, and never for an unsafe write.
+    const hookRetry =
+      retryRequested &&
+      !hookRetryUsed &&
+      replayable &&
+      !signal.aborted &&
+      (SAFE_REPLAY_METHODS.includes(request.method) ||
+        retry?.methods.includes(request.method) === true ||
+        input.idempotencyKey !== undefined);
     const retryAfter =
       retry?.respectRetryAfter && failedResponse
         ? parseRetryAfter(failedResponse.headers.get("retry-after"))
         : undefined;
+    const remaining = input.deadline !== undefined ? input.deadline - Date.now() : Infinity;
     const canRetry =
-      retry !== undefined &&
-      replayable &&
-      !(failure instanceof ValidationError) &&
-      !signal.aborted &&
-      decideRetry(retry, ctx, failure) &&
-      (retryAfter === undefined || retryAfter <= retry.maxDelayMs);
+      hookRetry ||
+      (retry !== undefined &&
+        replayable &&
+        (failure instanceof NetworkError ||
+          failure instanceof TimeoutError ||
+          failure instanceof HttpError) &&
+        retry.methods.includes(request.method) &&
+        !signal.aborted &&
+        decideRetry(retry, ctx, failure) &&
+        // A server hint longer than the cap or than what is left of the total budget is not waited for.
+        (retryAfter === undefined || (retryAfter <= retry.maxDelay && retryAfter < remaining)));
     failure.retryable = canRetry;
     if (request.delegated) {
       failure.message = "Presigned request failed.";
@@ -1370,8 +1879,12 @@ async function sendWithRetry(
     }
     channel?.fail({ kind: "error", error: failure, willRetry: canRetry });
     if (!canRetry) throw failure;
+    if (hookRetry) {
+      hookRetryUsed = true;
+      continue;
+    }
 
-    await retry!.onRetry?.(ctx);
+    await waitForSignal(Promise.resolve(retry!.onRetry?.(ctx)), signal);
     await delay(retryAfter ?? computeBackoffMs(attempt, retry!), signal);
   }
 }

@@ -216,7 +216,7 @@ describe("upload over a real socket (loopback)", () => {
   afterAll(() => new Promise<void>((r) => server.close(() => r())));
 
   const api = () =>
-    defineApi<{ docs: { path: "/docs"; entity: { id: string } } }>()({
+    defineApi<{ docs: { id: string } }>()({
       baseURL: url,
       transport: createFetchTransport(),
       resources: {

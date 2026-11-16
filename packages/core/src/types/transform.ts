@@ -21,10 +21,10 @@ export interface KeyTransformConfig {
 
 /** Per-direction key conventions. */
 export interface TransformsConfig {
-  /** Convert outgoing body / query keys to the backend convention at the serialization stage. */
-  request?: KeyTransformConfig;
-  /** Convert incoming response keys to the public convention before response middleware. */
-  response?: KeyTransformConfig;
+  /** Convert outgoing body / query keys to the backend convention at the serialization stage. Pass `false` to disable an inherited rule. */
+  request?: KeyTransformConfig | false;
+  /** Convert incoming response keys to the public convention before response middleware. Pass `false` to disable an inherited rule. */
+  response?: KeyTransformConfig | false;
 }
 
 type Sep = "_" | "-";

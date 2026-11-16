@@ -2,7 +2,7 @@ import { ConfigError, MockError, defineApi, mockFiles, resetMock } from "@apixa/
 import { describe, expect, it, vi } from "vitest";
 
 type User = { id: string; name: string; avatar?: string | null; documents?: string[] };
-type AppApi = { users: { path: "/users"; entity: User }; teams: { path: "/teams"; entity: User } };
+type AppApi = { users: User; teams: User };
 
 const file = (name: string, content = "x", type = "text/plain") =>
   new File([content], name, { type });
@@ -68,16 +68,16 @@ describe("mock file storage with dataset writes", () => {
       name: "Bob",
       avatar: file("1.txt", "1"),
     })) as User;
-    const second = (await api.users.patch!("2", { body: { avatar: file("2.txt", "2") } })) as User;
+    const second = (await api.users.patch!("2", { avatar: file("2.txt", "2") })) as User;
     expect(files.has(first.avatar!)).toBe(false);
     expect(files.get(second.avatar!)!.text()).toBe("2");
     expect(files.size).toBe(1);
     // patch without a file keeps the stored one
-    const kept = (await api.users.patch!("2", { body: { name: "Bobby" } })) as User;
+    const kept = (await api.users.patch!("2", { name: "Bobby" })) as User;
     expect(kept.avatar).toBe(second.avatar);
     expect(files.size).toBe(1);
     // update without the field drops the file
-    const dropped = (await api.users.update!("2", { body: { name: "Robert" } })) as User;
+    const dropped = (await api.users.update!("2", { name: "Robert" })) as User;
     expect(dropped.avatar).toBeUndefined();
     expect(files.size).toBe(0);
   });
@@ -116,7 +116,7 @@ describe("mock file storage with dataset writes", () => {
     ).rejects.toMatchObject({
       code: "MOCK_DUPLICATE_ID",
     });
-    await expect(api.users.update!("nope", { body: { avatar: file("x") } })).rejects.toMatchObject({
+    await expect(api.users.update!("nope", { avatar: file("x") })).rejects.toMatchObject({
       code: "MOCK_NOT_FOUND",
     });
     await expect(

@@ -55,7 +55,7 @@ describe("error propagation through the hooks", () => {
   });
 
   it("NetworkError: a failed connection reaches the hook consumer", async () => {
-    const api = defineApi<{ docs: { path: "/docs"; entity: { id: string } } }>()({
+    const api = defineApi<{ docs: { id: string } }>()({
       baseURL: "https://x.dev",
       transport: createFetchTransport((async () => {
         throw new TypeError("fetch failed");

@@ -16,7 +16,7 @@ type User = {
   documents: string[];
   banner?: string | null;
 };
-type AppApi = { users: { path: "/users"; entity: User } };
+type AppApi = { users: User };
 
 const file = (name: string, content = "x", type = "text/plain") =>
   new File([content], name, { type });
@@ -85,14 +85,14 @@ describe("automatic multipart on builtin writes", () => {
 
   it.each(["update", "patch"])("%s sends multipart when a file is present", async (op) => {
     const { api, seen } = setup();
-    await api.users[op]!("7", { body: { avatar: file("a.txt") } });
+    await api.users[op]!("7", { avatar: file("a.txt") });
     expect(seen[0]!.method).toBe(op === "patch" ? "PATCH" : "PUT");
     expect(seen[0]!.body).toBeInstanceOf(FormData);
   });
 
   it("keeps JSON when no binary value is present", async () => {
     const { api, seen } = setup();
-    await api.users.update!("7", { body: { firstName: "Ada" } });
+    await api.users.update!("7", { firstName: "Ada" });
     expect(seen[0]!.body).toBe('{"firstName":"Ada"}');
     expect(seen[0]!.headers.get("content-type")).toBe("application/json");
   });
@@ -139,7 +139,7 @@ describe("dataFormat, aliases and multipart options", () => {
 
   it("dataFormat multipart forces multipart without files", async () => {
     const { api, seen } = setup({ operations: { update: { dataFormat: "multipart" } } });
-    await api.users.update!("1", { body: { firstName: "Ada" } });
+    await api.users.update!("1", { firstName: "Ada" });
     expect(entries(form(seen[0]!))).toEqual([["firstName", "Ada"]]);
   });
 
@@ -245,11 +245,11 @@ describe("pipeline behavior", () => {
 
   it("retries resend an equivalent multipart body", async () => {
     const { api, seen } = setup(
-      { operations: { update: { retry: { retries: 2, baseDelayMs: 0, methods: ["PUT"] } } } },
+      { operations: { update: { retry: { count: 2, delay: 0, methods: ["PUT"] } } } },
       {},
       (n) => (n < 3 ? { status: 503, body: { error: "x" } } : { body: { id: "1" } }),
     );
-    await api.users.update!("1", { body: { avatar: file("a.txt", "AAA") } });
+    await api.users.update!("1", { avatar: file("a.txt", "AAA") });
     expect(seen).toHaveLength(3);
     for (const request of seen) {
       expect(request.body).toBe(seen[0]!.body);
@@ -259,7 +259,7 @@ describe("pipeline behavior", () => {
 
   it("does not retry stream bodies", async () => {
     const { api, seen } = setup(
-      { operations: { create: { retry: { retries: 2, baseDelayMs: 0, methods: ["POST"] } } } },
+      { operations: { create: { retry: { count: 2, delay: 0, methods: ["POST"] } } } },
       {},
       () => ({ status: 503, body: {} }),
     );

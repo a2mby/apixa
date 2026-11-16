@@ -14,7 +14,7 @@ async function mockStorageScenario(m) {
   } });
   const first = await api.docs.download({ params: { id: 1 } });
   const old = (await api.docs.getById(1)).file;
-  const updated = await api.docs.patch(1, { body: { file: new Blob(['next'], { type: 'text/plain' }) } });
+  const updated = await api.docs.patch(1, { file: new Blob(['next'], { type: 'text/plain' }) });
   const next = await api.docs.download({ params: { id: 1 } });
   if (!m.mockFiles(api).has(old) || m.mockFiles(api).list({ disk: 'test', path: 'docs' }).length !== 2) throw Error('fixture pin/path ownership');
   if (m.mockFiles(api).get(updated.file).meta.originalName !== 'blob') throw Error('stored naming');

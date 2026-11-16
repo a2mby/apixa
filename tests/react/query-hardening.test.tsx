@@ -20,7 +20,7 @@ function wrap(client: QueryClient) {
 
 function recordingApi(respond: (request: TransportRequest) => unknown = () => [ada]) {
   const requests: TransportRequest[] = [];
-  const api = defineApi<{ users: { entity: User }; members: { entity: User } }>()({
+  const api = defineApi<{ users: User; members: User }>()({
     baseURL: "https://api.example.com",
     transport: createFakeTransport((request) => {
       requests.push(request);
@@ -279,7 +279,7 @@ describe("Q4 — inherited reads", () => {
 
   it("works on a resource without getAll: no automatic query, reads on demand", async () => {
     const requests: string[] = [];
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((r) => (requests.push(r.url), { body: ada })),
       resources: { users: { path: "/users", operations: { getAll: false } } },

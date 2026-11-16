@@ -200,7 +200,7 @@ describe("L23: query-string credentials never surface in errors", () => {
       const client = defineApi({
         baseURL: "https://api.example.com",
         transport,
-        resources: { items: { path: "/items" } },
+        resources: { items: { path: "/items", operations: { getAll: { responseType: "text" } } } },
       });
       const error = await client.items
         .getAll({ query: { token: secret }, retry: false })
@@ -220,7 +220,7 @@ describe("L5/L13: response size limits and custom transports", () => {
     defineApi({
       baseURL: "https://api.example.com",
       transport,
-      resources: { items: { path: "/items" } },
+      resources: { items: { path: "/items", operations: { getAll: { responseType: "text" } } } },
     });
   const big = "x".repeat(2 * 1024 * 1024);
   const textTransport = (seen?: TransportRequest[]): Transport => ({
@@ -234,7 +234,7 @@ describe("L5/L13: response size limits and custom transports", () => {
   it("a custom transport receives the limit; a transport that ignores it is caught after reading", async () => {
     const seen: TransportRequest[] = [];
     const error = (await items(textTransport(seen))
-      .items.getAll({ responseType: "text", maxResponseSize: 1024, retry: false } as never)
+      .items.getAll({ maxResponseSize: 1024, retry: false } as never)
       .catch((e: unknown) => e)) as ValidationError;
     expect(seen[0]!.limits?.maxResponseBytes).toBe(1024);
     expect(error).toBeInstanceOf(ValidationError);
@@ -245,7 +245,6 @@ describe("L5/L13: response size limits and custom transports", () => {
 
   it("ordinary reads have no default size cap; the limit is opt-in", async () => {
     const value = await items(textTransport()).items.getAll({
-      responseType: "text",
       retry: false,
     } as never);
     expect(value).toBe(big);

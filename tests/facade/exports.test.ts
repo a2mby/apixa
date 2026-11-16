@@ -52,7 +52,7 @@ describe("apixa curated root", () => {
   });
 
   it("types a client built through the facade", () => {
-    const api = root.defineApi<{ users: { entity: { id: string; name: string } } }>()({
+    const api = root.defineApi<{ users: { id: string; name: string } }>()({
       baseURL: "https://example.test",
       resources: { users: { path: "/users" } },
     });

@@ -46,7 +46,7 @@ describe("custom operation classification (kind)", () => {
     await expect(client.users.report()).resolves.toEqual([]);
   });
 
-  const api = defineApi<{ users: { entity: User } }>()({
+  const api = defineApi<{ users: User }>()({
     ...base,
     resources: {
       users: {
@@ -101,7 +101,7 @@ describe("custom operation classification (kind)", () => {
     const users = getOperationMetadata(api.users)!;
     expect(users.getById!.optionsIndex).toBe(1);
     expect(users.create!.optionsIndex).toBe(1);
-    expect(users.update!.optionsIndex).toBe(1);
+    expect(users.update!.optionsIndex).toBe(2);
     expect(users.count!.optionsIndex).toBe(0);
     expect(users.findFirst!.optionsIndex).toBe(0);
     expect(users.getBy!.optionsIndex).toBe(2);
@@ -109,7 +109,7 @@ describe("custom operation classification (kind)", () => {
     const org = getOperationMetadata(api.org)!;
     expect(org.getAll!.optionsIndex).toBe(0);
     expect(org.getById!.optionsIndex).toBe(1);
-    expect(org.update!.optionsIndex).toBe(1);
+    expect(org.update!.optionsIndex).toBe(2);
   });
 
   it("keeps metadata non-enumerable, frozen, and outside the operation keys", () => {

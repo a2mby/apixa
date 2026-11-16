@@ -3,7 +3,7 @@ import type { BuiltinConventionName } from "../operation/conventions.js";
 import type { MockStore } from "./store.js";
 import type { MockSource, Row } from "./source.js";
 
-export type PaginationMode = "page" | "cursor";
+export type PaginationMode = "page" | "cursor" | "offset";
 
 export type MockResult = { status: number; data: unknown };
 
@@ -38,29 +38,52 @@ function positiveInt(
   return n;
 }
 
+/**
+ * Slice rows into the normalized contract for `mode`. `copy` runs only on the returned window.
+ * Mock cursors are decimal row indexes: a documented mock format, not a model of any backend's
+ * opaque cursors, ordering guarantees or snapshot behaviour. Mocks are forward-only (no
+ * `previousCursor`) and report a fixed total.
+ */
+function slicePage(
+  label: string,
+  rows: readonly unknown[],
+  mode: PaginationMode,
+  query: Record<string, unknown>,
+  copy: (rows: readonly unknown[]) => unknown[],
+): unknown {
+  const pageSize = positiveInt(label, "pageSize", query.pageSize, DEFAULT_PAGE_SIZE, 1);
+  if (mode === "page") {
+    const page = positiveInt(label, "page", query.page, 1, 1);
+    const start = (page - 1) * pageSize;
+    return { data: copy(rows.slice(start, start + pageSize)), total: rows.length, page, pageSize };
+  }
+  if (mode === "offset") {
+    const offset = positiveInt(label, "offset", query.offset, 0, 0);
+    const end = offset + pageSize;
+    return {
+      data: copy(rows.slice(offset, end)),
+      total: rows.length,
+      offset,
+      pageSize,
+      nextOffset: end < rows.length ? end : null,
+    };
+  }
+  const start = positiveInt(label, "cursor", query.cursor, 0, 0);
+  const end = start + pageSize;
+  return {
+    data: copy(rows.slice(start, end)),
+    nextCursor: end < rows.length ? String(end) : null,
+  };
+}
+
+/** Paginate an unpaginated collection (a custom mock handler's array) into the normalized contract. */
 export function paginateList(
   label: string,
   rows: readonly unknown[],
   mode: PaginationMode,
   query: Record<string, unknown> = {},
 ): unknown {
-  const pageSize = positiveInt(label, "pageSize", query.pageSize, DEFAULT_PAGE_SIZE, 1);
-  if (mode === "page") {
-    const page = positiveInt(label, "page", query.page, 1, 1);
-    const start = (page - 1) * pageSize;
-    return {
-      data: rows.slice(start, start + pageSize),
-      total: rows.length,
-      page,
-      pageSize,
-    };
-  }
-  const start = positiveInt(label, "cursor", query.cursor, 0, 0);
-  const end = start + pageSize;
-  return {
-    data: rows.slice(start, end),
-    nextCursor: end < rows.length ? String(end) : null,
-  };
+  return slicePage(label, rows, mode, query, (r) => [...r]);
 }
 
 /**
@@ -75,23 +98,7 @@ function paginate(
   query: Record<string, unknown> = {},
 ): unknown {
   if (!mode) return store.cloneRows(rows);
-  const pageSize = positiveInt(label, "pageSize", query.pageSize, DEFAULT_PAGE_SIZE, 1);
-  if (mode === "page") {
-    const page = positiveInt(label, "page", query.page, 1, 1);
-    const start = (page - 1) * pageSize;
-    return {
-      data: store.cloneRows(rows.slice(start, start + pageSize)),
-      total: rows.length,
-      page,
-      pageSize,
-    };
-  }
-  const start = positiveInt(label, "cursor", query.cursor, 0, 0);
-  const end = start + pageSize;
-  return {
-    data: store.cloneRows(rows.slice(start, end)),
-    nextCursor: end < rows.length ? String(end) : null,
-  };
+  return slicePage(label, rows, mode, query, (r) => store.cloneRows(r as readonly Row[]));
 }
 
 /** Run one builtin straight against the store — never through another builtin. */

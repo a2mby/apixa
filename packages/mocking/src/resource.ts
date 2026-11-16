@@ -19,6 +19,7 @@ export {
   type MockResourceDefaults,
   type Page,
   type CursorPage,
+  type OffsetPage,
   type PaginationConfig,
   type PageParams,
   type ResourceInput,
@@ -66,7 +67,59 @@ export type ResourceOptions = {
 };
 
 /** Paging keys are config of the call, not filters; everything else in the query filters rows. */
-const PAGING_MESSAGE = /: (page|pageSize|cursor) must be/;
+const PAGING_MESSAGE = /(: (page|pageSize|cursor|offset) must be|pagination `\w+` must be)/;
+
+const REQUEST_OPTION_KEYS = new Set([
+  "transfer",
+  "presigned",
+  "params",
+  "query",
+  "pagination",
+  "headers",
+  "signal",
+  "timeout",
+  "retry",
+  "maxResponseSize",
+  "onTransfer",
+  "meta",
+  "full",
+  "idempotencyKey",
+]);
+
+function normalizeListOrCountArg(arg: unknown): Record<string, unknown> | undefined {
+  if (arg === undefined) return undefined;
+  if (arg === null || typeof arg !== "object" || Array.isArray(arg)) {
+    return { query: arg };
+  }
+  const obj = arg as Record<string, unknown>;
+  const hasOptionKey = Object.keys(obj).some((k) => REQUEST_OPTION_KEYS.has(k));
+  if (!hasOptionKey) {
+    return { query: obj };
+  }
+  const callOptions: Record<string, unknown> = {};
+  const extraQuery: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (REQUEST_OPTION_KEYS.has(key)) {
+      callOptions[key] = value;
+    } else {
+      extraQuery[key] = value;
+    }
+  }
+  if (Object.keys(extraQuery).length > 0) {
+    const existingQuery = callOptions.query;
+    if (
+      existingQuery !== undefined &&
+      existingQuery !== null &&
+      typeof existingQuery === "object" &&
+      !Array.isArray(existingQuery)
+    ) {
+      callOptions.query = { ...extraQuery, ...(existingQuery as Record<string, unknown>) };
+    } else if (existingQuery === undefined) {
+      callOptions.query = extraQuery;
+    }
+  }
+  return callOptions;
+}
 
 /** Adapt calling conventions to Core's existing mocked-client engine. */
 export function createResource(name: string, type: DatasetId, options: ResourceOptions) {
@@ -146,7 +199,7 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
       },
       fileFields: options.fileFields,
       fileLimits: options.fileLimits,
-      pagination: options.pagination,
+      paginationConfig: options.pagination,
       slice: options.slice,
       operations: { preset: [], ...operations },
     },
@@ -167,17 +220,25 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
                   `Mock resource "${name}": invalid ${entry.idKey} ${JSON.stringify(id) ?? String(id)} (expected a non-empty string or number)`,
                 );
             }
-            if (
-              internal === op &&
-              op === "getAll" &&
-              resolvedPagination &&
-              args[0] !== null &&
-              typeof args[0] === "object" &&
-              !Array.isArray(args[0])
-            ) {
-              const q = args[0] as Record<string, unknown>;
-              const checkPaging = (key: string, min: number) => {
-                const raw = q[key];
+            const normalizedCall =
+              internal === op && ["getAll", "count"].includes(op)
+                ? normalizeListOrCountArg(args[0])
+                : undefined;
+            if (internal === op && op === "getAll" && resolvedPagination && normalizedCall) {
+              const q =
+                normalizedCall.query !== null &&
+                typeof normalizedCall.query === "object" &&
+                !Array.isArray(normalizedCall.query)
+                  ? (normalizedCall.query as Record<string, unknown>)
+                  : {};
+              const pag =
+                normalizedCall.pagination !== null &&
+                typeof normalizedCall.pagination === "object" &&
+                !Array.isArray(normalizedCall.pagination)
+                  ? (normalizedCall.pagination as Record<string, unknown>)
+                  : {};
+              const checkPaging = (source: Record<string, unknown>, key: string, min: number) => {
+                const raw = source[key];
                 if (raw === undefined || raw === null || raw === "") return;
                 const n = typeof raw === "number" ? raw : Number(raw);
                 if (!Number.isInteger(n) || n < min) {
@@ -187,15 +248,20 @@ export function createResource(name: string, type: DatasetId, options: ResourceO
                   );
                 }
               };
-              checkPaging("pageSize", 1);
-              if (resolvedPagination.mode === "cursor") checkPaging("cursor", 0);
-              else checkPaging("page", 1);
+              for (const source of [q, pag]) {
+                checkPaging(source, "pageSize", 1);
+                if (resolvedPagination.mode === "cursor") checkPaging(source, "cursor", 0);
+                else if (resolvedPagination.mode === "offset") checkPaging(source, "offset", 0);
+                else checkPaging(source, "page", 1);
+              }
             }
             const forwarded =
               internal !== op
                 ? [{ args }]
                 : ["getAll", "count"].includes(op)
-                  ? [{ query: args[0] }]
+                  ? normalizedCall
+                    ? [normalizedCall]
+                    : []
                   : args;
             const result = await core[internal]!(...forwarded);
             return (op === "delete" || op === "deleteMany") && internal === op ? undefined : result;

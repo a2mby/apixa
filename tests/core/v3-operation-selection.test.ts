@@ -1,4 +1,5 @@
 import { defineApi, getOperationMetadata, type OperationKindsOf } from "@apixa/core";
+import { z } from "zod";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -87,9 +88,7 @@ describe("v3 operation selection", () => {
   });
 
   it("retains typed mock handlers inside overrides", () => {
-    type State = {
-      users: { entity: { id: string }; operations: { stats: { response: { total: number } } } };
-    };
+    type State = { users: { id: string } };
     const api = defineApi<State>()({
       ...base,
       resources: {
@@ -101,6 +100,7 @@ describe("v3 operation selection", () => {
             stats: {
               method: "GET",
               path: "/stats",
+              schema: { response: z.object({ total: z.number() }) },
               mock: ({ records }) => ({ total: records.length }),
             },
           },
@@ -115,10 +115,14 @@ describe("v3 operation selection", () => {
           users: {
             path: "/users",
             mock: [{ id: "1" }],
-            // @ts-expect-error the declared response requires total
             operations: {
               preset: "crud",
-              stats: { method: "GET", path: "/stats", mock: () => ({ count: 1 }) },
+              stats: {
+                method: "GET",
+                path: "/stats",
+                schema: { response: z.object({ total: z.number() }) },
+                mock: () => ({ count: 1 }),
+              },
             },
           },
         },

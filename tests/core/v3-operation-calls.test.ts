@@ -1,4 +1,5 @@
 import { defineApi } from "@apixa/core";
+import { z } from "zod";
 import { describe, expect, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
@@ -25,10 +26,7 @@ describe("v3 operation calls", () => {
 
   it("preserves body-bearing list overrides with body first and params in options", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
-    type State = {
-      users: { operations: { getAll: { body: { active: boolean }; response: unknown[] } } };
-    };
-    const api = defineApi<State>()({
+    const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         requests.push({ url: request.url, body: request.body });
@@ -37,7 +35,13 @@ describe("v3 operation calls", () => {
       resources: {
         users: {
           path: "/orgs/:orgId/users",
-          operations: { getAll: { method: "POST", hasBody: true } },
+          operations: {
+            getAll: {
+              method: "POST",
+              hasBody: true,
+              schema: { body: z.object({ active: z.boolean() }), response: z.array(z.unknown()) },
+            },
+          },
         },
       },
     });
@@ -50,7 +54,7 @@ describe("v3 operation calls", () => {
   it("keeps identity and bodies first while path parameters stay in options", async () => {
     type User = { id: number; name: string };
     const requests: Array<{ method: string; url: string; body: unknown }> = [];
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         requests.push({ method: request.method, url: request.url, body: request.body });
@@ -94,7 +98,7 @@ describe("v3 operation calls", () => {
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         urls.push(request.url);
-        return { body: [] };
+        return { body: [{ id: 7 }, { id: 8 }] };
       }),
       resources: { users: { path: "/orgs/:orgId/users" } },
     });
@@ -109,7 +113,7 @@ describe("v3 operation calls", () => {
   it("puts identity first and update bodies in the options object", async () => {
     type User = { id: number; name: string };
     const requests: Array<{ method: string; url: string; body: unknown }> = [];
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         requests.push({ method: request.method, url: request.url, body: request.body });
@@ -117,8 +121,8 @@ describe("v3 operation calls", () => {
       }),
       resources: { users: { path: "/orgs/:orgId/users" } },
     });
-    await api.users.update(7, { params: { orgId: "acme" }, body: { name: "Ada" } });
-    await api.users.patch(7, { params: { orgId: "acme" }, body: { name: "Ada" } });
+    await api.users.update(7, { name: "Ada" }, { params: { orgId: "acme" } });
+    await api.users.patch(7, { name: "Ada" }, { params: { orgId: "acme" } });
     expect(requests).toEqual([
       { method: "PUT", url: "https://api.example.com/orgs/acme/users/7", body: '{"name":"Ada"}' },
       { method: "PATCH", url: "https://api.example.com/orgs/acme/users/7", body: '{"name":"Ada"}' },
@@ -126,16 +130,8 @@ describe("v3 operation calls", () => {
   });
 
   it("uses body and options consistently for custom HTTP operations", async () => {
-    type State = {
-      users: {
-        operations: {
-          archive: { body: { reason: string }; response: { ok: boolean } };
-          stats: { response: number };
-        };
-      };
-    };
     const requests: Array<{ method: string; url: string; body: unknown }> = [];
-    const api = defineApi<State>()({
+    const api = defineApi({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         requests.push({ method: request.method, url: request.url, body: request.body });
@@ -145,8 +141,19 @@ describe("v3 operation calls", () => {
         users: {
           path: "/orgs/:orgId/users",
           operations: {
-            archive: { method: "POST", path: "/:id/archive" },
-            stats: { method: "GET", path: "/stats/:range" },
+            archive: {
+              method: "POST",
+              path: "/:id/archive",
+              schema: {
+                body: z.object({ reason: z.string() }),
+                response: z.object({ ok: z.boolean() }),
+              },
+            },
+            stats: {
+              method: "GET",
+              path: "/stats/:range",
+              schema: { response: z.number() },
+            },
           },
         },
       },
@@ -170,7 +177,7 @@ describe("v3 operation calls", () => {
   it("passes resource path params in options.params for count, createMany, and deleteMany", async () => {
     type User = { id: number; name: string };
     const requests: Array<{ method: string; url: string; body: unknown }> = [];
-    const api = defineApi<{ users: { entity: User } }>()({
+    const api = defineApi<{ users: User }>()({
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         requests.push({ method: request.method, url: request.url, body: request.body });
@@ -203,15 +210,7 @@ describe("v3 operation calls", () => {
   });
 
   it("defaults custom DELETE operations to hasBody: true while keeping builtin delete bodyless", async () => {
-    type State = {
-      users: {
-        entity: { id: number; name: string };
-        operations: {
-          purge: { body: { reason: string }; response: { deleted: number } };
-          clearFlag: { response: { ok: boolean } };
-        };
-      };
-    };
+    type State = { users: { id: number; name: string } };
     const requests: Array<{ method: string; url: string; body: unknown }> = [];
     const api = defineApi<State>()({
       baseURL: "https://api.example.com",
@@ -223,8 +222,20 @@ describe("v3 operation calls", () => {
         users: {
           path: "/orgs/:orgId/users",
           operations: {
-            purge: { method: "DELETE", path: "/purge" },
-            clearFlag: { method: "DELETE", path: "/:id/flag", hasBody: false },
+            purge: {
+              method: "DELETE",
+              path: "/purge",
+              schema: {
+                body: z.object({ reason: z.string() }),
+                response: z.object({ deleted: z.number() }),
+              },
+            },
+            clearFlag: {
+              method: "DELETE",
+              path: "/:id/flag",
+              hasBody: false,
+              schema: { response: z.object({ ok: z.boolean() }) },
+            },
           },
         },
       },

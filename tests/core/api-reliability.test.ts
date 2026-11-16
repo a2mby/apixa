@@ -5,7 +5,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 const api = defineApi({
   baseURL: "https://example.test",
   timeout: 10000,
-  retry: { retries: 2, baseDelayMs: 1, jitter: false },
+  retry: { count: 2, delay: 1, jitter: false },
   transport: createFakeTransport(() => ({ body: [{ id: "1" }] })),
   resources: { users: { path: "/users" } },
 });

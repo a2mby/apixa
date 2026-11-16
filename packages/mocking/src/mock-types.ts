@@ -7,6 +7,9 @@ import type {
   FileLimits,
   MockFilesHandle,
   FileFieldOptions,
+  GetManySort,
+  LogicalPaginationInput,
+  RequestOptions,
 } from "@apixa/core";
 import type {
   AllBuiltinOpName,
@@ -28,9 +31,14 @@ type Id = string | number;
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
 /** Paging keys of `getAll`. Every other key in the query filters rows (Core's contract). */
-export type PageParams = { page?: number; pageSize?: number; cursor?: number | string };
+export type PageParams = {
+  page?: number;
+  pageSize?: number;
+  cursor?: number | string;
+  offset?: number;
+};
 
-/** Envelope when a mock resource has `pagination: true` / `"page"` — identical to a Core mock. */
+/** Envelope when a mock resource has `paginationConfig: true` / `"page"` — identical to a Core mock. */
 export type Page<T> = {
   data: T[];
   total: number;
@@ -38,10 +46,19 @@ export type Page<T> = {
   pageSize: number;
 };
 
-/** Envelope for `pagination: "cursor"`. `nextCursor` is `null` on the last page. */
+/** Envelope for `paginationConfig: "cursor"`. `nextCursor` is `null` on the last page. */
 export type CursorPage<T> = {
   data: T[];
   nextCursor: string | null;
+};
+
+/** Envelope for `paginationConfig: "offset"`. `nextOffset` is `null` on the last window. */
+export type OffsetPage<T> = {
+  data: T[];
+  total: number;
+  offset: number;
+  pageSize: number;
+  nextOffset: number | null;
 };
 
 export type PaginationConfig = ResourcePagination;
@@ -142,7 +159,7 @@ export interface MockResourceConfig {
    * `{ page, pageSize }`. `"cursor"`: `{ data, nextCursor }` and `{ cursor, pageSize }`. Other
    * query keys filter rows. An out-of-range page is an empty page, as in a Core mock.
    */
-  pagination?: PaginationConfig;
+  paginationConfig?: PaginationConfig;
   /**
    * Enable, disable, override or add operations: `true` keeps/enables a builtin, `false` removes
    * it, a function replaces it (or defines a custom operation).
@@ -181,19 +198,19 @@ export type MockApiConfig = Record<string, MockFlatResourceConfig>;
 
 /** Arguments of each builtin when a function overrides it (after the bound `ctx`). */
 type BuiltinArgs<N extends AllBuiltinOpName, T extends object, IdKey extends keyof T> = {
-  getAll: [query?: GetAllQuery<T>];
-  getById: [id: Id];
-  getMany: [ids: Id[]];
-  getBy: [field: Extract<keyof T, string>, value: Id];
-  findFirst: [options?: { query?: Partial<T> }];
-  exists: [id: Id];
-  count: [query?: Partial<T>];
-  create: [input: ResourceInput<T, IdKey>];
-  update: [id: Id, options: { body: ResourceInput<T, IdKey> }];
-  patch: [id: Id, options: { body: Partial<T> }];
-  delete: [id: Id];
-  createMany: [inputs: ResourceInput<T, IdKey>[]];
-  deleteMany: [ids: Id[]];
+  getAll: [query?: GetAllQuery<T> | MockCallOptions<GetAllQuery<T>, "page" | "cursor" | "offset">];
+  getById: [id: Id, options?: MockCallOptions];
+  getMany: [ids: Id[], options?: MockGetManyOptions<T>];
+  getBy: [field: Extract<keyof T, string>, value: Id, options?: MockCallOptions];
+  findFirst: [query?: CountInput<T>];
+  exists: [id: Id, options?: MockCallOptions];
+  count: [query?: CountInput<T>];
+  create: [input: ResourceInput<T, IdKey>, options?: MockCallOptions];
+  update: [id: Id, body: ResourceInput<T, IdKey>, options?: MockCallOptions];
+  patch: [id: Id, body: Partial<T>, options?: MockCallOptions];
+  delete: [id: Id, options?: MockCallOptions];
+  createMany: [inputs: ResourceInput<T, IdKey>[], options?: MockCallOptions];
+  deleteMany: [ids: Id[], options?: MockCallOptions];
 }[N];
 
 type BuiltinOverride<N extends AllBuiltinOpName, T extends object, IdKey extends keyof T> = (
@@ -289,13 +306,55 @@ type ValidateResource<R> = R extends string
 // Returned client type
 // ---------------------------------------------------------------------------------------------
 
-type GetAllQuery<T> = PageParams & Partial<T>;
+type GetAllQuery<T, Paginated = "page" | "cursor" | "offset"> = ([Paginated] extends ["page"]
+  ? { page?: number; pageSize?: number; cursor?: never; offset?: never }
+  : [Paginated] extends ["cursor"]
+    ? { cursor?: number | string; pageSize?: number; page?: never; offset?: never }
+    : [Paginated] extends ["offset"]
+      ? { offset?: number; pageSize?: number; page?: never; cursor?: never }
+      : PageParams) &
+  Partial<T>;
+
+type ModePaginationInput<Paginated> = [Paginated] extends ["page"]
+  ? { page?: number; pageSize?: number; cursor?: never; before?: never; offset?: never }
+  : [Paginated] extends ["cursor"]
+    ? { cursor?: string | number; before?: string; pageSize?: number; page?: never; offset?: never }
+    : [Paginated] extends ["offset"]
+      ? { offset?: number; pageSize?: number; page?: never; cursor?: never; before?: never }
+      : LogicalPaginationInput;
+
+/**
+ * Shared call-options shape accepted by standalone mock builtins alongside flat filter/page args.
+ * Preserves Core's `RequestOptions` ergonomics (`query`, `pagination`, `signal`, `headers`, etc.)
+ * without permitting unknown top-level keys on unpaginated calls.
+ */
+export type MockCallOptions<Q = Record<string, unknown>, Paginated = undefined> = Omit<
+  RequestOptions<Q>,
+  "full" | "query"
+> & {
+  query?: Q;
+  full?: false;
+} & ([Paginated] extends ["page" | "cursor" | "offset"]
+    ? { pagination?: ModePaginationInput<Paginated> }
+    : { pagination?: never });
+
+type GetAllInput<T, Paginated> = [Paginated] extends ["page" | "cursor" | "offset"]
+  ? GetAllQuery<T, Paginated> | MockCallOptions<GetAllQuery<T, Paginated>, Paginated>
+  : Partial<T> | MockCallOptions<Partial<T>, undefined>;
+
+type CountInput<T> = Partial<T> | MockCallOptions<Partial<T>, undefined>;
+
+export type MockGetManyOptions<T> = MockCallOptions<Record<string, unknown>, undefined> & {
+  sortBy?: GetManySort<Extract<keyof T, string>>;
+};
 
 type GetAllFn<T, Paginated> = [Paginated] extends ["page"]
-  ? (query?: GetAllQuery<T>) => Promise<Page<T>>
+  ? (query?: GetAllInput<T, Paginated>) => Promise<Page<T>>
   : [Paginated] extends ["cursor"]
-    ? (query?: GetAllQuery<T>) => Promise<CursorPage<T>>
-    : (query?: Partial<T>) => Promise<T[]>;
+    ? (query?: GetAllInput<T, Paginated>) => Promise<CursorPage<T>>
+    : [Paginated] extends ["offset"]
+      ? (query?: GetAllInput<T, Paginated>) => Promise<OffsetPage<T>>
+      : (query?: GetAllInput<T, undefined>) => Promise<T[]>;
 
 type BuiltinFn<
   N extends AllBuiltinOpName,
@@ -306,18 +365,32 @@ type BuiltinFn<
 > = N extends "getAll"
   ? GetAllFn<T, Paginated>
   : {
-      getById: (id: Id) => Promise<T>;
-      getMany: (ids: Id[]) => Promise<T[]>;
-      getBy: (field: Extract<keyof T, string>, value: Id) => Promise<T | null>;
-      findFirst: (options?: { query?: Partial<T> }) => Promise<T | null>;
-      exists: (id: Id) => Promise<boolean>;
-      count: (query?: Partial<T>) => Promise<number>;
-      create: (input: ResourceInput<Input, IdKey & keyof Input>) => Promise<T>;
-      update: (id: Id, options: { body: ResourceInput<Input, IdKey & keyof Input> }) => Promise<T>;
-      patch: (id: Id, options: { body: Partial<Input> }) => Promise<T>;
-      delete: (id: Id) => Promise<void>;
-      createMany: (inputs: ResourceInput<Input, IdKey & keyof Input>[]) => Promise<T[]>;
-      deleteMany: (ids: Id[]) => Promise<void>;
+      getById: (id: Id, options?: MockCallOptions) => Promise<T>;
+      getMany: (ids: Id[], options?: MockGetManyOptions<T>) => Promise<T[]>;
+      getBy: (
+        field: Extract<keyof T, string>,
+        value: Id,
+        options?: MockCallOptions,
+      ) => Promise<T | null>;
+      findFirst: (query?: CountInput<T>) => Promise<T | null>;
+      exists: (id: Id, options?: MockCallOptions) => Promise<boolean>;
+      count: (query?: CountInput<T>) => Promise<number>;
+      create: (
+        input: ResourceInput<Input, IdKey & keyof Input>,
+        options?: MockCallOptions,
+      ) => Promise<T>;
+      update: (
+        id: Id,
+        body: ResourceInput<Input, IdKey & keyof Input>,
+        options?: MockCallOptions,
+      ) => Promise<T>;
+      patch: (id: Id, body: Partial<Input>, options?: MockCallOptions) => Promise<T>;
+      delete: (id: Id, options?: MockCallOptions) => Promise<void>;
+      createMany: (
+        inputs: ResourceInput<Input, IdKey & keyof Input>[],
+        options?: MockCallOptions,
+      ) => Promise<T[]>;
+      deleteMany: (ids: Id[], options?: MockCallOptions) => Promise<void>;
     }[Exclude<N, "getAll">];
 
 /** Runtime operation entries that are not disabled. */
@@ -368,18 +441,22 @@ type ClientFn<
   : BuiltinFn<N, T, IdKey, Paginated, FileBody<T, Config>>;
 
 /** `true` / `"page"` / preset → page envelope, `"cursor"` → cursor envelope, else a plain list. */
-type PaginationOf<R> = R extends { readonly pagination: infer P }
+type PaginationOf<R> = (
+  R extends { readonly paginationConfig: infer P } ? P : undefined
+) extends infer P
   ? [P] extends [false | undefined]
     ? undefined
     : P extends true | "page" | PaginationPreset
       ? "page"
-      : P extends "cursor"
-        ? "cursor"
-        : P extends { type: infer T extends "page" | "cursor" }
+      : P extends "cursor" | "offset"
+        ? P
+        : P extends { strategy: infer T extends "page" | "cursor" | "offset" }
           ? T
-          : P extends { preset: PaginationPreset }
-            ? "page"
-            : undefined
+          : P extends { type: infer T extends "page" | "cursor" | "offset" }
+            ? T
+            : P extends { preset: PaginationPreset }
+              ? "page"
+              : undefined
   : undefined;
 
 /**
@@ -390,7 +467,7 @@ type PaginationOf<R> = R extends { readonly pagination: infer P }
 export type MockResource<
   T extends object,
   IdKey extends keyof T,
-  Paginated extends "page" | "cursor" | undefined = undefined,
+  Paginated extends "page" | "cursor" | "offset" | undefined = undefined,
   Config = {},
 > = Simplify<
   MockedResource & {

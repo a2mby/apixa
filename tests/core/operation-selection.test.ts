@@ -152,7 +152,7 @@ describe("operation selection", () => {
       baseURL: "https://api.example.com",
       transport: createFakeTransport((request) => {
         seen.push({ method: request.method, url: request.url, body: request.body });
-        return { body: [{ id: "1" }] };
+        return { body: [{ id: "1" }, { id: "2" }] };
       }),
       resources: {
         users: {

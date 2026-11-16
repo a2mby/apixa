@@ -11,8 +11,9 @@ import type { ApiStateOf } from "../types/definition.js";
 import { buildClient } from "./client.js";
 
 /**
- * Explicit metadata: `defineApi<AppApi>()({ … })`. `AppApi` supplies payload types only; the
- * runtime config decides which resources and operations exist.
+ * Explicit metadata: `defineApi<AppApi>()({ … })`. `AppApi` maps resource names to entity types only; the
+ * runtime config decides which resources and operations exist, and each operation's `schema`
+ * defines its custom body, query and response types.
  */
 export function defineApi<T extends ApiStateOf<T>>(): <
   const Config extends StructuralApiInput,
@@ -24,7 +25,7 @@ export function defineApi<T extends ApiStateOf<T>>(): <
     NoInfer<ApiInput<T>> &
     ValidateConfig<T, NoInfer<Config>> &
     HandlerCapture<M, RP, OP> &
-    HandlerOverlay<T, M, RP, OP>,
+    HandlerOverlay<M, RP, OP>,
 ) => ApiClient<T, Config>;
 
 /** Inferred: types come from the runtime config (and its mock data). */
@@ -38,7 +39,7 @@ export function defineApi<
     NoInfer<InferredApiInput> &
     ValidateConfig<{}, NoInfer<Config>> &
     HandlerCapture<M, RP, OP> &
-    HandlerOverlay<{}, M, RP, OP>,
+    HandlerOverlay<M, RP, OP>,
 ): ApiClient<{}, Config>;
 
 export function defineApi(config?: unknown): unknown {

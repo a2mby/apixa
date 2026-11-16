@@ -1,4 +1,5 @@
 import { defineApi, type ApiResponse } from "@apixa/core";
+import { z } from "zod";
 import { describe, expectTypeOf, it } from "vitest";
 
 /**
@@ -8,7 +9,7 @@ import { describe, expectTypeOf, it } from "vitest";
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type Doc = { id: string; name: string };
-type AppApi = { docs: { path: "/docs"; entity: Doc } };
+type AppApi = { docs: Doc };
 const baseURL = "https://api.example.com";
 
 const declared = () =>
@@ -32,21 +33,21 @@ const declared = () =>
   });
 
 const withMetadata = () =>
-  defineApi<{
-    docs: {
-      path: "/docs";
-      entity: Doc;
-      operations: { download: { response: Blob }; typed: { response: { ok: true } } };
-    };
-  }>()({
+  defineApi<{ docs: Doc }>()({
     baseURL,
     resources: {
       docs: {
         path: "/docs",
         operations: {
           download: { kind: "read", method: "GET", path: "/:id/file", responseType: "blob" },
-          // metadata wins over the literal responseType
-          typed: { kind: "read", method: "GET", path: "/:id/typed", responseType: "text" },
+          // a response schema wins over the literal responseType
+          typed: {
+            kind: "read",
+            method: "GET",
+            path: "/:id/typed",
+            responseType: "text",
+            schema: { response: z.object({ ok: z.literal(true) }) },
+          },
         },
       },
     },
@@ -113,41 +114,22 @@ describe("binary response types", () => {
     expectTypeOf<Awaited<ReturnType<Api["getAll"]>>>().not.toEqualTypeOf<Blob>();
   });
 
-  it("defineApi<T>() metadata response wins over the runtime responseType", () => {
+  it("a response schema wins over the runtime responseType", () => {
     type Api = ReturnType<typeof withMetadata>["docs"];
     expectTypeOf<Awaited<ReturnType<Api["download"]>>>().toEqualTypeOf<Blob>();
     expectTypeOf<Awaited<ReturnType<Api["typed"]>>>().toEqualTypeOf<{ ok: true }>();
   });
 
-  it("a per-call literal responseType replaces the data type, with and without full", () => {
-    // Never invoked: the assertions are compile-time only (no network).
+  it("rejects per-call decoding and redirect policy overrides", () => {
     const check = () => {
       const api = plain();
-      type Docs = typeof api.docs;
-      type GetById = Docs["getById"];
-      expectTypeOf(api.docs.getById("1")).resolves.toEqualTypeOf<Doc>();
-      expectTypeOf(api.docs.getById("1", { responseType: "blob" })).resolves.toEqualTypeOf<Blob>();
-      expectTypeOf(
-        api.docs.getById("1", { responseType: "arrayBuffer" }),
-      ).resolves.toEqualTypeOf<ArrayBuffer>();
-      expectTypeOf(
-        api.docs.getById("1", { responseType: "text" }),
-      ).resolves.toEqualTypeOf<string>();
-      expectTypeOf(
-        api.docs.getById("1", { responseType: "stream" }),
-      ).resolves.toEqualTypeOf<ReadableStream<Uint8Array> | null>();
-      expectTypeOf(api.docs.getById("1", { responseType: "json" })).resolves.toEqualTypeOf<Doc>();
-      expectTypeOf(
-        api.docs.getById("1", { responseType: "blob", full: true }),
-      ).resolves.toEqualTypeOf<ApiResponse<Blob>>();
+      // @ts-expect-error operation decoding is fixed
+      api.docs.getById("1", { responseType: "blob" });
+      // @ts-expect-error trusted policy belongs to the operation
+      api.docs.getById("1", { redirectOrigins: ["https://cdn.example.com"] });
       expectTypeOf(api.docs.getById("1", { full: true })).resolves.toEqualTypeOf<
         ApiResponse<Doc>
       >();
-      const widened: "blob" | "json" = Math.random() > 0.5 ? "blob" : "json";
-      expectTypeOf(api.docs.getById("1", { responseType: widened })).resolves.toEqualTypeOf<
-        Doc | Blob
-      >();
-      expectTypeOf<IsAny<Awaited<ReturnType<GetById>>>>().toEqualTypeOf<false>();
     };
     void check;
   });

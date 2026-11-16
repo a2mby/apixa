@@ -15,7 +15,7 @@ import { describe, expectTypeOf, it } from "vitest";
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type Doc = { id: string; name: string };
-type AppApi = { docs: { path: "/docs"; entity: Doc } };
+type AppApi = { docs: Doc };
 const baseURL = "https://api.example.com";
 
 const client = () =>
@@ -103,8 +103,8 @@ describe("onTransfer types", () => {
       const entity = await api.docs.getById("1", { onTransfer });
       expectTypeOf(entity).toEqualTypeOf<Doc>();
       expectTypeOf<IsAny<typeof entity>>().toEqualTypeOf<false>();
-      const buf = await api.docs.getById("1", { onTransfer, responseType: "arrayBuffer" });
-      expectTypeOf(buf).toEqualTypeOf<ArrayBuffer>();
+      // @ts-expect-error decoding is fixed by the operation
+      await api.docs.getById("1", { onTransfer, responseType: "arrayBuffer" });
       const list = await api.docs.getAll({ onTransfer });
       expectTypeOf<IsAny<typeof list>>().toEqualTypeOf<false>();
       const archived = await api.docs.archive("1");

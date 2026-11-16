@@ -55,7 +55,7 @@ function setup() {
       return { status, body, raw, headers };
     },
   };
-  const api = defineApi<{ files: { entity: { id: string; file: string; size?: number } } }>()({
+  const api = defineApi<{ files: { id: string; file: string; size?: number } }>()({
     baseURL: "https://backend.example",
     headers: { Authorization: "Bearer backend-secret" },
     transport,

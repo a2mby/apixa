@@ -66,9 +66,7 @@ export function createAdvancedApi() {
       },
     },
   };
-  return defineApi<{
-    transfers: { entity: Uploaded; operations: { create: { body: { document: Blob } } } };
-  }>()({
+  return defineApi<{ transfers: Uploaded }>()({
     baseURL: "/api",
     resources: {
       transfers: {

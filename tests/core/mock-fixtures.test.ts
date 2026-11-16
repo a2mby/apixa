@@ -333,7 +333,7 @@ it("invalidates pending provider generations and preserves field absence", async
   const gate = new Promise<void>((r) => {
     release = r;
   });
-  const api = defineApi<{ docs: { entity: { id: number; file?: string } } }>()({
+  const api = defineApi<{ docs: { id: number; file?: string } }>()({
     baseURL: "https://example.test",
     resources: {
       docs: {

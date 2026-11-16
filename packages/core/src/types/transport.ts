@@ -1,6 +1,6 @@
 import type { AdvancedTransferOptions, PresignedRequest } from "./advanced-transfer.js";
 import type { HeadersInitLike, HttpMethod, PathParams, QueryParams } from "./http.js";
-import type { RetryConfig } from "./retry.js";
+import type { RetryConfig, TimeoutOption } from "./retry.js";
 
 export type ResponseType = "json" | "auto" | "text" | "blob" | "arrayBuffer" | "stream";
 
@@ -40,6 +40,7 @@ export interface ApiRequest {
   /** Public body (request key transforms run after request middleware, at serialization). */
   body?: unknown;
   signal: AbortSignal;
+  /** Total deadline of the logical call in ms, when one is configured. */
   timeout?: number;
   meta: Record<string, unknown>;
   /** `resources` key that issued the call. */
@@ -124,9 +125,10 @@ export type TransportTransferEvent =
 export interface TransportRequest {
   security?: { credentials: "omit"; redirect: "error" };
   /**
-   * Origins a redirect may lead to without request headers or credentials (see
-   * `RequestOptions.redirectOrigins`). The built-in fetch transport follows redirects itself and
-   * refuses every other cross-origin destination; a custom transport owns its redirect policy.
+   * Origins a redirect may lead to without request headers or credentials (the operation's
+   * `redirectOrigins`). The built-in fetch transport follows redirects itself and refuses every
+   * other cross-origin destination. A custom transport receives this list only after declaring
+   * `capabilities.redirectOrigins`, which is its promise to enforce the same policy.
    */
   redirectOrigins?: readonly string[];
   url: string;
@@ -157,11 +159,20 @@ export interface TransportResponse {
 }
 
 export interface Transport {
-  capabilities?: { presigned?: true };
+  /**
+   * Security guarantees this transport enforces. An operation that needs one (`presigned`
+   * requests, `redirectOrigins`) is refused on a transport that does not declare it.
+   */
+  capabilities?: { presigned?: true; redirectOrigins?: true };
   request(input: TransportRequest): Promise<TransportResponse>;
 }
 
-/** Per-call options, always the last argument of an operation. */
+/**
+ * Per-call options, always the last argument of an operation. They carry the values and execution
+ * controls of **one call** (path / query values, headers, cancellation, time and retry budget,
+ * observers). They never redefine the operation: how the response is decoded (`responseType`) and
+ * where a redirect may lead (`redirectOrigins`) are fixed by the operation definition.
+ */
 export type RequestOptions<TQuery = QueryParams> = {
   transfer?: AdvancedTransferOptions;
   presigned?: PresignedRequest;
@@ -171,23 +182,23 @@ export type RequestOptions<TQuery = QueryParams> = {
   /** Highest-precedence headers for this call. */
   headers?: HeadersInitLike;
   signal?: AbortSignal;
-  /** Overall budget for the call, including retries and backoff. */
-  timeout?: number;
-  retry?: number | RetryConfig | false;
-  responseType?: ResponseType;
-  /** Largest accepted response body in bytes for this call; wins over the operation's. */
-  maxResponseSize?: number;
   /**
-   * Exact origins this call may be redirected to (for example a CDN the API answers `302` with).
-   * A listed destination is followed **without** request headers, cookies, credentials or body and
-   * only for `GET` / `HEAD`. Wins over the operation's list. Any other cross-origin redirect fails.
+   * Time budget for this call. A number is the total deadline (attempts, waits and hooks);
+   * `{ total?, perAttempt? }` also bounds each transport attempt.
    */
-  redirectOrigins?: readonly string[];
+  timeout?: TimeoutOption;
+  retry?: number | RetryConfig | false;
+  /**
+   * Largest accepted response body in bytes for this call. It can only **narrow** the operation's
+   * `maxResponseSize`: a larger value is rejected with `ConfigError`.
+   */
+  maxResponseSize?: number;
   /**
    * Opt in to transfer lifecycle events (upload and download progress, retry attempts, abort and
    * failure). Without it nothing is wrapped or observed. Overrides the operation's `onTransfer`.
    */
   onTransfer?: TransferObserver;
+  /** Application / middleware metadata. Never a trusted authorization source. */
   meta?: Record<string, unknown>;
   /** When true, resolve to `ApiResponse<T>` instead of unwrapped `T`. */
   full?: boolean;
@@ -197,3 +208,34 @@ export type RequestOptions<TQuery = QueryParams> = {
    */
   idempotencyKey?: string;
 };
+
+/**
+ * Optional local ordering of a `getMany` result (applied after every identity and schema check).
+ * A field name compares values as they are (strings by code unit, numbers numerically); only
+ * `{ type: "number" }` compares numeric strings as numbers, and then every record must hold a
+ * finite numeric value. Equal values keep the requested-id order.
+ */
+export type GetManySort<Field extends string = string> =
+  Field | { field: Field; order?: "asc" | "desc"; type?: "string" | "number" };
+
+/** `getMany`-only call options: {@link RequestOptions} plus the local `sortBy`. */
+export type GetManyOptions<
+  TQuery = QueryParams,
+  Field extends string = string,
+> = RequestOptions<TQuery> & { sortBy?: GetManySort<Field> };
+
+/**
+ * `getMany([], { full: true })`: nothing was sent, so there is no HTTP status, no headers and no
+ * raw response. `skipped: true` distinguishes it from a real (or mocked) response.
+ */
+export interface SkippedBatchResponse<T> {
+  data: T;
+  skipped: true;
+  reason: "empty-ids";
+  status: null;
+  headers: null;
+  raw?: undefined;
+}
+
+/** `getMany(ids, { full: true })` result: a real response, or a locally skipped empty batch. */
+export type BatchResponse<T> = (ApiResponse<T> & { skipped: false }) | SkippedBatchResponse<T>;

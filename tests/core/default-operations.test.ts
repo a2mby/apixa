@@ -1,34 +1,13 @@
 import { defineApi } from "@apixa/core";
+import { z } from "zod";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type User = { id: string; name: string; email: string };
 
-type UsersWithSearchApi = {
-  users: {
-    path: string;
-    entity: User;
-    operations: {
-      search: {
-        method: "GET";
-        path: "/search";
-        query: { q: string };
-        response: User[];
-      };
-    };
-  };
-};
+type UsersWithSearchApi = { users: User };
 
-type UsersWithOverridesApi = {
-  users: {
-    path: string;
-    entity: User;
-    operations: {
-      getAll: { path: "/active"; response: User[] };
-      update: { method: "PATCH"; body: Partial<User>; response: User };
-    };
-  };
-};
+type UsersWithOverridesApi = { users: User };
 
 describe("default-first operations", () => {
   it("exposes all built-in CRUD ops for a path-only resource", async () => {
@@ -81,7 +60,7 @@ describe("default-first operations", () => {
     await api.users.getAll();
     await api.users.getById("1");
     await api.users.create({ name: "Ada", email: "ada@example.com" });
-    await api.users.update("1", { body: { name: "Ada Lovelace" } });
+    await api.users.update("1", { name: "Ada Lovelace" });
     await api.users.delete("1");
 
     expect(calls).toEqual([
@@ -135,7 +114,7 @@ describe("default-first operations", () => {
 
     await api.users.getAll();
     await api.users.getById("1");
-    await api.users.update("1", { body: { name: "Ada" } });
+    await api.users.update("1", { name: "Ada" });
 
     expect(calls).toEqual([
       "GET https://api.example.com/users/active",
@@ -160,6 +139,12 @@ describe("default-first operations", () => {
             search: {
               method: "GET",
               path: "/search",
+              schema: {
+                query: z.object({ q: z.string() }),
+                response: z.array(
+                  z.object({ id: z.string(), name: z.string(), email: z.string() }),
+                ),
+              },
             },
           },
         },

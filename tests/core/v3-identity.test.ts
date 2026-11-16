@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import { createFakeTransport } from "../helpers/fake-transport.js";
 
 type Product = { sku: `sku-${number}`; name: string };
-type State = { products: { entity: Product } };
+type State = { products: Product };
 
 describe("resource identity", () => {
   it("uses the resource identity key for live lookup and call types", async () => {
@@ -142,7 +142,7 @@ describe("correlated lookup fields", () => {
       settings: { private: boolean };
       active: boolean;
     };
-    const api = defineApi<{ products: { entity: Entity } }>()({
+    const api = defineApi<{ products: Entity }>()({
       baseURL: "https://example.com",
       transport: createFakeTransport(() => ({
         body: { id: 42, slug: "macbook", active: true, settings: { private: false } },

@@ -22,7 +22,7 @@ const ada: User = { id: "1", name: "Ada" };
 
 function usersApi() {
   const requests: TransportRequest[] = [];
-  const api = defineApi<{ users: { entity: User } }>()({
+  const api = defineApi<{ users: User }>()({
     baseURL: "https://api.example.com",
     transport: createFakeTransport((request) => {
       requests.push(request);

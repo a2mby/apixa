@@ -31,13 +31,14 @@ operations at API construction and every function `ctx.request()` before transpo
 await api.users.getAll({
   query: { active: true },
   signal,
-  timeout: 5_000,
-  retry: { retries: 1 },
+  timeout: { total: 5_000, perAttempt: 2_000 },
+  retry: { count: 1 },
   meta: { reason: "warmup" },
   full: true, // → ApiResponse<T>
-  responseType: "json",
 });
 ```
+
+Per-call `RequestOptions` supply execution controls for a single call (`params`, `query`, `pagination`, `headers`, `signal`, `timeout`, `retry`, `maxResponseSize` narrowing, `onTransfer`, `meta`, `full`, `idempotencyKey`, and `sortBy` on `getMany`). Definition-only properties (`responseType`, `redirectOrigins`) are fixed on the operation definition and rejected per call (`ConfigError`).
 
 ## Idempotency keys
 
@@ -70,14 +71,22 @@ await api.orders.create(body, { idempotencyKey: "checkout-42" }); // your own ke
 - Function operations (`{ kind, run }`) reject `idempotency` with a `ConfigError`; set the header
   yourself in `ctx.request({ headers: { "Idempotency-Key": key } })`.
 
-## Retries
+## Retries and timeouts
 
-Opt-in `retry` on api / resource / operation / call. Defaults: methods `GET`/`HEAD`/`OPTIONS`, status `408`/`429`/`5xx`, exponential backoff (`baseDelayMs: 200`, `maxDelayMs: 2000`, `jitter: true`). Also: `respectRetryAfter`, `shouldRetry(ctx)`, `onRetry(ctx)`.
+Opt-in `retry` on api / resource / operation / call (`retry: 2` or `{ count, delay, maxDelay, backoff, jitter, methods, statusCodes, respectRetryAfter, shouldRetry, onRetry }`). Defaults: methods `GET`/`HEAD`/`OPTIONS`/`PUT`/`DELETE` (`POST` and `PATCH` require an explicit `methods` entry), status `408`/`429`/`5xx`, `backoff: "exponential"` (`"linear"` also supported), `delay: 200`, `maxDelay: 2000`, `jitter: "equal"` (`"full"` or `false` also supported). `timeout` accepts a total ms number or `{ total?, perAttempt? }`.
 
 ## Middleware
 
 ```ts
 const refresh: MiddlewareHooks = {
+  onAttemptResponse: [
+    async ({ response, retry }) => {
+      if (response.status === 401) {
+        await refreshSession();
+        retry();
+      }
+    },
+  ],
   onError: [
     async (error, ctx) => {
       if (isHttpError(error) && error.status === 401 && ctx.replay) {
@@ -89,18 +98,18 @@ const refresh: MiddlewareHooks = {
 };
 ```
 
-Configure `middleware: refresh` (`{ onRequest?, onResponse?, onError? }`) on the API, resource, or operation layer, composed `root → resource → operation` in array order within each hook list. `onRequest` sees `request.query` already key-transformed (and renamed by live pagination `params`), while `request.body` transforms run after `onRequest`; mutations to `request.query` or `request.url` stay synchronized (`request.query` wins on conflicts). `onResponse` runs after `response` processing (`unwrap`, transforms, `parse`, shaping, `validate`) and preserves `ApiResponse.source`.
+Configure `middleware: refresh` (`{ onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }`) on the API, resource, or operation layer, composed `root → resource → operation` in array order within each hook list. Logical hooks (`onRequest`, `onResponse`, `onError`) run once per call; attempt hooks (`onAttempt`, `onAttemptResponse`) run around each transport attempt with per-attempt isolated headers and bounded `retry()`. `onRequest` sees `request.query` already key-transformed (and renamed by live pagination `params`), while `request.body` transforms run after `onRequest`; mutations to `request.query`, `request.body`, or `request.url` are re-validated before dispatch. `onResponse` runs once on the final logical response after `response` processing (`unwrap`, transforms, `parse`, builtin normalization, `validate`) and before `schema.response` and final builtin invariants, preserving `ApiResponse.source`.
 
 ## Response processing, query options, transforms, and pagination
 
 - **Query serialization (root `defineApi` only)**: configure `queryArrayFormat` (`"repeat"` | `"comma"` | `"brackets"`, default `"repeat"`), `query` (`{ nulls?: "omit" | "empty" | "null", emptyArrays?: "omit" | "empty", booleans?: "string" | "number" }`), and `querySerializer?: (query) => string`. (`undefined` is always omitted; nested plain objects use percent-encoded brackets.)
-- **`response` processing**: configure `{ unwrap, parse, validate }` on API, resource, or operation layers (`false` disables an inherited hook). Builtin collection responses reject invalid shapes with `ResponseShapeError`; `ApiResponse.source` preserves the raw payload when `{ full: true }` is used.
+- **`response` processing and `schema`**: configure `{ unwrap, parse, validate }` on API, resource, or operation layers (`false` disables an inherited hook), and Standard Schema V1 `schema: { body?, query?, response? }` on operations (use `emptyResponse` for intentional `void` / `204` responses). Builtin collection responses reject invalid shapes with `ResponseShapeError`; `getMany` enforces strict ID membership (`missingIds`, `extraIds`, `duplicateIds`), restores requested ID order (or applies local `sortBy`), and short-circuits `getMany([])` without a network request; `count` normalizes approved number/numeric-string/envelope shapes; `ApiResponse.source` preserves the raw payload when `{ full: true }` is used.
 - **`transforms`**: configure `transforms: { request: { keys, exclude, preserve, maxDepth }, response: { keys, exclude, preserve, maxDepth } }`.
-- **`pagination`**: declare `true` (`"page"`), `"page"`, `"cursor"`, a preset shorthand (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"`), `false` (shadow/disable per operation), or `{ type?, preset | fields | parseList, params }` (`type` defaults to `"page"` when omitted with `preset`). Configured on a resource (`getAll` inherits it) or per operation on `getAll`, `getMany`, and declarative custom operations; shorthand, mapped, `parseList`, and mock envelopes all validate complete page/cursor metadata.
+- **`paginationConfig` / `pagination`**: resource `paginationConfig` is the shared pagination configuration (`getAll` paginates from it; other operations opt in with `pagination: true`; an operation strategy/preset/object replaces it entirely; resource `pagination` is rejected with `ConfigError`). Strategies: `"page"`, `"cursor"`, `"offset"`. Callers can pass logical pagination inputs via `options.pagination` or `options.query`. Navigation helpers `nextPageInput`, `previousPageInput`, `paginationContextKey`. See [docs/guides/humans/pagination.md](../../docs/guides/humans/pagination.md).
 
 ## Plugin seams
 
-`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), use `apixa/mocking` and import `apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `apixa/mocking` README.
+`ResourceExtensions` / `OperationExtensions` — Core owns `mock` / `slice` / `paginationConfig` / `pagination` types and known `MockDatasetIds`. For named datasets (`mock: "<dataset-id>"`), use `apixa/mocking` and import `apixa/mocking/register` once before requesting data. Inline mock data and providers need no integration. A custom declarative operation can carry its own `mock` handler (`mock: ({ records, store, params, query, body, signal }) => result`) that runs only when the resource is mocked; see the `apixa/mocking` README.
 
 ## File uploads
 
@@ -108,7 +117,7 @@ Declare which entity fields hold files; writes then accept native `File` / `Blob
 sends `multipart/form-data` automatically (JSON stays the default when there are no files):
 
 ```ts
-const api = defineApi<{ users: { entity: User } }>()({
+const api = defineApi<{ users: User }>()({
   baseURL: "https://api.example.com",
   resources: {
     users: { path: "/users", fileFields: ["avatar", "documents"] },
@@ -116,7 +125,7 @@ const api = defineApi<{ users: { entity: User } }>()({
 });
 
 await api.users.create({ name: "Ada", avatar: file, documents: [a, b] }); // multipart
-await api.users.update("1", { body: { name: "Ada L." } }); // no binary values → JSON
+await api.users.update("1", { name: "Ada L." }); // no binary values → JSON
 const user = await api.users.getById("1"); // user.avatar: string
 ```
 
@@ -130,11 +139,10 @@ from an `<input>` must be converted first (`Array.from(input.files)`).
 ## File downloads and binary responses
 
 A download is an ordinary operation. `responseType` (`"json"` default, `"text"`, `"blob"`,
-`"arrayBuffer"`, `"stream"`) is declared on the operation and types the result; a per-call
-`responseType` wins, and `{ full: true }` gives the `ApiResponse` with `status` and `headers`:
+`"arrayBuffer"`, `"stream"`) is declared on the operation and types the result; `{ full: true }` gives the `ApiResponse` with `status` and `headers`:
 
 ```ts
-const api = defineApi<{ reports: { entity: Report } }>()({
+const api = defineApi<{ reports: Report }>()({
   baseURL: "https://api.example.com",
   resources: {
     reports: {
@@ -150,16 +158,15 @@ const blob = await api.reports.download({ params: { id: "1" } }); // Blob
 const res = await api.reports.download({ params: { id: "1" }, full: true }); // ApiResponse<Blob>
 parseContentDisposition(res.headers).filename; // string | undefined (never assumed)
 res.headers.get("content-type"); // content type / length are plain headers
-await api.reports.getById("1", { responseType: "arrayBuffer" }); // ArrayBuffer
 ```
 
 Result types: `text` → `string`, `blob` → `Blob`, `arrayBuffer` → `ArrayBuffer`, `stream` →
-`ReadableStream<Uint8Array> | null`. Metadata `response` in `defineApi<T>()` wins over the inferred
+`ReadableStream<Uint8Array> | null`. Operation `schema.response` or `responseType` determines the inferred
 type; function operations use `ctx.request({ path, responseType: "blob" })` (also typed). Rules:
-an unknown `responseType` is a `ConfigError`; binary data is never JSON-parsed, key-transformed or
+an unknown `responseType` or per-call `responseType` override is a `ConfigError`; binary data is never JSON-parsed, key-transformed or
 shaped (collection array validation, `slice`); a failed download is an `HttpError` whose `data` is the parsed
 JSON/text body; an empty 204/205 gives `""` / an empty `Blob` / an empty `ArrayBuffer` for explicit
-text/binary modes (`null` for JSON and `stream`). Abort and timeout cover the body read, and retries
+text/binary modes (`null` for `stream`, and `ResponseShapeError` for JSON operations expecting an entity/collection unless `schema: { response: emptyResponse }` is declared). Abort and timeout cover the body read, and retries
 never read a binary body that was not successful.
 
 Mocked resources serve uploaded files from the virtual store, through a declarative operation:
@@ -245,8 +252,8 @@ defined value, including `0`, wins). `accept`/`reject` take MIME types, wildcard
 an allow-list rejects a file with no declared type unless `unknownType: "allow"`. `min` applies only when the field is
 present. A raw `Blob` / buffer / string / `ReadableStream` body is bounded by `maxBodySize` / `maxTotalSize`; a stream is
 counted as it flows (never buffered or read to validate), and a cut-off stream errors with `ValidationError`.
-`maxResponseSize` (per operation or call) rejects early from a trustworthy `Content-Length` and otherwise counts bytes
-while reading (blob, arrayBuffer, text, json and stream), without breaking cancellation, timeouts or backpressure;
+`maxResponseSize` (per operation, or narrowed per call) rejects early from a trustworthy `Content-Length` and otherwise counts bytes
+while reading (blob, arrayBuffer, text, json and stream), without breaking cancellation, timeouts or backpressure (a per-call `maxResponseSize` larger than the operation's ceiling is rejected with `ConfigError`);
 `responseAccept` checks the declared `Content-Type`. A failed response keeps its status and `HttpError`; an oversized error body is dropped (`data` is `null`) rather than buffered. A `ValidationError` is never retried.
 
 **This is not security.** Client-side rules give fast local feedback and save wasted uploads. `File.type` and `File.name`
@@ -255,7 +262,7 @@ cannot undo bytes already sent. Your backend must validate everything again.
 
 **Redirects (v1.8.0):** a redirect is followed only within the request's own origin. A cross-origin redirect fails with
 `SecurityError` before the destination is contacted, so credentials and custom headers are never forwarded. For a CDN, list
-the destination with `redirectOrigins: ["https://cdn.example.com"]` (operation setting or call option): it is followed with
+the destination with `redirectOrigins: ["https://cdn.example.com"]` on the operation definition (or `ctx.request` in a function operation; per-call overrides are rejected with `ConfigError`): it is followed with
 no headers, cookies or body (`GET`/`HEAD` only). Browsers hide redirect destinations, so any redirect fails closed there;
 return the URL in a JSON body and use a `presigned` descriptor instead.
 
@@ -263,8 +270,8 @@ return the URL in a JSON body and use a `presigned` descriptor instead.
 
 ## Errors
 
-`ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `RESPONSE_SHAPE` | `VALIDATION` | `TIMEOUT` | `ABORT` | `CONFIG` | `HEADERS` | `SECURITY` | `TRANSFORM` | `SERIALIZATION` | `MOCK_NOT_FOUND` | `MOCK_DUPLICATE_ID` | `MOCK_INVALID_INPUT` | `MOCK_UNSUPPORTED` | `MOCK_LOAD`.  
-`ApiError` has `code`, `retryable`, `attempt`. Specialized classes include `HttpError`, `ParseError`, `ResponseShapeError`, `ValidationError`, `TimeoutError`, `AbortError`, `ConfigError`, `SecurityError`, `TransformError`, `SerializationError`, `MockError`. Guards: `isApiError`, `isHttpError`, `isTimeoutError`.
+`ApiErrorCode`: `NETWORK` | `HTTP` | `PARSE` | `RESPONSE_SHAPE` | `VALIDATION` | `VALIDATION_ERROR` | `TIMEOUT` | `ABORT` | `CONFIG` | `HEADERS` | `SECURITY` | `TRANSFORM` | `SERIALIZATION` | `MOCK_NOT_FOUND` | `MOCK_DUPLICATE_ID` | `MOCK_INVALID_INPUT` | `MOCK_UNSUPPORTED` | `MOCK_LOAD`.  
+`ApiError` has `code`, `retryable`, `attempt`. Specialized classes include `HttpError`, `ParseError`, `ResponseShapeError`, `ValidationError`, `SchemaValidationError` (`code: "VALIDATION_ERROR"`, `phase: "body" | "query" | "response"`), `TimeoutError`, `AbortError`, `ConfigError`, `SecurityError`, `TransformError`, `SerializationError`, `MockError`. Guards: `isApiError`, `isHttpError`, `isTimeoutError`.
 
 ## Notes
 
@@ -296,7 +303,7 @@ const api = defineApi({
 const seeded = await api.docs.getById(1); // seeded.file: string
 mockFiles(api).get(seeded.file)?.text(); // "hello"
 await api.docs.patch(1, {
-  body: { file: new File(["updated"], "guide.txt", { type: "text/plain" }) },
+  file: new File(["updated"], "guide.txt", { type: "text/plain" }),
 });
 mockFiles(api).list({ disk: "documents", path: "guides" });
 resetMock(api); // invalidates pending work immediately; fixtures rehydrate on next awaited read

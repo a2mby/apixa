@@ -7,7 +7,7 @@ import { useResourceMutation } from "../../packages/react/src/use-resource-mutat
 import { newClient, wrap } from "../helpers/query.js";
 
 type User = { id: string; name: string; avatar?: string | null; documents?: string[] };
-type AppApi = { users: { path: "/users"; entity: User } };
+type AppApi = { users: User };
 
 const makeApi = () =>
   defineApi<AppApi>()({

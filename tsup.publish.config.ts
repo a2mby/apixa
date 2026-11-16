@@ -14,6 +14,7 @@ const entries: Record<string, string> = {
   "mocking/datasets/orders": "src/mocking/datasets/orders.ts",
   "mocking/datasets/posts": "src/mocking/datasets/posts.ts",
   "mocking/datasets/comments": "src/mocking/datasets/comments.ts",
+  validation: "src/validation.ts",
   "react/index": "src/react/index.ts",
   "react/advanced": "src/react/advanced.ts",
 };
@@ -30,7 +31,7 @@ export default defineConfig({
   clean: true,
   sourcemap: false,
   noExternal: [/^@apixa\//],
-  external: ["react", "react/jsx-runtime", "react-dom", /^@tanstack\//, /^node:/],
+  external: ["react", "react/jsx-runtime", "react-dom", /^@tanstack\//, /^node:/, "zod", /^zod\//],
   esbuildOptions(options) {
     options.chunkNames = "chunks/[name]-[hash]";
   },

@@ -64,7 +64,7 @@ function findUnsafeKey(root: unknown): string | undefined {
 }
 
 /** Exact-match filter used by list / findFirst / count. Reserved paging keys are ignored. */
-const RESERVED_QUERY_KEYS = new Set(["page", "pageSize", "cursor", "id", "id[]"]);
+const RESERVED_QUERY_KEYS = new Set(["page", "pageSize", "cursor", "offset", "id", "id[]"]);
 
 function filterEntries(query: Record<string, unknown> | undefined): [string, unknown][] {
   if (!query) return [];

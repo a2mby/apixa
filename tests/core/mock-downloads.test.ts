@@ -20,7 +20,7 @@ const forbidden: Transport = {
 type Doc = { id: string; name: string; file?: string | null };
 
 function makeApi() {
-  return defineApi<{ docs: { path: "/docs"; entity: Doc } }>()({
+  return defineApi<{ docs: Doc }>()({
     baseURL: "https://api.example.com",
     transport: forbidden,
     resources: {
@@ -122,20 +122,16 @@ describe("mock downloads from the virtual file store", () => {
     });
   });
 
-  it("is coerced to the requested responseType, per operation and per call", async () => {
+  it("is coerced to the requested responseType, from the operation declaration", async () => {
     const api = makeApi();
     const doc = await upload(api);
     const buffer = await api.docs.raw({ params: { id: doc.id } });
     expect(buffer).toBeInstanceOf(ArrayBuffer);
     expect(new Uint8Array(buffer)).toEqual(PNG);
     expect(await api.docs.note({ params: { id: doc.id } })).toBe(new TextDecoder().decode(PNG));
-    const asBuffer = await api.docs.download({
-      ...{ responseType: "arrayBuffer" },
-      params: { id: doc.id },
-    });
-    expect(new Uint8Array(asBuffer)).toEqual(PNG);
-    const asText = await api.docs.download({ ...{ responseType: "text" }, params: { id: doc.id } });
-    expect(asText).toBe(new TextDecoder().decode(PNG));
+    await expect(
+      api.docs.download({ params: { id: doc.id }, responseType: "text" } as never),
+    ).rejects.toThrow(/not a call option/);
   });
 
   it("serializes JSON results for a binary responseType, like a server would", async () => {

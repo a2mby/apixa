@@ -21,7 +21,7 @@ function recording(statuses: number[] = [200], header = "idempotency-key") {
   return { transport, seen };
 }
 
-const RETRY_WRITES = { retries: 2, baseDelayMs: 0, jitter: false, methods: ["POST" as const] };
+const RETRY_WRITES = { count: 2, delay: 0, jitter: false as const, methods: ["POST" as const] };
 
 describe("Core idempotency keys", () => {
   it("is disabled by default: no header on writes or reads", async () => {

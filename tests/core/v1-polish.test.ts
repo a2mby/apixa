@@ -5,7 +5,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 describe("operation-level transforms are typed", () => {
   it("an operation's response keys override resource and root in TypeScript and at runtime", async () => {
     type Backend = { user_id: number };
-    const api = defineApi<{ users: { entity: Backend } }>()({
+    const api = defineApi<{ users: Backend }>()({
       baseURL: "https://x.dev",
       transforms: { response: { keys: "camelCase" } },
       transport: createFakeTransport(() => ({ body: { user_id: 1 } })),

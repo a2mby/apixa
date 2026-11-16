@@ -11,21 +11,57 @@ See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) fo
 
 - **Built-in consolidation (16 → 13):** Removed `getBySlug`, `upsert`, and `search` from generated
   resource clients, presets (`"all"`, `"crud"`, `"read"`), and `MockStore` built-ins.
-- **Stable `{ body }` on detail writes:** `update(id, { body, ...options })` and
-  `patch(id, { body, ...options })` now take `options.body` instead of a positional body argument
-  across Core, `apixa/react` mutations/optimistic updaters, and `defineMockApi`. Passing no `body`
-  is a TypeScript error and a runtime `ValidationError`.
-- **Unified `middleware`:** Consolidated `middleware`, `requestMiddleware`, `responseMiddleware`, and
-  `errorMiddleware` into `middleware: MiddlewareHooks` (`{ onRequest?, onResponse?, onError? }`)
-  at root, resource, and operation layers, composing hook arrays `root → resource → operation`.
+- **Positional `body` on detail writes (ADR-007):** `update(id, body, options?)` and
+  `patch(id, body, options?)` take a positional `body` argument and trailing `options` across Core,
+  `apixa/react` mutations/optimistic updaters (`[id, body, options?]`), and `defineMockApi`. Passing
+  no `body` throws `ValidationError` at runtime.
+- **Unified `middleware` with attempt hooks:** Consolidated `middleware`, `requestMiddleware`,
+  `responseMiddleware`, and `errorMiddleware` into `middleware: MiddlewareHooks`
+  (`{ onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }`) at root, resource, and
+  operation layers, composing hook arrays `root → resource → operation`.
 - **Declarative custom operation arguments & `kind` derivation:** Declarative HTTP operations derive
   `kind` from `method` (rejecting mismatched `kind`); reads take `(options?)`, writes default to
   `hasBody: true` unless `hasBody: false` is set.
+- **Per-call `RequestOptions` boundaries (ADR-007):** Removed per-call `responseType` and
+  `redirectOrigins` (they remain operation-definition and `ctx.request` settings). Per-call
+  `maxResponseSize` may only tighten an operation's configured limit.
 - **Strict `slice` and `ResponseShapeError`:** `slice` now uses standard `Array.prototype.slice`
   semantics and throws `ConfigError` when combined with `pagination`. Invalid collection shapes
   raise `ResponseShapeError` instead of coercing to `[]`.
 
+### Schemas, `emptyResponse`, and flat `ApiState` (ADR-006 & ADR-007)
+
+- **Breaking:** `ApiState` is a map of resource name to entity (`{ products: Product }`).
+  `ResourceState`, `OperationState` and the `entity` / `list` / `query` / `operations` wrapper are removed.
+  Custom operation payload types now come from each operation's runtime `schema`.
+- Added `schema: { body?, query?, response? }` (Standard Schema V1) on built-in and custom declarative
+  operations, `emptyResponse` marker (`import { emptyResponse } from "apixa"` for `Promise<void>`
+  empty-body operations), `SchemaValidationError` (`code: "VALIDATION_ERROR"`,
+  `phase: "body" | "query" | "response"`), and the optional `apixa/validation` subpath (`defineApi`, `z`;
+  optional peer `zod`). `response.parse` and `schema.response` are compatible (`response.parse` runs
+  before `onResponse`, and `schema.response` runs after `onResponse` and before final built-in
+  structural/pagination checks). See [ADR-006](./docs/decisions/006-operation-schema-and-simplified-api-state.md),
+  [ADR-007](./docs/decisions/ADR-007-apixa-v3-unified-api-contract.md), and the
+  [schemas guide](./docs/guides/humans/schemas.md).
+
 ### Added
+
+- **Pagination architecture:** resource `paginationConfig` (resource `pagination` is rejected with
+  `ConfigError`; `pagination` is the operation-level key and `options.pagination` / `options.query`
+  carry call-time logical inputs), the `"offset"` strategy, optional metadata (`pageCount`, `hasMore`, `nextOffset`,
+  `previousOffset`, `previousCursor`), `pageBase`, `defaultPageSize` / `maxPageSize`, logical-input
+  validation and collision detection shared by live and mock calls, `buildRequest` (query / body /
+  headers), `parseList` with `{ status, headers, request }`, pure navigation helpers `nextPageInput` /
+  `previousPageInput` / `paginationContextKey`, `OffsetPage` for `defineMockApi`, and
+  `docs/guides/humans/pagination.md`. Breaking for TypeScript: `PageResult` is now the page contract
+  (the union is `PaginatedResult`); result types carry optional metadata; custom mappings may omit `total`;
+  `laravel-paginator` cursor results include `previousCursor`.
+- **Built-in `getMany` and `count` contracts (ADR-007):** `getMany([])` fast-paths with zero network
+  or mock requests (`skipped: true` on `{ full: true }`), enforces strict ID membership against
+  `idKey` with input-order preservation (allowing page subsets when paginated while rejecting unexpected `extraIds` and `duplicateIds`), and supports local `options.sortBy`. `count()` normalizes
+  non-negative safe integers, digit strings, and `{ count }`, `{ total }`, `{ data }`, `{ records }`, `{ quantity }`, `{ numberOfUsers }`, or `{ statistics: { count } }` envelopes.
+- **Retries and timeouts (ADR-007):** Default retryable methods include `PUT` and `DELETE` alongside
+  `GET`, `HEAD`, and `OPTIONS`; `retry` adds `backoff: "exponential" | "linear"` and `jitter: "full" | "equal" | false` (default `"equal"`); `timeout` accepts `number` or `{ total?, perAttempt? }`.
 
 - **Query serialization config:** Client-wide `queryArrayFormat` (`"repeat"` | `"comma"` |
   `"brackets"`), `query` (`{ nulls, emptyArrays, booleans }`), and `querySerializer` with nested
@@ -34,15 +70,18 @@ See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) fo
   (with `false` opt-out per layer) and `ApiResponse.source` preserving raw parsed payloads.
 - **Transform guards & `TransformError`:** `KeyTransformConfig` (`exclude`, `preserve`, `maxDepth`)
   with cycle/collision/depth detection raising `TransformError`.
-- **Per-operation pagination:** `pagination` (`true`, `"page"`, `"cursor"`, preset shorthands, or
+- **Per-operation pagination:** `pagination` (`true`, `"page"`, `"cursor"`, `"offset"`, preset shorthands, or
   mapping objects) inherited by `getAll` (`pagination: false` opts out) and opt-in on `getMany` and
-  declarative custom operations, with complete page/cursor envelope validation.
-- **Root & Core type exports:** Exported `LayerOptions`, `QueryOptions`, `ResponseOptions`,
-  `ResponseHookContext`, `ApiState`, `ApiStateOf`, `ResourceState`, `OperationState`,
-  `PageResult`, `ResolvedPagination`, `PaginationMode`, `PaginationQueryOf`, `KeyTransformConfig`,
-  `TransformKeys`, `ConvertKey`, `MockStorageOptions`, `MockFileFilter`, `MockFileFixture`,
-  `MockFileFixtures`, `MockFixtureRef`, `OperationMockHandler`, `OperationMockContext`,
-  `MockStoreHandle`, `MockFilesHandle`, `ExtendedBuiltinOpName`, `RetryHookContext`.
+  declarative custom operations, with complete page/cursor/offset envelope validation.
+- **Root & Core exports:** Exported `emptyResponse`, `LayerOptions`, `QueryOptions`, `ResponseOptions`,
+  `ResponseHookContext`, `AttemptMiddleware`, `AttemptContext`, `AttemptResponseMiddleware`,
+  `AttemptResponseContext`, `TimeoutOption`, `ResolvedTimeout`, `RetryBackoff`, `RetryJitter`,
+  `BatchResponse`, `SkippedBatchResponse`, `GetManyOptions`, `GetManySort`, `SchemaPhase`,
+  `ApiState`, `ApiStateOf`, `PageResult`, `ResolvedPagination`, `PaginationMode`, `PaginationQueryOf`,
+  `KeyTransformConfig`, `TransformKeys`, `ConvertKey`, `MockStorageOptions`, `MockFileFilter`,
+  `MockFileFixture`, `MockFileFixtures`, `MockFixtureRef`, `OperationMockHandler`,
+  `OperationMockContext`, `MockStoreHandle`, `MockFilesHandle`, `ExtendedBuiltinOpName`,
+  `RetryHookContext`.
 
 ---
 

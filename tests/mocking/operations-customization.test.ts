@@ -181,7 +181,7 @@ describe("defineMockApi: operations customization (v0.10.0)", () => {
 
     const all = await api.users.getAll();
     const first = (all as Array<{ id: string; name: string }>)[0]!;
-    const patched = await api.users.patch(first.id, { body: { name: "Patched" } });
+    const patched = await api.users.patch(first.id, { name: "Patched" });
     expect((patched as { name: string }).name).toBe("Patched");
 
     expect(await api.users.count()).toBe(100);

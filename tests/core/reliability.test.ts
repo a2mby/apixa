@@ -51,7 +51,7 @@ describe("request reliability", () => {
 
     const api = defineApi({
       baseURL: "https://api.example.com",
-      retry: { retries: 2, baseDelayMs: 1, jitter: false },
+      retry: { count: 2, delay: 1, jitter: false },
       transport: createFakeTransport(() => {
         attempts += 1;
         if (attempts < 3) {
@@ -73,7 +73,7 @@ describe("request reliability", () => {
 
     const api = defineApi({
       baseURL: "https://api.example.com",
-      retry: { retries: 3, baseDelayMs: 1, jitter: false },
+      retry: { count: 3, delay: 1, jitter: false },
       transport: createFakeTransport(() => {
         attempts += 1;
         throw new NetworkError("temporary");
@@ -92,7 +92,7 @@ describe("request reliability", () => {
 
     const api = defineApi({
       baseURL: "https://api.example.com",
-      retry: { retries: 1, baseDelayMs: 1, jitter: false },
+      retry: { count: 1, delay: 1, jitter: false },
       transport: createFakeTransport(() => {
         attempts += 1;
         return { status: 503, body: { detail: "unavailable" } };
@@ -119,8 +119,8 @@ describe("request reliability", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       retry: {
-        retries: 2,
-        baseDelayMs: 1,
+        count: 2,
+        delay: 1,
         jitter: false,
         shouldRetry: ({ attempt }) => {
           shouldRetryCalls += 1;
@@ -149,8 +149,8 @@ describe("request reliability", () => {
     const api = defineApi({
       baseURL: "https://api.example.com",
       retry: {
-        retries: 1,
-        baseDelayMs: 1,
+        count: 1,
+        delay: 1,
         jitter: false,
         shouldRetry: ({ error }) => {
           if (error instanceof HttpError) seenRetryable.push(error.retryable);
@@ -180,7 +180,7 @@ describe("request reliability", () => {
 
       const api = defineApi({
         baseURL: "https://api.example.com",
-        retry: { retries: 5, baseDelayMs: 1_000, jitter: false },
+        retry: { count: 5, delay: 1_000, jitter: false },
         transport: createFakeTransport(() => {
           attempts += 1;
           throw new NetworkError("temporary");
@@ -209,7 +209,7 @@ describe("request reliability", () => {
 
     const api = defineApi({
       baseURL: "https://api.example.com",
-      retry: { retries: 1, baseDelayMs: 1, jitter: false },
+      retry: { count: 1, delay: 1, jitter: false },
       middleware: {
         onRequest: [
           (request) => {
@@ -257,7 +257,7 @@ describe("request reliability", () => {
 
     const api = defineApi({
       baseURL: "https://api.example.com",
-      retry: { retries: 2, baseDelayMs: 1, jitter: false },
+      retry: { count: 2, delay: 1, jitter: false },
       transport: createFakeTransport(() => {
         attempts += 1;
         throw new NetworkError("temporary");

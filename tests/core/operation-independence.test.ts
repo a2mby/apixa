@@ -68,13 +68,13 @@ const cases: Case[] = [
   },
   {
     name: "update",
-    call: (u) => u.update!(1, { body: { name: "X", slug: "x" } }),
+    call: (u) => u.update!(1, { name: "X", slug: "x" }),
     http: "PUT /users/1",
     mock: (r) => expect(r).toMatchObject({ name: "X" }),
   },
   {
     name: "patch",
-    call: (u) => u.patch!(1, { body: { name: "P" } }),
+    call: (u) => u.patch!(1, { name: "P" }),
     http: "PATCH /users/1",
     mock: (r) => expect(r).toMatchObject({ name: "P", slug: "ali" }),
   },
@@ -82,7 +82,7 @@ const cases: Case[] = [
     name: "delete",
     call: (u) => u.delete!(1),
     http: "DELETE /users/1",
-    mock: (r) => expect(r).toBeNull(),
+    mock: (r) => expect(r).toBeUndefined(),
   },
   {
     name: "createMany",
@@ -94,7 +94,7 @@ const cases: Case[] = [
     name: "deleteMany",
     call: (u) => u.deleteMany!([1, 2]),
     http: "DELETE /users/bulk",
-    mock: (r) => expect(r).toBeNull(),
+    mock: (r) => expect(r).toBeUndefined(),
   },
 ];
 
@@ -138,12 +138,11 @@ describe.each(cases)("$name is independent", ({ name, call, http, mock }) => {
           body:
             name === "count"
               ? 3
-              : name === "getAll" ||
-                  name === "getMany" ||
-                  name === "findFirst" ||
-                  name === "createMany"
-                ? [{ id: 1 }]
-                : { id: 1 },
+              : name === "getMany"
+                ? [{ id: 3 }, { id: 1 }]
+                : name === "getAll" || name === "findFirst" || name === "createMany"
+                  ? [{ id: 1 }]
+                  : { id: 1 },
         };
       }),
       resources: { users: { path: "/users", operations } as never },

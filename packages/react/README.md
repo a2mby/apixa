@@ -263,7 +263,9 @@ await users.cancel(); // cancelQueries for the observed entry (or a target / pre
 ## Infinite queries
 
 Infinite pagination is a mode of `useResourceQuery` (no separate hook), backed by native
-`useInfiniteQuery`:
+`useInfiniteQuery`. `getNextPageParam` stays yours: this package derives nothing about pagination from
+the Core result. Core's pure helpers (`nextPageInput`, `paginationContextKey`; see the
+[pagination guide](../../docs/guides/humans/pagination.md)) can build it and key the cache by filters:
 
 ```tsx
 const posts = useResourceQuery(api.posts, {
@@ -378,7 +380,7 @@ const users = useResourceMutation(api.users, {
 });
 
 await users.create(body);
-await users.update(id, { body });
+await users.update(id, body);
 await users.archive(id); // custom function op taking id (declarative writes with hasBody: false take { params: { id } })
 await users.exportUser(id);
 
@@ -433,7 +435,7 @@ const users = useResourceMutation(api.users, {
     update: {
       optimistic: {
         detail: ([id]) => id, // every cached variant of this detail
-        update: (current, [, { body }]) => ({ ...current, ...body }), // typed: User → User
+        update: (current, [, body]) => ({ ...current, ...body }), // typed: User → User
       },
     },
     create: {
@@ -485,8 +487,7 @@ and rollback context.
 `states.<op>.context` and the callbacks infer `onMutate`'s (awaited) return. **TypeScript limit:**
 when `onMutate` has an unannotated parameter _and_ a sibling callback reads the context,
 TypeScript fixes the config before it sees `onMutate`'s return, and that callback's context is
-`{}`. Annotate the parameter (`async ([id, options]: OperationParameters<typeof api.users, "update">)`
-)
+`{}`. Annotate the parameter (`async ([id, body, options]: OperationParameters<typeof api.users, "update">)`)
 or omit it.
 
 For a standalone native `UseMutationResult`, call TanStack’s `useMutation` with a Core
@@ -532,7 +533,7 @@ off `useResourceQuery`. Use `useResource` for the old all-in-one shape (`users.c
 
 `createResourceController` remains in the advanced entry, composing the query and mutation
 controllers. Conventional `createOptions`, `updateOptions`, and `deleteOptions` use exact Core
-argument tuples as mutation variables. For example, `mutateAsync([id, { body }])` for `update`. The advanced entry also exports `ResourceMutationStore`,
+argument tuples as mutation variables. For example, `mutateAsync([id, body])` for `update`. The advanced entry also exports `ResourceMutationStore`,
 `applyInvalidation`, and `describeOperations` for custom integrations.
 
 ## Query and mutation DX additions (v1.0.0 release candidate; implemented)

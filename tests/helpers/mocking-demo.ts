@@ -71,7 +71,7 @@ export async function runPaginationAndSlice() {
   const api = defineApi({
     baseURL: BASE_URL,
     resources: {
-      comments: { path: "/comments", mock: "comments-mock", pagination: "page" },
+      comments: { path: "/comments", mock: "comments-mock", paginationConfig: "page" },
       top: { path: "/top", mock: "users-mock", slice: 3 },
     },
   });
@@ -90,8 +90,8 @@ export async function runPaginationAndSlice() {
 export async function runCrudErrorsReset() {
   const api = inlineMock();
   const log: unknown[] = [];
-  log.push(await api.pets.update("1", { body: { name: "Rex II" } }));
-  log.push(await api.pets.patch("2", { body: { name: "Tommy" } }));
+  log.push(await api.pets.update("1", { name: "Rex II" }));
+  log.push(await api.pets.patch("2", { name: "Tommy" }));
   await api.pets.delete("1");
   const missing = await api.pets.getById("1").catch((e: unknown) => e);
   log.push({ code: (missing as { code?: string }).code, message: (missing as Error).message });
@@ -155,7 +155,7 @@ export async function runCustomOperations() {
 export async function runStandalone() {
   const api = defineMockApi({
     users: "users-mock",
-    comments: { type: "comments-mock", pagination: true },
+    comments: { type: "comments-mock", paginationConfig: true },
   });
   const page = await api.comments.getAll({ page: 1, pageSize: 3 });
   const error = await defineMockApi({ users: "users-mock" })

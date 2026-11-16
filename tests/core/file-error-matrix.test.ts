@@ -40,6 +40,7 @@ function client(transport: Transport, seen: unknown[], extra: object = {}) {
       docs: {
         path: "/docs",
         fileFields: { file: { maxSize: 8 } },
+        operations: { getById: { responseType: "blob" } },
         ...extra,
       },
     },
@@ -128,7 +129,7 @@ describe("download failures", () => {
       createFakeTransport(() => ({ status: 404, body: { message: "gone" } })),
       seen,
     )
-      .docs.getById(1, { responseType: "blob", retry: false })
+      .docs.getById(1, { retry: false })
       .catch((e: unknown) => e);
     expect(error).toMatchObject({ status: 404, data: { message: "gone" } });
     expect(seen).toHaveLength(1);
@@ -142,8 +143,9 @@ describe("download failures", () => {
         headers: { "content-type": "text/plain" },
       })),
       seen,
+      { operations: { getById: { responseType: "text" } } },
     )
-      .docs.getById(1, { responseType: "text", maxResponseSize: 10, retry: false })
+      .docs.getById(1, { maxResponseSize: 10, retry: false })
       .catch((e: unknown) => e)) as ValidationError;
     expect(error).toBeInstanceOf(ValidationError);
     expect(error.violations?.[0]).toMatchObject({ code: "RESPONSE_TOO_LARGE", limit: 10 });
@@ -154,7 +156,7 @@ describe("download failures", () => {
     const seen: unknown[] = [];
     const controller = new AbortController();
     const pending = client(hang(), seen)
-      .docs.getById(1, { responseType: "blob", signal: controller.signal, retry: false })
+      .docs.getById(1, { signal: controller.signal, retry: false })
       .catch((e: unknown) => e);
     controller.abort();
     expect(await pending).toBeInstanceOf(AbortError);
@@ -166,7 +168,7 @@ describe("advanced transfer failures keep one classification and a typed reason"
   const run = async (fault: Parameters<typeof withFaults>[1][number]) => {
     const server = protocolServer();
     const seen: unknown[] = [];
-    const api = defineApi<{ files: { entity: { id: string; document: string } } }>()({
+    const api = defineApi<{ files: { id: string; document: string } }>()({
       baseURL: "https://api.example.com",
       transport: withFaults(server.transport, [fault]),
       middleware: { onError: [(error) => void seen.push(error)] },

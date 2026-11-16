@@ -207,7 +207,7 @@ describe("cross-origin redirects fail closed before the destination is contacted
 
   it("is never retried (a redirect decision is not transient)", async () => {
     reset();
-    await call("/cross/302", { retry: { retries: 3, baseDelayMs: 0, maxDelayMs: 0 } });
+    await call("/cross/302", { retry: { count: 3, delay: 0, maxDelay: 0 } });
     expect(apiSeen.filter((r) => r.url === "/cross/302")).toHaveLength(1);
   });
 });
@@ -217,7 +217,11 @@ describe("redirectOrigins: an explicit, credential-free CDN workflow", () => {
     "follows a %i to a listed origin with nothing attached",
     async (status) => {
       reset();
-      const out = await call(`/cdn/${status}`, { redirectOrigins: [origin(cdn)] });
+      const out = await call(
+        `/cdn/${status}`,
+        {},
+        { operations: { getAll: { redirectOrigins: [origin(cdn)] } } },
+      );
       expect(out.value).toEqual({ from: "cdn" });
       const seen = cdnSeen.at(-1)!;
       expect(seen.url).toBe("/object?sig=1");
@@ -229,7 +233,7 @@ describe("redirectOrigins: an explicit, credential-free CDN workflow", () => {
     },
   );
 
-  it("works as an operation setting and a per-call list wins", async () => {
+  it("uses operation policy and rejects a per-call replacement", async () => {
     reset();
     const viaOperation = await call(
       "/cdn/302",
@@ -246,17 +250,29 @@ describe("redirectOrigins: an explicit, credential-free CDN workflow", () => {
         operations: { getAll: { redirectOrigins: [origin(cdn)] } },
       },
     );
-    expect((narrowed as { error: unknown }).error).toBeInstanceOf(SecurityError);
+    expect((narrowed as { error: unknown }).error).toBeInstanceOf(ConfigError);
   });
 
   it("a POST is never forwarded to a listed origin (307/308), but a 303 becomes a bare GET", async () => {
     reset();
-    const kept = await call("/cdn/307", { redirectOrigins: [origin(cdn)] }, {}, "POST", { a: 1 });
+    const kept = await call(
+      "/cdn/307",
+      {},
+      { operations: { create: { redirectOrigins: [origin(cdn)] } } },
+      "POST",
+      { a: 1 },
+    );
     expect((kept as { error: unknown }).error).toBeInstanceOf(SecurityError);
     expect(cdnSeen).toHaveLength(0);
-    const converted = await call("/cdn/303", { redirectOrigins: [origin(cdn)] }, {}, "POST", {
-      a: 1,
-    });
+    const converted = await call(
+      "/cdn/303",
+      {},
+      { operations: { create: { redirectOrigins: [origin(cdn)] } } },
+      "POST",
+      {
+        a: 1,
+      },
+    );
     expect(converted.value).toEqual({ from: "cdn" });
     expect(cdnSeen.at(-1)!.body).toBe("");
     expect(cdnSeen.at(-1)!.headers["x-api-key"]).toBeUndefined();
@@ -264,7 +280,11 @@ describe("redirectOrigins: an explicit, credential-free CDN workflow", () => {
 
   it("a listed origin cannot bounce the request on to an unlisted one", async () => {
     reset();
-    const out = await call("/chain", { redirectOrigins: [origin(cdn)] });
+    const out = await call(
+      "/chain",
+      {},
+      { operations: { getAll: { redirectOrigins: [origin(cdn)] } } },
+    );
     expect((out as { error: unknown }).error).toBeInstanceOf(SecurityError);
     expect(evilSeen).toHaveLength(0);
   });

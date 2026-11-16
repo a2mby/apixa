@@ -11,6 +11,7 @@ import {
   type UseInfiniteQueryOptions,
   type UseQueryOptions,
 } from "@tanstack/react-query";
+import { prepareOperationQuery, SchemaValidationError } from "@apixa/core";
 import { createResourceKeys } from "./keys.js";
 import {
   assertNoFullResponse,
@@ -161,20 +162,26 @@ export function buildResourceQueryOptions(
   if (query !== undefined && args !== undefined) {
     throw new Error("Use either query or args for getAll; combining them is ambiguous.");
   }
-  const staticArgs = Array.isArray(args)
+  const declaredArgs = Array.isArray(args)
     ? args
     : query === undefined
       ? undefined
       : info.optionsIndex === null
         ? [{ query }]
         : withOptions([], info, { query });
-  if (staticArgs) assertNoFullResponse(staticArgs, info);
+  if (declaredArgs) assertNoFullResponse(declaredArgs, info);
+  // An operation with a `schema.query` sends the parsed query, so the cache key and the call use it too.
+  const staticArgs = declaredArgs
+    ? withPreparedQuery(resource, operation, info, declaredArgs)
+    : undefined;
+  const preparedQuery =
+    query === undefined ? undefined : listQueryOf(normalizeIdentity(staticArgs ?? [], info), info);
 
   const keys = createResourceKeys({ queryKey, scope });
   const identity = keyParts ?? normalizeIdentity(staticArgs ?? [], info);
   let generatedKey: QueryKey;
   if (operation === "getAll") {
-    const listQuery = query !== undefined ? query : listQueryOf(identity, info);
+    const listQuery = query !== undefined ? (preparedQuery ?? query) : listQueryOf(identity, info);
     generatedKey =
       keyParts !== undefined
         ? keys.list(keyParts)
@@ -252,6 +259,33 @@ function bindSignal(
  * Merge `extra` into Core's `RequestOptions` slot at its known position. Never touches functions
  * whose signature Core doesn't own (`optionsIndex: null`), nor a slot holding a non-object.
  */
+/**
+ * `args` with the options `query` replaced by the operation's parsed query (`schema.query`), so keys
+ * describe the request that is really sent. A query that fails its schema keeps its raw form: the call
+ * itself then rejects with the `SchemaValidationError` like any other failed query.
+ */
+function withPreparedQuery(
+  resource: object,
+  operation: string,
+  info: OperationInfo,
+  args: readonly unknown[],
+): readonly unknown[] {
+  const index = info.optionsIndex;
+  if (index === null) return args;
+  const options = args[index];
+  if (!isPlainObject(options) || options.query === undefined) return args;
+  try {
+    const prepared = prepareOperationQuery(resource, operation, options.query);
+    if (prepared === options.query) return args;
+    const result = [...args];
+    result[index] = { ...options, query: prepared };
+    return result;
+  } catch (error) {
+    if (error instanceof SchemaValidationError) return args;
+    throw error;
+  }
+}
+
 export function withOptions(
   values: readonly unknown[],
   info: OperationInfo,

@@ -793,14 +793,15 @@ async function verifyPresignedSecurity() {
           resources: {
             plain: { path: "/api/plain" },
             sameHop: { path: "/api/redirect-same" },
-            crossHop: { path: "/api/redirect-cross" },
+            crossHop: {
+              path: "/api/redirect-cross",
+              operations: { getAll: { redirectOrigins: [storageOrigin] } },
+            },
           },
         });
         const plain = await secure.plain.getAll();
         const same = await secure.sameHop.getAll({ retry: false }).catch((e) => e);
-        const cross = await secure.crossHop
-          .getAll({ retry: false, redirectOrigins: [storageOrigin] })
-          .catch((e) => e);
+        const cross = await secure.crossHop.getAll({ retry: false }).catch((e) => e);
         return {
           redirects: {
             plain: plain.length,

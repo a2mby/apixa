@@ -3,7 +3,10 @@
 // at `apixa/react`. Importing this file never loads React, TanStack Query or Node built-ins.
 
 // Define APIs.
-export { defineApi, defineApis } from "@apixa/core";
+export { defineApi, defineApis, emptyResponse } from "@apixa/core";
+
+// Pagination navigation helpers (pure: they build call inputs and never send requests).
+export { nextPageInput, previousPageInput, paginationContextKey } from "@apixa/core";
 export { defineMockApi, MockApiError, InvalidSliceError } from "@apixa/mocking";
 
 // Mock file storage (virtual files behind mocked resources).
@@ -20,6 +23,7 @@ export {
   ParseError,
   ResponseShapeError,
   ValidationError,
+  SchemaValidationError,
   TimeoutError,
   AbortError,
   ConfigError,
@@ -54,8 +58,12 @@ export type {
   ResponseHookContext,
   ApiState,
   ApiStateOf,
-  ResourceState,
-  OperationState,
+  StandardSchemaV1,
+  StandardSchemaIssue,
+  InferSchemaInput,
+  InferSchemaOutput,
+  OperationSchema,
+  SchemaPhase,
   ResourceDefinition,
   ResourcePagination,
   PaginationPreset,
@@ -67,7 +75,18 @@ export type {
   NestjsPagination,
   PaginationFields,
   PaginationParams,
+  PaginationStrategy,
+  LogicalPaginationInput,
+  PaginationRequestParts,
+  PaginationResponseContext,
   PageResult,
+  OpenPageResult,
+  CursorResult,
+  OffsetResult,
+  OpenOffsetResult,
+  PaginatedResult,
+  PaginationNavigation,
+  PaginationNavOptions,
   ResolvedPagination,
   PaginationMode,
   PaginationQueryOf,
@@ -106,7 +125,6 @@ export type {
   EntityOf,
   IdOf,
   ListOf,
-  QueryOf,
   PaginatedListOf,
   OperationFn,
   OperationFnContext,
@@ -120,6 +138,10 @@ export type {
   TransportResponse,
   ApiRequest,
   ApiResponse,
+  BatchResponse,
+  SkippedBatchResponse,
+  GetManyOptions,
+  GetManySort,
   RequestOptions,
   ResponseType,
   FileRules,
@@ -134,8 +156,16 @@ export type {
   TransportTransferEvent,
   RetryConfig,
   RetryOption,
+  RetryBackoff,
+  RetryJitter,
   RetryHookContext,
+  TimeoutOption,
+  ResolvedTimeout,
   RequestMiddleware,
+  AttemptMiddleware,
+  AttemptContext,
+  AttemptResponseMiddleware,
+  AttemptResponseContext,
   ResponseMiddleware,
   ErrorMiddleware,
   MiddlewareHooks,
@@ -164,6 +194,7 @@ export type {
   MockApiErrorCode,
   Page,
   CursorPage,
+  OffsetPage,
   PaginationConfig,
   PageParams,
   ResourceInput,

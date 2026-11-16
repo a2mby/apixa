@@ -432,9 +432,7 @@ describe("infinite mode: errors, retry, refetch, Strict Mode", () => {
   function pagedApi(fail: { times: number }) {
     let calls = 0;
     const api = defineApi<{
-      posts: {
-        entity: { id: string };
-      };
+      posts: { id: string };
     }>()({
       baseURL: "https://x.dev",
       transport: createFakeTransport((request) => {
@@ -451,7 +449,7 @@ describe("infinite mode: errors, retry, refetch, Strict Mode", () => {
       resources: {
         posts: {
           path: "/posts",
-          pagination: { type: "cursor", fields: { data: "items", nextCursor: "next" } },
+          paginationConfig: { strategy: "cursor", fields: { data: "items", nextCursor: "next" } },
           operations: "read",
         },
       },

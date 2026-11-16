@@ -52,7 +52,7 @@ describe("retry policy", () => {
     const { transport, calls } = sequence(new NetworkError("blip"), { status: 503 }, {});
     const api = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 2, baseDelayMs: 0 },
+      retry: { count: 2, delay: 0 },
       transport,
       resources,
     });
@@ -73,7 +73,7 @@ describe("retry policy", () => {
     const plain = sequence({ status: 503 }, {});
     const api = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 2, baseDelayMs: 0 },
+      retry: { count: 2, delay: 0 },
       transport: plain.transport,
       resources,
     });
@@ -83,7 +83,7 @@ describe("retry policy", () => {
     const optIn = sequence({ status: 503 }, {});
     const writes = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 2, baseDelayMs: 0, methods: ["POST"] },
+      retry: { count: 2, delay: 0, methods: ["POST"] },
       transport: optIn.transport,
       resources,
     });
@@ -93,17 +93,18 @@ describe("retry policy", () => {
 
   it("uses exponential backoff with bounded jitter", () => {
     const retry = {
-      retries: 5,
+      count: 5,
+      backoff: "exponential" as const,
       methods: ["GET" as const],
-      baseDelayMs: 100,
-      maxDelayMs: 1000,
-      jitter: false,
+      delay: 100,
+      maxDelay: 1000,
+      jitter: false as const,
       respectRetryAfter: true,
     };
     expect([0, 1, 2, 3, 4].map((a) => computeBackoffMs(a, retry))).toEqual([
       100, 200, 400, 800, 1000,
     ]);
-    const jittered = { ...retry, jitter: true };
+    const jittered = { ...retry, jitter: "equal" as const };
     expect(computeBackoffMs(2, jittered, () => 0)).toBe(200);
     expect(computeBackoffMs(2, jittered, () => 0.999)).toBe(399);
   });
@@ -117,7 +118,7 @@ describe("retry policy", () => {
     const valid = sequence({ status: 429, headers: { "Retry-After": "1" } }, {});
     const api = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 1, baseDelayMs: 5, jitter: false },
+      retry: { count: 1, delay: 5, jitter: false },
       transport: valid.transport,
       resources,
     });
@@ -131,7 +132,7 @@ describe("retry policy", () => {
     const invalid = sequence({ status: 429, headers: { "Retry-After": "later" } }, {});
     const api2 = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 1, baseDelayMs: 5, jitter: false },
+      retry: { count: 1, delay: 5, jitter: false },
       transport: invalid.transport,
       resources,
     });
@@ -145,7 +146,7 @@ describe("retry policy", () => {
     const { transport, calls } = sequence({ status: 503, headers: { "Retry-After": "120" } }, {});
     const api = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 3, maxDelayMs: 2000 },
+      retry: { count: 3, maxDelay: 2000 },
       transport,
       resources,
     });
@@ -157,7 +158,7 @@ describe("retry policy", () => {
     const { transport, calls } = sequence({ status: 503 }, {});
     const api = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 2, baseDelayMs: 0, methods: ["POST"] },
+      retry: { count: 2, delay: 0, methods: ["POST"] },
       transport,
       resources,
     });
@@ -180,7 +181,7 @@ describe("timeout and cancellation (one budget for the whole logical call)", () 
     const api = defineApi({
       baseURL: "https://x.dev",
       timeout: 250,
-      retry: { retries: 10, baseDelayMs: 100, jitter: false, maxDelayMs: 100 },
+      retry: { count: 10, delay: 100, jitter: false as const, maxDelay: 100 },
       transport,
       resources,
     });
@@ -214,7 +215,7 @@ describe("timeout and cancellation (one budget for the whole logical call)", () 
     const { transport, calls } = sequence({ status: 503 });
     const api = defineApi({
       baseURL: "https://x.dev",
-      retry: { retries: 5, baseDelayMs: 1000, jitter: false },
+      retry: { count: 5, delay: 1000, jitter: false },
       transport,
       resources,
     });

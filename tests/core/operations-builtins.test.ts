@@ -5,10 +5,7 @@ import { createFakeTransport } from "../helpers/fake-transport.js";
 type User = { id: string; name: string; email: string };
 
 type UsersApi = {
-  users: {
-    path: "/users";
-    entity: User;
-  };
+  users: User;
 };
 
 describe("builtins added in v0.10.0", () => {
@@ -39,7 +36,8 @@ describe("builtins added in v0.10.0", () => {
       transport: createFakeTransport(() => ({ body: [] })),
       resources: { users: { path: "/users" } },
     });
-    await expect(api.users.getMany(["1"])).resolves.toEqual([]);
+    await expect(api.users.getMany([])).resolves.toEqual([]);
+    await expect(api.users.getAll()).resolves.toEqual([]);
     await expect(api.users.findFirst()).resolves.toBeNull();
   });
 
@@ -83,7 +81,7 @@ describe("builtins added in v0.10.0", () => {
       }, // no `operations` at all
     });
 
-    await api.users.patch("1", { body: { name: "Ada" } });
+    await api.users.patch("1", { name: "Ada" });
     await api.users.getBy("email", "a@example.com");
 
     expect(calls).toEqual([
@@ -100,7 +98,7 @@ describe("builtins added in v0.10.0", () => {
   }> = [
     {
       name: "patch",
-      call: (api) => api.users.patch("1", { body: { name: "Ada" } }),
+      call: (api) => api.users.patch("1", { name: "Ada" }),
       expectedMethod: "PATCH",
       expectedUrl: "https://api.example.com/users/1",
     },
@@ -428,7 +426,7 @@ describe("read preset", () => {
 
     expect(Object.keys(api.users)).toContain("patch");
     expect(Object.keys(api.users)).not.toContain("delete");
-    await api.users.patch("1", { body: { name: "Ada" } });
+    await api.users.patch("1", { name: "Ada" });
     expect(urls).toEqual(["https://api.example.com/users/1"]);
   });
 });
@@ -461,7 +459,7 @@ describe("pagination convention (v0.11.0, type-only)", () => {
         return { status: 200, body: { data: [{ id: "1" }], total: 1, page: 1, pageSize: 20 } };
       }),
       resources: {
-        users: { path: "/users", pagination: "page" },
+        users: { path: "/users", paginationConfig: "page" },
       },
     });
 

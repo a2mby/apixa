@@ -43,7 +43,7 @@ const api = defineApi({
       ],
     },
     // 2. A named dataset: loaded lazily, on the first call.
-    products: { path: "/products", mock: "products-mock", pagination: "page" },
+    products: { path: "/products", mock: "products-mock", paginationConfig: "page" },
     // 3. A provider: any function returning records (sync or async), called once per client.
     tasks: { path: "/tasks", mock: async () => [{ id: "t1", title: "Write docs" }] },
     // Not mocked: the normal transport.
@@ -56,7 +56,8 @@ const api = defineApi({
 - Records are validated when the first call loads them (plain objects, unique string/number ids).
   The array you pass is copied at that moment; changing it later does not change the store.
 - A mocked resource never reaches a transport, whatever the URL looks like after middleware.
-- `pagination` accepts `true` (`"page"`), `"page"`, `"cursor"`, preset shorthands (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"`), `false` (to shadow/disable per operation), or `{ type?, preset | fields | parseList, params }` (on a resource for `getAll`, or per operation on `getAll`, `getMany`, and declarative custom operations). `slice` caps the **list result** of
+- `paginationConfig` is the resource-level pagination configuration (resource `pagination` is rejected with `ConfigError`; `pagination` is the operation-level key); `"offset"` returns `{ data, total, offset, pageSize, nextOffset }` and takes `{ offset, pageSize }`. See [docs/guides/humans/pagination.md](../../docs/guides/humans/pagination.md) for mock limits (no cursor stability, ordering or snapshot guarantees).
+- `pagination` accepts `true` (`"page"`), `"page"`, `"cursor"`, `"offset"`, preset shorthands (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"`), `false` (to shadow/disable per operation), or `{ strategy?, preset | fields | parseList, params }` (per operation on `getAll`, `getMany`, and declarative custom operations; `paginationConfig` on a resource for `getAll`). `slice` caps the **list result** of
   `getAll` (first N, or `{ start, end }`); `count`, lookups and writes still see every record.
 
 ### Reading with filters and pages
@@ -132,20 +133,18 @@ is built. Handlers do not depend on any builtin being enabled (`operations: { pr
 | `records`               | A **snapshot copy** of every record, taken when you first read it, typed from the resource's mock data. Editing it changes nothing. Reading it copies the resource, so use `store.list(query)` for big filtered reads and ignore it when you only write.                                        |
 | `store`                 | `get(id)`, `exists(id)`, `list(query?)`, `create`, `update` (replace), `patch`, `delete(id)`. Copies in and out; the same engine as the builtins, so duplicate ids, missing records and unsafe keys (`__proto__`, `constructor`, `prototype`) fail the same way.                                |
 | `params`                | Path parameters (typed from the path, resource path included): `params.id`.                                                                                                                                                                                                                     |
-| `query`, `body`         | What the mock engine sees: `query` after request key transforms and `onRequest` middleware, and `body` after `onRequest` middleware and request key transforms (matching builtins). Typed from `defineApi<Meta>()` operation `query` / `body`, otherwise `Record<string, unknown>` / `unknown`. |
+| `query`, `body`         | What the mock engine sees: `query` after request key transforms and `onRequest` middleware, and `body` after `onRequest` middleware and request key transforms (matching builtins). Typed from the operation's `schema.query` / `schema.body`, otherwise `Record<string, unknown>` / `unknown`. |
 | `signal`                | Aborts on cancellation or timeout. The call rejects at once; a handler may continue, but its managed draft is discarded and late writes reject. External user side effects are outside rollback.                                                                                                |
 | `resource`, `operation` | Names, for messages.                                                                                                                                                                                                                                                                            |
 
-Return any value; it flows through response transforms, response processing, and response middleware like a builtin's
+Return any value; it flows through response transforms, response processing, response middleware, and `schema.response` like a builtin's
 result. The status is 200, or 204 for a `DELETE` that returns nothing. Throwing (sync or async) goes
 through error middleware, which may recover or replay as usual. Each client has its own store, so a
 handler's writes are visible to later builtin reads of that client and never to another client;
 `resetMock` restores the seed.
 
 **Types.** The client's return type still comes from the real operation, not the handler, so declare
-`response` in `defineApi<Meta>()` or `defineApis<Meta>()` to type the call. Metadata describes the
-raw backend response. The handler returns that raw shape, and Core applies the configured response
-key transform before returning the public result; no cast is needed. `records` take the entity type
+`schema.response` on the operation to type the call. `records` take the entity type
 inferred from the resource's inline array, provider or named dataset. `defineApis` keeps these types
 and full path parameter names independently for each backend.
 
@@ -185,21 +184,21 @@ import { defineMockApi } from "apixa/mocking";
 const mockApi = defineMockApi({
   resources: {
     users: { type: "users-mock", operations: "read" },
-    comments: { type: "comments-mock", pagination: "page" },
+    comments: { type: "comments-mock", paginationConfig: "page" },
     products: { type: "products-mock", seed: { limit: 20 } },
   },
 });
 
-const page = await mockApi.comments.getAll({ query: { page: 1, pageSize: 10, postId: "1" } });
+const page = await mockApi.comments.getAll({ page: 1, pageSize: 10, postId: "1" });
 // { data, total, page, pageSize }
 ```
 
-| Option       | Meaning                                                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `type`       | Dataset id (see the table below). Unknown ids throw `UNKNOWN_DATASET`.                                                               |
-| `pagination` | `"page"` / `true`: `{ data, total, page, pageSize }`; `"cursor"`: `{ data, nextCursor }`; `false`: disabled; or `{ type, ... }`.     |
-| `slice`      | Caps the `getAll` list result (first N, or `{ start, end }`). The store keeps every record: `count`, `getById` and writes ignore it. |
-| `seed`       | `{ limit, offset }`: start the store with a window of the dataset. Records outside it do not exist for any operation.                |
+| Option             | Meaning                                                                                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`             | Dataset id (see the table below). Unknown ids throw `UNKNOWN_DATASET`.                                                                                                                |
+| `paginationConfig` | `"page"` / `true`: `{ data, total, page, pageSize }`; `"cursor"`: `{ data, nextCursor }`; `"offset"`: `{ data, total, offset, pageSize }`; `false`: disabled; or `{ strategy, ... }`. |
+| `slice`            | Caps the `getAll` list result (first N, or `{ start, end }`). The store keeps every record: `count`, `getById` and writes ignore it.                                                  |
+| `seed`             | `{ limit, offset }`: start the store with a window of the dataset. Records outside it do not exist for any operation.                                                                 |
 
 Root `operations` accepts a preset or builtin list; resources can replace it or add named overrides.
 Operation values are `true`, `false` or a function that
@@ -326,7 +325,7 @@ const api = defineMockApi({
 });
 // A backend can use any string field as a file reference; email is an existing catalog field here.
 const user = await api.users.patch("1", {
-  body: { email: new Blob(["fixture"], { type: "text/plain" }) },
+  email: new Blob(["fixture"], { type: "text/plain" }),
 });
 mockFiles(api).get(user.email)?.text();
 resetMock(api.users);

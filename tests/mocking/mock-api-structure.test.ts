@@ -12,7 +12,7 @@ describe("defineMockApi mirrors the defineApi structure", () => {
         },
         products: {
           type: "products-mock",
-          pagination: true,
+          paginationConfig: true,
           operations: { delete: false },
         },
       },
@@ -44,7 +44,7 @@ describe("defineMockApi mirrors the defineApi structure", () => {
   it("keeps the flat compatibility form working", async () => {
     const api = defineMockApi({
       users: "users-mock",
-      products: { type: "products-mock", pagination: true, operations: { delete: false } },
+      products: { type: "products-mock", paginationConfig: true, operations: { delete: false } },
     });
     expect((await api.users.getAll()).length).toBeGreaterThan(0);
     expect((await api.products.getAll({ page: 2, pageSize: 3 })).page).toBe(2);
@@ -184,7 +184,7 @@ describe("typed operations", () => {
     const api = defineMockApi({
       resources: {
         users: { type: "users-mock", seed: { limit: 3 } },
-        products: { type: "products-mock", pagination: true },
+        products: { type: "products-mock", paginationConfig: true },
       },
     });
     expectTypeOf(api.users.getAll).toBeFunction();

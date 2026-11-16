@@ -20,7 +20,7 @@ function wrapped(
   wrap: (inner: Transport) => Transport,
   override: object = {},
 ) {
-  return defineApi<{ files: { entity: { id: string; size?: number; document: string } } }>()({
+  return defineApi<{ files: { id: string; size?: number; document: string } }>()({
     baseURL: "https://api.example.com",
     transport: wrap(server.transport),
     resources: {
