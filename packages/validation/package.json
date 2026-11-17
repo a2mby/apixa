@@ -1,6 +1,6 @@
 {
   "name": "@apixa/validation",
-  "version": "3.0.0-rc.0",
+  "version": "3.0.0-rc.1",
   "description": "Zod-friendly defineApi for Apixa: plain-object schema shapes become z.object. Compiled into the `apixa/validation` subpath.",
   "license": "MIT",
   "repository": {

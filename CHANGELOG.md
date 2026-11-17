@@ -3,6 +3,13 @@
 `apixa@2.0.0` is the current published `latest` release on npm. `apixa@3.0.0-rc.0` is the prepared
 release candidate in this repository (not published to npm).
 
+## [3.0.0-rc.1] — Advanced settings and entity/error schemas
+
+Release candidate published to the `experimental` npm dist-tag only; `latest` is unchanged. Adds
+`settings` on `defineApis`, `defineApi` and resources, resource entity and error schemas,
+`inspectSettings`, and typed same-scope conflict detection. See
+[ADR-008](./docs/decisions/008-unified-advanced-settings.md).
+
 ## [3.0.0-rc.0] — Coordinated Core architecture overhaul
 
 See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrations/v2-to-v3.md) for upgrade examples.
