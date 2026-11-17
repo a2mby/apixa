@@ -52,7 +52,7 @@ A case tagged `T/H` can be explored deterministically with a transport and then 
 - [Core usage](../packages/core/README.md), [Mocking usage](../packages/mocking/README.md), [React usage](../packages/react/README.md).
 - Verification fixtures: [browser-next SSR/files fixture](../tests/fixtures/browser-next/package.json) and [S3 transfer recipe](../tests/helpers/s3-transfer.ts) (starter templates under [templates/](../templates/README.md) are postponed until Apixa stabilizes).
 - Local Laravel playground (`manual-testing/backends/laravel-backend/README.md`, gitignored): local PostgreSQL/MongoDB playground with empty application API routing.
-- [Production file handling](guides/humans/production-file-handling.md) for ownership, safety, performance and recovery boundaries.
+- [Production file handling](guides/humans/features/production-file-handling.md) for ownership, safety, performance and recovery boundaries.
 - [Version status](../versions/README.md) distinguishes shipped, merged, signed-off and pending work. This notebook does not change those statuses.
 
 Build the selected checkout before testing packed code. Use public `apixa` imports in external consumers, not private `@apixa/*` workspace names. Do not assume the npm registry's release candidate contains all repository milestones.
@@ -1921,7 +1921,7 @@ Sources: [HTTP origin protection](../tests/core/http-security.test.ts), [redirec
 
 ## Lifecycle, performance and regression probes — HARD
 
-Sources: [hardening milestone](../versions/v1.8.0/acceptance-criteria.md), [production guide](guides/humans/production-file-handling.md), [memory tests](../tests/core/file-memory-bounds.test.ts).
+Sources: [hardening milestone](../versions/v1.8.0/acceptance-criteria.md), [production guide](guides/humans/features/production-file-handling.md), [memory tests](../tests/core/file-memory-bounds.test.ts).
 
 - [ ] **HARD-001 — Memory versus file size** · `N/T/H`
   - Do: On the same machine/commit, measure increasingly large synthetic transfers with fixed chunk size/concurrency and a streaming sink.

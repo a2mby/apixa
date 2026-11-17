@@ -66,6 +66,15 @@ See also:
 everything, resolves each operation once (selection, defaults, layers, transforms, retry
 policy) and returns a frozen client. It makes no network calls and loads no datasets.
 
+`settings` is not a second resolver. Collection options, the API, and the resource are folded
+into the same root → resource → operation layers ([ADR-008](./decisions/008-unified-advanced-settings.md)).
+Precedence is Apixa defaults, then `defineApis` options, then the API, then the resource, then
+operation fields, then allowed call overrides (`timeout`, `retry`). An operation has no `settings`
+object. The same option set twice on one scope throws; a deeper scope may override a shallower one.
+`settings.response.parse` infers like `response.parse`. A resource entity schema's output stays the
+builtin result when that schema runs. `inspectSettings(resource)` reports the resolved resource view
+(string unwrap paths kept, functions as present, headers omitted) and does not add a method to the client.
+
 Every call then runs through `request/pipeline.ts`:
 
 1. Use the effective config pre-resolved on the operation. Precedence is root < resource <
@@ -95,17 +104,23 @@ Every call then runs through `request/pipeline.ts`:
    `ctx.request()` is routed by method and relative path (`getMany([])` short-circuits before dispatch in both live and mock paths). No transport is involved. Writes carrying
    `File` / `Blob` values first move them into the client's virtual file store (see "File handling");
    records keep string references.
-8. Run response processing in order (skipped for non-JSON `responseType`): preserve raw parsed
+8. Run response processing in the historical order unless `settings.response.order` lists another
+   permutation of `unwrap`, `transform`, `parse`, `normalize`, and `validate` (skipped for non-JSON
+   `responseType`; a paginated operation rejects a non-default order). Preserve the raw parsed
    payload as `source`; on live paginated calls decode the envelope from the raw payload (`response.unwrap` does not apply) and transform only the rows
    (`TransformError` on cycles/depth/collisions), otherwise run `response.unwrap` and response key
    transforms; run `response.parse` on JSON responses, apply builtin shaping (`exists`, `getMany`,
    `findFirst`, `count`, `getAll`, `slice`, `ResponseShapeError` on invalid shapes), and run
-   `response.validate` (`ValidationError` on non-`ApiError` throws).
+   `response.validate` (`ValidationError` on non-`ApiError` throws). Mocks skip `unwrap` in every order.
 9. Run unified `middleware.onResponse` hooks with the processed `ApiResponse` (preserving `source`).
-10. **Response schema & final invariants (ADR-006 / ADR-007).** `schema.response` (or `emptyResponse`)
-    validates the post-middleware value about to be returned (for a paginated call, the whole page),
-    followed by final built-in structural and pagination contract checks. Empty 204/205 is validated as
-    `undefined`; an allowed 404 skips it.
+10. **Response schema & final invariants (ADR-006 / ADR-007 / ADR-008).** An operation `schema.response`
+    (or `emptyResponse`) validates the post-middleware value about to be returned (for a paginated call, the whole page).
+    Otherwise a resource `schema.response` validates builtins that return that entity (items, or `null`
+    for nullable lookups); `schema: { entity: false }` skips it. `count`, `exists`, deletes, and custom
+    operations do not use the entity schema. Final built-in structural and pagination checks follow.
+    Empty 204/205 is validated as `undefined`; an allowed 404 skips it. A resource `schema.error`
+    validates a non-success JSON body and still fails the call (`phase: "error"` when it does not match).
+    Advanced-transfer protocol steps do not inherit those schemas or a custom response order.
 11. Return the data, or the `ApiResponse` envelope (including `source`, and `skipped: true` on `getMany([])`) when `{ full: true }` is passed.
 
 One controller per call combines the overall timeout (`timeout: number | { total?, perAttempt? }`) and the caller's signal. A total timeout covers
@@ -171,7 +186,7 @@ during an observed transfer.
 
 ## File lifecycle and hardening (v1.8.0, implemented)
 
-Guarantees are stated per owner (`docs/guides/humans/production-file-handling.md`): Apixa owns client-side mock storage
+Guarantees are stated per owner (`docs/guides/humans/features/production-file-handling.md`): Apixa owns client-side mock storage
 (atomic managed commits per client; low-level `delete`/`clear` stay deliberate and may leave stale refs) and its own
 transfer sessions (part delivery at least once, completion exactly once by authoritative reconciliation, abort ordered
 against completion); a backend owns remote files, sessions and their expiry; the author owns replacement and deletion

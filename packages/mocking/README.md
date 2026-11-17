@@ -56,7 +56,7 @@ const api = defineApi({
 - Records are validated when the first call loads them (plain objects, unique string/number ids).
   The array you pass is copied at that moment; changing it later does not change the store.
 - A mocked resource never reaches a transport, whatever the URL looks like after middleware.
-- `paginationConfig` is the resource-level pagination configuration (resource `pagination` is rejected with `ConfigError`; `pagination` is the operation-level key); `"offset"` returns `{ data, total, offset, pageSize, nextOffset }` and takes `{ offset, pageSize }`. See [docs/guides/humans/pagination.md](../../docs/guides/humans/pagination.md) for mock limits (no cursor stability, ordering or snapshot guarantees).
+- `paginationConfig` is the resource-level pagination configuration (resource `pagination` is rejected with `ConfigError`; `pagination` is the operation-level key); `"offset"` returns `{ data, total, offset, pageSize, nextOffset }` and takes `{ offset, pageSize }`. See [docs/guides/humans/features/pagination.md](../../docs/guides/humans/features/pagination.md) for mock limits (no cursor stability, ordering or snapshot guarantees).
 - `pagination` accepts `true` (`"page"`), `"page"`, `"cursor"`, `"offset"`, preset shorthands (`"laravel"`, `"laravel-paginator"`, `"strapi"`, `"payload"`, `"nestjs"`), `false` (to shadow/disable per operation), or `{ strategy?, preset | fields | parseList, params }` (per operation on `getAll`, `getMany`, and declarative custom operations; `paginationConfig` on a resource for `getAll`). `slice` caps the **list result** of
   `getAll` (first N, or `{ start, end }`); `count`, lookups and writes still see every record.
 

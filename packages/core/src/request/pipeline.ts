@@ -11,6 +11,7 @@ import {
   ConfigError,
   MockError,
   HttpError,
+  SchemaValidationError,
   NetworkError,
   ParseError,
   ResponseShapeError,
@@ -94,7 +95,15 @@ import type {
   Transport,
 } from "../types/transport.js";
 import { isResponseType, RESPONSE_TYPES } from "../transport/read-body.js";
-import { prepareQuery, validateAsync, type PreparedSchemas } from "../schema/index.js";
+import {
+  applyEntitySchema,
+  prepareQuery,
+  validateAsync,
+  type EntitySchemaMode,
+  type PreparedSchemas,
+} from "../schema/index.js";
+import type { ResponseStage } from "../types/definition.js";
+import type { StandardSchemaV1 } from "../types/standard-schema.js";
 import {
   computeBackoffMs,
   decideRetry,
@@ -197,6 +206,18 @@ export interface PreparedOperation {
   idempotency?: { header: string; generate: () => string };
   /** Standard Schema validators (`schema` option): body and query before dispatch, response last. */
   schema?: PreparedSchemas;
+  /** Resource entity schema for builtins that return that entity. Not used when `schema.response` is set. */
+  entitySchema?: StandardSchemaV1;
+  entityMode?: EntitySchemaMode;
+  /** HTTP error body schema. Absent when none is configured or the operation opts out. */
+  errorSchema?: StandardSchemaV1;
+  /**
+   * Non-default order of unwrap, transform, parse, normalize and validate.
+   * Absent means the historical pipeline, including pagination's fixed envelope parse.
+   */
+  responseOrder?: readonly ResponseStage[];
+  /** Effective `settings.validation.strict`. TypeScript enforces it; the pipeline does not. */
+  strict?: boolean;
   /** `schema.response` is the `emptyResponse` marker: the operation resolves to `undefined`. */
   emptyResponse?: boolean;
 }
@@ -333,6 +354,86 @@ async function applyUnwrap(
       );
     }
     current = current[segment];
+  }
+  return current;
+}
+
+/**
+ * Opt-in stage order. The historical pipeline stays inline when `responseOrder` is absent.
+ * Pagination and non-JSON responses never reach this function.
+ */
+async function applyConfiguredResponseOrder(input: {
+  order: readonly ResponseStage[];
+  data: unknown;
+  mocked: boolean;
+  skipHooks: boolean;
+  isJsonLike: boolean;
+  op: PreparedOperation;
+  hookCtx: ResponseHookContext;
+  sourceResponse: ApiResponse<unknown>;
+  signal: AbortSignal;
+  status: number;
+  call: CallInput;
+}): Promise<unknown> {
+  let current = input.data;
+  const { op, hookCtx, sourceResponse, signal, call } = input;
+  for (const stage of input.order) {
+    if (stage === "unwrap") {
+      if (!input.skipHooks && input.isJsonLike && !input.mocked && op.responseUnwrap) {
+        current = await waitForSignal(
+          applyUnwrap(current, op.responseUnwrap, hookCtx, sourceResponse),
+          signal,
+        );
+      }
+    } else if (stage === "transform") {
+      if (!input.skipHooks && input.isJsonLike && op.responseTransform) {
+        current = applyTransform(current, op.responseTransform);
+      }
+    } else if (stage === "parse") {
+      if (!input.skipHooks && input.isJsonLike && op.responseParse) {
+        try {
+          current = await waitForSignal(
+            Promise.resolve(op.responseParse(current, hookCtx)),
+            signal,
+          );
+        } catch (err) {
+          if (err instanceof ApiError) throw err;
+          throw new ValidationError(
+            `${hookCtx.resource}.${hookCtx.operation}: response.parse failed.`,
+            {
+              status: input.status,
+              data: sourceResponse.source,
+              response: sourceResponse,
+              cause: err,
+            },
+          );
+        }
+      }
+    } else if (stage === "normalize") {
+      if (!input.mocked && call.fromHttp && input.isJsonLike) {
+        current = call.fromHttp(current, input.status, sourceResponse);
+      }
+      if (call.shape && input.isJsonLike) current = call.shape(current);
+    } else if (!input.skipHooks && input.isJsonLike && op.responseValidate) {
+      try {
+        const validated = await waitForSignal(
+          Promise.resolve(op.responseValidate(current, hookCtx)),
+          signal,
+        );
+        if (validated !== undefined) current = validated;
+      } catch (err) {
+        if (err instanceof ApiError) throw err;
+        throw new ValidationError(
+          `${hookCtx.resource}.${hookCtx.operation}: response.validate failed.`,
+          {
+            status: input.status,
+            data: sourceResponse.source,
+            response: sourceResponse,
+            cause: err,
+          },
+        );
+      }
+    }
   }
   return current;
 }
@@ -612,6 +713,20 @@ export async function runOperation(
       response = { ...response, data: parsed };
     }
 
+    if (op.entitySchema && op.entityMode && !op.schema?.response) {
+      const parsed = await waitForSignal(
+        applyEntitySchema(
+          response.data,
+          op.entitySchema,
+          op.entityMode,
+          { resource: resource.name, operation: op.name, phase: "response" },
+          Boolean(call.paginated && op.pagination),
+        ),
+        signal,
+      );
+      response = { ...response, data: parsed };
+    }
+
     if (!op.transfer && !op.emptyResponse && (responseType === "json" || responseType === "auto")) {
       // Builtin invariants hold for whatever the hooks, middleware and schema produced.
       if (call.paginated ? op.pagination : undefined) {
@@ -636,6 +751,18 @@ export async function runOperation(
       throw new ConfigError(
         `${resource.name}.${op.name}: responseType must be one of ${RESPONSE_TYPES.map((t) => JSON.stringify(t)).join(", ")} (got ${JSON.stringify(responseType)}).`,
       );
+    }
+    if (op.responseOrder) {
+      if (call.paginated || op.pagination) {
+        throw new ConfigError(
+          `${resource.name}.${op.name}: settings.response.order cannot change a paginated operation. Pagination reads the raw envelope before entity transforms so page metadata is kept.`,
+        );
+      }
+      if (responseType !== "json" && responseType !== "auto") {
+        throw new ConfigError(
+          `${resource.name}.${op.name}: settings.response.order applies to JSON responses only (responseType "${String(responseType)}").`,
+        );
+      }
     }
     if (options.maxResponseSize !== undefined) {
       const n = options.maxResponseSize;
@@ -1043,7 +1170,13 @@ export async function runOperation(
                 headers: op.headers,
                 transfer: undefined,
                 idempotency: undefined,
+                // Steps keep the outer retry, timeout, and headers above. They do not inherit
+                // the outer schema, entity schema, error schema, or a custom response order.
                 schema: undefined,
+                errorSchema: undefined,
+                entitySchema: undefined,
+                entityMode: undefined,
+                responseOrder: undefined,
                 method: stepMethod,
                 path: joinPath(resource.path, init.path ?? ""),
                 relativePath: init.path ?? "",
@@ -1366,6 +1499,20 @@ export async function runOperation(
         // `emptyResponse`: no body is expected, so nothing is unwrapped, transformed or shaped. A
         // mocked builtin still returns its record; the declared contract discards it.
         data = mocked || isEmptyBodyValue(data) ? undefined : data;
+      } else if (!op.transfer && op.responseOrder) {
+        data = await applyConfiguredResponseOrder({
+          order: op.responseOrder,
+          data,
+          mocked,
+          skipHooks,
+          isJsonLike,
+          op,
+          hookCtx,
+          sourceResponse,
+          signal,
+          status,
+          call,
+        });
       } else if (!op.transfer) {
         if (!skipHooks && isJsonLike) {
           if (!mocked) {
@@ -1802,13 +1949,39 @@ async function sendWithRetry(input: SendInput) {
         request,
         raw: response.raw,
       };
-      failure = new HttpError(`Request failed with status ${response.status}`, {
-        status: response.status,
-        data: response.body,
-        request,
-        response: failedResponse,
-        attempt,
-      });
+      let errorData = response.body;
+      let rejected: ApiError | undefined;
+      if (op.errorSchema && (input.responseType === "json" || input.responseType === "auto")) {
+        try {
+          errorData = await waitForSignal(
+            validateAsync(op.errorSchema, response.body, {
+              resource: request.resource,
+              operation: request.operation,
+              phase: "error",
+            }),
+            signal,
+          );
+        } catch (error) {
+          if (error instanceof SchemaValidationError) {
+            error.status = response.status;
+            error.data = response.body;
+            error.response = failedResponse;
+            error.request = request;
+            error.attempt = attempt;
+          }
+          if (error instanceof ApiError) rejected = error;
+          else throw error;
+        }
+      }
+      failure =
+        rejected ??
+        new HttpError(`Request failed with status ${response.status}`, {
+          status: response.status,
+          data: errorData,
+          request,
+          response: failedResponse,
+          attempt,
+        });
     } catch (error) {
       if (signal.aborted) {
         failFromSignal(channel, signal);

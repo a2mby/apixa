@@ -10,7 +10,7 @@ description: >-
 
 Run commands; inspect **exit codes and short error excerpts only**. Do not read the entire codebase, narrate routine successes, perform broad audits, or repeat completed tests. One concise final report. Never assume a queued publish is successful.
 
-Owner-facing checklist: `docs/guides/humans/publish-a-release.md`.
+Owner-facing checklist: `docs/guides/humans/contributing/publish-a-release.md`.
 
 ## Invariants
 

@@ -1,17 +1,24 @@
 import type { ResourceDefinition, ResourceEntityBrand } from "../types/definition.js";
+import type { InferSchemaOutput, StandardSchemaV1 } from "../types/standard-schema.js";
+
+type SchemaEntity<R> = R extends { schema: { response: infer S extends StandardSchemaV1 } }
+  ? InferSchemaOutput<S>
+  : unknown;
 
 /**
- * A resource definition that carries its entity type. Call it as `createResource<User>()({ path })`.
- * The returned value is that same object: paths, operations, and pagination behave exactly as they do
- * when written inline. Root settings (headers, retry, response hooks, transforms, and the resource
- * `paginationConfig`) still inherit root → resource → operation. The entity type argument lets
- * `defineApi({ resources })` infer it without `defineApi<ApiState>()`.
+ * A resource definition that carries its entity type.
  *
- * The extra call is what keeps the resource's own literal types. An explicit `defineApi<ApiState>()`
- * entry for the same resource still wins.
+ * `createResource<User>()({ path })` attaches an explicit entity. `createResource({ path, schema })`
+ * attaches the `schema.response` output when that schema is present. The returned value is the same
+ * object. An explicit `defineApi<ApiState>()` entry for the same resource still wins.
  */
+export function createResource<const R extends ResourceDefinition>(
+  definition: R,
+): R & ResourceEntityBrand<SchemaEntity<R>>;
 export function createResource<T>(): <const R extends ResourceDefinition>(
   definition: R,
-) => R & ResourceEntityBrand<T> {
-  return (definition) => definition as typeof definition & ResourceEntityBrand<T>;
+) => R & ResourceEntityBrand<T>;
+export function createResource(definition?: ResourceDefinition) {
+  if (definition === undefined) return (inner: ResourceDefinition) => inner;
+  return definition;
 }

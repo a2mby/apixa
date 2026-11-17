@@ -34,6 +34,7 @@ export const ROOT_KEYS = new Set([
   "query",
   "querySerializer",
   "resources",
+  "settings",
 ]);
 
 export const RESOURCE_KEYS = new Set([
@@ -52,6 +53,8 @@ export const RESOURCE_KEYS = new Set([
   "fileFields",
   "fileLimits",
   "multipart",
+  "settings",
+  "schema",
 ]);
 
 export const OPERATION_KEYS = new Set([
@@ -182,7 +185,7 @@ export function validateRoot(
 
 const QUERY_OPTION_KEYS = new Set(["nulls", "emptyArrays", "booleans"]);
 
-function validateQueryOptions(where: string, value: unknown): void {
+export function validateQueryOptions(where: string, value: unknown): void {
   if (!isPlainObject(value)) {
     throw new ConfigError(`${where} must be an object { nulls?, emptyArrays?, booleans? }.`);
   }
@@ -227,7 +230,7 @@ export function parseUnwrapPath(path: string): string[] | null {
 
 const RESPONSE_OPTION_KEYS = new Set(["unwrap", "parse", "validate"]);
 
-function validateResponseOptions(where: string, value: unknown): void {
+export function validateResponseOptions(where: string, value: unknown): void {
   if (!isPlainObject(value)) {
     throw new ConfigError(`${where} must be an object { unwrap?, parse?, validate? }.`);
   }
@@ -271,7 +274,7 @@ export function validateLayer(where: string, layer: Record<string, unknown>): vo
   if (response !== undefined) validateResponseOptions(`${where}.response`, response);
 }
 
-function validateHooks(where: string, value: unknown): asserts value is MiddlewareHooks {
+export function validateHooks(where: string, value: unknown): asserts value is MiddlewareHooks {
   if (!isPlainObject(value)) {
     throw new ConfigError(
       `${where} must be an object { onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }.`,
@@ -378,6 +381,7 @@ export function validateResource(
   validateFileFields(where, value.fileFields);
   validateFileLimits(where, value.fileLimits);
   validateMultipart(where, value.multipart);
+  if (value.schema !== undefined) validateResourceSchema(`${where}.schema`, value.schema);
   validateLayer(where, value);
   if (value.operations !== undefined) {
     const operations = value.operations;
@@ -452,11 +456,16 @@ function validateOperation(where: string, name: string, value: unknown): void {
     return;
   }
   assertKnownKeys(where, value, OPERATION_KEYS);
-  const declaredMethod = (value.method ??
-    (builtin ? BUILTIN_CONVENTIONS[name].method : undefined)) as HttpMethod;
+  if (value.method !== undefined && !METHODS.has(value.method as HttpMethod)) {
+    throw new ConfigError(
+      `${where}.method must be one of ${[...METHODS].join(", ")} (got ${JSON.stringify(value.method)}).`,
+    );
+  }
+  const method = (value.method ??
+    (builtin ? BUILTIN_CONVENTIONS[name].method : "GET")) as HttpMethod;
   const operationKind = builtin
-    ? requiredKind(declaredMethod)
-    : ((value.kind as "read" | "write" | undefined) ?? requiredKind(declaredMethod));
+    ? requiredKind(method)
+    : ((value.kind as "read" | "write" | undefined) ?? requiredKind(method));
   if (value.transfer !== undefined) {
     validateAdvanced(value.transfer as AdvancedTransferConfig);
     if (operationKind !== "write" || value.dataFormat !== undefined)
@@ -480,16 +489,6 @@ function validateOperation(where: string, name: string, value: unknown): void {
       );
     }
   }
-  if (value.method !== undefined && !METHODS.has(value.method as HttpMethod)) {
-    throw new ConfigError(
-      `${where}.method must be one of ${[...METHODS].join(", ")} (got ${JSON.stringify(value.method)}).`,
-    );
-  }
-  if (!builtin && value.method === undefined) {
-    throw new ConfigError(`${where}: custom operation "${name}" needs a method.`);
-  }
-  const method = (value.method ??
-    (builtin ? BUILTIN_CONVENTIONS[name].method : undefined)) as HttpMethod;
   validateMethodKind(where, operationKind, method);
   if (value.path !== undefined && typeof value.path !== "string")
     throw new ConfigError(`${where}.path must be a string.`);
@@ -533,7 +532,33 @@ function validateOperation(where: string, name: string, value: unknown): void {
   validateLayer(where, value);
 }
 
-const SCHEMA_KEYS = new Set(["body", "query", "response"]);
+const SCHEMA_KEYS = new Set(["body", "query", "response", "error", "entity"]);
+const RESOURCE_SCHEMA_KEYS = new Set(["response", "error"]);
+
+function validateResourceSchema(where: string, value: unknown): void {
+  if (!isPlainObject(value)) {
+    throw new ConfigError(
+      `${where}: Expected an object { response?, error? } (got ${typeName(value)}). A resource schema does not accept body or query.`,
+    );
+  }
+  assertKnownKeys(where, value, RESOURCE_SCHEMA_KEYS);
+  if ("body" in value || "query" in value) {
+    throw new ConfigError(
+      `${where}: resource schemas only support "response" and "error". Declare body and query on the operation.`,
+    );
+  }
+  let declared = 0;
+  for (const key of ["response", "error"] as const) {
+    if (value[key] === undefined) continue;
+    declared++;
+    if (!isStandardSchema(value[key])) {
+      throw new ConfigError(`${where}.${key}: Expected a Standard Schema V1-compatible validator.`);
+    }
+  }
+  if (declared === 0) {
+    throw new ConfigError(`${where}: Declare response and/or error.`);
+  }
+}
 
 /**
  * Static shape of an operation's `schema`. A validator is recognized by its Standard Schema V1
@@ -542,7 +567,7 @@ const SCHEMA_KEYS = new Set(["body", "query", "response"]);
 function validateSchemaOption(where: string, value: unknown): void {
   if (!isPlainObject(value)) {
     throw new ConfigError(
-      `${where}: Expected an object { body?, query?, response? } (got ${typeName(value)}). A bare schema is not accepted.`,
+      `${where}: Expected an object { body?, query?, response?, error?, entity? } (got ${typeName(value)}). A bare schema is not accepted.`,
     );
   }
   assertKnownKeys(where, value, SCHEMA_KEYS);
@@ -550,12 +575,23 @@ function validateSchemaOption(where: string, value: unknown): void {
   for (const key of SCHEMA_KEYS) {
     if (value[key] === undefined) continue;
     declared++;
+    if (key === "entity") {
+      if (value.entity !== false) {
+        throw new ConfigError(
+          `${where}.entity must be false. It only opts this operation out of the resource entity schema.`,
+        );
+      }
+      continue;
+    }
+    if (key === "error" && value.error === false) continue;
     if (!isStandardSchema(value[key])) {
       throw new ConfigError(`${where}.${key}: Expected a Standard Schema V1-compatible validator.`);
     }
   }
   if (declared === 0) {
-    throw new ConfigError(`${where}: Declare at least one of body, query or response.`);
+    throw new ConfigError(
+      `${where}: Declare at least one of body, query, response, error or entity.`,
+    );
   }
 }
 

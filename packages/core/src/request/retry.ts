@@ -81,8 +81,8 @@ export function resolveRetryConfig(
   }
   return {
     count: config.count,
-    methods: config.methods ?? defaultMethods,
-    statusCodes: config.statusCodes,
+    methods: [...(config.methods ?? defaultMethods)],
+    statusCodes: config.statusCodes === undefined ? undefined : [...config.statusCodes],
     backoff: config.backoff ?? "exponential",
     delay: config.delay ?? 200,
     maxDelay: config.maxDelay ?? 2000,

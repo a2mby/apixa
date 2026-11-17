@@ -102,7 +102,7 @@
       "mode": 420
     },
     ".claude/skills/publish-library/SKILL.md": {
-      "sha256": "053a7138cc8eec87bed14a2f775eedfc45746a1cecc52bdd21aabc7327f4ac92",
+      "sha256": "572050ae477b0a860d6164eb1f90d0ba7d2bd6350758c2735c0b9698dc325930",
       "mode": 420
     },
     ".claude/skills/ship-changes/SKILL.md": {
@@ -174,7 +174,7 @@
       "mode": 420
     },
     ".cursor/rules/apixa-docs.mdc": {
-      "sha256": "082c863d1dddaded06a43c4e870658af95d3be665361bc4944d5459830e9f6c7",
+      "sha256": "d65f5788d5552b723b296bef4ddc1240e032d8cfeca340bcf1f0d6434aa4d6d0",
       "mode": 420
     },
     ".cursor/rules/apixa-examples.mdc": {

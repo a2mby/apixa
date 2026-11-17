@@ -2,6 +2,18 @@
 
 Project log. Newest entry first.
 
+## 2026-11-16 — Guides grouped into topic folders
+
+How-tos now sit under `getting-started/`, `features/`, `migrations/`, and `contributing/` inside `docs/guides/humans/` and `docs/guides/agents/`. The consumer-migration pack is that migrations set: adopt, protocol, backend audit, capability gaps, copy-paste prompt, and policy. Living contracts stay at the `docs/` root. Map: [docs/README.md](./README.md).
+
+## 2026-11-16 — ADR-008 freeze corrections
+
+Protocol steps no longer inherit a resource error schema, entity schema, or custom response order. `settings.response.parse` infers like `response.parse`, and a builtin that sets `schema: { entity: false }` is not typed as the entity schema output. Same-scope response and query duplicates are type errors. `inspectSettings` keeps string unwrap paths. Resolved retry `methods` and `statusCodes` are copied.
+
+## 2026-11-16 — Unified advanced settings
+
+`settings` on `defineApis(..., { settings })`, `defineApi`, and each resource now feeds the existing layer resolver. Same-scope duplicates of `timeout`, `retry`, response hooks, middleware, and query options throw. A custom response `order` is opt-in; pagination and non-JSON responses keep the historical pipeline. Resource `schema.response` types and validates the entity, `schema.error` types HTTP error bodies, custom operations without a method are `GET`, and `validation.strict` is a TypeScript contract. See [ADR-008](./decisions/008-unified-advanced-settings.md).
+
 ## 2026-11-16 — Carry a resource entity with createResource
 
 `createResource<T>()(definition)` returns the same resource object with `T` attached, so `defineApi()` can type that resource without `defineApi<ApiState>()`. Explicit `ApiState` still wins, and root → resource → operation inheritance is unchanged. Added under v3.0.0 at the owner's request; it was not in the written scope before this change.
@@ -34,7 +46,7 @@ Full verification, manual testing and release are the owner's.
 Added `paginationConfig` (with `pagination` as a resource-level alias), offset pagination, optional
 metadata with honest navigation availability, shared live/mock logical-input validation and collision
 detection, `buildRequest` / `parseList` adapters, navigation helpers, and the
-[pagination guide](./guides/humans/pagination.md). Decisions: paginated operations decode the raw payload
+[pagination guide](./guides/humans/features/pagination.md). Decisions: paginated operations decode the raw payload
 (configured `response.unwrap` does not apply); the final contract is validated before response
 middleware; navigation helpers take an explicit strategy because results carry no discriminant.
 
@@ -404,7 +416,7 @@ grew to match the claims: public exports are checked against declarations and a 
 example runs in real Chromium, and the packed facade runs in `workerd` and the Vercel Edge Runtime.
 The architecture checker's failure detection is tested. The `@apixa` npm scope is owned by a different
 npm user than the one logged in here, so publishing `@apixa/*` is blocked until that is resolved; see
-[the release guide](./guides/humans/publish-a-release.md). Nothing was published.
+[the release guide](./guides/humans/contributing/publish-a-release.md). Nothing was published.
 
 ## 2026-11-07 — `apixa` facade and `@apixa/react` (Phase 2)
 

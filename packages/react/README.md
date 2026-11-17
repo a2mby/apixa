@@ -265,7 +265,7 @@ await users.cancel(); // cancelQueries for the observed entry (or a target / pre
 Infinite pagination is a mode of `useResourceQuery` (no separate hook), backed by native
 `useInfiniteQuery`. `getNextPageParam` stays yours: this package derives nothing about pagination from
 the Core result. Core's pure helpers (`nextPageInput`, `paginationContextKey`; see the
-[pagination guide](../../docs/guides/humans/pagination.md)) can build it and key the cache by filters:
+[pagination guide](../../docs/guides/humans/features/pagination.md)) can build it and key the cache by filters:
 
 ```tsx
 const posts = useResourceQuery(api.posts, {

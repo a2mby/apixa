@@ -93,7 +93,7 @@ optional peers the same way.
 
 Core, Mocking, React and shared integration helpers remain private workspace modules. Their
 canonical code is compiled into one distribution with shared runtime chunks. No scoped package
-installation is required. See the [installation guide](./docs/guides/humans/install-apixa.md)
+installation is required. See the [installation guide](./docs/guides/humans/getting-started/install-apixa.md)
 and [public API contract](./docs/public-api.md).
 
 ### Runtime support
@@ -140,7 +140,7 @@ await api.users.patch("123", { name: "Ada L." });
 await api.users.delete("123");
 ```
 
-Entity types use a **resource-only** state generic (`ApiState`: resource name → entity; custom operation payloads come from each operation's `schema`, see [docs/guides/humans/schemas.md](docs/guides/humans/schemas.md)) (no `type()` helper).
+Entity types use a **resource-only** state generic (`ApiState`: resource name → entity; custom operation payloads come from each operation's `schema`, see [docs/guides/humans/features/schemas.md](docs/guides/humans/features/schemas.md)) (no `type()` helper).
 `create` / `update` are derived from the entity (`Omit<Entity,"id">` / `Partial<Entity>`).
 Root config (`baseURL`, `headers`, …) is typed by Core — not listed on `AppApi`:
 
@@ -180,7 +180,7 @@ config chooses paths and enabled methods; the optional generic supplies payload 
 `operations` can disable a builtin with `false`, restore it with `true`, override it with a
 partial config, or define a custom operation. Declarative HTTP operations derive their `kind`
 from the HTTP method; custom functions use `{ kind, run }`. See
-[Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) if upgrading from v2.
+[Migrating from Apixa v2 to v3](./docs/guides/humans/migrations/v2-to-v3.md) if upgrading from v2.
 
 ```ts
 const api = defineApi<AppApi>()({
@@ -241,7 +241,7 @@ const api = defineApi({
 Unified `middleware` hook lists (`{ onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }`) and `response`
 (`{ unwrap?, parse?, validate? }`) run inside Core's request pipeline. See
 [`packages/core/README.md`](./packages/core/README.md) and the
-[v2-to-v3 migration guide](./docs/guides/humans/migrate-v2-to-v3.md).
+[v2-to-v3 migration guide](./docs/guides/humans/migrations/v2-to-v3.md).
 
 ### Simple Mocking (implemented)
 
@@ -350,18 +350,19 @@ filesystem dependency is required.
 
 ## Documentation
 
-| Doc                                                                  | Purpose                                                |
-| -------------------------------------------------------------------- | ------------------------------------------------------ |
-| [v2-to-v3 Migration Guide](./docs/guides/humans/migrate-v2-to-v3.md) | Breaking changes and new v3.0.0 capabilities           |
-| [docs/context.md](./docs/context.md)                                 | Project identity, principles, constraints              |
-| [docs/architecture.md](./docs/architecture.md)                       | Core shape and request flow                            |
-| [docs/conventions.md](./docs/conventions.md)                         | How we build and document                              |
-| [docs/public-api.md](./docs/public-api.md)                           | Export contract for every public entry point           |
-| [docs/roadmap.md](./docs/roadmap.md)                                 | Milestones and future phases                           |
-| [docs/use-cases.md](./docs/use-cases.md)                             | Manual-testing catalog (all milestones, v0.1.0–v1.8.1) |
-| [versions/v3.0.0/](./versions/v3.0.0/)                               | **Active coding contract** (scope, plan, acceptance)   |
-| [.ai/README.md](./.ai/README.md)                                     | AI rule/skill/role layout and provider adapters        |
-| [docs/story.md](./docs/story.md)                                     | Dated project log, newest first                        |
+| Doc                                                                     | Purpose                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------ |
+| [docs/README.md](./docs/README.md)                                      | Map of living docs, decisions, audits, and guides      |
+| [v2-to-v3 Migration Guide](./docs/guides/humans/migrations/v2-to-v3.md) | Breaking changes and new v3.0.0 capabilities           |
+| [docs/context.md](./docs/context.md)                                    | Project identity, principles, constraints              |
+| [docs/architecture.md](./docs/architecture.md)                          | Core shape and request flow                            |
+| [docs/conventions.md](./docs/conventions.md)                            | How we build and document                              |
+| [docs/public-api.md](./docs/public-api.md)                              | Export contract for every public entry point           |
+| [docs/roadmap.md](./docs/roadmap.md)                                    | Milestones and future phases                           |
+| [docs/use-cases.md](./docs/use-cases.md)                                | Manual-testing catalog (all milestones, v0.1.0–v1.8.1) |
+| [versions/v3.0.0/](./versions/v3.0.0/)                                  | **Active coding contract** (scope, plan, acceptance)   |
+| [.ai/README.md](./.ai/README.md)                                        | AI rule/skill/role layout and provider adapters        |
+| [docs/story.md](./docs/story.md)                                        | Dated project log, newest first                        |
 
 ## Project Status
 

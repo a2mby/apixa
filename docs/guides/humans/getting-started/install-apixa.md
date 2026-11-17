@@ -28,13 +28,13 @@ so `.data` is a compile error). Run `npm install @tanstack/react-query`.
 
 For server prefetch, construct a new `QueryClient` per request from `apixa/react/advanced`, then use
 `prefetchResourceQuery` and `dehydrate`. Pass that state to `ApixaHydrationBoundary` from
-`apixa/react`. See the [React guide](../../../packages/react/README.md) for full examples.
+`apixa/react`. See the [React guide](../../../../packages/react/README.md) for full examples.
 
 For named Core mocks, import `apixa/mocking/register` once before the first mocked call. This
 registers the included loader without eagerly loading records. `defineMockApi` from `apixa`
 uses the same engine and loads named records when requested. Import `users` directly from
 `apixa/mocking/datasets/users` for one synthetic dataset, or use `loadDataset` from `apixa/mocking`
-for a lazy catalog lookup. See the [Mocking guide](../../../packages/mocking/README.md).
+for a lazy catalog lookup. See the [Mocking guide](../../../../packages/mocking/README.md).
 
 Filesystem helpers live only at `apixa/mocking/node` and need Node.js >=22. Pass `{ basePath }`
 to `loadDataset` or `listDatasets` to read your own directory of `meta.json` and `data.json` files.

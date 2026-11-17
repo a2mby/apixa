@@ -128,6 +128,13 @@ const api = defineApi({
   `transforms` are accepted at the root, resource, and operation levels. The most specific
   value wins (`false` disables an inherited `retry`, `transforms.request` / `transforms.response`, or `response` hook). Headers also accept a
   per-call value and may be static, a sync provider, or an async provider (evaluated on every logical call).
+- `settings` on `defineApis(..., { settings })`, `defineApi`, and a resource is the same layer, not a
+  second resolver. Precedence is defaults, then the collection, then the API, then the resource, then
+  operation fields (`timeout`, `retry`, `response`, `middleware`), then call `timeout` and `retry`.
+  Operations do not take a `settings` object. Setting both the legacy field and `settings` for the
+  same option on one scope throws. A deeper scope may override a shallower one. `settings.response.parse`
+  infers like `response.parse`. `settings.response.order` replaces the inherited stage order;
+  pagination and non-JSON responses keep the historical pipeline. Query serialization stays client-wide.
 - `queryArrayFormat` (`"repeat"` | `"comma"` | `"brackets"`), `query`
   (`{ nulls?: "omit" | "empty" | "null", emptyArrays?: "omit" | "empty", booleans?: "string" | "number" }`),
   and `querySerializer?: (query: QueryParams) => string` configure query string serialization
@@ -148,6 +155,10 @@ const api = defineApi({
   `TransformError`. TypeScript exposes the converted keys at every level (root, resource, operation).
 - `response: { unwrap?, parse?, validate? }` extracts envelopes (dot-path or callback), parses, and
   validates decoded payloads; `ApiResponse.source` keeps the raw parsed body prior to response stages.
+  The historical stage order is `unwrap`, response key transform, `parse`, builtin normalization,
+  `response.validate`, then `onResponse`, then `schema.response` or the resource entity schema.
+  `settings.response.order` may permute only the first five stages. Each stage appears once.
+  `false` disables a hook; omitting a stage does not.
 - Error middleware receives `(error, { request, replay })`. `replay()` re-runs the call once (fresh headers),
   e.g. refresh a token on 401 and `return replay()`; it is `undefined` inside a replay.
 - Register middleware under `middleware: { onRequest?, onAttempt?, onAttemptResponse?, onResponse?, onError? }` with arrays of hook
@@ -199,9 +210,9 @@ pageSize }`, offset `{ data, total, offset, pageSize }`, cursor `{ data, nextCur
   `buildRequest` adapter for body/headers); ambiguous or colliding values are rejected. Live responses
   map through `preset`, `fields` or `parseList(body, { status, headers, request })` from the raw
   payload (a configured `response.unwrap` does not apply), then `transforms.response` runs on rows only;
-  `response.parse`, `response.validate`, `middleware.onResponse`, and `schema.response` run before the final contract is validated. Navigation helpers `nextPageInput` / `previousPageInput` /
+  `response.parse`, `response.validate`, `middleware.onResponse`, and `schema.response` (or the resource entity schema) run before the final contract is validated. A non-default `settings.response.order` is rejected on a paginated operation. Navigation helpers `nextPageInput` / `previousPageInput` /
   `paginationContextKey` build inputs without sending requests. Full semantics:
-  [pagination guide](./guides/humans/pagination.md).
+  [pagination guide](./guides/humans/features/pagination.md).
   Import the types from `apixa`: `Page<T>`, `CursorPage<T>`, `OffsetPage<T>` (mocking), `PageResult<T>`,
   `CursorResult<T>`, `OffsetResult<T>`, `PaginatedResult<T>`, `ResolvedPagination`, `PaginationMode`,
   `PaginationQueryOf`, `ResourcePagination`, `PaginationPreset`, `PaginationFields`, and
@@ -228,7 +239,7 @@ pageSize }`, offset `{ data, total, offset, pageSize }`, cursor `{ data, nextCur
   - [roadmap.md](./roadmap.md) — milestone status and phases
   - [use-cases.md](./use-cases.md) — manual-testing catalog
   - [decisions/](./decisions/) — ADRs
-  - [guides/](./guides/) — short how-tos ([humans](./guides/humans/), [agents](./guides/agents/))
+  - [guides/](./guides/) — short how-tos ([humans](./guides/humans/), [agents](./guides/agents/)), grouped into `getting-started/`, `features/`, `migrations/`, and `contributing/`
 - Milestone specs live under [`versions/`](../versions/). A version folder freezes intent for that release. Do not invent empty future version folders; add them when that milestone starts.
 
 ## Version folders
@@ -268,7 +279,7 @@ Use these so the structure does not drift:
 - Reusable workflows live in `.agents/skills/`; rules live in `.ai/rules/`. Run `pnpm ai:sync` after changing canonical configuration and `pnpm ai:check` to verify it. The command names above use slash syntax; Codex uses `$plan-change`, `$git-push`, etc. See [the AI configuration guide](../.ai/README.md) for provider discovery, roles and native settings ownership.
 - Release work has its own skill: `.agents/skills/publish-library/` (owner request only).
 
-How-to checklists for agents (and prose for humans): [`docs/guides/`](./guides/).
+How-to checklists for agents (and prose for humans): [`docs/guides/`](./guides/). The map of this folder is [`docs/README.md`](./README.md).
 
 ## Templates, fixtures, and tests
 

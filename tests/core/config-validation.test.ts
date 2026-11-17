@@ -53,14 +53,14 @@ describe("configuration fails early with descriptive errors", () => {
       /method must be one of/,
     ],
     [
-      "custom op without method",
+      "custom write without a method",
       {
         ...base,
         resources: {
           users: { path: "/users", operations: { archive: { kind: "write", path: "/x" } } },
         },
       },
-      /custom operation "archive" needs a method/,
+      /defaults to GET|incompatible with HTTP method "GET"/,
     ],
     [
       "custom true",

@@ -1,5 +1,7 @@
 # Migrating from Apixa v2 to v3
 
+This is the library upgrade for code that already uses Apixa. A project that does not use Apixa yet starts at [Adopt Apixa](./adopt-apixa.md).
+
 This guide covers the breaking changes and new capabilities in **Apixa `3.0.0-rc.0`**. At this release-candidate stage, `apixa@2.0.0` remains the published `latest` package on npm while `3.0.0-rc.0` is prepared and verified in the repository.
 
 ## 1. Built-in operations consolidated (16 -> 13)
@@ -61,7 +63,7 @@ await api.users.update("1", { name: "Ada" });
 
 ## 2. `update` and `patch` take positional `(id, body, options?)`
 
-In v3 (finalized in [ADR-007](../../decisions/ADR-007-apixa-v3-unified-api-contract.md)), every body-bearing built-in write takes `body` as a positional argument and `options` as the trailing parameter: `create(body, options?)`, `update(id, body, options?)`, `patch(id, body, options?)`, `createMany(items, options?)`, and `deleteMany(ids, options?)`. Passing `{ body }` in the second argument of `update` or `patch` is rejected at compile time when `body` is not an entity field, and missing `body` throws `ValidationError` at runtime.
+In v3 (finalized in [ADR-007](../../../decisions/ADR-007-apixa-v3-unified-api-contract.md)), every body-bearing built-in write takes `body` as a positional argument and `options` as the trailing parameter: `create(body, options?)`, `update(id, body, options?)`, `patch(id, body, options?)`, `createMany(items, options?)`, and `deleteMany(ids, options?)`. Passing `{ body }` in the second argument of `update` or `patch` is rejected at compile time when `body` is not an entity field, and missing `body` throws `ValidationError` at runtime.
 
 ```ts
 await api.users.update("42", { name: "Ada Lovelace" });

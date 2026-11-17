@@ -62,6 +62,9 @@ export type {
   OffsetResult,
   OpenOffsetResult,
   PaginatedResult,
+  AdvancedSettings,
+  ApisCollectionOptions,
+  ResponseStage,
   ApiRootConfig,
   ApiState,
   ApiStateOf,
@@ -87,6 +90,7 @@ export type {
   InferSchemaInput,
   InferSchemaOutput,
   OperationSchema,
+  ResourceSchema,
 } from "./standard-schema.js";
 
 export type {

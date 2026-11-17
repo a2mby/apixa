@@ -3,13 +3,13 @@ import type { MockStorageOptions } from "../mock/files.js";
 import type { MockFileFixtures } from "../mock/fixtures.js";
 import type { AllBuiltinOpName, OperationFn } from "./builtins.js";
 import type { HeadersSource, HttpMethod, QueryParams } from "./http.js";
-import type { MiddlewareOptions } from "./middleware.js";
+import type { MiddlewareHooks, MiddlewareOptions } from "./middleware.js";
 import type { MockDatasetId } from "./mock-datasets.js";
 import type { RetryOption, TimeoutOption } from "./retry.js";
 import type { ResponseType, TransferObserver, ApiRequest } from "./transport.js";
 import type { TransformsConfig } from "./transform.js";
 import type { Transport } from "./transport.js";
-import type { OperationSchema } from "./standard-schema.js";
+import type { OperationSchema, ResourceSchema } from "./standard-schema.js";
 
 /**
  * A plain object keyed by the known builtin operation names (suggested for autocomplete/override)
@@ -70,6 +70,59 @@ export interface ResponseOptions<T = unknown> {
    * Pass `false` to disable an inherited validator.
    */
   validate?: { bivariant(data: unknown, ctx: ResponseHookContext): unknown }["bivariant"] | false;
+}
+
+/**
+ * Configurable JSON response stages. The default order is the historical pipeline.
+ * `schema.response` and `onResponse` are not stages: they always run after this list.
+ */
+export const RESPONSE_STAGES = ["unwrap", "transform", "parse", "normalize", "validate"] as const;
+export type ResponseStage = (typeof RESPONSE_STAGES)[number];
+
+/**
+ * Advanced configuration. It resolves into the same runtime as the legacy layer fields
+ * (`timeout`, `retry`, `response`, `middleware`, query options). There is no operation-level
+ * `settings` object: an operation keeps using those legacy fields, which stay more specific.
+ *
+ * `request.timeout` is the existing {@link TimeoutOption} (a number is the total deadline;
+ * `{ total, perAttempt }` keeps per-attempt budgets). `retry` is the existing {@link RetryOption}
+ * (`count`, not `attempts`).
+ */
+export interface AdvancedSettings {
+  request?: {
+    timeout?: TimeoutOption;
+  };
+  retry?: RetryOption;
+  response?: {
+    /** Permutation of {@link RESPONSE_STAGES}. Each stage once; none may be omitted. */
+    order?: readonly ResponseStage[];
+    unwrap?: ResponseOptions["unwrap"];
+    parse?: ResponseOptions["parse"];
+    validate?: ResponseOptions["validate"];
+  };
+  /**
+   * `strict: true` requires a known response type on every operation. It is a TypeScript
+   * constraint. Runtime JavaScript cannot see a type-only generic, so construction does not
+   * reject an untyped operation merely because this flag is set.
+   */
+  validation?: {
+    strict?: boolean;
+  };
+  /**
+   * Client-wide query serialization. Valid on `defineApis` and `defineApi` only.
+   * A resource cannot set it.
+   */
+  serialization?: {
+    queryArrayFormat?: QueryArrayFormat;
+    query?: QueryOptions;
+    querySerializer?: (query: QueryParams) => string;
+  };
+  middleware?: MiddlewareHooks;
+}
+
+/** Second argument of `defineApis(definitions, options)`. */
+export interface ApisCollectionOptions {
+  settings?: AdvancedSettings;
 }
 
 /** Settings shared by root, resource, and operation levels (most specific wins). */
@@ -303,6 +356,13 @@ export type MockOption =
 /** Runtime resource definition under `resources`. */
 export interface ResourceDefinition<S = OperationSchema> extends LayerOptions {
   path: string;
+  /** Advanced defaults for this resource. More specific than the API, less specific than an operation. */
+  settings?: AdvancedSettings;
+  /**
+   * Entity `response` schema and optional HTTP `error` schema. Not `body` or `query`.
+   * The entity schema applies to builtins that return that entity; list operations validate items.
+   */
+  schema?: ResourceSchema;
   /** Entity identity field. Default: `"id"`. */
   idKey?: string;
   operations?: OperationsBag<OperationValue<S>> | OperationSelection<S>;
@@ -329,6 +389,8 @@ export interface ResourceDefinition<S = OperationSchema> extends LayerOptions {
 /** Root `defineApi` configuration. Resources live only under `resources`. */
 export interface ApiRootConfig<S = OperationSchema> extends LayerOptions {
   baseURL: string;
+  /** Advanced defaults for every resource of this API. */
+  settings?: AdvancedSettings;
   transport?: Transport;
   /** Array encoding for query strings. Default: `"repeat"`. */
   queryArrayFormat?: QueryArrayFormat;

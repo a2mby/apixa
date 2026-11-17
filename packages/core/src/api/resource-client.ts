@@ -14,7 +14,13 @@ import {
   type ResourceRuntime,
 } from "../request/index.js";
 import { convertKey } from "../transform/keys.js";
-import { isEmptyResponse, prepareQuery, type PreparedSchemas } from "../schema/index.js";
+import {
+  isEmptyResponse,
+  isStandardSchema,
+  prepareQuery,
+  type EntitySchemaMode,
+  type PreparedSchemas,
+} from "../schema/index.js";
 import { normalizeCount, prepareBatchIds, finalizeBatch } from "../operation/results.js";
 import { READ_ONLY_RETRY_METHODS, resolveTimeout } from "../request/retry.js";
 import { controlQueryKeys } from "./pagination-request.js";
@@ -29,13 +35,20 @@ import { requiredKind, validateMethodKind } from "./validate.js";
 import type {
   FileFieldOptions,
   FileLimits,
-  LayerOptions,
   MultipartOptions,
   OperationDefinition,
   OperationRunDefinition,
   OperationSelection,
   ResourcePagination,
 } from "../types/definition.js";
+import {
+  canonicalResponseOrder,
+  inspectLayer,
+  resolveScopeSettings,
+  type LayerInput,
+  type ResolvedSerialization,
+  type SettingsInspection,
+} from "./settings.js";
 import { resolveOperationPagination, resolvePagination } from "./pagination.js";
 import {
   OPERATION_METADATA,
@@ -59,19 +72,20 @@ function pick<T>(...values: Array<T | undefined>): T | undefined {
   return undefined;
 }
 
-/** Merge root → resource → operation layers once, at construction. */
+/** Merge collection → API → resource → operation layers once, at construction. */
 function prepareLayers(
   where: string,
-  layers: Array<LayerOptions | undefined>,
+  layers: Array<LayerInput | undefined>,
   defaultRetryMethods?: HttpMethod[],
 ) {
-  const present = layers.filter((l): l is LayerOptions => l !== undefined);
+  const present = layers.filter((l): l is LayerInput => l !== undefined);
   const retry = pick<RetryOption>(...present.map((l) => l.retry));
   const rawReqTransform = pick(...present.map((l) => l.transforms?.request));
   const rawResTransform = pick(...present.map((l) => l.transforms?.response));
   const rawUnwrap = pick(...present.map((l) => l.response?.unwrap));
   const rawParse = pick(...present.map((l) => l.response?.parse));
   const rawValidate = pick(...present.map((l) => l.response?.validate));
+  const strict = pick(...present.map((l) => l.strict));
   return {
     headers: present.map((l) => l.headers).filter((h): h is HeadersSource => h !== undefined),
     timeout: resolveTimeout(pick(...present.map((l) => l.timeout)), `${where}.timeout`),
@@ -86,6 +100,8 @@ function prepareLayers(
     responseUnwrap: rawUnwrap === false ? undefined : rawUnwrap,
     responseParse: rawParse === false ? undefined : rawParse,
     responseValidate: rawValidate === false ? undefined : rawValidate,
+    responseOrder: canonicalResponseOrder(pick(...present.map((l) => l.responseOrder))),
+    strict: strict === true,
   };
 }
 
@@ -182,20 +198,41 @@ function toArray(result: unknown, response: ApiResponse<unknown>): unknown[] {
   );
 }
 
+const ENTITY_SCHEMA_MODE: Partial<Record<string, EntitySchemaMode>> = {
+  getById: "entity",
+  create: "entity",
+  update: "entity",
+  patch: "entity",
+  getBy: "nullable",
+  findFirst: "nullable",
+  getAll: "list",
+  getMany: "list",
+  createMany: "list",
+};
+
 export interface ResourceBuildInput {
   name: string;
   definition: Record<string, unknown> & { path: string };
-  root: LayerOptions;
+  baseLayers: LayerInput[];
+  serialization: ResolvedSerialization;
 }
 
 /**
  * Build one resource client: operation selection, defaults, layers, and request strategies are
  * resolved here exactly once; the returned functions only bind call arguments.
  */
-export function createResourceClient(client: ClientRuntime, input: ResourceBuildInput) {
-  const { name, definition: def, root } = input;
+export function createResourceClient(
+  client: ClientRuntime,
+  input: ResourceBuildInput,
+): { client: Record<string, Fn>; store: MockStore | undefined; inspection: SettingsInspection } {
+  const { name, definition: def, baseLayers, serialization } = input;
   const resourcePath = def.path;
-  const resourceLayer = def as LayerOptions;
+  const resourceLayer = resolveScopeSettings(`resources.${name}`, def, "resource").layer;
+  const resourceSchema = isRecord(def.schema) ? def.schema : undefined;
+  const resourceEntity = isStandardSchema(resourceSchema?.response)
+    ? resourceSchema.response
+    : undefined;
+  const resourceError = isStandardSchema(resourceSchema?.error) ? resourceSchema.error : undefined;
   const runtime: ResourceRuntime = {
     name,
     path: resourcePath,
@@ -203,14 +240,11 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
   const resourcePagination = def.paginationConfig as ResourcePagination | undefined;
   const sharedPagination = resolvePagination(name, resourcePagination);
   if (sharedPagination) runtime.pagination = sharedPagination;
+  const resourceEffective = prepareLayers(name, [...baseLayers, resourceLayer]);
   if (def.mock !== undefined) {
     const source = normalizeMockSource(name, def.mock, def.idKey as string | undefined);
     runtime.mock = { source, store: new MockStore(source), files: client.files };
-    const seedFiles = prepareFiles(
-      def,
-      undefined,
-      prepareLayers(name, [root, resourceLayer]).requestTransform?.keys,
-    );
+    const seedFiles = prepareFiles(def, undefined, resourceEffective.requestTransform?.keys);
     attachMockFiles(
       runtime.mock.store,
       source,
@@ -247,7 +281,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
         opName,
         fn,
         convention?.access ?? (definition as OperationRunDefinition).kind!,
-        prepareLayers(where, [root, resourceLayer]),
+        prepareLayers(where, [...baseLayers, resourceLayer]),
         def,
         typeof definition === "object"
           ? (definition as OperationRunDefinition).presigned
@@ -263,7 +297,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       continue;
     }
     const declared = definition as OperationDefinition;
-    const method = declared.method ?? convention!.method;
+    const method = declared.method ?? convention?.method ?? "GET";
     const relativePath = declared.path ?? convention?.path ?? "";
     const hasBody =
       declared.hasBody ??
@@ -284,7 +318,7 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
       ),
       ...prepareLayers(
         where,
-        [root, resourceLayer, declared],
+        [...baseLayers, resourceLayer, declared],
         declared.transfer !== undefined ? READ_ONLY_RETRY_METHODS : undefined,
       ),
     };
@@ -306,10 +340,53 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
         )
           throw new ConfigError("Transfer source must name a declared file field.");
       }
-      op.transferLayers = prepareLayers(where, [root, resourceLayer], READ_ONLY_RETRY_METHODS);
+      op.transferLayers = prepareLayers(
+        where,
+        [...baseLayers, resourceLayer],
+        READ_ONLY_RETRY_METHODS,
+      );
     }
     if (declared.presigned !== undefined) op.presigned = declared.presigned;
     if (declared.responseType !== undefined) op.responseType = declared.responseType;
+    const entityMode = convention ? ENTITY_SCHEMA_MODE[opName] : undefined;
+    const optedOut = declared.schema?.entity === false;
+    const explicitResult = isStandardSchema(declared.schema?.response);
+    if (resourceEntity && entityMode && !optedOut && !explicitResult) {
+      op.entitySchema = resourceEntity;
+      op.entityMode = entityMode;
+    }
+    if (declared.schema?.error === false) {
+      // An explicit false turns off the inherited resource error schema.
+    } else if (isStandardSchema(declared.schema?.error)) {
+      op.errorSchema = declared.schema.error;
+    } else if (resourceError) {
+      op.errorSchema = resourceError;
+    }
+    if (
+      op.errorSchema &&
+      op.responseType !== undefined &&
+      op.responseType !== "json" &&
+      op.responseType !== "auto"
+    ) {
+      throw new ConfigError(
+        `${where}.schema.error: error schemas require a JSON response so the error body is already decoded.`,
+      );
+    }
+    if (op.responseOrder && op.pagination) {
+      throw new ConfigError(
+        `${where}: settings.response.order cannot change a paginated operation. Pagination reads the raw envelope before entity transforms so page metadata is kept.`,
+      );
+    }
+    if (
+      op.responseOrder &&
+      op.responseType !== undefined &&
+      op.responseType !== "json" &&
+      op.responseType !== "auto"
+    ) {
+      throw new ConfigError(
+        `${where}: settings.response.order applies to JSON responses only (responseType "${op.responseType}").`,
+      );
+    }
     if (
       op.pagination &&
       op.responseType !== undefined &&
@@ -367,13 +444,17 @@ export function createResourceClient(client: ClientRuntime, input: ResourceBuild
     registerIdempotencyGenerators(out, Object.freeze(generators));
   if (Object.keys(queryPreparers).length > 0)
     registerQueryPreparers(out, Object.freeze(queryPreparers));
-  return { client: out, store: runtime.mock?.store };
+  return {
+    client: out,
+    store: runtime.mock?.store,
+    inspection: inspectLayer(resourceEffective, serialization),
+  };
 }
 
 /**
- * Resolve an operation's `schema` against its effective configuration. Rejects what cannot be
- * honored instead of ignoring it: a body schema where no body is sent, and a response schema next
- * to an effective `response.parse` (inherited ones count unless disabled with `parse: false`).
+ * Resolve an operation's `schema` against its effective configuration. A body schema is rejected
+ * when the operation sends no body. `response.parse` and `schema.response` compose: parse runs
+ * first, and the schema validates the value returned after `onResponse`.
  */
 function prepareSchemas(
   where: string,
@@ -390,7 +471,7 @@ function prepareSchemas(
   const out: PreparedSchemas = {};
   if (schema.body) out.body = schema.body;
   if (schema.query) out.query = schema.query;
-  if (schema.response) out.response = schema.response;
+  if (isStandardSchema(schema.response)) out.response = schema.response;
   return out;
 }
 
@@ -670,6 +751,9 @@ function functionOperation(
   def: Record<string, unknown>,
   presigned?: import("../types/advanced-transfer.js").PresignedPolicy,
 ): Fn {
+  const resourceError = isStandardSchema(isRecord(def.schema) ? def.schema.error : undefined)
+    ? (def.schema as { error: PreparedOperation["errorSchema"] }).error
+    : undefined;
   const base: PreparedOperation = {
     presigned,
     name: opName,
@@ -679,6 +763,7 @@ function functionOperation(
     hasBody: false,
     ...layers,
     ...prepareFiles(def, undefined, layers.requestTransform?.keys),
+    ...(resourceError ? { errorSchema: resourceError } : {}),
   };
   const ctx: OperationFnContext = {
     transfer: <T, F extends boolean = false>(

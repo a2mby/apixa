@@ -26,7 +26,8 @@ Do not move living context to the repo root.
 
 - Task-oriented only — not a second `context.md` or architecture dump.
 - Put human-facing prose under `guides/humans/`; agent checklists and Cursor command pointers under `guides/agents/`.
-- Keep both indexes (`guides/README.md`, folder READMEs) updated when you add a guide.
+- Group each audience by topic: `getting-started/`, `features/`, `migrations/`, and `contributing/`. Migrations for upgrading Apixa and for adopting it in a consumer project stay in those `migrations/` folders.
+- Keep the indexes updated when you add a guide: `guides/README.md`, each audience README, and the topic README.
 - Prefer linking to package READMEs / source for long code samples instead of duplicating them.
 
 ## Version folders (`versions/vX.Y.Z/`)

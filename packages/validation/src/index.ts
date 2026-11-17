@@ -36,6 +36,8 @@ export interface ShorthandOperationSchema {
   body?: SchemaDeclaration;
   query?: SchemaDeclaration;
   response?: SchemaDeclaration;
+  error?: SchemaDeclaration | false;
+  entity?: false;
 }
 
 type ResolveValue<V> = V extends z.ZodType ? V : V extends SchemaShape ? ResolveShape<V> : never;
@@ -49,7 +51,13 @@ export type ResolveShape<D> = D extends StandardSchemaV1
 
 type ResolveSchema<S> = S extends object
   ? {
-      -readonly [K in keyof S]: K extends "body" | "query" | "response" ? ResolveShape<S[K]> : S[K];
+      -readonly [K in keyof S]: K extends "body" | "query" | "response"
+        ? ResolveShape<S[K]>
+        : K extends "error"
+          ? [S[K]] extends [false]
+            ? false
+            : ResolveShape<S[K]>
+          : S[K];
     }
   : S;
 
@@ -61,8 +69,18 @@ type ResolveOperations<Ops> = Ops extends string | readonly unknown[]
   ? Ops
   : { [K in keyof Ops]: K extends "preset" ? Ops[K] : ResolveOperation<Ops[K]> };
 
-type ResolveResource<R> = R extends { operations: infer Ops }
-  ? Omit<R, "operations"> & { operations: ResolveOperations<Ops> }
+type ResolveResourceSchema<S> = S extends object
+  ? {
+      -readonly [K in keyof S]: K extends "response" | "error" ? ResolveShape<S[K]> : S[K];
+    }
+  : S;
+
+type ResolveResource<R> = (
+  R extends { schema: infer S } ? Omit<R, "schema"> & { schema: ResolveResourceSchema<S> } : R
+) extends infer WithSchema
+  ? WithSchema extends { operations: infer Ops }
+    ? Omit<WithSchema, "operations"> & { operations: ResolveOperations<Ops> }
+    : WithSchema
   : R;
 
 /** The configuration as Core sees it once shorthand has become `z.object(...)`. */
@@ -109,8 +127,8 @@ function resolveDeclaration(value: unknown, where: string): unknown {
 function resolveOperation(value: unknown, where: string): unknown {
   if (!isPlainObject(value) || !isPlainObject(value.schema)) return value;
   const schema: Record<string, unknown> = { ...value.schema };
-  for (const key of ["body", "query", "response"] as const) {
-    if (schema[key] !== undefined) {
+  for (const key of ["body", "query", "response", "error"] as const) {
+    if (schema[key] !== undefined && schema[key] !== false) {
       schema[key] = resolveDeclaration(schema[key], `${where}.schema.${key}`);
     }
   }
@@ -118,12 +136,23 @@ function resolveOperation(value: unknown, where: string): unknown {
 }
 
 function resolveResource(value: unknown, where: string): unknown {
-  if (!isPlainObject(value) || !isPlainObject(value.operations)) return value;
+  if (!isPlainObject(value)) return value;
+  let next = value;
+  if (isPlainObject(value.schema)) {
+    const schema: Record<string, unknown> = { ...value.schema };
+    for (const key of ["response", "error"] as const) {
+      if (schema[key] !== undefined) {
+        schema[key] = resolveDeclaration(schema[key], `${where}.schema.${key}`);
+      }
+    }
+    next = { ...next, schema };
+  }
+  if (!isPlainObject(value.operations)) return next;
   const operations: Record<string, unknown> = {};
   for (const [name, op] of Object.entries(value.operations)) {
     operations[name] = name === "preset" ? op : resolveOperation(op, `${where}.operations.${name}`);
   }
-  return { ...value, operations };
+  return { ...next, operations };
 }
 
 /** Copy of `config` with shorthand schemas resolved; the caller's objects are never mutated. */
