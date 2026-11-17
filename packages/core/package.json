@@ -1,6 +1,6 @@
 {
   "name": "@apixa/core",
-  "version": "3.0.0-rc.0",
+  "version": "3.0.0-rc.1",
   "description": "TypeScript API framework \u2014 define your API once, use it everywhere.",
   "license": "MIT",
   "repository": {

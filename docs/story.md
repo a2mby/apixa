@@ -2,6 +2,10 @@
 
 Project log. Newest entry first.
 
+## 2026-11-17 — Release candidate 3.0.0-rc.1 for experimental
+
+Coordinated versions moved to `3.0.0-rc.1` so the advanced settings work can ship to the `experimental` npm dist-tag only; `latest` stays on `3.0.0-rc.0`.
+
 ## 2026-11-16 — Guides grouped into topic folders
 
 How-tos now sit under `getting-started/`, `features/`, `migrations/`, and `contributing/` inside `docs/guides/humans/` and `docs/guides/agents/`. The consumer-migration pack is that migrations set: adopt, protocol, backend audit, capability gaps, copy-paste prompt, and policy. Living contracts stay at the `docs/` root. Map: [docs/README.md](./README.md).
