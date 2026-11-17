@@ -1,7 +1,7 @@
 # Extend mock dataset types (agents)
 
 Use this checklist for a built-in catalog change within an approved milestone. For application
-records, use the public inline/provider `mock` syntax described in the [human guide](../humans/extend-mock-dataset-types.md).
+records, use the public inline/provider `mock` syntax described in the [human guide](../../humans/contributing/extend-mock-dataset-types.md).
 
 1. Read `packages/core/src/types/mock-datasets.ts`: `MockDatasetCatalog` owns entity/id-key types;
    `MockDatasetIds` is derived from it. Core must not import Mocking.

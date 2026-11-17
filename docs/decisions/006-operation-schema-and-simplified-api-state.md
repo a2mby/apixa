@@ -109,4 +109,4 @@ optional peer dependency (`^4`); only `dist/validation.js` imports it (checked b
 
 `ResourceState`, `OperationState`, `ResourceTypeOnlyKey`, `OperationTypeOnlyKey` and `QueryOf` types
 are removed; `ApiState` entries are entities. See the
-[migration guide](../guides/humans/schemas.md).
+[migration guide](../guides/humans/features/schemas.md).

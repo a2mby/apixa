@@ -17,5 +17,5 @@ lazily. `MockDatasetCatalog` owns the built-in entity/id-key mapping; `MockDatas
 type, not an open registry interface. The former `registerDatasetPreset` pattern is not implemented
 by the current API.
 
-To contribute a built-in dataset, follow the [agent checklist](../agents/extend-mock-dataset-types.md).
-For paging, loading and individual dataset imports, see the [Mocking guide](../../../packages/mocking/README.md).
+To contribute a built-in dataset, follow the [agent checklist](../../agents/contributing/extend-mock-dataset-types.md).
+For paging, loading and individual dataset imports, see the [Mocking guide](../../../../packages/mocking/README.md).

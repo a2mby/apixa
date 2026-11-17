@@ -217,7 +217,7 @@ describe("configuration-driven client inference", () => {
       defineApi({
         baseURL: "https://api.example.com",
         resources: {
-          // @ts-expect-error a declarative custom operation must specify its method
+          // A custom operation with no method is GET.
           users: { path: "/users", operations: { archive: { path: "/archive" } } },
         },
       });

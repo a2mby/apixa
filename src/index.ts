@@ -3,7 +3,7 @@
 // at `apixa/react`. Importing this file never loads React, TanStack Query or Node built-ins.
 
 // Define APIs.
-export { createResource, defineApi, defineApis, emptyResponse } from "@apixa/core";
+export { createResource, defineApi, defineApis, emptyResponse, inspectSettings } from "@apixa/core";
 
 // Pagination navigation helpers (pure: they build call inputs and never send requests).
 export { nextPageInput, previousPageInput, paginationContextKey } from "@apixa/core";
@@ -62,7 +62,12 @@ export type {
   StandardSchemaIssue,
   InferSchemaInput,
   InferSchemaOutput,
+  AdvancedSettings,
+  ApisCollectionOptions,
+  ResponseStage,
+  SettingsInspection,
   OperationSchema,
+  ResourceSchema,
   SchemaPhase,
   ResourceDefinition,
   ResourceEntityBrand,

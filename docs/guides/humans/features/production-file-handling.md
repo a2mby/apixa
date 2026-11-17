@@ -2,10 +2,10 @@
 
 A task-oriented guide for **using** Apixa's file features in a production application. It states
 what Apixa guarantees, what your backend must do, and what to do when things go wrong. Reference
-detail lives in [`packages/core/README.md`](../../../packages/core/README.md) and
-[`packages/react/README.md`](../../../packages/react/README.md); this page links to them instead of
+detail lives in [`packages/core/README.md`](../../../../packages/core/README.md) and
+[`packages/react/README.md`](../../../../packages/react/README.md); this page links to them instead of
 repeating them. Status: **implemented** (v1.1.0–v1.8.0 behavior; v1.8.0 hardening evidence is in
-[`versions/v1.8.0/acceptance-criteria.md`](../../../versions/v1.8.0/acceptance-criteria.md)).
+[`versions/v1.8.0/acceptance-criteria.md`](../../../../versions/v1.8.0/acceptance-criteria.md)).
 
 > Common workflows work without configuration; unusual backend requirements stay configurable.
 
@@ -43,8 +43,8 @@ const blob = await api.users.downloadAvatar({ params: { id: "1" } });
 ```
 
 No configuration is needed beyond `fileFields` for uploads and operation `responseType` for binary downloads. See
-[File uploads](../../../packages/core/README.md#file-uploads) and
-[File downloads](../../../packages/core/README.md#file-downloads-and-binary-responses).
+[File uploads](../../../../packages/core/README.md#file-uploads) and
+[File downloads](../../../../packages/core/README.md#file-downloads-and-binary-responses).
 
 ## 2. Validation and safety limits
 
@@ -90,7 +90,7 @@ before any request is sent, with identical results for live and mocked resources
 `onTransfer` reports observed bytes per attempt; it never claims server acknowledgment. Runtimes
 differ (Chromium cannot observe upload progress without changing the wire, so Apixa reports
 `unsupported` rather than faking it). See
-[Transfer progress, streaming and cancellation](../../../packages/core/README.md#transfer-progress-streaming-and-cancellation).
+[Transfer progress, streaming and cancellation](../../../../packages/core/README.md#transfer-progress-streaming-and-cancellation).
 
 - **Stream ownership.** A `responseType: "stream"` result is yours: read it to the end, or
   `cancel()` it. The call `timeout` and `signal` still end it after the Promise resolved.
@@ -166,7 +166,7 @@ You are responsible for:
 - **Server-side idempotency.** Apixa sends a stable `Idempotency-Key` per part for replay-safe
   protocols; honoring it is the backend's job.
 
-Recipe and protocol shape: [Advanced transfers](../../../packages/core/README.md#advanced-transfers-v170).
+Recipe and protocol shape: [Advanced transfers](../../../../packages/core/README.md#advanced-transfers-v170).
 
 ## 6. Presigned URLs and S3-compatible uploads
 
@@ -177,7 +177,7 @@ Backend-issued, temporary destinations only; signing and secrets stay on your se
   `[presigned destination]` in errors and logs (the signed query string is never exposed).
 - An S3-compatible multipart upload is a **multi-request session protocol** (initiate, presigned
   part URLs, ETags, complete), not HTTP `multipart/form-data`. The tracked
-  [S3 recipe](../../../tests/helpers/s3-transfer.ts) needs no AWS SDK. CORS must
+  [S3 recipe](../../../../tests/helpers/s3-transfer.ts) needs no AWS SDK. CORS must
   expose `ETag`; expired URLs are renewed through the protocol's `renew` step.
 
 ## 7. Resource ownership and cleanup (checklist)
@@ -231,4 +231,4 @@ session for `session-expired`; treat `integrity`/`protocol` as a backend or sour
 
 Range or resumable **downloads**, a global stream manager, provider SDK adapters, automatic remote
 cleanup or TTL, browser persistence for checkpoints, cross-tab locking, and distributed
-transactions. See [`versions/v1.8.0/scope.md`](../../../versions/v1.8.0/scope.md).
+transactions. See [`versions/v1.8.0/scope.md`](../../../../versions/v1.8.0/scope.md).

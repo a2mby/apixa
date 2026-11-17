@@ -150,6 +150,13 @@ explicit `response` processing (`unwrap` / `parse` / `validate` / `source` / `sc
 `transforms`, and unified `paginationConfig` (resource) / `pagination` (operation) / `options.pagination` (call) with live/mock parity. TanStack's list hook
 supports resources with disabled detail and mutation methods.
 
+**Advanced settings (ADR-008):** `defineApis(definitions, { settings })`, `settings` on an API, and
+`settings` on a resource share the existing layer resolver. A resource `schema.response` is the
+entity validator and the inferred entity type; `schema: { entity: false }` skips it for that builtin.
+`schema.error` types HTTP error bodies (`phase: "error"` on mismatch). `settings.response.parse`
+infers like `response.parse`, and the entity schema output wins when that schema runs. Custom
+operations without `method` are `GET`. `settings.validation.strict` is a TypeScript completeness check.
+
 Prefer clear semantics. For example, `update()` is a clearer default than an ambiguous operation such as `appendUser()`.
 
 ## 6. TanStack Query Compatibility

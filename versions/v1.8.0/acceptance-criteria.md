@@ -61,7 +61,7 @@ files, 62/62 packed type consumers) are reference values; Batch 0 records the **
 
 ## Documentation and delivery
 
-- [x] `docs/guides/humans/production-file-handling.md` exists and covers: upload/download, validation and limits, streaming and progress, mock storage, advanced transfers, backend requirements for resumability, presigned security, S3-compatible workflows, ownership and cleanup, runtime support, performance, common mistakes and recovery. It links to (does not duplicate) the package READMEs.
+- [x] `docs/guides/humans/features/production-file-handling.md` exists and covers: upload/download, validation and limits, streaming and progress, mock storage, advanced transfers, backend requirements for resumability, presigned security, S3-compatible workflows, ownership and cleanup, runtime support, performance, common mistakes and recovery. It links to (does not duplicate) the package READMEs.
 - [x] Documentation distinguishes Apixa's guarantees from backend responsibilities; planned versus implemented is honest; the F2/L7 stream limitation and custom-transport limitation remain visible if unresolved.
 - [x] `docs/architecture.md`, `docs/public-api.md` (behavior notes), `docs/context.md`, `docs/roadmap.md`, `docs/story.md` and `versions/README.md` reflect reality.
 - [ ] Complete `pnpm verify` passes (build, architecture, public API, typecheck, tests, packed consumers, browser, edge) and CI `verify (22)` and `verify (24)` are green on the final head; commands, measured counts and thresholds are recorded here.

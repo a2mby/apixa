@@ -105,7 +105,7 @@ Configure `middleware: refresh` (`{ onRequest?, onAttempt?, onAttemptResponse?, 
 - **Query serialization (root `defineApi` only)**: configure `queryArrayFormat` (`"repeat"` | `"comma"` | `"brackets"`, default `"repeat"`), `query` (`{ nulls?: "omit" | "empty" | "null", emptyArrays?: "omit" | "empty", booleans?: "string" | "number" }`), and `querySerializer?: (query) => string`. (`undefined` is always omitted; nested plain objects use percent-encoded brackets.)
 - **`response` processing and `schema`**: configure `{ unwrap, parse, validate }` on API, resource, or operation layers (`false` disables an inherited hook), and Standard Schema V1 `schema: { body?, query?, response? }` on operations (use `emptyResponse` for intentional `void` / `204` responses). Builtin collection responses reject invalid shapes with `ResponseShapeError`; `getMany` enforces strict ID membership (`missingIds`, `extraIds`, `duplicateIds`), restores requested ID order (or applies local `sortBy`), and short-circuits `getMany([])` without a network request; `count` normalizes approved number/numeric-string/envelope shapes; `ApiResponse.source` preserves the raw payload when `{ full: true }` is used.
 - **`transforms`**: configure `transforms: { request: { keys, exclude, preserve, maxDepth }, response: { keys, exclude, preserve, maxDepth } }`.
-- **`paginationConfig` / `pagination`**: resource `paginationConfig` is the shared pagination configuration (`getAll` paginates from it; other operations opt in with `pagination: true`; an operation strategy/preset/object replaces it entirely; resource `pagination` is rejected with `ConfigError`). Strategies: `"page"`, `"cursor"`, `"offset"`. Callers can pass logical pagination inputs via `options.pagination` or `options.query`. Navigation helpers `nextPageInput`, `previousPageInput`, `paginationContextKey`. See [docs/guides/humans/pagination.md](../../docs/guides/humans/pagination.md).
+- **`paginationConfig` / `pagination`**: resource `paginationConfig` is the shared pagination configuration (`getAll` paginates from it; other operations opt in with `pagination: true`; an operation strategy/preset/object replaces it entirely; resource `pagination` is rejected with `ConfigError`). Strategies: `"page"`, `"cursor"`, `"offset"`. Callers can pass logical pagination inputs via `options.pagination` or `options.query`. Navigation helpers `nextPageInput`, `previousPageInput`, `paginationContextKey`. See [docs/guides/humans/features/pagination.md](../../docs/guides/humans/features/pagination.md).
 
 ## Plugin seams
 
@@ -266,7 +266,7 @@ the destination with `redirectOrigins: ["https://cdn.example.com"]` on the opera
 no headers, cookies or body (`GET`/`HEAD` only). Browsers hide redirect destinations, so any redirect fails closed there;
 return the URL in a JSON body and use a `presigned` descriptor instead.
 
-> **Production guidance:** guarantees, backend responsibilities, limits, measured memory and recovery for everything above are consolidated in [Production file handling](../../docs/guides/humans/production-file-handling.md).
+> **Production guidance:** guarantees, backend responsibilities, limits, measured memory and recovery for everything above are consolidated in [Production file handling](../../docs/guides/humans/features/production-file-handling.md).
 
 ## Errors
 

@@ -5,7 +5,7 @@ release candidate in this repository (not published to npm).
 
 ## [3.0.0-rc.0] — Coordinated Core architecture overhaul
 
-See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) for upgrade examples.
+See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrations/v2-to-v3.md) for upgrade examples.
 
 ### Breaking changes & removals
 
@@ -42,7 +42,7 @@ See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) fo
   before `onResponse`, and `schema.response` runs after `onResponse` and before final built-in
   structural/pagination checks). See [ADR-006](./docs/decisions/006-operation-schema-and-simplified-api-state.md),
   [ADR-007](./docs/decisions/ADR-007-apixa-v3-unified-api-contract.md), and the
-  [schemas guide](./docs/guides/humans/schemas.md).
+  [schemas guide](./docs/guides/humans/features/schemas.md).
 
 ### Added
 
@@ -53,7 +53,7 @@ See [Migrating from Apixa v2 to v3](./docs/guides/humans/migrate-v2-to-v3.md) fo
   validation and collision detection shared by live and mock calls, `buildRequest` (query / body /
   headers), `parseList` with `{ status, headers, request }`, pure navigation helpers `nextPageInput` /
   `previousPageInput` / `paginationContextKey`, `OffsetPage` for `defineMockApi`, and
-  `docs/guides/humans/pagination.md`. Breaking for TypeScript: `PageResult` is now the page contract
+  `docs/guides/humans/features/pagination.md`. Breaking for TypeScript: `PageResult` is now the page contract
   (the union is `PaginatedResult`); result types carry optional metadata; custom mappings may omit `total`;
   `laravel-paginator` cursor results include `previousCursor`.
 - **Built-in `getMany` and `count` contracts (ADR-007):** `getMany([])` fast-paths with zero network

@@ -2,6 +2,7 @@ export {
   createResource,
   defineApi,
   defineApis,
+  inspectSettings,
   resetMock,
   mockFiles,
   validatePagination,
@@ -22,6 +23,7 @@ export {
   prepareOperationQuery,
 } from "./api/metadata.js";
 export type { OperationMetadata } from "./api/metadata.js";
+export type { SettingsInspection } from "./api/settings.js";
 
 export {
   ApiError,

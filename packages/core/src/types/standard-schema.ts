@@ -61,4 +61,21 @@ export interface OperationSchema {
   query?: StandardSchemaV1;
   /** Validates the normalized response payload (async allowed); its output is the result type. */
   response?: StandardSchemaV1;
+  /**
+   * Validates a non-success HTTP body. `false` turns off an inherited resource error schema.
+   * A failure here is an error-phase schema error, not a successful result and not a request
+   * `ValidationError`.
+   */
+  error?: StandardSchemaV1 | false;
+  /** `false` skips the resource entity schema for this operation. */
+  entity?: false;
+}
+
+/**
+ * Resource-level schemas. `response` is the entity validator, not an operation result schema.
+ * `body` and `query` are rejected here: they differ per operation.
+ */
+export interface ResourceSchema {
+  response?: StandardSchemaV1;
+  error?: StandardSchemaV1;
 }

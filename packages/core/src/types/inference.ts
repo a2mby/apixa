@@ -149,6 +149,8 @@ export interface RootTypes {
   responseKeys: KeyCase | undefined;
   responseTransform?: KeyTransformConfig | undefined;
   responseParser?: unknown;
+  /** `true` only when `settings.validation.strict` is the literal `true`. */
+  strict?: boolean;
 }
 
 type KeysOf<C, Dir extends "request" | "response"> = C extends {
@@ -163,11 +165,29 @@ type TransformRuleOf<C, Dir extends "request" | "response"> = C extends {
   ? Rule
   : undefined;
 
-export type RootTypesOf<Config> = {
+/** Legacy `response.parse`, or `settings.response.parse` when the legacy field is absent. `false` disables. */
+type LayerParse<Layer> = Layer extends { response: { parse: infer Legacy } }
+  ? [Legacy] extends [undefined]
+    ? Layer extends { settings: { response: { parse: infer Modern } } }
+      ? [Modern] extends [undefined]
+        ? never
+        : Modern
+      : never
+    : Legacy
+  : Layer extends { settings: { response: { parse: infer Modern } } }
+    ? [Modern] extends [undefined]
+      ? never
+      : Modern
+    : never;
+
+export type RootTypesOf<Config, InheritedStrict extends boolean = false, InheritedParse = never> = {
   requestKeys: KeysOf<Config, "request">;
   responseKeys: KeysOf<Config, "response">;
   responseTransform: TransformRuleOf<Config, "response">;
-  responseParser: Config extends { response: { parse: infer P } } ? P : never;
+  responseParser: [LayerParse<Config>] extends [never] ? InheritedParse : LayerParse<Config>;
+  strict: Config extends { settings: { validation: { strict: infer S extends boolean } } }
+    ? S
+    : InheritedStrict;
 };
 
 type ResponseKeys<R, Root extends RootTypes> = R extends {
@@ -200,11 +220,21 @@ type SourceEntity<R, Meta> = unknown extends Meta
     : unknown
   : Meta;
 
-/** Public entity: source entity with the configured response key convention applied. */
-export type EntityOf<R, Meta, Root extends RootTypes = RootTypes> = TransformKeys<
-  SourceEntity<R, Meta>,
-  ResponseTransform<R, Root>
->;
+type ResourceResponseSchema<R> = R extends { schema: { response: infer S } }
+  ? S extends StandardSchemaV1
+    ? S
+    : never
+  : never;
+
+/** Entity schema output. It is already the post-transform public value, so keys are not converted again. */
+type SchemaOut<R> = [ResourceResponseSchema<R>] extends [never]
+  ? never
+  : InferSchemaOutput<ResourceResponseSchema<R>>;
+
+/** Public entity: schema output when a resource entity schema exists, otherwise the transformed source. */
+export type EntityOf<R, Meta, Root extends RootTypes = RootTypes> = [SchemaOut<R>] extends [never]
+  ? TransformKeys<SourceEntity<R, Meta>, ResponseTransform<R, Root>>
+  : SchemaOut<R>;
 
 type IdKey<R> = R extends { idKey: infer K extends string }
   ? K
@@ -217,13 +247,24 @@ type PublicIdKey<R, Root extends RootTypes> =
     : IdKey<R>;
 
 /** Identity type from the entity's id field; `string | number` when unknown. */
-export type IdOf<R, Meta, Root extends RootTypes = RootTypes> =
-  SourceEntity<R, Meta> extends infer E
+export type IdOf<R, Meta, Root extends RootTypes = RootTypes> = [SchemaOut<R>] extends [never]
+  ? SourceEntity<R, Meta> extends infer E
     ? unknown extends E
       ? string | number
       : IdKey<R> extends keyof E
         ? E[IdKey<R>] extends string | number
           ? E[IdKey<R>]
+          : string | number
+        : string | number
+    : string | number
+  : SchemaOut<R> extends infer E
+    ? PublicIdKey<R, Root> extends keyof E
+      ? E[PublicIdKey<R, Root>] extends string | number
+        ? E[PublicIdKey<R, Root>]
+        : string | number
+      : "id" extends keyof E
+        ? E["id"] extends string | number
+          ? E["id"]
           : string | number
         : string | number
     : string | number;
@@ -579,45 +620,50 @@ type ParsedBuiltinResult<Name, T, Mode> = Name extends "exists"
               ? ParsedEntity<T>
               : T;
 
+type AsParser<P> = [P] extends [never | undefined | false] ? never : { response: { parse: P } };
+
 type InheritedParser<R, Op, Root extends RootTypes> = [Op] extends [never]
   ? InheritedParser<R, {}, Root>
-  : Op extends { response: { parse: infer P } }
-    ? [P] extends [never | undefined | false]
-      ? never
-      : { response: { parse: P } }
-    : R extends { response: { parse: infer P } }
-      ? [P] extends [never | undefined | false]
-        ? never
-        : { response: { parse: P } }
-      : [Root["responseParser"]] extends [never | undefined | false]
-        ? never
-        : { response: { parse: Root["responseParser"] } };
+  : [LayerParse<Op>] extends [never]
+    ? [LayerParse<R>] extends [never]
+      ? AsParser<Root["responseParser"]>
+      : AsParser<LayerParse<R>>
+    : AsParser<LayerParse<Op>>;
 
-/** A literal `response.parse` function overrides the inferred `response` type unless metadata sets it. */
-type ApplyResponseParser<Op, RawOp = Op, Name = never, Mode = undefined> = Op extends {
-  responseType: BinaryResponseType;
-}
+/**
+ * A typed `response.parse` overrides the inferred result unless `Keep` is true.
+ * `Keep` is the resource entity schema: its output is what the call returns, after parse.
+ */
+type ApplyResponseParser<
+  Op,
+  RawOp = Op,
+  Name = never,
+  Mode = undefined,
+  Keep = false,
+> = Op extends { responseType: BinaryResponseType }
   ? Op
-  : [RawOp] extends [never]
+  : Keep extends true
     ? Op
-    : RawOp extends {
-          response: { parse: (...args: never[]) => infer R };
-        }
-      ? [Awaited<R>] extends [void | undefined]
-        ? Op
-        : unknown extends Awaited<R>
+    : [RawOp] extends [never]
+      ? Op
+      : RawOp extends {
+            response: { parse: (...args: never[]) => infer R };
+          }
+        ? [Awaited<R>] extends [void | undefined]
           ? Op
-          : Omit<Op, "response"> & {
-              response: [Name] extends [never]
-                ? Awaited<R>
-                : ParsedBuiltinResult<Name, Awaited<R>, Mode>;
-            }
-      : Op;
+          : unknown extends Awaited<R>
+            ? Op
+            : Omit<Op, "response"> & {
+                response: [Name] extends [never]
+                  ? Awaited<R>
+                  : ParsedBuiltinResult<Name, Awaited<R>, Mode>;
+              }
+        : Op;
 
 type InferQuery<Op> = Op extends { query: infer Q } ? Q : QueryParams;
 type DefaultMethod<Name extends string> = Name extends keyof Conventions
   ? Conventions[Name]["method"]
-  : never;
+  : "GET";
 type BodyMethod = "POST" | "PUT" | "PATCH" | "DELETE";
 type HasBody<Name extends string, Op> = Op extends { hasBody: infer H }
   ? H
@@ -766,6 +812,56 @@ export type MaybeOpName<R> = {
   [Name in AllBuiltinOpName]: [Selected<R, Name>] extends [true] | [false] ? never : Name;
 }[AllBuiltinOpName];
 
+type EntityBuiltinName =
+  | "getById"
+  | "create"
+  | "update"
+  | "patch"
+  | "getBy"
+  | "findFirst"
+  | "getAll"
+  | "getMany"
+  | "createMany";
+
+/** Entity before a resource response schema runs. Key transforms still apply. */
+type WireEntity<R, Meta, Root extends RootTypes> = TransformKeys<
+  SourceEntity<R, Meta>,
+  ResponseTransform<R, Root>
+>;
+
+type OptOutResult<Name, R, Meta, Root extends RootTypes> = Name extends "getBy" | "findFirst"
+  ? WireEntity<R, Meta, Root> | null
+  : Name extends "getAll" | "getMany" | "createMany"
+    ? WireEntity<R, Meta, Root>[]
+    : WireEntity<R, Meta, Root>;
+
+/** `schema: { entity: false }` skips the resource entity schema, so the result is not its output. */
+type ApplyEntityOptOut<Name, R, Meta, Root extends RootTypes, Base> = Name extends EntityBuiltinName
+  ? [RuntimeOperation<R, Name>] extends [never]
+    ? Base
+    : RuntimeOperation<R, Name> extends { schema: { entity: false } }
+      ? Omit<Base, "response"> & { response: OptOutResult<Name, R, Meta, Root> }
+      : Base
+  : Base;
+
+type KeepEntitySchema<Name, R> = [SchemaOut<R>] extends [never]
+  ? false
+  : Name extends EntityBuiltinName
+    ? [RuntimeOperation<R, Name>] extends [never]
+      ? true
+      : RuntimeOperation<R, Name> extends { schema: { entity: false } }
+        ? false
+        : true
+    : false;
+
+type PublicEntity<R, Meta, Root extends RootTypes, Name extends string> = [
+  RuntimeOperation<R, Name>,
+] extends [never]
+  ? EntityOf<R, Meta, Root>
+  : RuntimeOperation<R, Name> extends { schema: { entity: false } }
+    ? WireEntity<R, Meta, Root>
+    : EntityOf<R, Meta, Root>;
+
 type EffectiveOpDef<
   Name extends AllBuiltinOpName,
   R,
@@ -777,16 +873,23 @@ type EffectiveOpDef<
         ApplySchemaRequest<
           ApplyResponseParser<
             ApplyResponseType<
-              MergeOp<
-                EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
-                SanitizeRuntimeOp<
-                  Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+              ApplyEntityOptOut<
+                Name,
+                R,
+                Meta,
+                Root,
+                MergeOp<
+                  EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
+                  SanitizeRuntimeOp<
+                    Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+                  >
                 >
               >
             >,
             InheritedParser<R, RuntimeOperation<R, Name>, Root>,
             Name,
-            GetAllPagination<R>
+            GetAllPagination<R>,
+            KeepEntitySchema<Name, R>
           >,
           RuntimeOperation<R, Name>
         >,
@@ -798,15 +901,23 @@ type EffectiveOpDef<
       ApplySchemaRequest<
         ApplyResponseParser<
           ApplyResponseType<
-            MergeOp<
-              EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
-              SanitizeRuntimeOp<
-                Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+            ApplyEntityOptOut<
+              Name,
+              R,
+              Meta,
+              Root,
+              MergeOp<
+                EntityBuiltinOps<R, Meta, Root>[Name & keyof EntityBuiltinOps<R, Meta, Root>],
+                SanitizeRuntimeOp<
+                  Name extends keyof ResourceOpsOf<R> ? ResourceOpsOf<R>[Name] : never
+                >
               >
             >
           >,
           InheritedParser<R, RuntimeOperation<R, Name>, Root>,
-          Name
+          Name,
+          undefined,
+          KeepEntitySchema<Name, R>
         >,
         RuntimeOperation<R, Name>
       >,
@@ -858,7 +969,8 @@ type SpecialResponse<Name extends string, R, Meta, Root extends RootTypes, Defau
       >,
       InheritedParser<R, RuntimeOperation<R, Name>, Root>,
       Name,
-      OptInPagination<R, RuntimeOperation<R, Name>>
+      OptInPagination<R, RuntimeOperation<R, Name>>,
+      KeepEntitySchema<Name, R>
     > extends { response: infer Res }
     ? unknown extends Res
       ? Default
@@ -905,10 +1017,10 @@ type SpecialClientFn<Name extends string, R, Meta, Root extends RootTypes> = Nam
         >,
         [SchemaPart<RuntimeOperation<R, "getMany">, "response">] extends [never]
           ? WrapPaginated<
-              SpecialResponse<"getMany", R, Meta, Root, EntityOf<R, Meta, Root>[]>,
+              SpecialResponse<"getMany", R, Meta, Root, PublicEntity<R, Meta, Root, "getMany">[]>,
               OptInPagination<R, RuntimeOperation<R, "getMany">>
             >
-          : SpecialResponse<"getMany", R, Meta, Root, EntityOf<R, Meta, Root>[]>
+          : SpecialResponse<"getMany", R, Meta, Root, PublicEntity<R, Meta, Root, "getMany">[]>
       >
     : Name extends "findFirst"
       ? CallWithOptions<
@@ -921,7 +1033,13 @@ type SpecialClientFn<Name extends string, R, Meta, Root extends RootTypes> = Nam
             >
           >,
           FilterOf<R, Meta, Root, RuntimeOperation<R, "findFirst">>,
-          SpecialResponse<"findFirst", R, Meta, Root, EntityOf<R, Meta, Root> | null>
+          SpecialResponse<
+            "findFirst",
+            R,
+            Meta,
+            Root,
+            PublicEntity<R, Meta, Root, "findFirst"> | null
+          >
         >
       : Name extends "getBy"
         ? GetByCall<R, Meta, Root>
@@ -1122,7 +1240,11 @@ export type OperationKindOf<R, Name> = Name extends keyof ResourceOpsOf<R>
       ? Conventions[Name]["access"]
       : ResourceOpsOf<R>[Name] extends { kind: infer Kind extends "read" | "write" }
         ? Kind
-        : never
+        : ResourceOpsOf<R>[Name] extends (...args: never[]) => unknown
+          ? never
+          : ResourceOpsOf<R>[Name] extends { run: unknown }
+            ? never
+            : "read"
   : Name extends AllBuiltinOpName
     ? Conventions[Name]["access"]
     : never;
@@ -1179,18 +1301,22 @@ type ResourceEntity<Meta, K, R> = [K] extends [keyof Meta]
   : EntityBrandOf<R>;
 
 /** Client type: one property per `resources` key in the runtime config. */
-export type ApiClient<Meta, Config> = {
+export type ApiClient<Meta, Config, InheritedParse = never> = {
   readonly [K in keyof ResourcesOf<Config>]: ResourcesOf<Config>[K] extends { path: string }
     ? ResourceClient<
         ResourcesOf<Config>[K],
         ResourceEntity<Meta, K, ResourcesOf<Config>[K]>,
-        RootTypesOf<Config>
+        RootTypesOf<Config, false, InheritedParse>
       >
     : never;
 } & ApixaClient;
 
-export type ApisClient<Defs, Configs> = {
-  readonly [K in keyof Configs]: ApiClient<K extends keyof Defs ? Defs[K] : unknown, Configs[K]>;
+export type ApisClient<Defs, Configs, InheritedParse = never> = {
+  readonly [K in keyof Configs]: ApiClient<
+    K extends keyof Defs ? Defs[K] : unknown,
+    Configs[K],
+    InheritedParse
+  >;
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -1241,7 +1367,15 @@ type ValidateMethodKind<Name, Op> = Op extends { method: infer Method extends st
           method: ConfigTypeError<`HTTP method "${Method}" requires kind "${RequiredKind<Method>}"`>;
         }
     : unknown
-  : unknown;
+  : Name extends AllBuiltinOpName
+    ? unknown
+    : Op extends { kind: infer Kind }
+      ? Kind extends "write"
+        ? {
+            kind: ConfigTypeError<`custom operation "${Name & string}" defaults to GET, which requires kind "read"`>;
+          }
+        : unknown
+      : unknown;
 
 type EffectiveKind<Name, Op> = Op extends { method: infer Method extends string }
   ? RequiredKind<Method>
@@ -1280,7 +1414,7 @@ type ValidateOpPagination<Name, Op> = Op extends { pagination: infer P }
         : { pagination: ConfigTypeError<`invalid pagination setting`> }
   : unknown;
 
-type SchemaPlacement = "body" | "query" | "response";
+type SchemaFields = "body" | "query" | "response";
 
 /** Compile-time mirror of the runtime `schema` checks that TypeScript can decide from literals. */
 type ValidateOpSchema<Name, Op> = Op extends { schema: infer S }
@@ -1290,19 +1424,37 @@ type ValidateOpSchema<Name, Op> = Op extends { schema: infer S }
       ? {
           schema: {
             [
-              K in Exclude<keyof S, SchemaPlacement>
-            ]: ConfigTypeError<`Unknown schema key "${K & string}". Use { body?, query?, response? }`>;
+              K in Exclude<keyof S, SchemaFields | "error" | "entity">
+            ]: ConfigTypeError<`Unknown schema key "${K & string}". Use { body?, query?, response?, error?, entity? }`>;
           } & {
-            [K in Extract<keyof S, SchemaPlacement>]: S[K] extends StandardSchemaV1
+            [K in Extract<keyof S, SchemaFields>]: S[K] extends StandardSchemaV1
               ? unknown
               : ConfigTypeError<"Expected a Standard Schema V1-compatible validator">;
           };
-        } & (S extends { body: unknown }
-          ? HasBody<Name & string, Op> extends true
+        } & (S extends { entity: infer E }
+          ? [E] extends [false]
             ? unknown
-            : { schema: { body: ConfigTypeError<"this operation has no request body"> } }
-          : unknown)
-      : { schema: ConfigTypeError<"schema must be an object { body?, query?, response? }"> }
+            : { schema: { entity: ConfigTypeError<"entity must be false"> } }
+          : unknown) &
+          (S extends { error: infer E }
+            ? [E] extends [false]
+              ? unknown
+              : E extends StandardSchemaV1
+                ? unknown
+                : {
+                    schema: {
+                      error: ConfigTypeError<"Expected a Standard Schema V1-compatible validator">;
+                    };
+                  }
+            : unknown) &
+          (S extends { body: unknown }
+            ? HasBody<Name & string, Op> extends true
+              ? unknown
+              : { schema: { body: ConfigTypeError<"this operation has no request body"> } }
+            : unknown)
+      : {
+          schema: ConfigTypeError<"schema must be an object { body?, query?, response?, error?, entity? }">;
+        }
   : unknown;
 
 type ValidateResourcePagination<R> = R extends { pagination: unknown }
@@ -1392,13 +1544,7 @@ type ValidateOperationShape<Name, Op> = Op extends { run: unknown }
           (Op extends { middleware: infer M }
             ? { middleware: ValidateMiddlewareHooks<M> }
             : unknown) &
-          (Name extends AllBuiltinOpName
-            ? unknown
-            : Op extends { method: string }
-              ? unknown
-              : {
-                  method: ConfigTypeError<`custom operation "${Name & string}" needs a method`>;
-                })
+          unknown
       : Op extends false | undefined
         ? unknown
         : ConfigTypeError<`operation "${Name & string}" must be a declaration or a boolean`>;
@@ -1513,17 +1659,223 @@ type ValidateResource<R, Meta, Root extends RootTypes> = Exact<R, ResourceDefini
   (R extends { transforms: infer T } ? { transforms: ValidateTransformsConfig<T> } : unknown) &
   (R extends { response: infer Resp } ? { response: ValidateResponseOptions<Resp> } : unknown) &
   (R extends { middleware: infer M } ? { middleware: ValidateMiddlewareHooks<M> } : unknown) &
+  (R extends { settings: infer S } ? { settings: ValidateSettings<S, "resource"> } : unknown) &
+  SameScopeConflict<R> &
+  ValidateResourceSchemaBlock<R> &
+  ValidateEntitySchema<R, Meta, Root> &
+  StrictOperations<R, Root> &
   ValidateResourcePagination<R>;
 
+type SettingsKeys = {
+  request?: unknown;
+  retry?: unknown;
+  response?: unknown;
+  validation?: unknown;
+  serialization?: unknown;
+  middleware?: unknown;
+};
+
+type ValidateSettings<S, Scope extends "api" | "resource"> = [S] extends [undefined]
+  ? unknown
+  : S extends object
+    ? Exact<S, SettingsKeys> &
+        (S extends { request: infer R } ? { request: Exact<R, { timeout?: unknown }> } : unknown) &
+        (S extends { response: infer R }
+          ? {
+              response: Exact<
+                R,
+                { order?: unknown; unwrap?: unknown; parse?: unknown; validate?: unknown }
+              >;
+            }
+          : unknown) &
+        (S extends { validation: infer R }
+          ? { validation: Exact<R, { strict?: unknown }> }
+          : unknown) &
+        (S extends { serialization: infer R }
+          ? Scope extends "resource"
+            ? {
+                serialization: ConfigTypeError<"query serialization is client-wide. Set it on defineApi() or defineApis(), not on a resource.">;
+              }
+            : {
+                serialization: Exact<
+                  R,
+                  { queryArrayFormat?: unknown; query?: unknown; querySerializer?: unknown }
+                >;
+              }
+          : unknown) &
+        (S extends { middleware: infer M } ? { middleware: ValidateMiddlewareHooks<M> } : unknown)
+    : ConfigTypeError<"settings must be an object">;
+
+type HookConflict<Layer, Key extends "unwrap" | "parse" | "validate"> = Layer extends {
+  response: infer Legacy;
+  settings: { response: infer Modern };
+}
+  ? Legacy extends Record<Key, infer L>
+    ? Modern extends Record<Key, infer M>
+      ? [L] extends [undefined]
+        ? unknown
+        : [M] extends [undefined]
+          ? unknown
+          : {
+              response: ConfigTypeError<`response.${Key} and settings.response.${Key} both set the same option at this scope`>;
+            }
+      : unknown
+    : unknown
+  : unknown;
+
+type SameScopeConflict<Layer> = (Layer extends { retry: infer L; settings: { retry: infer M } }
+  ? [L] extends [undefined]
+    ? unknown
+    : [M] extends [undefined]
+      ? unknown
+      : {
+          retry: ConfigTypeError<"retry and settings.retry both set the same option at this scope">;
+        }
+  : unknown) &
+  (Layer extends { timeout: infer L; settings: { request: { timeout: infer M } } }
+    ? [L] extends [undefined]
+      ? unknown
+      : [M] extends [undefined]
+        ? unknown
+        : {
+            timeout: ConfigTypeError<"timeout and settings.request.timeout both set the same option at this scope">;
+          }
+    : unknown) &
+  (Layer extends { middleware: infer L; settings: { middleware: infer M } }
+    ? [L] extends [undefined]
+      ? unknown
+      : [M] extends [undefined]
+        ? unknown
+        : {
+            middleware: ConfigTypeError<"middleware and settings.middleware both set the same option at this scope">;
+          }
+    : unknown) &
+  HookConflict<Layer, "unwrap"> &
+  HookConflict<Layer, "parse"> &
+  HookConflict<Layer, "validate">;
+
+type Compatible<A, B> = [A] extends [B] ? true : [B] extends [A] ? true : false;
+
+type PublicExplicit<R, Meta, Root extends RootTypes> = TransformKeys<
+  SourceEntity<R, Meta>,
+  ResponseTransform<R, Root>
+>;
+
+type ValidateEntitySchema<R, Meta, Root extends RootTypes> = [SchemaOut<R>] extends [never]
+  ? unknown
+  : (unknown extends Meta
+      ? unknown
+      : Compatible<SchemaOut<R>, PublicExplicit<R, Meta, Root>> extends true
+        ? unknown
+        : {
+            schema: {
+              response: ConfigTypeError<"schema.response output is incompatible with the declared entity">;
+            };
+          }) &
+      (R extends { mock: infer M }
+        ? unknown extends MockEntityOf<M>
+          ? unknown
+          : Compatible<
+                SchemaOut<R>,
+                TransformKeys<MockEntityOf<M>, ResponseTransform<R, Root>>
+              > extends true
+            ? unknown
+            : {
+                schema: {
+                  response: ConfigTypeError<"schema.response output is incompatible with the mock entity">;
+                };
+              }
+        : unknown);
+
+type ValidateResourceSchemaBlock<R> = R extends { schema: infer S }
+  ? S extends object
+    ? Exact<S, { response?: unknown; error?: unknown }> &
+        (S extends { body: unknown }
+          ? {
+              body: ConfigTypeError<"resource schemas do not accept body. Declare schema.body on the operation.">;
+            }
+          : unknown) &
+        (S extends { query: unknown }
+          ? {
+              query: ConfigTypeError<"resource schemas do not accept query. Declare schema.query on the operation.">;
+            }
+          : unknown) &
+        (S extends { response: infer Resp }
+          ? [Resp] extends [undefined]
+            ? unknown
+            : Resp extends StandardSchemaV1
+              ? unknown
+              : { response: ConfigTypeError<"Expected a Standard Schema V1-compatible validator"> }
+          : unknown) &
+        (S extends { error: infer Err }
+          ? [Err] extends [undefined]
+            ? unknown
+            : Err extends StandardSchemaV1
+              ? unknown
+              : { error: ConfigTypeError<"Expected a Standard Schema V1-compatible validator"> }
+          : unknown)
+    : { schema: ConfigTypeError<"schema must be { response?, error? }"> }
+  : unknown;
+
+type ResponseKnown<Op> = Op extends (...args: never[]) => infer R
+  ? unknown extends Awaited<R>
+    ? false
+    : true
+  : Op extends { run: (...args: never[]) => infer R }
+    ? unknown extends Awaited<R>
+      ? false
+      : true
+    : Op extends { schema: { response: StandardSchemaV1 } }
+      ? true
+      : Op extends { responseType: "text" | "blob" | "arrayBuffer" | "stream" | "auto" }
+        ? true
+        : Op extends { response: { parse: (...args: never[]) => infer R } }
+          ? unknown extends Awaited<R>
+            ? false
+            : true
+          : false;
+
+type StrictOp<K, Op> = K extends AllBuiltinOpName
+  ? unknown
+  : Op extends false
+    ? unknown
+    : ResponseKnown<Op> extends true
+      ? unknown
+      : {
+          "apixa config error": `strict mode requires a known response type for "${K & string}". Add schema.response, a responseType, a typed response.parse, or a typed function.`;
+        };
+
+type StrictMode<R, Root extends RootTypes> = R extends {
+  settings: { validation: { strict: infer S extends boolean } };
+}
+  ? S
+  : Root["strict"] extends boolean
+    ? Root["strict"]
+    : false;
+
+type StrictOperations<R, Root extends RootTypes> =
+  StrictMode<R, Root> extends true
+    ? R extends { operations: infer Ops }
+      ? Ops extends string | readonly unknown[]
+        ? unknown
+        : Ops extends { preset: unknown }
+          ? { operations: { [K in keyof Omit<Ops, "preset">]: StrictOp<K, Ops[K]> } }
+          : { operations: { [K in keyof Ops]: StrictOp<K, Ops[K]> } }
+      : unknown
+    : unknown;
+
 /** Compile-time checks applied on top of the inferred config (`Config & ValidateConfig<…>`). */
-export type ValidateConfig<Meta, Config> = Exact<Config, ApiRootConfig> &
+export type ValidateConfig<Meta, Config, InheritedStrict extends boolean = false> = Exact<
+  Config,
+  ApiRootConfig
+> &
   (Config extends { resources: infer Res }
     ? {
         resources: {
           [K in keyof Res]: ValidateResource<
             Res[K],
             K extends keyof Meta ? Meta[K] : unknown,
-            RootTypesOf<Config>
+            RootTypesOf<Config, InheritedStrict>
           >;
         };
       }
@@ -1533,10 +1885,45 @@ export type ValidateConfig<Meta, Config> = Exact<Config, ApiRootConfig> &
     ? { response: ValidateResponseOptions<Resp> }
     : unknown) &
   (Config extends { query: infer Q } ? { query: Exact<Q, QueryOptions> } : unknown) &
-  (Config extends { middleware: infer M } ? { middleware: ValidateMiddlewareHooks<M> } : unknown);
+  (Config extends { middleware: infer M } ? { middleware: ValidateMiddlewareHooks<M> } : unknown) &
+  (Config extends { settings: infer S } ? { settings: ValidateSettings<S, "api"> } : unknown) &
+  SameScopeConflict<Config> &
+  (Config extends {
+    queryArrayFormat: unknown;
+    settings: { serialization: { queryArrayFormat: unknown } };
+  }
+    ? {
+        queryArrayFormat: ConfigTypeError<"queryArrayFormat and settings.serialization.queryArrayFormat both set the same option at this scope">;
+      }
+    : unknown) &
+  (Config extends { query: infer L; settings: { serialization: { query: infer M } } }
+    ? [L] extends [undefined]
+      ? unknown
+      : [M] extends [undefined]
+        ? unknown
+        : {
+            query: ConfigTypeError<"query and settings.serialization.query both set the same option at this scope">;
+          }
+    : unknown) &
+  (Config extends {
+    querySerializer: infer L;
+    settings: { serialization: { querySerializer: infer M } };
+  }
+    ? [L] extends [undefined]
+      ? unknown
+      : [M] extends [undefined]
+        ? unknown
+        : {
+            querySerializer: ConfigTypeError<"querySerializer and settings.serialization.querySerializer both set the same option at this scope">;
+          }
+    : unknown);
 
-export type ValidateApisConfig<Defs, Configs> = {
-  [K in keyof Configs]: ValidateConfig<K extends keyof Defs ? Defs[K] : {}, Configs[K]>;
+export type ValidateApisConfig<Defs, Configs, InheritedStrict extends boolean = false> = {
+  [K in keyof Configs]: ValidateConfig<
+    K extends keyof Defs ? Defs[K] : {},
+    Configs[K],
+    InheritedStrict
+  >;
 };
 
 // ---------------------------------------------------------------------------------------------

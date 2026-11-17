@@ -3,9 +3,14 @@ import { parseBaseURL } from "../http/url.js";
 import { MockFileStorage, type MockStore } from "../mock/index.js";
 import type { ClientRuntime } from "../request/index.js";
 import { createFetchTransport } from "../transport/fetch.js";
-import type { LayerOptions } from "../types/definition.js";
 import type { Transport } from "../types/transport.js";
 import { createResourceClient } from "./resource-client.js";
+import {
+  mergeSerialization,
+  rememberSettings,
+  resolveScopeSettings,
+  type ResolvedScope,
+} from "./settings.js";
 import { validateResource, validateRoot } from "./validate.js";
 
 /** Mock state of one mocked resource: its records and the client's shared file store. */
@@ -23,33 +28,38 @@ export const mockEntries = new WeakMap<object, readonly MockEntry[]>();
  * everything, resolves every operation once, and returns a frozen client. No network calls and
  * no dataset loading happen here.
  */
-export function buildClient(config: unknown): Record<string, Record<string, unknown>> {
+export function buildClient(
+  config: unknown,
+  collection?: ResolvedScope,
+): Record<string, Record<string, unknown>> {
   validateRoot(config);
+  const apiScope = resolveScopeSettings("defineApi config", config, "api");
+  const serialization = mergeSerialization(collection?.serialization, apiScope.serialization);
   const base = parseBaseURL(config.baseURL);
   const runtime: ClientRuntime = {
     base,
     transport: (config.transport as Transport | undefined) ?? createFetchTransport(),
-    queryArrayFormat:
-      (config.queryArrayFormat as ClientRuntime["queryArrayFormat"] | undefined) ?? "repeat",
-    query: config.query as ClientRuntime["query"],
-    querySerializer: config.querySerializer as ClientRuntime["querySerializer"],
+    queryArrayFormat: serialization.queryArrayFormat ?? "repeat",
+    query: serialization.query,
+    querySerializer: serialization.querySerializer,
     files: new MockFileStorage(),
   };
-  const root: LayerOptions = {
-    headers: config.headers as LayerOptions["headers"],
-    timeout: config.timeout as LayerOptions["timeout"],
-    retry: config.retry as LayerOptions["retry"],
-    middleware: config.middleware as LayerOptions["middleware"],
-    transforms: config.transforms as LayerOptions["transforms"],
-    response: config.response as LayerOptions["response"],
-  };
+  const baseLayers = [collection?.layer, apiScope.layer].filter(
+    (layer): layer is NonNullable<typeof layer> => layer !== undefined,
+  );
 
   const client: Record<string, Record<string, unknown>> = {};
   const all: MockEntry[] = [];
   for (const [name, definition] of Object.entries(config.resources)) {
     validateResource(name, definition);
-    const built = createResourceClient(runtime, { name, definition, root });
+    const built = createResourceClient(runtime, {
+      name,
+      definition,
+      baseLayers,
+      serialization,
+    });
     const resource = Object.freeze(built.client);
+    rememberSettings(resource, built.inspection);
     if (built.store) {
       const entry = { store: built.store, resource: name, files: runtime.files };
       mockEntries.set(resource, [entry]);

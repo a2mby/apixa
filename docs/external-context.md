@@ -24,6 +24,7 @@ Mocking is an explicit, client-scoped branch of the same request pipeline.
 4. [`docs/conventions.md`](./conventions.md), [`docs/public-api.md`](./public-api.md) when the
    change touches public surface.
 5. [`docs/use-cases.md`](./use-cases.md) when the change needs manual-test impact.
+6. [`docs/README.md`](./README.md) when you need a how-to, an ADR index, or the guide map.
 
 If the repository and this file disagree, the repository wins; say so and update this file.
 

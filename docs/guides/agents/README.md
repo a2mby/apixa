@@ -1,16 +1,17 @@
 # Guides for agents
 
-Checklists and paths for coding agents working in this repo.
+Checklists and paths for coding agents in this repo, and for agents converting a consumer repository to Apixa.
 
-| Guide                                                             | When to use it                                                                                    |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| [Extend mock dataset types](./extend-mock-dataset-types.md)       | Adding a built-in catalog entry (`MockDatasetCatalog` / `MockDatasetIds`)                         |
-| [Production file handling](../humans/production-file-handling.md) | Answering questions on file guarantees, limits, ownership; check it before changing file behavior |
-| [Plan and land a change](./plan-and-land-change.md)               | `/plan-change` → implement → `/git-push`                                                          |
+| Folder                           | When                                                       |
+| -------------------------------- | ---------------------------------------------------------- |
+| [migrations/](./migrations/)     | Backend-first conversion of an existing frontend API layer |
+| [contributing/](./contributing/) | Plan, implement, and land a change in this repository      |
 
-Release work is its own workflow: use the `publish-library` skill (`.agents/skills/publish-library/`)
-only when the owner explicitly requests a publish; see the [human release guide](../humans/publish-a-release.md).
+| Also read                                                                  | When                                                                  |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Production file handling](../humans/features/production-file-handling.md) | Before changing upload, download, or transfer behavior                |
+| [Human guides](../humans/)                                                 | When the reader is a person, or the checklist points at a prose guide |
 
-Human-readable versions: [`../humans/`](../humans/).
+Release work is its own workflow: use the `publish-library` skill (`.agents/skills/publish-library/`) only when the owner explicitly requests a publish. The owner-facing steps are the [human release guide](../humans/contributing/publish-a-release.md).
 
-Shared rules: `.ai/rules/` (activation is recorded per rule); repository entry point: `AGENTS.md`. Workflow skill: `.agents/skills/apixa-workflow/`. See [AI configuration](../../../.ai/README.md) for provider invocation, discovery and synchronization.
+Shared rules: `.ai/rules/` (activation is recorded per rule). Repository entry point: `AGENTS.md`. Workflow skill: `.agents/skills/apixa-workflow/`. See [AI configuration](../../../.ai/README.md) for provider invocation, discovery, and synchronization.

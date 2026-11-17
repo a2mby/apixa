@@ -1,13 +1,47 @@
 import { ConfigError } from "../errors/index.js";
 import type { QueryParams } from "../types/http.js";
 import type { StandardSchemaV1 } from "../types/standard-schema.js";
-import { validateSync, type SchemaSite } from "./validate.js";
+import { validateAsync, validateSync, type SchemaSite } from "./validate.js";
 
 /** Per-operation validators, resolved once at construction. */
 export interface PreparedSchemas {
   body?: StandardSchemaV1;
   query?: StandardSchemaV1;
   response?: StandardSchemaV1;
+}
+
+/** How a resource entity schema applies to one builtin. */
+export type EntitySchemaMode = "entity" | "nullable" | "list";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Validate entities with the resource schema and keep the parsed output.
+ * Lists validate items. A paginated result validates `data` items and keeps the envelope.
+ * A value that is not the expected shape is left for the builtin shape check.
+ */
+export async function applyEntitySchema(
+  data: unknown,
+  schema: StandardSchemaV1,
+  mode: EntitySchemaMode,
+  site: SchemaSite,
+  paginated: boolean,
+): Promise<unknown> {
+  if (mode === "nullable" && (data === null || data === undefined)) return data;
+  if (mode === "entity" || mode === "nullable") return validateAsync(schema, data, site);
+  if (paginated && isRecord(data) && Array.isArray(data.data)) {
+    const items = [];
+    for (const item of data.data) items.push(await validateAsync(schema, item, site));
+    return { ...data, data: items };
+  }
+  if (Array.isArray(data)) {
+    const items = [];
+    for (const item of data) items.push(await validateAsync(schema, item, site));
+    return items;
+  }
+  return data;
 }
 
 /**
@@ -22,10 +56,6 @@ const PREPARED_QUERIES = new WeakMap<
 function sameKeys(a: readonly string[] | undefined, b: readonly string[] | undefined): boolean {
   if (a === b) return true;
   return !!a && !!b && a.length === b.length && a.every((key, i) => key === b[i]);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 /**

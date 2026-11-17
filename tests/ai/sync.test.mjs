@@ -88,10 +88,12 @@ const tokens = (text) => text.replace(/\s+/g, " ").trim();
 
 const TEMPLATE_EVOLVED_LEGACY_FILES = new Set([
   ".cursor/rules/apixa-core.mdc",
+  ".cursor/rules/apixa-docs.mdc",
   ".cursor/rules/apixa-examples.mdc",
   ".cursor/rules/apixa-packages.mdc",
   ".cursor/commands/check-structure.md",
   ".cursor/commands/implement-version.md",
+  ".cursor/commands/ship-changes.md",
 ]);
 
 test("every original command, skill and rule body survives with only explicit path relocations", async () => {

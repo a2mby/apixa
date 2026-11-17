@@ -27,6 +27,7 @@
   "detectTransferSupport",
   "emptyResponse",
   "getOperationMetadata",
+  "inspectSettings",
   "isApiError",
   "isHttpError",
   "isMockError",

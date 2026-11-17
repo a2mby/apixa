@@ -41,7 +41,7 @@ Values: `defineApi`, `defineApis`, `defineMockApi`; `ApiError`, `NetworkError`, 
 `isTimeoutError`, `isMockError`; `createFetchTransport`, `computeBackoffMs`, `parseRetryAfter`,
 `isRetryableStatus`; `convertKey`, `transformKeys`, `KEY_CASES`; `OPERATION_METADATA`,
 `getOperationMetadata`; `nextPageInput`, `previousPageInput`, `paginationContextKey`; `emptyResponse`;
-`createResource`. The exact list is `tests/facade/curated-root-exports.json`, shared by the
+`createResource`, `inspectSettings`. The exact list is `tests/facade/curated-root-exports.json`, shared by the
 unit test and the packed-consumer check. Types are listed in `src/index.ts`.
 
 Everything else (`MockStore`, `resetMock`, `registerMockDatasetLoader`, `createIdempotencyKey`,
@@ -135,7 +135,7 @@ No symbol or import path changed; the generated export snapshot is unchanged. On
 - **Breaking:** removed types `ResourceState`, `OperationState`, `ResourceTypeOnlyKey`,
   `OperationTypeOnlyKey`, `QueryOf`. `ApiState` entries are entities
   (`interface ApiState { products: Product }`); the old `{ entity, list, query, operations }` wrapper is
-  a type error with a migration message. Migration: [schemas guide](./guides/humans/schemas.md) and
+  a type error with a migration message. Migration: [schemas guide](./guides/humans/features/schemas.md) and
   [ADR-007](./decisions/ADR-007-apixa-v3-unified-api-contract.md).
 
 ## v3.0.0-rc.0 changes (Core overhaul; release candidate prepared, not npm-published)
@@ -180,7 +180,7 @@ query/body serialization, response processing, transforms, middleware and per-op
   (resource `pagination` is rejected with `ConfigError`); operation definitions use `pagination`; call
   options accept `options.pagination` or `options.query`. `PageResult` is now the page contract (the former
   page/cursor union is `PaginatedResult`). Pagination error text now names `"offset"`.
-  See the [pagination guide](./guides/humans/pagination.md).
+  See the [pagination guide](./guides/humans/features/pagination.md).
 - **Serialization, responses & pagination**: Added client-wide `query` (`nulls`, `emptyArrays`,
   `booleans`) alongside `queryArrayFormat` and `querySerializer`, strict JSON/explicit `responseType`,
   `response` (`unwrap`, `parse`, `validate`, `source`), bounded/excluded `transforms` (`TransformError`

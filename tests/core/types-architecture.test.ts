@@ -226,8 +226,8 @@ describe("defineApi type architecture", () => {
             path: "/users",
             operations: {
               good: { method: "GET", path: "/good", schema: { response: z.number() } },
-              // @ts-expect-error missing method on custom operation
-              bad: { path: "/bad" },
+              // @ts-expect-error a custom operation with no method is GET, which cannot be kind "write"
+              bad: { path: "/bad", kind: "write" },
             },
           },
           posts: {

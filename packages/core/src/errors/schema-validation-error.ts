@@ -3,8 +3,11 @@ import { MAX_VIOLATIONS, ValidationError } from "./validation-error.js";
 
 type SchemaErrorOptions = NonNullable<ConstructorParameters<typeof ValidationError>[1]>;
 
-/** Which schema of an operation rejected the value. */
-export type SchemaPhase = "body" | "query" | "response";
+/**
+ * Which schema rejected the value. `"error"` is a non-success HTTP body that failed
+ * `schema.error`. It is not a local request failure and not a successful result.
+ */
+export type SchemaPhase = "body" | "query" | "response" | "error";
 
 export interface SchemaValidationErrorInit extends SchemaErrorOptions {
   phase: SchemaPhase;
@@ -32,7 +35,10 @@ export function formatIssuePath(path: StandardSchemaIssue["path"]): string {
  * validator keeps the original exception in `cause`.
  */
 export class SchemaValidationError extends ValidationError {
-  /** `"body"` / `"query"` are rejected before any transport call, `"response"` on the final result. */
+  /**
+   * `"body"` / `"query"` are rejected before any transport call, `"response"` on the final
+   * success payload, `"error"` on a non-success HTTP body.
+   */
   readonly phase: SchemaPhase;
   readonly resource: string;
   readonly operation: string;
